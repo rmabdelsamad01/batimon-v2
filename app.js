@@ -4874,7 +4874,6 @@ function buildComplexTable(zone){
           cell0.style.cssText=base+`display:flex;align-items:center;justify-content:center;`;
           cell0.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
         }
-        if(['R201','R202','R203','R204','R211','C201','E202'].includes(ref)) cell0.style.borderBottom='5px double #ED1C24';
         cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.style.height='25px';td.style.maxHeight='25px';td.style.padding='0';td.style.verticalAlign='top';
         td.appendChild(cell0);tr.appendChild(td);return;
