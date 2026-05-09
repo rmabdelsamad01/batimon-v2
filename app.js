@@ -2594,7 +2594,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
              onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
              onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
-             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:''}
+             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='sitepictures'?`onclick=""`:''}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
@@ -4929,7 +4929,7 @@ function buildComplexTable(zone){
           cell.style.cssText += 'position:relative;';
           cell.innerHTML = `<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
         }
-        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);return;
       }
       // SF R+25 trapezoid cells — cols 94→81, slope from left=50/right=47 to left=3/right=0
@@ -4956,7 +4956,7 @@ function buildComplexTable(zone){
             cell.style.cssText+=`height:150px;${bLeftSF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
           }
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
       }
@@ -4985,7 +4985,7 @@ function buildComplexTable(zone){
             cell.style.cssText+=`height:150px;${bLeftNF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
           }
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
       }
@@ -4995,7 +4995,7 @@ function buildComplexTable(zone){
         cell.classList.remove('big-type');
         cell.style.cssText+=`height:150px;clip-path:polygon(0 76px, 100% 76px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
         cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref26.split('').join('\n')}</span>`;
-        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);return;
       }
       if((zone.id==='EF'||zone.id==='WF') && pType) cell.setAttribute('data-ptype', pType);
@@ -5006,7 +5006,7 @@ function buildComplexTable(zone){
         const _wBL=(pType==='W03'||pType==='W04')?'border-left:5px double #ED1C24;':'';
         cell.style.cssText=`width:var(--cw);height:150px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;padding:0;border-radius:4px;cursor:pointer;${_wBB}${_wBL}`;
         cell.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:radial-gradient(circle,rgba(0,0,0,0.55) 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.2);"></div><div style="width:100%;flex:1;position:relative;overflow:hidden;"><svg width="50" height="100" viewBox="0 0 50 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="display:block;position:absolute;top:0;left:0;width:100%;height:100%;"><rect x="1" y="1" width="48" height="98" fill="none" stroke="#2a3a52" stroke-width="3.5"/><rect x="1" y="75" width="48" height="24" fill="rgba(0,0,0,0.18)"/><rect x="1" y="75" width="48" height="24" fill="none" stroke="#2a3a52" stroke-width="1.5"/><line x1="3" y1="77" x2="47" y2="77" stroke="#2a3a52" stroke-width="0.8" opacity="0.35"/><rect x="6" y="8" width="38" height="62" fill="none" stroke="#2a3a52" stroke-width="2.5"/><rect x="7.5" y="9.5" width="35" height="59" fill="rgba(255,255,255,0.35)"/><line x1="42.5" y1="9.5" x2="7.5" y2="39" stroke="#2a3a52" stroke-width="1.1" opacity="0.6"/><line x1="42.5" y1="68.5" x2="7.5" y2="39" stroke="#2a3a52" stroke-width="1.1" opacity="0.6"/></svg><span style="position:absolute;bottom:0;left:0;right:0;height:25px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;z-index:2;letter-spacing:0.03em;">${pType}</span></div>`;
-        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);return;
       }
       // EF panel type rendering — confirmed formats
@@ -5042,7 +5042,7 @@ function buildComplexTable(zone){
           if(['R301','R302','R303','R304','R305','R306','C301','C302'].includes(ref)){
             cell.style.borderBottom='5px double #ED1C24';
           }
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
         // NF R+02 cols 50-31: 50px height, top-aligned, R3xx visual formats
@@ -5066,7 +5066,7 @@ function buildComplexTable(zone){
             cell.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
           }
           if(['R301','R302','R303','G303','R306','C302'].includes(ref)) cell.style.borderBottom='5px double #ED1C24';
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.style.height='50px';td.style.maxHeight='50px';td.style.padding='0';td.style.verticalAlign='top';
           td.appendChild(cell);tr.appendChild(td);return;
         }
@@ -5091,7 +5091,7 @@ function buildComplexTable(zone){
             cell.innerHTML=`<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
           }
           if(['R301','R302','R303','R306','C302','G303'].includes(ref)) cell.style.borderBottom='5px double #ED1C24';
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
         // SF R+02: cols 4-15 render with R301-R306, C301, D304 special formats
@@ -5127,7 +5127,7 @@ function buildComplexTable(zone){
           if(col===4 && !/^D(0[1-9]|1[0-2])$/.test(pType)&&!['DM06','D1803','D1705','D304'].includes(pType)) cell.style.borderRight='5px double #ED1C24';
           cell.style.setProperty('height','50px','important');
           td.style.verticalAlign='top';
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
         // effType: use pType, or pRef when pRef is a known D/G format code and pType is empty
@@ -5284,7 +5284,7 @@ function buildComplexTable(zone){
             cell.classList.remove('big-type');
             cell.style.cssText += 'height:165px;clip-path:polygon(0 115px, 100% 111px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // W-34-30 to W-34-16: trapezoid with 5px increments
@@ -5306,13 +5306,13 @@ function buildComplexTable(zone){
               // R306 modified: vlines left | plain right + red middle + red left
               cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
               cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);"><span class="c-type" style="font-size:12px;line-height:1.4;">${(pRef||pType||'').split('').join('\n')}</span></div>`;
-              cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
               td.appendChild(cell);tr.appendChild(td);return;
             } else if(r304cols.includes(col)){
               // R304 modified: plain left | vlines right + red middle + red left border (col 19 only)
               cell.style.cssText += `height:165px;${col!==17?'border-left:5px double #ED1C24;':''}clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
               cell.innerHTML=`<div style="width:25px;height:100%;flex-shrink:0;border-right:5px double #ED1C24;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span class="c-type" style="font-size:12px;line-height:1.4;">${(pRef||pType||'').split('').join('\n')}</span></div>`;
-              cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
               td.appendChild(cell);tr.appendChild(td);return;
             } else if(redLeftCols.includes(col)){
               // Double vertical red left border
@@ -5321,7 +5321,7 @@ function buildComplexTable(zone){
               cell.style.cssText += `height:165px;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
             }
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // W-34-15: trapezoid top-left 5px, top-right 0px
@@ -5330,7 +5330,7 @@ function buildComplexTable(zone){
             cell.classList.remove('big-type');
             cell.style.cssText += 'height:165px;clip-path:polygon(0 20px, 100% 15px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // SF R+34 cols 4–15: progressive slope L=116→101, R=111→95 (n=0 at col15, n=11 at col4)
@@ -5357,7 +5357,7 @@ function buildComplexTable(zone){
               cell.style.cssText += `height:165px;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
               cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
             }
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // SF R+34 cols 1,2: flat top at 100px plain
@@ -5366,7 +5366,7 @@ function buildComplexTable(zone){
             cell.classList.remove('big-type');
             cell.style.cssText += 'height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // SF R+34 col 3 (R3403): flat top 100px + vlines + red left (same as R3404)
@@ -5375,7 +5375,7 @@ function buildComplexTable(zone){
             cell.classList.remove('big-type');
             cell.style.cssText += 'height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // SF R+34 cols 91,92 (R3498,R3499): flat top 100px — same as R3402
@@ -5384,7 +5384,7 @@ function buildComplexTable(zone){
             cell.classList.remove('big-type');
             cell.style.cssText += 'height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // SF R+34 cols 89,90 (R3496,R3497): flat top 100px, no red border
@@ -5393,7 +5393,7 @@ function buildComplexTable(zone){
             cell.classList.remove('big-type');
             cell.style.cssText += 'height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // SF R+34 col 88 (R4795): flat top 100px, width 25px, no red border
@@ -5402,7 +5402,7 @@ function buildComplexTable(zone){
             cell.classList.remove('big-type');
             cell.style.cssText += 'width:25px;height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           // NF R+34 cols 31–41: progressive slope tl=82.5+(41-col)*3.25, tr2=tl+2.5
@@ -5428,7 +5428,7 @@ function buildComplexTable(zone){
               cell.style.cssText += `height:165px;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
               cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
             }
-            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(cell);tr.appendChild(td);return;
           }
           const isHorizType = (pType||pRef).match(/^R\d+$/) || (isR01Short && (pType||pRef).match(/^C\d+$/));
@@ -5540,7 +5540,7 @@ function buildComplexTable(zone){
           <div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="c-type" style="font-size:15.3px;">${cellLabel}</span></div>
           <div style="width:100%;height:25px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;"></div>
           <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
-        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);return;
       }
       // EF R+02 cols 73 and 69 (R208): T09 format, merged with R+01 below (rowspan=2), 175px
@@ -5558,7 +5558,7 @@ function buildComplexTable(zone){
             <div style="height:25px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;"></div>
           </div>
           <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
-        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);return;
       }
       // EF R+02 col 75 (R207): T05 format, merged with R+01 below (rowspan=2), 175px
@@ -5569,7 +5569,7 @@ function buildComplexTable(zone){
         cell.style.cssText='border-left:5px double #ED1C24;justify-content:flex-end;padding-bottom:8px;height:175px;min-height:175px;position:relative;';
         cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
         cell.innerHTML=`<div style="position:absolute;left:0;right:0;top:150px;height:2px;background:#fff;z-index:2;"></div><span class="c-type" style="position:relative;z-index:1;font-size:15.3px;">${(pRef||pType).split('').join('\n')}</span>`;
-        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);return;
       }
       // Handle merged door cell
@@ -5658,7 +5658,7 @@ function buildComplexTable(zone){
               <div style="height:25px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;"></div>
             </div>
             <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
         // NF R+02 col 60 (R210): mirror of R208 (T07-style), merged with R+01 below (rowspan=2), 175px
@@ -5676,7 +5676,7 @@ function buildComplexTable(zone){
             </div>
             <div style="width:25px;height:175px;flex-shrink:0;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>
             <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
-          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
         // NF R+02 col 59: merge with R+01 below (rowspan=2) — Door 1, same format as E-02-70
@@ -5782,7 +5782,7 @@ function buildComplexTable(zone){
           cell.style.setProperty('min-height','175px','important');
           cell.style.setProperty('max-height','175px','important');
         }
-        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);
       }
     });
@@ -9244,6 +9244,369 @@ async function _supaEditCell(panelId, field, value, el){
     },1200);
   }
 }
+
+// ══════════════════════════════════════════════════════════════
+// DEMO MODE
+// ══════════════════════════════════════════════════════════════
+let _demoData={legend:[],panels:{}};
+let _demoActiveZone='overview';
+
+function _demoGate(){
+  const modal=document.getElementById('demo-gate-modal');
+  if(modal) modal.classList.add('open');
+}
+
+function _demoStartNew(){
+  cm('demo-gate-modal');
+  _demoData={legend:[],panels:{}};
+  _demoOpen();
+}
+
+function _demoLoad(inp){
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(!parsed.legend||!parsed.panels) throw new Error('Invalid format');
+      _demoData=parsed;
+      cm('demo-gate-modal');
+      _demoOpen();
+    }catch(err){ alert('Invalid demo file. Please upload a valid Batimon demo (.json) file.'); }
+  };
+  r.readAsText(f);
+  inp.value='';
+}
+
+function _demoOpen(){
+  _demoActiveZone='overview';
+  const modal=document.getElementById('demo-modal');
+  if(modal) modal.classList.add('open');
+  _demoRenderLegend();
+  _demoSwitchZone('overview');
+}
+
+function _demoExit(){
+  cm('demo-modal');
+  _demoPanelPickerClose();
+}
+
+function _demoSave(){
+  const blob=new Blob([JSON.stringify(_demoData,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`batimon-demo-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// ── 20 most-used planning colours ────────────────────────────────
+const DEMO_COLORS=[
+  '#E53935','#E91E63','#FF5722','#FF9800','#FFC107',
+  '#FFEB3B','#8BC34A','#4CAF50','#009688','#00BCD4',
+  '#03A9F4','#2196F3','#3F51B5','#9C27B0','#673AB7',
+  '#795548','#607D8B','#9E9E9E','#212121','#1B5E20'
+];
+let _demoAddColor=DEMO_COLORS[0];
+let _demoEditLid=null;
+
+function _demoAddLegendItem(){
+  // default to next colour in sequence
+  _demoAddColor=DEMO_COLORS[_demoData.legend.length%DEMO_COLORS.length];
+  const sw=document.getElementById('demo-add-swatches');
+  if(sw) _demoFillSwatches(sw,_demoAddColor,'_demoSelectAddColor');
+  const ci=document.getElementById('demo-add-custom');
+  if(ci) ci.value=_demoAddColor;
+  const li=document.getElementById('demo-add-label');
+  if(li) li.value='';
+  const m=document.getElementById('demo-add-modal');
+  if(m){m.classList.add('open');setTimeout(()=>{if(li)li.focus();},120);}
+}
+
+function _demoSelectAddColor(color){
+  _demoAddColor=color;
+  const sw=document.getElementById('demo-add-swatches');
+  if(sw) _demoFillSwatches(sw,color,'_demoSelectAddColor');
+  const ci=document.getElementById('demo-add-custom');
+  if(ci) ci.value=color;
+}
+
+function _demoConfirmAdd(){
+  const li=document.getElementById('demo-add-label');
+  const label=(li?.value||'').trim();
+  if(!label){if(li)li.focus();return;}
+  const ci=document.getElementById('demo-add-custom');
+  const color=ci?.value||_demoAddColor;
+  _demoData.legend.push({id:'l'+Date.now(),label,color});
+  cm('demo-add-modal');
+  _demoRenderLegend();
+  _demoRenderGrid();
+}
+
+function _demoOpenColorEdit(lid,el,e){
+  if(e) e.stopPropagation();
+  _demoEditLid=lid;
+  const item=_demoData.legend.find(l=>l.id===lid);
+  if(!item) return;
+  const popup=document.getElementById('demo-coloredit-popup');
+  if(!popup) return;
+  const sw=document.getElementById('demo-coloredit-swatches');
+  if(sw) _demoFillSwatches(sw,item.color,'_demoApplyEditColor');
+  const ci=document.getElementById('demo-coloredit-custom');
+  if(ci) ci.value=item.color;
+  const rect=el.getBoundingClientRect();
+  popup.style.left=Math.min(rect.right+8,window.innerWidth-220)+'px';
+  popup.style.top=Math.min(rect.top,window.innerHeight-290)+'px';
+  popup.style.display='block';
+}
+
+function _demoApplyEditColor(color){
+  if(!_demoEditLid) return;
+  const item=_demoData.legend.find(l=>l.id===_demoEditLid);
+  if(!item) return;
+  item.color=color;
+  const sw=document.getElementById('demo-coloredit-swatches');
+  if(sw) _demoFillSwatches(sw,color,'_demoApplyEditColor');
+  const ci=document.getElementById('demo-coloredit-custom');
+  if(ci) ci.value=color;
+  _demoRenderLegend();
+  _demoRenderGrid();
+}
+
+function _demoCloseColorEdit(){
+  _demoEditLid=null;
+  const popup=document.getElementById('demo-coloredit-popup');
+  if(popup) popup.style.display='none';
+}
+
+function _demoFillSwatches(container,selectedColor,fn){
+  container.innerHTML=DEMO_COLORS.map(c=>`
+    <div onclick="${fn}('${c}')" title="${c}"
+      style="width:28px;height:28px;border-radius:5px;background:${c};cursor:pointer;
+             box-sizing:border-box;border:3px solid ${c.toLowerCase()===selectedColor.toLowerCase()?'#1e3a5f':'transparent'};
+             transition:transform 0.1s,border-color 0.1s;flex-shrink:0;"
+      onmouseover="this.style.transform='scale(1.18)'" onmouseout="this.style.transform='scale(1)'">
+    </div>`).join('');
+}
+
+function _demoRemoveLegendItem(lid){
+  if(!confirm('Remove this legend item? Panels colored with it will be cleared.')) return;
+  _demoData.legend=_demoData.legend.filter(l=>l.id!==lid);
+  Object.keys(_demoData.panels).forEach(pid=>{if(_demoData.panels[pid]===lid)delete _demoData.panels[pid];});
+  _demoRenderLegend();
+  _demoRenderGrid();
+}
+
+function _demoCountPanels(lid){
+  return Object.values(_demoData.panels).filter(v=>v===lid).length;
+}
+
+function _demoRenderLegend(){
+  const el=document.getElementById('demo-legend-list');
+  if(!el) return;
+  if(!_demoData.legend.length){
+    el.innerHTML='<div style="font-size:11px;color:#8099b0;text-align:center;padding:20px 8px;line-height:1.6;">No items yet.<br>Click <strong>+ Add</strong><br>to build your legend.</div>';
+    return;
+  }
+  el.innerHTML=_demoData.legend.map(item=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#f8fafd;border:1px solid #e0e8f0;">
+      <div onclick="_demoOpenColorEdit('${item.id}',this,event)" title="Click to change colour"
+        style="width:26px;height:26px;border-radius:5px;background:${item.color};cursor:pointer;flex-shrink:0;border:2px solid ${item.color}99;"></div>
+      <span onclick="_demoInlineEditLabel('${item.id}',this)" title="Click to rename"
+        style="flex:1;font-size:11px;font-weight:600;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;min-width:0;">${item.label}</span>
+      <span style="font-size:11px;font-weight:700;color:#224F93;min-width:22px;text-align:center;background:#e8f0fb;border-radius:10px;padding:1px 6px;flex-shrink:0;">${_demoCountPanels(item.id)}</span>
+      <button onclick="_demoRemoveLegendItem('${item.id}')" style="border:none;background:none;cursor:pointer;color:#c0cde0;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0;" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+function _demoInlineEditLabel(lid,span){
+  const inp=document.createElement('input');
+  inp.type='text';
+  inp.value=span.textContent;
+  inp.maxLength=40;
+  inp.style.cssText='flex:1;min-width:0;padding:2px 5px;border:1.5px solid #a855f7;border-radius:4px;font-size:11px;font-weight:600;color:#1e3a5f;background:#f5eeff;outline:none;font-family:var(--font);width:100%;';
+  const save=()=>{
+    const v=inp.value.trim();
+    const item=_demoData.legend.find(l=>l.id===lid);
+    if(item&&v) item.label=v;
+    _demoRenderLegend();
+  };
+  inp.onblur=save;
+  inp.onkeydown=e=>{
+    if(e.key==='Enter'){e.preventDefault();inp.blur();}
+    if(e.key==='Escape'){_demoRenderLegend();}
+  };
+  span.parentNode.replaceChild(inp,span);
+  inp.focus();
+  inp.select();
+}
+
+function _demoSwitchZone(zoneId){
+  _demoActiveZone=zoneId;
+  ['overview','NF','EF','SF','WF'].forEach(z=>{
+    const btn=document.getElementById('demo-tab-'+z);
+    if(btn){
+      const active=z===zoneId;
+      btn.style.background=active?'#a855f7':'var(--surface2)';
+      btn.style.color=active?'#fff':'var(--text2)';
+      btn.style.fontWeight=active?'700':'600';
+      btn.style.border='none';
+    }
+  });
+  _demoRenderGrid();
+}
+
+function _demoRenderGrid(){
+  const area=document.getElementById('demo-grid-area');
+  if(!area) return;
+  area.innerHTML='';
+  if(_demoActiveZone==='overview'){ _demoRenderOverview(area); return; }
+  const zone=ZONES.find(z=>z.id===_demoActiveZone);
+  if(!zone) return;
+
+  // Build a wrapper exactly like renderComplexFP does
+  const chVal=(zone.id==='NF'||zone.id==='WF'||zone.id==='SF')?'150px':'150px';
+  const wrap=document.createElement('div');
+  wrap.className='wf-wrap';
+  wrap.style.cssText=`transform-origin:top left;display:inline-block;--cw:50px;--ch:${chVal};`;
+
+  const titleDiv=document.createElement('div');
+  titleDiv.className='wftitle';
+  titleDiv.textContent=zone.name;
+  wrap.appendChild(titleDiv);
+
+  const table=document.createElement('table');
+  table.className='wft';
+  table.id='tbl-'+zone.id; // buildComplexTable looks for this exact ID
+  wrap.appendChild(table);
+
+  // Temporarily attach off-screen so getElementById('tbl-'+zone.id) works
+  wrap.style.position='fixed';
+  wrap.style.top='-99999px';
+  wrap.style.left='-99999px';
+  document.body.appendChild(wrap);
+
+  buildComplexTable(zone); // renders full monitoring table with all types, borders, etc.
+
+  // ── Demo overrides: replace status colours + redirect clicks ──────
+  const STATUS_CLS=['st-i','st-d','st-f','st-c','st-cn','st-cip','st-x','st-p'];
+  table.querySelectorAll('.wfc[data-pid]').forEach(cell=>{
+    const pid=cell.dataset.pid;
+    const legendId=_demoData.panels[pid]||null;
+    const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
+    // Reset status colour to neutral pending
+    STATUS_CLS.forEach(c=>cell.classList.remove(c));
+    cell.classList.add('st-p');
+    // Apply legend colour if assigned
+    if(legendItem){
+      cell.style.setProperty('background',legendItem.color,'important');
+      cell.style.borderColor=legendItem.color+'bb';
+    }
+    // Redirect click to demo picker
+    cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
+  });
+
+  // Move into demo area (restores normal positioning)
+  document.body.removeChild(wrap);
+  wrap.style.position='';
+  wrap.style.top='';
+  wrap.style.left='';
+  area.appendChild(wrap);
+}
+
+function _demoRenderOverview(area){
+  const totalZonePanels=ZONES.reduce((s,z)=>s+z.floors.length*z.colNums.length,0);
+  const totalColored=Object.keys(_demoData.panels).length;
+  area.innerHTML=`
+    <div style="padding:28px 32px;max-width:640px;">
+      <div style="font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Demo Overview</div>
+      <div style="font-size:11px;color:#8099b0;margin-bottom:24px;">${totalColored} of ${totalZonePanels} panels colored</div>
+      ${!_demoData.legend.length
+        ?'<div style="color:#8099b0;font-size:12px;background:#f8fafd;border-radius:8px;padding:20px;text-align:center;">No legend items yet.<br>Add items in the left panel and start coloring.</div>'
+        :_demoData.legend.map(item=>{
+            const count=_demoCountPanels(item.id);
+            const pct=totalZonePanels?Math.round(count/totalZonePanels*100):0;
+            return `<div style="margin-bottom:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:14px;height:14px;border-radius:3px;background:${item.color};flex-shrink:0;"></div>
+                  <span style="font-size:12px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+                </div>
+                <span style="font-size:12px;font-weight:700;color:#224F93;">${count} panels &nbsp;·&nbsp; ${pct}%</span>
+              </div>
+              <div style="height:9px;background:#e8f0fb;border-radius:5px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:${item.color};border-radius:5px;"></div>
+              </div>
+            </div>`;
+          }).join('')
+      }
+    </div>`;
+}
+
+function _demoHandlePanelClick(e,panelId){
+  if(!_demoData.legend.length){
+    alert('Please add at least one legend item first.\nUse the "+ Add Item" button on the left.');
+    return;
+  }
+  const picker=document.getElementById('demo-picker');
+  if(!picker) return;
+  picker.dataset.pid=panelId;
+  const x=Math.min(e.clientX+8, window.innerWidth-210);
+  const y=Math.min(e.clientY+8, window.innerHeight-280);
+  picker.style.left=x+'px';
+  picker.style.top=y+'px';
+  picker.style.display='block';
+  const currentLid=_demoData.panels[panelId]||null;
+  document.getElementById('demo-picker-items').innerHTML=
+    `<div style="font-size:9px;font-weight:700;color:#8099b0;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;">Assign color</div>`+
+    _demoData.legend.map(item=>`
+      <div onclick="_demoPanelAssign('${item.id}')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;background:${currentLid===item.id?'#e8f0fb':'transparent'};" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='${currentLid===item.id?'#e8f0fb':'transparent'}'">
+        <div style="width:18px;height:18px;border-radius:3px;background:${item.color};flex-shrink:0;"></div>
+        <span style="font-size:11px;font-weight:600;color:#1e3a5f;flex:1;">${item.label}</span>
+        ${currentLid===item.id?'<span style="font-size:10px;color:#224F93;">✓</span>':''}
+      </div>`).join('')+
+    `<div style="border-top:1px solid #e8f0fb;margin-top:6px;padding-top:6px;">
+      <div onclick="_demoPanelClear()" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;" onmouseover="this.style.background='#fff0f0'" onmouseout="this.style.background='transparent'">
+        <div style="width:18px;height:18px;border-radius:3px;background:#eef2f8;border:1px solid #d0dbe8;flex-shrink:0;"></div>
+        <span style="font-size:11px;font-weight:500;color:#8099b0;">Clear</span>
+      </div>
+    </div>`;
+  e.stopPropagation();
+}
+
+function _demoPanelAssign(legendId){
+  const pid=document.getElementById('demo-picker')?.dataset.pid;
+  if(!pid) return;
+  _demoData.panels[pid]=legendId;
+  _demoPanelPickerClose();
+  _demoRenderLegend();
+  _demoRenderGrid();
+}
+
+function _demoPanelClear(){
+  const pid=document.getElementById('demo-picker')?.dataset.pid;
+  if(!pid) return;
+  delete _demoData.panels[pid];
+  _demoPanelPickerClose();
+  _demoRenderLegend();
+  _demoRenderGrid();
+}
+
+function _demoPanelPickerClose(){
+  const picker=document.getElementById('demo-picker');
+  if(picker) picker.style.display='none';
+}
+
+document.addEventListener('click',e=>{
+  const picker=document.getElementById('demo-picker');
+  if(picker&&picker.style.display==='block'&&!picker.contains(e.target)) _demoPanelPickerClose();
+  const cedit=document.getElementById('demo-coloredit-popup');
+  if(cedit&&cedit.style.display==='block'&&!cedit.contains(e.target)) _demoCloseColorEdit();
+});
+
+// ══════════════════════════════════════════════════════════════
 
 function _supaPasswordGate(){
   if(_supaUnlocked){ openSupabasePanel(); return; }
