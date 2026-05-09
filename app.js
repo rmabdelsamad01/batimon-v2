@@ -11578,7 +11578,7 @@ async function openBatidocPage(){
       page: _batidocPage,
       projects: sbProfile?.projects || null
     }));
-    const batidocBase = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://batidoc.batimon.com';
+    const batidocBase = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://ged.batimon.com';
     frame.src = batidocBase + '#bd=' + payload;
   } else {
     // Already loaded — just switch page
