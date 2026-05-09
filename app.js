@@ -9499,10 +9499,12 @@ function _demoRenderGrid(){
     // Reset status colour to neutral pending
     STATUS_CLS.forEach(c=>cell.classList.remove(c));
     cell.classList.add('st-p');
-    // Apply legend colour if assigned
+    // Apply legend colour using background-color only — preserves backgroundImage
+    // patterns (vertical lines, dots) and does NOT touch border colours (red double lines)
     if(legendItem){
-      cell.style.setProperty('background',legendItem.color,'important');
-      cell.style.borderColor=legendItem.color+'bb';
+      cell.style.setProperty('background-color',legendItem.color,'important');
+    } else {
+      cell.style.removeProperty('background-color');
     }
     // Redirect click to demo picker
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
