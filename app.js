@@ -252,6 +252,11 @@ document.addEventListener('keyup',e=>{
   if(e.key==='Control'){
     ctrlHeld=false;
     if(multiSelPanels.size>0) openBulkStatusModal();
+    // Demo: show picker when Ctrl is released
+    const demoModal=document.getElementById('demo-modal');
+    if(demoModal&&demoModal.classList.contains('open')&&_demoSelected.size>0){
+      _demoShowMultiPicker(_demoLastClickPos);
+    }
   }
 });
 ZONES.forEach(z=>fFilters[z.id]='all');
@@ -9251,6 +9256,7 @@ async function _supaEditCell(panelId, field, value, el){
 let _demoData={legend:[],panels:{}};
 let _demoActiveZone='overview';
 let _demoSelected=new Set();
+let _demoLastClickPos={x:200,y:200};
 
 function _demoGate(){
   const modal=document.getElementById('demo-gate-modal');
@@ -9496,24 +9502,43 @@ function _demoRenderGrid(){
 
   buildComplexTable(zone); // renders full monitoring table with all types, borders, etc.
 
-  // ── Demo overrides: replace status colours + redirect clicks ──────
+  // ── Demo overrides ────────────────────────────────────────────────
   const STATUS_CLS=['st-i','st-d','st-f','st-c','st-cn','st-cip','st-x','st-p'];
+  // Only ef-r18md has an actual orange CSS background (#FFD9A0 !important)
+  // All other ef-r18x / ef-r17x classes are purely height constraints — don't skip them
+  const ORANGE_CLS=['ef-r18md'];
+
+  // Pass 1: reset wfc cells to pending, skipping orange architectural rows
+  table.querySelectorAll('.wfc').forEach(cell=>{
+    if(ORANGE_CLS.some(c=>cell.classList.contains(c))) return;
+    STATUS_CLS.forEach(c=>cell.classList.remove(c));
+    cell.classList.add('st-p');
+  });
+
+  // Pass 2: apply legend colours + redirect clicks for identifiable cells
   table.querySelectorAll('.wfc[data-pid]').forEach(cell=>{
     const pid=cell.dataset.pid;
     const legendId=_demoData.panels[pid]||null;
     const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
-    // Reset status colour to neutral pending
-    STATUS_CLS.forEach(c=>cell.classList.remove(c));
-    cell.classList.add('st-p');
-    // Apply legend colour using background-color only — preserves backgroundImage
-    // patterns (vertical lines, dots) and does NOT touch border colours (red double lines)
     if(legendItem){
+      // background-color only — preserves backgroundImage patterns and border colours
       cell.style.setProperty('background-color',legendItem.color,'important');
     } else {
       cell.style.removeProperty('background-color');
     }
-    // Redirect click to demo picker
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
+  });
+
+  // Pass 3: door cells (plain divs with HTML onclick, no wfc class) — reset to pending
+  table.querySelectorAll('[onclick*="openComplexModal"]').forEach(door=>{
+    door.style.setProperty('background','#E8F0FB','important');
+    // Also reset child divs that echo the doorBg colour
+    door.querySelectorAll('[style*="background"]').forEach(ch=>{
+      ch.style.setProperty('background','#E8F0FB','important');
+    });
+    door.onclick=null;
+    door.removeAttribute('onclick');
+    door.style.cursor='default';
   });
 
   // Restore any still-selected panels (e.g. after legend re-render)
@@ -9564,12 +9589,14 @@ function _demoRenderOverview(area){
     </div>`;
 }
 
-function _demoShowMultiPicker(e){
+function _demoShowMultiPicker(pos){
   const picker=document.getElementById('demo-multi-picker');
   if(!picker) return;
   if(_demoSelected.size===0){picker.style.display='none';return;}
-  const x=Math.min(e.clientX+12,window.innerWidth-220);
-  const y=Math.min(e.clientY+12,window.innerHeight-320);
+  const cx=pos.clientX??pos.x??200;
+  const cy=pos.clientY??pos.y??200;
+  const x=Math.min(cx+12,window.innerWidth-220);
+  const y=Math.min(cy+12,window.innerHeight-320);
   picker.style.left=x+'px';
   picker.style.top=y+'px';
   picker.style.display='block';
@@ -9622,8 +9649,9 @@ function _demoClearSelection(){
 }
 
 function _demoHandlePanelClick(e,panelId){
-  // ── Ctrl+click → toggle selection (same behaviour as monitoring sheet) ──
+  // ── Ctrl+click → toggle selection, popup shows only on Ctrl release ──
   if(ctrlHeld||e.ctrlKey||e.metaKey){
+    _demoLastClickPos={x:e.clientX,y:e.clientY};
     if(_demoSelected.has(panelId)){
       _demoSelected.delete(panelId);
       const cell=document.querySelector('#demo-tbl-'+_demoActiveZone+' .wfc[data-pid="'+panelId+'"]');
@@ -9633,7 +9661,7 @@ function _demoHandlePanelClick(e,panelId){
       const cell=document.querySelector('#demo-tbl-'+_demoActiveZone+' .wfc[data-pid="'+panelId+'"]');
       if(cell){cell.classList.add('sel-multi');cell._panelId=panelId;}
     }
-    _demoShowMultiPicker(e);
+    _demoCloseMultiPicker(); // keep hidden while still selecting
     return;
   }
   // ── Normal click with active selection → clear selection ──────────────
