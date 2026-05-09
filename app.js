@@ -9449,7 +9449,7 @@ function _demoInlineEditLabel(lid,span){
 function _demoSwitchZone(zoneId){
   _demoActiveZone=zoneId;
   _demoSelected.clear();
-  _demoUpdateMultiBar();
+  _demoCloseMultiPicker();
 
   ['overview','NF','EF','SF','WF'].forEach(z=>{
     const btn=document.getElementById('demo-tab-'+z);
