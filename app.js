@@ -585,6 +585,7 @@ function router(){
 window.addEventListener('hashchange',router);
 
 function _renderPage(id){
+  if(curPage==='batidoc'&&id!=='batidoc') _batidocLoaded=false;
   curPage=id;
   if(['BM-NF','BM-SF','BM-EF','BM-WF','BM-dashboard'].includes(id)) navMode='bracket';
   else if(['NF','SF','EF','WF','dashboard'].includes(id)) navMode='ucw';
@@ -11574,7 +11575,7 @@ async function openBatidocPage(){
       page: _batidocPage,
       projects: sbProfile?.projects || null
     }));
-    const batidocBase = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://batidoc.netlify.app';
+    const batidocBase = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://batidoc.batimon.com';
     frame.src = batidocBase + '#bd=' + payload;
   } else {
     // Already loaded — just switch page
