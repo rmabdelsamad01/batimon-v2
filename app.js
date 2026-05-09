@@ -595,7 +595,10 @@ function _renderPage(id){
   if(id==='dashboard'){
     root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><div style="font-size:18px;font-weight:700;margin-bottom:3px;">Project Overview</div><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div></div></div></div>`;
   } else if(id==='batidoc'){
-    root.innerHTML=`<div class="page active" id="page-batidoc"><div class="fpw" style="flex:1;overflow:hidden;min-height:0;"><div id="batidoc-sidebar-wrap"></div><iframe id="batidoc-frame" src="" style="flex:1;border:none;min-height:0;"></iframe></div></div>`;
+    // Only rebuild the shell if the iframe doesn't already exist (avoid destroying a live iframe)
+    if(!document.getElementById('batidoc-frame')){
+      root.innerHTML=`<div class="page active" id="page-batidoc"><div class="fpw" style="flex:1;overflow:hidden;min-height:0;"><div id="batidoc-sidebar-wrap"></div><iframe id="batidoc-frame" src="" style="flex:1;border:none;min-height:0;"></iframe></div></div>`;
+    }
   } else {
     root.innerHTML=`<div class="page active" id="page-${id}"></div>`;
   }
