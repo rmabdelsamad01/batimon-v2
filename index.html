@@ -374,10 +374,6 @@
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <button id="demo-multi-btn" onclick="_demoToggleMultiMode()"
-          style="font-size:11px;font-weight:700;padding:6px 14px;border:1.5px solid #a855f7;border-radius:6px;background:transparent;color:#a855f7;cursor:pointer;">
-          ☐ Multi-select
-        </button>
         <button onclick="_demoSave()"
           style="font-size:11px;font-weight:700;padding:6px 14px;border:1.5px solid #a855f7;border-radius:6px;background:transparent;color:#a855f7;cursor:pointer;display:flex;align-items:center;gap:5px;">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -430,12 +426,6 @@
         <!-- populated by _demoRenderGrid() or _demoRenderOverview() -->
       </div>
     </div>
-    <!-- Multi-select assignment bar -->
-    <div id="demo-multi-bar" style="display:none;flex-shrink:0;background:#2d0a50;border-top:2px solid #a855f740;padding:10px 18px;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span id="demo-multi-count" style="font-size:12px;font-weight:700;color:#e9d5ff;white-space:nowrap;"></span>
-      <div id="demo-multi-colors" style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap;"></div>
-      <button onclick="_demoClearSelection()" style="font-size:11px;font-weight:600;padding:5px 12px;border:1px solid rgba(255,255,255,0.25);border-radius:6px;background:transparent;color:rgba(255,255,255,0.6);cursor:pointer;white-space:nowrap;flex-shrink:0;">✕ Deselect all</button>
-    </div>
   </div>
 </div>
 
@@ -474,6 +464,12 @@
       oninput="_demoApplyEditColor(this.value)"
       style="width:40px;height:30px;border:1.5px solid var(--border2);border-radius:6px;cursor:pointer;padding:2px;">
   </div>
+</div>
+
+<!-- Demo Multi-select Picker (floating) -->
+<div id="demo-multi-picker" style="display:none;position:fixed;z-index:9999;background:var(--surface);border:1.5px solid var(--border2);border-radius:10px;box-shadow:0 6px 28px rgba(0,0,0,0.22);padding:10px;min-width:180px;">
+  <div id="demo-multi-picker-count" style="font-size:10px;font-weight:700;color:#a855f7;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;padding:0 2px;"></div>
+  <div id="demo-multi-picker-items" style="display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto;"></div>
 </div>
 
 <!-- Demo Panel Picker (floating) -->
@@ -1178,7 +1174,7 @@ if(typeof supabase === 'undefined'){
 <script src="config.js"></script>
 <script src="auth.js?v=20260505b"></script>
 <script src="project.js"></script>
-<script src="app.js?v=20260509j"></script>
+<script src="app.js?v=20260509l"></script>
 <script src="profile.js"></script>
 <script src="ncr.js"></script>
 <script src="bulk-admin.js?v=20260505b"></script>
