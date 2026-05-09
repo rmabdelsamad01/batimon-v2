@@ -1,0 +1,11553 @@
+﻿// ══════════════════════════════════════════════════════════════
+// WEST FACADE DATA (from west_1.pdf)
+// Cols 31→15, Floors R+33→RDC
+// ══════════════════════════════════════════════════════════════
+// ══ SOUTH FACADE DATA ══
+const SF_COLS=['15-A','15-B',15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,99,98,97,96,94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+const SF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+
+// SF column layout (35 total):
+// idx: 0 = 15-A, 1 = 15-B (empty except orange rows)
+// idx: 2-16 = cols 15..1 (left 15 cols)
+// idx: 17-22 = cols 99,98,97,96,94,93 (empty gap)
+// idx: 23-34 = cols 92..81 (12 active right cols)
+function sfRow(left15, right12){
+  const e='';
+  return [e, e, ...left15, e,e,e,e,e,e, ...(right12||Array(12).fill(e))];
+}
+function sfRowL(left15){
+  return sfRow(left15, null);
+}
+
+const SF_TYPES={
+  'R+34': sfRow(['R3415','R3414','R3413','R3412','R3411','R3410','R3409','R3408','R3407','R3406','R3405','R3404','R3403','R3402','R3401'],['R3499','R3498','R3497','R3496','R4795','','','','','','','']), // trapezoid special
+  'R+33': sfRowL(['C02','T02','T12','T02','T12','T06','T04','T06','T04','T02','T02','D06','','','']),
+  'R+32': sfRowL(['C01','T01','T01','T07','T03','T05','T03','T01','T01','T05','T03','D07','','','']),
+  'R+31': sfRowL(['C02','T02','T02','T10','T04','T06','T04','T02','T02','T06','T04','D10','','','']),
+  'R+30': sfRowL(['C01','T01','T01','T09','T01','T09','T05','T03','T05','T03','T05','D08','','','']),
+  'R+29': sfRowL(['C02','T02','T02','T12','T02','T12','T06','T04','T06','T04','T06','D11','','','']),
+  'R+28': sfRowL(['C01','T01','T09','T01','T01','T05','T03','T05','T03','T05','T03','D05','','','']),
+  'R+27': sfRowL(['C02','T02','T12','T02','T02','T06','T04','T06','T04','T06','T04','D06','','','']),
+  'R+26': sfRowL(['C01','T07','T03','T01','T09','T07','T03','T01','T05','T08','T03','D07','','','']),
+  'R+25': ['','','C02','T10','T04','T02','T12','T10','T04','T02','T06','T11','T04','D10','','','','','','','','R2594','R2593','R2592','R2591','R2590','R2589','R2588','R2587','R2586','R2585','R2584','R2583','R2582','R2581'],
+  'R+24': sfRow(['C01','T01','T01','T09','T01','T05','T03','T01','T05','T03','T01','D05','','',''],['G05','T03','T05','T05','T03','T09','T01','T07','T03','T01','T01','C03']),
+  'R+23': sfRow(['C02','T02','T02','T12','T02','T06','T04','T02','T06','T04','T02','D06','','',''],['G06','T04','T06','T06','T04','T12','T02','T10','T04','T02','T02','C04']),
+  'R+22': sfRow(['C01','T01','T05','T03','T09','T01','T05','T03','T01','T01','T05','D08','','',''],['G03','T05','T03','T09','T05','T03','T09','T01','T07','T03','T01','C03']),
+  'R+21': sfRow(['C02','T02','T06','T04','T12','T02','T06','T04','T02','T02','T06','D11','','',''],['G04','T06','T04','T12','T06','T04','T12','T02','T10','T04','T02','C04']),
+  'R+20': sfRow(['C01','T05','T03','T01','T01','T05','T08','T08','T03','T05','T03','D05','','',''],['G03','T05','T03','T05','T03','T01','T01','T05','T03','T09','T01','C03']),
+  'R+19': sfRow(['C01','M06','T03','T01','T01','M06','M11','M11','T03','M06','T03','DM06','','',''],['G03','R1807','Door','R1807','T03','T01','T01','M06','T03','M12','T01','C03']),
+  'R+18T': sfRow(['C1801','R1803','R1802','R1801','R1801','R1803','R1805','R1805','R1802','R1803','R1802','D1803','','',''],['R1802','','','','R1802','R1801','R1801','G1853','R1852','R1856','R1851','C1804']),
+  'R+18M': Array(35).fill(''),
+  'R+18MD': Array(35).fill(''),
+  'R+18B': Array(35).fill(''),
+  'R+17T': Array(35).fill(''),
+  'R+17B': sfRow(['C1701','R1704','R1702','R1701','R1701','R1703','R1702','R1704','R1702','R1701','R1703','D1705','','',''],['G1703','R1703','R1702','R1706','R1703','R1702','R1701','G1754','R1752','R1751','R1752','C1704']),
+  'R+16': sfRow(['C02','T10','T04','T02','T02','T06','T04','T10','T04','T02','T06','D11','','',''],['G06','T06','T04','T12','T06','T04','T02','T10','T04','T10','T04','C04']),
+  'R+15': sfRow(['C01','T05','T08','T03','T01','T01','T05','T03','T05','T05','T03','D07','','',''],['G03','T05','T03','T07','T03','T07','T03','T01','T01','T05','T03','C03']),
+  'R+14': sfRow(['C02','T06','T11','T04','T02','T02','T06','T04','T06','T06','T04','D10','','',''],['G04','T06','T04','T10','T04','T10','T04','T02','T02','T06','T04','C04']),
+  'R+13': sfRow(['C01','T01','T05','T03','T07','T03','T05','T03','T01','T05','T03','D05','','',''],['G03','T01','T05','T03','T05','T03','T09','T01','T01','T09','T01','C03']),
+  'R+12': sfRow(['C02','T02','T06','T04','T10','T04','T06','T04','T02','T06','T04','D06','','',''],['G04','T02','T06','T04','T06','T04','T12','T02','T02','T12','T02','C04']),
+  'R+11': sfRow(['C01','T07','T03','T07','T03','T09','T07','T03','T05','T03','T05','D08','','',''],['G05','T08','T03','T05','T03','T09','T05','T03','T09','T01','T01','C03']),
+  'R+10': sfRow(['C02','T10','T04','T10','T04','T12','T10','T04','T06','T04','T06','D11','','',''],['G06','T11','T04','T06','T04','T12','T06','T04','T12','T02','T02','C04']),
+  'R+09': sfRow(['C01','T05','T03','T09','T01','T01','T05','T03','T01','T05','T03','D07','','',''],['G03','T01','T05','T03','T05','T03','T05','T03','T07','T08','T03','C03']),
+  'R+08': sfRow(['C02','T06','T04','T12','T02','T02','T06','T04','T02','T06','T04','D10','','',''],['G04','T02','T06','T04','T06','T04','T06','T04','T10','T11','T04','C04']),
+  'R+07': sfRow(['C01','T01','T09','T01','T01','T01','T01','T05','T03','T01','T01','D05','','',''],['G03','T05','T05','T08','T03','T05','T03','T07','T03','T07','T03','C03']),
+  'R+06': sfRow(['C02','T02','T12','T02','T02','T02','T02','T06','T04','T02','T02','D06','','',''],['G04','T06','T06','T11','T04','T06','T04','T10','T04','T10','T04','C04']),
+  'R+05': sfRow(['C01','T05','T03','T01','T01','T05','T03','T07','T03','T05','T03','D07','','',''],['G05','T05','T03','T09','T05','T03','T01','T01','T09','T01','T01','C03']),
+  'R+04': sfRow(['C02','T06','T04','T02','T02','T06','T04','T10','T04','T06','T04','D10','','',''],['G06','T06','T04','T12','T06','T04','T02','T02','T12','T02','T02','C04']),
+  'R+03': sfRow(['C01','T05','T03','T01','T01','T05','T03','T07','T03','T05','T03','D07','','',''],['G03','T05','T03','T09','T07','T03','T09','T01','T01','T05','T03','C03']),
+  'R+02': sfRow(['C301','R303','R302','R301','R301','R303','R302','R304','R302','R303','R302','D304','','',''],['G04','T06','T04','T12','T10','T04','T12','T02','T02','T06','T04','C04']),
+  'R+01': sfRow(['','','','','','','','','','','','','','',''],['G03','T05','T03','T09','T07','T03','T09','T01','T05','T03','T01','C101']),
+  'RDC':  sfRow(['','','','','','','','','','','','','','',''],['R092','R091','R090','R089','R088','R087','R086','R085','R084','R083','R082','C001']),
+};
+
+const SF_REFS={
+  'R+19': sfRow(['','','','','','','','','','','','','','',''],['','','Door 4','','','','','','','','','']),
+};
+
+// SF gap column refs (cols 99,98,97,96,94,93 — not reachable via sfRow)
+const SF_GAP_REFS={};
+
+// ══════════════════════════════════════════════════════════════
+// NORTH FACADE DATA (from north.pdf)
+// Cols 65→31 (gap 53→42), Floors R+34→RDC
+// Col layout (33 total):
+//   idx 0-11  = cols 65-54 (left section)
+//   idx 12-21 = cols 53-42 (structural gap)
+//   idx 22-32 = cols 41-31 (right section)
+// ══════════════════════════════════════════════════════════════
+const NF_COLS=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31];
+const NF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+// NF row helpers:
+// nfRowUpper11: R+26-R+34 — right section only at cols 42-32 (idx21-31), col31 empty
+function nfRowUpper(r11){const e='';return[...Array(21).fill(e),...r11,e];}
+// nfRowBoth11: R+19-R+24,R+18T — left(idx0-11) + gap(idx12-21) + right col41-31(idx22-32)
+function nfRowBoth11(l12,r11){const e='';return[...l12,...Array(10).fill(e),...r11];}
+// nfRowBoth10: R+16-R+02 — left(idx0-11) + gap+col41(idx12-22) + right col40-31(idx23-32)
+function nfRowBoth10(l12,r10){const e='';return[...l12,...Array(11).fill(e),...r10];}
+// nfRowLeft: R+18B — left section only
+function nfRowLeft(l12){const e='';return[...l12,...Array(21).fill(e)];}
+// nfRowRight10: R+17B — right section col40-31 only (idx23-32)
+function nfRowRight10(r10){const e='';return[...Array(23).fill(e),...r10];}
+// nfRowR25: R+25 — left(idx0-11) + gap(idx12-20) + right col42-32(idx21-31) + col31 empty
+function nfRowR25(l12,r11){const e='';return[...l12,...Array(9).fill(e),...r11,e];}
+
+const NF_TYPES={
+  'R+34': nfRowBoth11(Array(12).fill(''),['R3441','R3440','R3439','R3438','R3437','R3436','R3435','R3434','R3433','R3432','R3431']),
+  'R+33': nfRowBoth11(Array(12).fill(''),['G04','T06','T04','T06','T04','T06','T11','T04','T10','T04','C06']),
+  'R+32': nfRowBoth11(Array(12).fill(''),['G03','T05','T03','T09','T01','T05','T03','T05','T03','T01','C05']),
+  'R+31': nfRowBoth11(Array(12).fill(''),['G04','T06','T04','T12','T02','T06','T04','T06','T04','T02','C06']),
+  'R+30': nfRowBoth11(Array(12).fill(''),['G05','T03','T05','T03','T05','T08','T03','T07','T03','T01','C05']),
+  'R+29': nfRowBoth11(Array(12).fill(''),['G06','T04','T06','T04','T06','T11','T04','T10','T04','T02','C06']),
+  'R+28': nfRowBoth11(Array(12).fill(''),['G03','T05','T03','T05','T03','T05','T03','T01','T07','T03','C05']),
+  'R+27': nfRowBoth11(Array(12).fill(''),['G04','T06','T04','T06','T04','T06','T04','T02','T10','T04','C06']),
+  'R+26': (()=>{const e='';return[e,e,e,e,e,e,e,e,e,e,'R2551','R2550','R2549',...Array(9).fill(e),'G03','T01','T05','T03','T01','T09','T07','T03','T01','T09','C05'];})(),
+  'R+25': (()=>{const e='';return['R2565','R2564','R2563','R2562','R2561','R2560','R2559','R2558','R2557','R2556','R2555','R2554','R2553','R2552',...Array(8).fill(e),'G04','T02','T06','T04','T02','T12','T10','T04','T02','T12','C06'];})(),
+  'R+24': nfRowBoth11(['C07','T01','T01','T01','T09','T01','T07','T03','T05','T05','T03','E05'],['G05','T03','T05','T03','T01','T05','T03','T07','T03','T01','C05']),
+  'R+23': nfRowBoth11(['C08','T02','T02','T02','T12','T02','T10','T04','T06','T06','T04','E06'],['G06','T04','T06','T04','T02','T06','T04','T10','T04','T02','C06']),
+  'R+22': nfRowBoth11(['C07','T01','T01','T09','T01','T07','T03','T05','T08','T03','T05','E03'],['G05','T01','T01','T01','T05','T03','T07','T03','T05','T03','C05']),
+  'R+21': nfRowBoth11(['C08','T02','T02','T12','T02','T10','T04','T06','T11','T04','T06','E04'],['G06','T02','T02','T02','T06','T04','T10','T04','T06','T04','C06']),
+  'R+20': nfRowBoth11(['C07','T01','T01','T09','T05','T03','T01','T01','T05','T03','T05','E03'],['G05','T05','T03','T09','T09','T05','T03','T01','T01','T05','C09']),
+  'R+19': nfRowBoth11(['C07','T01','T01','M12','M06','T03','T01','T01','M06','T03','M06','E04'],['GM06','M06','T03','M12','M12','M06','T03','T01','T01','M06','C1902']),
+  'R+18T': nfRowBoth11(['C1803','R1851','R1851','R1856','R1853','R1852','R1851','R1851','R1853','R1852','R1853','E1852'],['G1803','R1803','R1802','R1806','R1806','R1803','R1803','R1801','R1801','R1803','C1802']),
+  'R+18M':  Array(33).fill(''),
+  'R+18MD': Array(33).fill(''),
+  'R+18B':  nfRowLeft(['C1703','R1751','R1756','R1751','R1756','R1751','R1751','R1753','R1755','R1752','R1753','E1753']),
+  'R+17T':  Array(33).fill(''),
+  'R+17B':  nfRowRight10(['D1702','R1701','R1706','R1701','R1703','R1702','R1701','R1701','R1706','C1702']),
+  'R+16': nfRowBoth10(['C08','T02','T12','T02','T12','T02','T02','T06','T11','T04','T06','E06'],['G04','T02','T12','T02','T06','T04','T02','T02','T12','C06']),
+  'R+15': nfRowBoth10(['C07','T01','T05','T03','T01','T01','T09','T01','T09','T01','T05','E03'],['G05','T05','T03','T05','T03','T01','T01','T09','T05','C09']),
+  'R+14': nfRowBoth10(['C08','T02','T06','T04','T02','T02','T12','T02','T12','T02','T06','E04'],['G06','T06','T04','T06','T04','T02','T02','T12','T06','C10']),
+  'R+13': nfRowBoth10(['C07','T01','T07','T03','T01','T07','T03','T05','T03','T05','T03','E01'],['G05','T03','T01','T05','T03','T07','T03','T05','T03','C05']),
+  'R+12': nfRowBoth10(['C08','T02','T10','T04','T02','T10','T04','T06','T04','T06','T04','E02'],['G06','T04','T02','T06','T04','T10','T04','T06','T04','C06']),
+  'R+11': nfRowBoth10(['C07','T01','T01','T07','T03','T05','T08','T03','T05','T03','T09','E05'],['G03','T05','T03','T09','T07','T03','T09','T01','T09','C05']),
+  'R+10': nfRowBoth10(['C08','T02','T02','T10','T04','T06','T11','T04','T06','T04','T12','E06'],['G04','T06','T04','T12','T10','T04','T12','T02','T12','C06']),
+  'R+09': nfRowBoth10(['C07','T01','T09','T09','T01','T05','T03','T05','T03','T05','T03','E01'],['G05','T03','T01','T05','T03','T01','T07','T03','T05','C09']),
+  'R+08': nfRowBoth10(['C08','T02','T12','T12','T02','T06','T04','T06','T04','T06','T04','E02'],['G06','T04','T02','T06','T04','T02','T10','T04','T06','C10']),
+  'R+07': nfRowBoth10(['C07','T01','T09','T01','T09','T01','T05','T03','T09','T05','T05','E03'],['G03','T01','T05','T03','T01','T01','T01','T07','T03','C05']),
+  'R+06': nfRowBoth10(['C08','T02','T12','T02','T12','T02','T06','T04','T12','T06','T06','E04'],['G04','T02','T06','T04','T02','T02','T02','T10','T04','C06']),
+  'R+05': nfRowBoth10(['C07','T01','T01','T07','T03','T01','T01','T05','T08','T03','T05','E05'],['G05','T03','T09','T01','T05','T03','T01','T01','T05','C09']),
+  'R+04': nfRowBoth10(['C08','T02','T02','T10','T04','T02','T02','T06','T11','T04','T06','E06'],['G06','T04','T12','T02','T06','T04','T02','T02','T06','C10']),
+  'R+03': nfRowBoth10(['C07','T01','T05','T03','T01','T07','T03','T09','T07','T03','T05','E03'],['G05','T03','T09','T01','T05','T03','T01','T01','T05','C09']),
+  'R+02': nfRowBoth10(['C07','T01','M06','T03','T01','R210','Door','R208','M10','T03','M06','E03'],['G303','R302','R306','R301','R303','R302','R301','R301','R303','C302']),
+  'R+01': ['C201','R201','R203','R202','R201','','','','R204','R202','R203','E202',...Array(21).fill('')],
+  'RDC':  Array(33).fill(''),
+};
+const NF_REFS={};
+// Sparse ref overrides keyed by "floor-col"
+const NF_CELL_REFS={'R+02-59':'Door 1'};
+
+const WF_COLS=[31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,'15-A'];
+const WF_TYPES={
+  'R+34':['R3431','R3430','R3429','R3428','R3427','R3426','R3425','R3424','R3423','R3422','R3421','R3420','R3419','R3418','R3417','R3416','R3415',''],
+  'R+34':['R3431','R3430','R3429','R3428','R3427','R3426','R3425','R3424','R3423','R3422','R3421','R3420','R3419','R3418','R3417','R3416','R3415',''],
+  'R+33':['C06','T02','T06','T04','T06','T04','W02','T12','T06','T04','T02','T06','T11','W04','T10','T04','C02',''],
+  'R+32':['C05','T01','T09','W01','T09','T05','T03','T01','T09','T01','T05','T03','T05','T08','W03','T01','C01',''],
+  'R+31':['C06','T02','T12','W02','T12','T06','T04','T02','T12','T02','T06','T04','T06','T11','W04','T02','C02',''],
+  'R+30':['C05','T01','T05','T03','T07','W03','T09','T01','T05','T03','T05','T03','T05','W03','T09','T01','C01',''],
+  'R+29':['C06','T02','T06','T04','T10','W04','T12','T02','T06','T04','T06','T04','T06','W04','T12','T02','C02',''],
+  'R+28':['C05','T01','T09','W01','T01','T05','T03','T09','T09','T01','T09','W01','T05','T03','T01','T01','C01',''],
+  'R+27':['C06','T02','T12','W02','T02','T06','T04','T12','T12','T02','T12','W02','T06','T04','T02','T02','C02',''],
+  'R+26':['C05','T07','T03','T05','T08','W03','T09','T01','T09','T01','T05','T08','T08','W03','T05','T03','C01',''],
+  'R+25':['C06','T10','T04','T06','T11','W04','T12','T02','T12','T02','T06','T11','T11','W04','T06','T04','C02',''],
+  'R+24':['C05','T07','T03','T01','T05','T03','T07','T03','T05','T03','T09','T01','T07','T03','T07','T03','C01',''],
+  'R+23':['C06','T10','T04','T02','T06','T04','T10','T04','T06','T04','T12','T02','T10','T04','T10','T04','C02',''],
+  'R+22':['C05','T01','T07','T03','T07','T03','T05','T03','T09','T01','T05','T03','T05','T03','T09','T01','C01',''],
+  'R+21':['C06','T02','T10','T04','T10','T04','T06','T04','T12','T02','T06','T04','T06','T04','T12','T02','C02',''],
+  'R+20':['C09','T01','T05','T03','T07','T03','T07','T03','T05','T03','T07','T03','T05','T03','T07','T03','C01',''],
+  'R+19':['C1902','T01','R1803','Door','R1804','T03','M10','T03','R1803','Door','R1804','T03','M06','T03','M10','T03','C01',''],
+  'R+18T':['C1802','R1801','','','','R1802','R1804','R1802','','','','R1802','R1803','R1802','R1804','R1802','C1801',''],
+  'R+17T':['C1702','R1701','R1706','R1701','R1703','R1702','R1704','R1702','R1703','R1702','R1701','R1703','R1702','R1706','R1701','R1701','C1701',''],
+  'R+16':['C06','T02','T12','T02','T06','T04','T10','T04','T06','T04','T02','T06','T04','T12','T02','T02','C02',''],
+  'R+15':['C09','T01','T07','T03','T05','T03','T01','T09','T09','T01','T05','T03','T05','T08','T03','T01','C01',''],
+  'R+14':['C10','T02','T10','T04','T06','T04','T02','T12','T12','T02','T06','T04','T06','T11','T04','T02','C02',''],
+  'R+13':['C05','T01','T01','T01','T09','T05','T03','T01','T09','T05','T08','T03','T01','T05','T03','T01','C01',''],
+  'R+12':['C06','T02','T02','T02','T12','T06','T04','T02','T12','T06','T11','T04','T02','T06','T04','T02','C02',''],
+  'R+11':['C05','T01','T05','T03','T09','T01','T05','T03','T05','T03','T09','T05','T03','T01','T07','T03','C01',''],
+  'R+10':['C06','T02','T06','T04','T12','T02','T06','T04','T06','T04','T12','T06','T04','T02','T10','T04','C02',''],
+  'R+09':['C09','T01','T07','T03','T05','T03','T01','T01','T09','T01','T07','T03','T07','T03','T01','T01','C01',''],
+  'R+08':['C10','T02','T10','T04','T06','T04','T02','T02','T12','T02','T10','T04','T10','T04','T02','T02','C02',''],
+  'R+07':['C05','T07','T03','T01','T05','T03','T07','T03','T05','T03','T05','T03','T09','T05','T03','T01','C01',''],
+  'R+06':['C06','T10','T04','T02','T06','T04','T10','T04','T06','T04','T06','T04','T12','T06','T04','T02','C02',''],
+  'R+05':['C09','T01','T01','T05','T08','T03','T01','T01','T09','T01','T05','T03','T01','T09','T01','T01','C01',''],
+  'R+04':['C10','T02','T02','T06','T11','T04','T02','T02','T12','T02','T06','T04','T02','T12','T02','T02','C02',''],
+  'R+03':['C09','T01','T01','T05','T08','T03','T05','T03','T05','T03','T05','T03','T01','T09','T01','T01','C01',''],
+  'R+02':['C302','R301','R301','R303','R305','R302','R303','R302','R303','R302','R303','R302','R301','R306','R301','R301','C301',''],
+  'R+01':['','','','','','','','','','','','','','','','','',''],
+  'RDC': ['','','','','','','','','','','','','','','','',''],
+};
+const WF_REFS={
+  'R+19':['','','','Door 6','','','','','','Door 5','','','','','','','',''],
+};
+const WF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+
+// ══════════════════════════════════════════════════════════════
+// EAST FACADE DATA (from east_1.pdf)
+// Cols 81→65, Floors R+34→RDC
+// ══════════════════════════════════════════════════════════════
+const EF_COLS=[81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65];
+const EF_TYPES={
+  'R+34':['','','','','','','','','','','','','','','','',''],
+  'R+33':['','','','','','','','','','','','','','','','',''],
+  'R+32':['','','','','','','','','','','','','','','','',''],
+  'R+31':['','','','','','','','','','','','','','','','',''],
+  'R+30':['','','','','','','','','','','','','','','','',''],
+  'R+29':['','','','','','','','','','','','','','','','',''],
+  'R+28':['','','','','','','','','','','','','','','','',''],
+  'R+27':['','','','','','','','','','','','','','','','',''],
+  'R+26':['','','','','','','','','','','','','','','','',''],
+  'R+25':['R2581','R2580','R2579','R2578','R2577','R2576','R2575','R2574','R2573','R2572','R2571','R2570','R2569','R2568','R2567','R2566','R2565'],
+  'R+24':['C03','T01','T09','T01','T09','T01','T07','T03','T07','T03','T07','T03','T05','T03','T01','T09','C07'],
+  'R+23':['C04','T02','T12','T02','T12','T02','T10','T04','T10','T04','T10','T04','T06','T04','T02','T12','C08'],
+  'R+22':['C03','T01','T01','T09','T01','T01','T05','T03','T09','T01','T05','T03','T09','T01','T07','T03','C07'],
+  'R+21':['C04','T02','T02','T12','T02','T02','T06','T04','T12','T02','T06','T04','T12','T02','T10','T04','C08'],
+  'R+20':['C03','T01','T09','T01','T05','T03','T09','T01','T05','T03','T09','T01','T09','T01','T05','T03','C07'],
+  'R+19':['C03','T01','M12','T01','M06','T03','M12','T01','M06','T03','M12','T01','M12','T01','M06','T03','C07'],
+  'R+18T':['C1804','R1851','R1856','R1851','R1853','R1852','R1856','R1851','R1853','R1852','R1856','R1851','R1856','R1851','R1853','R1852','C1803'],
+  'R+18B':['C1704','R1751','R1751','R1754','R1752','R1751','R1753','R1752','R1754','R1752','R1756','R1751','R1753','R1752','R1754','R1752','C1703'],
+  'R+16':['C04','T02','T02','T10','T04','T02','T06','T04','T10','T04','T12','T02','T06','T04','T10','T04','C08'],
+  'R+15':['C03','T01','T01','T09','T05','T03','T07','T03','T05','T03','T01','T01','T05','T03','T09','T01','C07'],
+  'R+14':['C04','T02','T02','T12','T06','T04','T10','T04','T06','T04','T02','T02','T06','T04','T12','T02','C08'],
+  'R+13':['C03','T01','T01','T05','T03','T01','T09','T01','T05','T08','T03','T05','T08','T03','T01','T01','C07'],
+  'R+12':['C04','T02','T02','T06','T04','T02','T12','T02','T06','T11','T04','T06','T11','T04','T02','T02','C08'],
+  'R+11':['C03','T01','T09','T01','T01','T05','T08','T03','T09','T01','T05','T03','T09','T01','T05','T03','C07'],
+  'R+10':['C04','T02','T12','T02','T02','T06','T11','T04','T12','T02','T06','T04','T12','T02','T06','T04','C08'],
+  'R+09':['C03','T01','T01','T01','T09','T01','T09','T01','T07','T03','T01','T01','T05','T03','T09','T01','C07'],
+  'R+08':['C04','T02','T02','T02','T12','T02','T12','T02','T10','T04','T02','T02','T06','T04','T12','T02','C08'],
+  'R+07':['C03','T01','T07','T03','T07','T03','T05','T03','T05','T03','T09','T01','T05','T03','T07','T03','C07'],
+  'R+06':['C04','T02','T10','T04','T10','T04','T06','T04','T06','T04','T12','T02','T06','T04','T10','T04','C08'],
+  'R+05':['C03','T01','T01','T07','T03','T01','T05','T03','T09','T05','T03','T01','T09','T05','T03','T01','C07'],
+  'R+04':['C04','T02','T02','T10','T04','T02','T06','T04','T12','T06','T04','T02','T12','T06','T04','T02','C08'],
+  'R+03':['C03','T01','T01','T07','T03','T01','T05','T03','T09','T05','T03','T01','T09','T05','T03','T01','C07'],
+  'R+02':['C04','T02','T02','M10','T03','T01','R207','Door','R208','M06','R209','Door','R208','M06','T03','T01','C07'],
+  'R+01':['C101','T03','C102','R211','R202','R201','','','','R203','','','','R203','R202','R201','C201'],
+  'RDC': ['C001','R080','C002','','','','','','','','','','','','','',''],
+};
+const EF_REFS={
+  'R+02':['','','','','','','','Door 3','','','','Door 2','','','','',''],
+};
+const EF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+
+// ══════════════════════════════════════════════════════════════
+// ZONE CONFIG
+// ══════════════════════════════════════════════════════════════
+const ZONES=[
+  {id:'NF',name:'North Facade',sub:'North Elevation',cols:NF_COLS.length,rows:NF_FLOORS.length,color:'#2d65bd',simple:false,floors:NF_FLOORS,colNums:NF_COLS,types:NF_TYPES,refs:NF_REFS},
+  {id:'SF',name:'South Facade',sub:'South Elevation',cols:SF_COLS.length,rows:SF_FLOORS.length,color:'#1a9458',simple:false,floors:SF_FLOORS,colNums:SF_COLS,types:SF_TYPES,refs:SF_REFS},
+  {id:'EF',name:'East Facade', sub:'East Elevation', cols:EF_COLS.length,rows:EF_FLOORS.length,color:'#a07800',simple:false,floors:EF_FLOORS,colNums:EF_COLS,types:EF_TYPES,refs:EF_REFS},
+  {id:'WF',name:'West Facade', sub:'West Elevation', cols:WF_COLS.length,rows:WF_FLOORS.length,color:'#6d35d9',simple:false,floors:WF_FLOORS,colNums:WF_COLS,types:WF_TYPES,refs:WF_REFS},
+];
+
+const SM={installed:{icon:'✓',label:'Installed',cls:'st-i'},delivered:{icon:'▣',label:'Delivered',cls:'st-d'},fabricated:{icon:'⬡',label:'Fabricated',cls:'st-f'},cutting:{icon:'✂',label:'CL issued',cls:'st-c'},cl_not_issued:{icon:'✗',label:'CL not issued',cls:'st-cn'},cip:{icon:'◑',label:'Cutting List in Progress',cls:'st-cip'},defect:{icon:'!',label:'Defect',cls:'st-x'},pending:{icon:'·',label:'Pending',cls:'st-p'}};
+const SMAP={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+let panels={},issues=[],selPanel=null,selStat='pending',fFilters={};
+let multiSelPanels=new Set();
+let assemblyPanelRefs=new Set(); // panel_ref values that have a panel-assembly QC checklist filled
+let prepInstPanelRefs=new Set();  // panel_ref values that have a panel-preparation QC checklist filled
+let _supaUnlocked=false; // true once the correct password has been entered this session
+let _dirtyPanels=new Set(); // IDs of panels modified this session — only these get pushed to Supabase
+let ctrlHeld=false;
+document.addEventListener('keydown',e=>{if(e.key==='Control')ctrlHeld=true;});
+document.addEventListener('keyup',e=>{
+  if(e.key==='Control'){
+    ctrlHeld=false;
+    if(multiSelPanels.size>0) openBulkStatusModal();
+  }
+});
+ZONES.forEach(z=>fFilters[z.id]='all');
+
+// localStorage for standalone use
+function lsG(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsS(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+async function load(){
+  // Step 1: Always load localStorage first as a baseline (ensures data survives even if Supabase returns empty)
+  try{const v=lsG('bm_full_panels');if(v){const saved=JSON.parse(v);Object.assign(panels,saved);}}catch(e2){}
+  try{const v=lsG('bm_full_issues');if(v){const saved=JSON.parse(v);if(!issues.length)issues=saved;}}catch(e2){}
+
+  // Step 2: Load panels from Supabase with pagination (overrides localStorage only if Supabase returns real data)
+  try{
+    const PAGE=1000;let from=0;let totalLoaded=0;
+    while(true){
+      const {data,error}=await sb.from('panels').select('*').range(from,from+PAGE-1);
+      if(error||!data||data.length===0) break;
+      data.forEach(row=>{
+        panels[row.id]={
+          status:row.status||'pending',
+          notes:row.notes||'',
+          assigned:row.assigned||'',
+          ref:row.panel_ref||'',
+          type:row.panel_type||'',
+          fabDate:row.fab_date||'',
+          deliveryDate:row.delivery_date||'',
+          installDate:row.install_date||'',
+          installRef:row.install_ref||''
+        };
+      });
+      totalLoaded+=data.length;
+      if(data.length<PAGE) break;
+      from+=PAGE;
+    }
+  }catch(e){/* localStorage already loaded above */}
+  // Load issues from Supabase
+  try{
+    const {data:issData}=await sb.from('issues').select('*');
+    if(issData && issData.length>0) issues=issData.map(r=>({id:r.id,panelId:r.panel_id,type:r.issue_type,desc:r.description,reporter:r.reporter,date:r.reported_at}));
+  }catch(e){/* localStorage already loaded above */}
+  // Load panel-assembly checklist IDs for fabricated filter highlighting
+  await _loadAssemblyPanels();
+  // Seed panels that don't exist yet
+  ZONES.filter(z=>z.simple).forEach(z=>{
+    for(let r=1;r<=z.rows;r++)for(let c=1;c<=z.cols;c++){
+      const id=`${z.id}-R${r}C${c}`;
+      if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',ref:'',type:''};
+    }
+  });
+  ZONES.filter(z=>!z.simple).forEach(z=>{
+    z.floors.forEach(fl=>{
+      z.colNums.forEach((col,ci)=>{
+        const id=`${z.id}-${fl}-C${col}`;
+        const ref=(z.refs[fl]||[])[ci]||'';
+        const type=(z.types[fl]||[])[ci]||'';
+        if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',ref,type,fabDate:'',installDate:'',deliveryDate:''};
+        else{if(!panels[id].ref)panels[id].ref=ref;if(!panels[id].type)panels[id].type=type;}
+      });
+    });
+  });
+  // Seed BM-WF bracket cells
+  const wfCols=['31-a','31','30','29','28','27','26','25','24','23','22','21','20','19','18','17','16','15'];
+  const wfFloors=['R34','R33','R32','R31','R30','R29','R28','R27','R26','R25','R24','R23','R22','R21','R20','R19','R18','R17','R16','R15','R14','R13','R12','R11','R10','R9','R8','R7','R6','R5','R4','R3','R2'];
+  wfFloors.forEach(fl=>{
+    wfCols.forEach(col=>{
+      const id=`BM-WF-${fl}-${col.replace('-','_')}`;
+      if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
+    });
+  });
+  // Seed BM-EF bracket cells
+  const efBMCols=['81a','81','80','79','78','77','76','75','74','73','72','71','70','69','68','67','66','65C'];
+  const efBMFloors=['R25','R24','R23','R22','R21','R20','R19','R18','R17','R16','R15','R14','R13','R12','R11','R10','R09','R08','R07','R06','R05','R04','R03','R02','R01','RDC'];
+  const efBMR01Active=['81a','81','80','79','78','77','76','75','74','73','72','71','70','69','68','67','66','65C'];
+  const efBMRDCActive=['81a','81','80'];
+  efBMFloors.forEach(fl=>{
+    const activeCols=fl==='RDC'?efBMRDCActive:efBMCols;
+    activeCols.forEach(col=>{
+      const id=`BM-EF-R${fl.replace('R','')}-${col}`;
+      if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
+    });
+  });
+  // Seed BM-SF bracket cells
+  const sfColsL=['15a','15','14','13','12','11','10','9','8','7','6','5','4'];
+  const sfColsR=['93','92','91','90','89','88','87','86','85','84','83','82','81'];
+  // Left wing active floors (R36–R32, R30, R28, R26–R2)
+  const sfFloorsL=['R36','R35','R34','R33','R32','R31','R30','R29','R28','R27','R26','R25','R24','R23','R22','R21','R20','R19','R18','R17','R16','R15','R14','R13','R12','R11','R10','R09','R08','R07','R06','R05','R04','R03','R02'];
+  // Right wing active floors (R25–R1, RDC)
+  const sfFloorsR=['R25','R24','R23','R22','R21','R20','R19','R18','R17','R16','R15','R14','R13','R12','R11','R10','R09','R08','R07','R06','R05','R04','R03','R02','R01','RDC'];
+  sfFloorsL.forEach(fl=>{
+    sfColsL.forEach(col=>{
+      const id=`BM-SF-${fl.replace('+','')}-${col}`;
+      if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
+    });
+  });
+  sfFloorsR.forEach(fl=>{
+    const activeCols=(fl==='RDC')?sfColsR:sfColsR;
+    activeCols.forEach(col=>{
+      const id=`BM-SF-${fl.replace('+','')}-${col}`;
+      if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
+    });
+  });
+  // Seed BM-NF bracket cells
+  const nfColsL=['65a','65','64','63','62','61','60','59','58','57','56','55','54'];
+  const nfColsR=['41','40','39','38','37','36','35','34','33','32','31'];
+  // Left wing active floors: R+25 to R+01 (no R+36..R+26, no RDC)
+  const nfFloorsL=['R25','R24','R23','R22','R21','R20','R19','R18','R17','R16','R15','R14','R13','R12','R11','R10','R09','R08','R07','R06','R05','R04','R03','R02','R01'];
+  // Right wing active floors: R+36 to R+02
+  const nfFloorsR=['R36','R35','R34','R33','R32','R31','R30','R29','R28','R27','R26','R25','R24','R23','R22','R21','R20','R19','R18','R17','R16','R15','R14','R13','R12','R11','R10','R09','R08','R07','R06','R05','R04','R03','R02'];
+  nfFloorsL.forEach(fl=>{
+    nfColsL.forEach(col=>{
+      const id=`BM-NF-${fl.replace('+','')}-${col}`;
+      if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
+    });
+  });
+  nfFloorsR.forEach(fl=>{
+    nfColsR.forEach(col=>{
+      const id=`BM-NF-${fl.replace('+','')}-${col}`;
+      if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
+    });
+  });
+}
+
+function saveData(){
+  // 1. Persist to localStorage immediately — instant, never fails
+  lsS('bm_full_panels',JSON.stringify(panels));
+  lsS('bm_full_issues',JSON.stringify(issues));
+  // 2. Fire-and-forget cloud sync with auto-retry
+  _triggerCloudSync();
+}
+
+let _syncRetryTimer=null;
+
+function _triggerCloudSync(){
+  if(_syncRetryTimer){clearTimeout(_syncRetryTimer);_syncRetryTimer=null;}
+  _setSyncStatus('syncing');
+  _doCloudSync(1);
+}
+
+async function _doCloudSync(attempt){
+  try{
+    // Refresh session before syncing to avoid JWT expiry errors
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session) throw new Error('No active session — please log in again.');
+    // Only push panels that were actually modified this session — prevents stale in-memory
+    // data from overwriting valid Supabase values set by other devices or tabs
+    const dirtyIds=_dirtyPanels.size>0?_dirtyPanels:null;
+    if(!dirtyIds||dirtyIds.size===0){_setSyncStatus('ok');return;}
+    const rows=Object.entries(panels)
+      .filter(([id])=>dirtyIds.has(id))
+      .map(([id,p])=>({
+        id,
+        zone:id.startsWith('BM-')?id.split('-').slice(0,2).join('-'):id.split('-')[0],
+        status:p.status||'pending',
+        notes:p.notes||null,
+        assigned:p.assigned||null,
+        panel_ref:p.ref||null,
+        panel_type:p.type||null,
+        fab_date:p.fabDate||null,
+        delivery_date:p.deliveryDate||null,
+        install_date:p.installDate||null,
+        install_ref:p.installRef||null,
+        updated_by:sbUser?.id||null,
+        updated_at:new Date().toISOString()
+      }));
+    for(let i=0;i<rows.length;i+=500){
+      const batch=rows.slice(i,i+500);
+      let {error}=await sb.from('panels').upsert(batch,{onConflict:'id'});
+      // If new columns (delivery_date / install_ref) don't exist yet, retry without them
+      if(error&&error.message&&(error.message.includes('delivery_date')||error.message.includes('install_ref'))){
+        const safeBatch=batch.map(r=>{const s={...r};delete s.delivery_date;delete s.install_ref;return s;});
+        ({error}=await sb.from('panels').upsert(safeBatch,{onConflict:'id'}));
+      }
+      if(error){
+        const firstId=batch[0]?.id||'?';
+        const lastId=batch[batch.length-1]?.id||'?';
+        const batchInfo=` [batch ${Math.floor(i/500)+1}, rows ${i+1}–${i+batch.length}, first: ${firstId}, last: ${lastId}]`;
+        const enriched=new Error((error.message||error.toString())+batchInfo);
+        enriched.code=error.code;enriched.status=error.status;enriched.hint=error.hint;
+        throw enriched;
+      }
+    }
+    _setSyncStatus('ok');
+    _dirtyPanels.clear(); // successfully pushed — reset dirty tracking
+    // Clear any persistent error banner once a sync succeeds
+    const banner=document.getElementById('sync-error-banner');
+    if(banner) banner.style.display='none';
+  }catch(e){
+    const msg=e?.message||e?.toString()||'Unknown error';
+    const code=e?.code?` [${e.code}]`:'';
+    const status=e?.status?` HTTP ${e.status}`:'';
+    const hint=e?.hint?` Hint: ${e.hint}`:'';
+    console.warn(`Cloud sync attempt ${attempt} failed:`,msg,e);
+    if(attempt<4){
+      const delay=attempt*8000;
+      _setSyncStatus('retry',`Sync failed — retrying in ${delay/1000}s`);
+      _syncRetryTimer=setTimeout(()=>_doCloudSync(attempt+1),delay);
+    }else{
+      _setSyncStatus('error');
+      _showSyncErrorBanner(msg+code+status+hint);
+    }
+  }
+}
+
+function _showSyncErrorBanner(errorMsg){
+  let banner=document.getElementById('sync-error-banner');
+  if(!banner){
+    banner=document.createElement('div');
+    banner.id='sync-error-banner';
+    banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#c02020;color:#fff;font-family:Barlow,sans-serif;font-size:12px;font-weight:600;padding:10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML=`
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span style="flex:1;"><b>Cloud sync failed</b> — changes are saved locally and will sync when connection is restored.<br>
+    <span style="opacity:0.85;font-weight:400;">Reason: ${errorMsg}</span></span>
+    <button onclick="_triggerCloudSync();document.getElementById('sync-error-banner').style.display='none';" style="background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;margin-right:6px;">↺ Retry</button>
+    <button onclick="document.getElementById('sync-error-banner').style.display='none'" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:700;flex-shrink:0;">✕</button>`;
+  banner.style.display='flex';
+}
+
+// Run once after login — writes one test row to verify Supabase write permission
+window._diagnoseSyncPermission=async function(){
+  const testId='__batimon_sync_test__';
+  const {error}=await sb.from('panels').upsert(
+    [{id:testId,zone:'TEST',status:'pending',updated_by:sbUser?.id||null,updated_at:new Date().toISOString()}],
+    {onConflict:'id'}
+  );
+  if(error){
+    console.error('Sync diagnostic FAILED:',error.message,error.code,error.hint||'');
+    _showSyncErrorBanner(error.message+(error.hint?` — Hint: ${error.hint}`:''));
+  }else{
+    // Clean up test row
+    await sb.from('panels').delete().eq('id',testId);
+    console.log('Sync diagnostic OK — Supabase writes are working.');
+  }
+};
+
+function _setSyncStatus(status,customMsg){
+  const wrap=document.getElementById('sync-status-wrap');
+  const icon=document.getElementById('sync-status-icon');
+  const text=document.getElementById('sync-status-text');
+  if(!wrap||!icon||!text) return;
+  const cfg={
+    syncing:{msg:'Syncing…',           color:'#8099b0',spin:true, hide:false},
+    ok:     {msg:'Saved ✓',            color:'#1a9458',spin:false,hide:true },
+    retry:  {msg:customMsg||'Retrying…',color:'#e05c00',spin:false,hide:false},
+    error:  {msg:'Sync failed ⚠',      color:'#c02020',spin:false,hide:false},
+  }[status];
+  if(!cfg) return;
+  icon.style.color=cfg.color;
+  text.style.color=cfg.color;
+  text.textContent=cfg.msg;
+  icon.style.animation=cfg.spin?'spin 0.8s linear infinite':'none';
+  wrap.style.opacity='1';
+  wrap.style.borderColor=cfg.color+'55';
+  if(cfg.hide) setTimeout(()=>{wrap.style.opacity='0';},2200);
+}
+
+function allIds(zid){
+  const z=ZONES.find(z=>z.id===zid);
+  if(!z)return[];
+  if(z.simple){const ids=[];for(let r=1;r<=z.rows;r++)for(let c=1;c<=z.cols;c++)ids.push(`${zid}-R${r}C${c}`);return ids;}
+  // Exclude columns/floors that render as structural spacers (never a clickable wfc cell)
+  const hiddenCols={
+    WF:new Set([31,15,'15-A']),
+    EF:new Set([65,81]),
+    SF:new Set(['15-A','15-B']),
+  };
+  const hiddenFloors={
+    // WF: R+18B covered by R+18MD rowspan=2; R+01/RDC are structural spacers
+    WF:new Set(['R+01','RDC','R+18B']),
+    // SF: orange rows with no real panels
+    SF:new Set(['R+18M','R+17T']),
+    // EF: R+18M/R+18MD/R+17T/R+17B not defined in EF_TYPES → render as wfc-empty (phantom)
+    EF:new Set(['R+18M','R+18MD','R+17T','R+17B']),
+  };
+  // Cells covered by a rowspan from the floor above (merged display = 1 panel, not 2)
+  const mergedCells={
+    WF:new Set(['R+18T-C21','R+18T-C22','R+18T-C23','R+18T-C27','R+18T-C28','R+18T-C29']),
+    // EF R+01 cols 69,70,71,73,74,75 covered by R+02 rowspan=2 — never rendered
+    EF:new Set(['R+01-C69','R+01-C70','R+01-C71','R+01-C73','R+01-C74','R+01-C75']),
+    // SF R+18T cols 89,90,91 covered by R+19 rowspan=2 — never rendered
+    SF:new Set(['R+18T-C89','R+18T-C90','R+18T-C91']),
+    // NF R+01 cols 58,59,60 covered by R+02 rowspan=2 — never rendered
+    NF:new Set(['R+01-C58','R+01-C59','R+01-C60']),
+  };
+  const hCols=hiddenCols[zid]||new Set();
+  const hFloors=hiddenFloors[zid]||new Set();
+  const hMerged=mergedCells[zid]||new Set();
+  return z.floors.flatMap(fl=>{
+    if(hFloors.has(fl)) return [];
+    return z.colNums.flatMap((col,ci)=>{
+      if(hCols.has(col)) return [];
+      if(hMerged.has(`${fl}-C${col}`)) return [];
+      return [`${zid}-${fl}-C${col}`];
+    });
+  });
+}
+function allPanelIds(){return ZONES.flatMap(z=>allIds(z.id));}
+function zC(zid){const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};allIds(zid).forEach(id=>{c.total++;const s=(panels[id]||{}).status||'pending';c[s]=(c[s]||0)+1;});return c;}
+function gC(){const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};allPanelIds().forEach(id=>{c.total++;const s=(panels[id]||{}).status||'pending';c[s]=(c[s]||0)+1;});return c;}
+
+let curPage='welcome';
+let navMode=null; // 'bracket' | 'ucw' | null
+let facadeValMode='numbers'; // 'numbers' | 'percentages'
+
+function navGoFacade(facade){
+  const bmMap={NF:'BM-NF',SF:'BM-SF',EF:'BM-EF',WF:'BM-WF'};
+  const target=navMode==='bracket'?bmMap[facade]:facade;
+  if(target) goPage(target);
+}
+// ── Hash-based router ─────────────────────────────────────────────
+function goPage(id){
+  // If already on this hash, render directly (hashchange won't fire)
+  if(location.hash==='#'+id){_renderPage(id);}
+  else{location.hash='#'+id;}
+}
+
+function router(){
+  const id=(location.hash||'#welcome').slice(1)||'welcome';
+  _renderPage(id);
+}
+
+window.addEventListener('hashchange',router);
+
+function _renderPage(id){
+  curPage=id;
+  if(['BM-NF','BM-SF','BM-EF','BM-WF','BM-dashboard'].includes(id)) navMode='bracket';
+  else if(['NF','SF','EF','WF','dashboard'].includes(id)) navMode='ucw';
+  const root=document.getElementById('root');
+
+  // Pages that need a pre-built HTML shell (inner IDs used by render fns)
+  if(id==='dashboard'){
+    root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><div style="font-size:18px;font-weight:700;margin-bottom:3px;">Project Overview</div><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div></div></div></div>`;
+  } else if(id==='batidoc'){
+    root.innerHTML=`<div class="page active" id="page-batidoc"><div class="fpw" style="flex:1;overflow:hidden;min-height:0;"><div id="batidoc-sidebar-wrap"></div><iframe id="batidoc-frame" src="" style="flex:1;border:none;min-height:0;"></iframe></div></div>`;
+  } else {
+    root.innerHTML=`<div class="page active" id="page-${id}"></div>`;
+  }
+
+  // Highlight active nav button
+  document.querySelectorAll('.nt').forEach(t=>t.classList.toggle('active',t.dataset.page===id));
+
+  // Call the matching render function
+  if(id==='welcome')renderWelcome();
+  else if(id==='proj-general')renderProjGeneral();
+  else if(id==='proj-bati-org')renderBatiOrg();
+  else if(id==='proj-org')renderProjOrg();
+  else if(id==='proj-financial')renderProjFinancial();
+  else if(id==='dashboard')renderDash();
+  else if(id==='BM-dashboard')renderBMDashboard();
+  else if(id==='BM-NF')renderBMNF();
+  else if(id==='BM-SF')renderBMSF();
+  else if(id==='BM-EF')renderBMEF();
+  else if(id==='BM-WF')renderBMWF();
+  else if(id==='aging-report')renderAgingReport();
+  else if(id==='monthly-cost')renderMonthlyCost();
+  else if(id==='po-log')renderPOLog();
+  else if(id==='of-log')renderOFLog();
+  else if(id==='cash-in')renderCashIn();
+  else if(id==='fournitures')renderFournitures();
+  else if(id==='other-costs')renderOtherCosts();
+  else if(id==='cash-flow')renderCashFlow();
+  else if(id==='suggestions')renderSuggestions();
+  else if(id==='labor-curve')renderLaborCurve();
+  else if(id==='planning')renderPlanning();
+  else if(id==='batidoc')openBatidocPage();
+  else{const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
+}
+
+function toggleFacadeValMode(){
+  facadeValMode=facadeValMode==='numbers'?'percentages':'numbers';
+  const btn=document.getElementById('facade-val-toggle');
+  if(btn){btn.textContent=facadeValMode==='numbers'?'%':'#';btn.title=facadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';}
+  document.getElementById('facades-grid').innerHTML='';
+  renderDash();
+}
+function renderDash(){
+  const gc=gC();
+  const ss=[
+    {key:'installed',   label:'Installed',         color:'#1a9458', cumulLabel:'T. installed'},
+    {key:'delivered',   label:'Delivered',          color:'#a07800', cumulLabel:'T. delivered'},
+    {key:'fabricated',  label:'Fabricated',         color:'#1a5fa8', cumulLabel:'T. fabricated'},
+    {key:'cutting',     label:'CL issued',          color:'#C98BCA', cumulLabel:'T. CL issued'},
+    {key:'cip',         label:'CL in Prog',         color:'#A349A4', cumulLabel:'T. CL in Prog'},
+    {key:'cl_not_issued',label:'CL not issued',     color:'#FF6666', cumulLabel:'T. CL not issued'},
+    {key:'defect',      label:'Defect',             color:'#c02020', cumulLabel:''},
+  ];
+  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const gcActiveTotal=(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
+  document.getElementById('dash-cards').innerHTML=ss.map(s=>{
+    const n=gc[s.key]||0;
+    const idx=pipeline.indexOf(s.key);
+    const cumul=idx>0?pipeline.slice(0,idx+1).reduce((sum,k)=>sum+(gc[k]||0),0):n;
+    // percentage = cumulative / gcActiveTotal
+    const pct=gcActiveTotal?(cumul/gcActiveTotal*100):0;
+    const pctStr=pct.toFixed(1)+'%';
+    const hasCumul=s.cumulLabel&&idx>0;
+    return`<div class="sc">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:4px;margin-bottom:4px;min-width:0;">
+        <div class="scl" style="margin-bottom:0;font-size:8px;letter-spacing:0.05em;white-space:nowrap;">${s.label}</div>
+        ${hasCumul?`<div style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</div>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div class="scn" style="color:${s.color};">${n}</div>
+        ${hasCumul?`<div style="font-size:18px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</div>`:''}
+      </div>
+      <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:${pct.toFixed(1)}%;background:${s.color}"></div></div>
+      <div style="font-size:10px;color:${s.color};font-family:var(--mono);text-align:right;margin-top:3px;">${pctStr}</div>
+    </div>`;
+  }).join('')+`<div class="sc">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;">
+      <div class="scl" style="margin-bottom:0;">Total</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+      <div class="scn" style="color:#1a2a3a;">${gcActiveTotal}</div>
+    </div>
+    <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:100%;background:#1a2a3a"></div></div>
+    <div style="font-size:10px;color:#1a2a3a;font-family:var(--mono);text-align:right;margin-top:3px;">100%</div>
+  </div>`;
+  const statDefs=[
+    {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
+    {key:'delivered',    label:'Delivered',     color:'#a07800', cumulLabel:'T. delivered'},
+    {key:'fabricated',   label:'Fabricated',    color:'#1a5fa8', cumulLabel:'T. fabricated'},
+    {key:'cutting',      label:'CL issued',     color:'#C98BCA', cumulLabel:'T. CL issued'},
+    {key:'cip',          label:'CL in Prog',    color:'#A349A4', cumulLabel:'T. CL in Prog'},
+    {key:'cl_not_issued',label:'CL not issued', color:'#FF6666', cumulLabel:'T. CL not issued'},
+    {key:'defect',       label:'Defect',        color:'#c02020', cumulLabel:''},
+  ];
+  const facadePipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  document.getElementById('facades-grid').innerHTML=ZONES.map(z=>{
+    const c=zC(z.id);
+    const activeTotal=(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal?Math.round(c.installed/activeTotal*100):0;
+    const breakdown=statDefs.map(s=>{
+      const n=c[s.key]||0;
+      const idx=facadePipeline.indexOf(s.key);
+      const cumul=idx>0?facadePipeline.slice(0,idx+1).reduce((sum,k)=>sum+(c[k]||0),0):n;
+      const hasCumul=s.cumulLabel&&idx>0;
+      const barPct=activeTotal?(n/activeTotal*100):0;
+      const cumulPct=activeTotal?(cumul/activeTotal*100):0;
+      return`<div style="padding:4px 0 2px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2px;gap:4px;">
+          <span style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};white-space:nowrap;">${s.label}</span>
+          ${hasCumul?`<span style="font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</span>`:''}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          ${facadeValMode==='numbers'
+            ?`<span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${n}</span>${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</span>`:''}`
+            :`<span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${barPct.toFixed(1)}%</span>${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumulPct.toFixed(1)}%)</span>`:''}`
+          }
+        </div>
+      </div>`;
+    }).join('');
+    return`<div class="fc" onclick="goPage('${z.id}')" style="cursor:pointer;">
+      <div style="display:flex;align-items:center;">
+        <div class="fcdot" style="background:${z.color}"></div>
+        <div class="fcn" style="flex:1;">${z.name}</div>
+      </div>
+      <div class="fcs">${activeTotal} panels</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:9px;color:var(--text3)">Installation</span>
+        <span class="fcp" style="color:${z.color}">${pct}%</span>
+      </div>
+      <div class="fcp-bar"><div class="fcp-fill" style="width:${pct}%;background:${z.color}"></div></div>
+      <div style="margin-top:8px;padding-top:6px;border-top:2px solid ${z.color}30;">
+        ${breakdown}
+      </div>
+    </div>`;
+  }).join('');
+  // Sync toggle button label to current mode
+  const fvBtn=document.getElementById('facade-val-toggle');
+  if(fvBtn){fvBtn.textContent=facadeValMode==='numbers'?'%':'#';fvBtn.title=facadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';}
+  // Use the same full sidebar as EF/WF
+  const wrap=document.getElementById('dash-sidebar-wrap');
+  if(wrap) wrap.innerHTML=efSidebarHTML();
+}
+
+function sidebarHTML(zid,color){
+  const c=zC(zid);const pct=c.total?Math.round(c.installed/c.total*100):0;
+  const z=ZONES.find(z=>z.id===zid);
+  const issH=issues.filter(i=>i.panelId.startsWith(zid+'-'));
+  return`<aside class="sb"><div class="sbs"><div class="sbl">Legend</div><div class="leg"><div class="li"><span class="ls sw-i"></span>Installed</div><div class="li"><span class="ls sw-d"></span>Delivered</div><div class="li"><span class="ls sw-f"></span>Fabricated</div><div class="li"><span class="ls sw-c"></span>CL issued</div><div class="li"><span class="ls sw-cn"></span>CL not issued</div><div class="li"><span class="ls sw-cip"></span>Cutting List in Progress</div><div class="li"><span class="ls sw-x"></span>Defect</div></div><div style="margin-top:11px"><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:4px"><span>Progress</span><span style="font-family:var(--mono);color:${color}">${pct}%</span></div><div class="pb"><div class="pbf" style="width:${pct}%;background:${color}"></div></div></div><div style="margin-top:11px;padding-top:9px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);line-height:1.9"><b style="color:var(--text);font-size:11px;">${z.name}</b><br>${z.sub}<br><b style="color:var(--text)">${c.total}</b> panels</div></div><div class="sbs" style="padding:9px 11px 7px"><div class="sbl" style="margin-bottom:0">Issues (${issH.length})</div></div><div class="il">${issH.length===0?'<div class="ni">No issues</div>':issH.slice().reverse().map(iss=>`<div class="ic"><div class="it"><span class="iid">#${iss.id}</span><span class="ib">${iss.type}</span></div><div class="idesc">${iss.desc||'—'}</div><div class="ipid">${iss.panelId}</div></div>`).join('')}</div></aside>`;
+}
+
+// Zoom levels for EF
+const EF_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2];
+let efZoomIdx=5; // default = 1x
+const WF_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2];
+let wfZoomIdx=5; // default = 1x
+
+function toggleEFSub(id, el){
+  // Find the sidebar containing the clicked element
+  const sb = el ? el.closest('aside') : document.querySelector('aside');
+  const sub = sb ? sb.querySelector('#ef-sub-'+id) : document.getElementById('ef-sub-'+id);
+  const arr = sb ? sb.querySelector('#ef-arr-'+id) : document.getElementById('ef-arr-'+id);
+  if(!sub)return;
+  const open=sub.style.display==='block';
+  sub.style.display=open?'none':'block';
+  if(arr)arr.style.transform=open?'':'rotate(90deg)';
+}
+
+function efZoomIn(){efZoomIdx=Math.min(EF_ZOOM_LEVELS.length-1,efZoomIdx+1);applyEFZoom();}
+function efZoomOut(){efZoomIdx=Math.max(0,efZoomIdx-1);applyEFZoom();}
+function efZoomReset(){efZoomIdx=5;applyEFZoom();}
+function applyEFZoom(){
+  const z=EF_ZOOM_LEVELS[efZoomIdx];
+  const wrap=document.getElementById('wf-wrap-EF');
+  if(wrap){wrap.style.zoom=z;wrap.style.transform='';wrap.style.transformOrigin='';}
+  const lbl=document.getElementById('ef-zoom-label');
+  if(lbl)lbl.textContent=Math.round(z*100)+'%';
+}
+
+function wfZoomIn(){wfZoomIdx=Math.min(WF_ZOOM_LEVELS.length-1,wfZoomIdx+1);applyWFZoom();}
+function wfZoomOut(){wfZoomIdx=Math.max(0,wfZoomIdx-1);applyWFZoom();}
+function wfZoomReset(){wfZoomIdx=5;applyWFZoom();}
+function applyWFZoom(){
+  const z=WF_ZOOM_LEVELS[wfZoomIdx];
+  const wrap=document.getElementById('wf-wrap-WF');
+  if(wrap){wrap.style.zoom=z;wrap.style.transform='';wrap.style.transformOrigin='';}
+  const lbl=document.getElementById('wf-zoom-label');
+  if(lbl)lbl.textContent=Math.round(z*100)+'%';
+}
+
+let sfZoomIdx=3;
+const SF_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2];
+function sfZoomIn(){sfZoomIdx=Math.min(SF_ZOOM_LEVELS.length-1,sfZoomIdx+1);applySFZoom();}
+function sfZoomOut(){sfZoomIdx=Math.max(0,sfZoomIdx-1);applySFZoom();}
+function sfZoomReset(){sfZoomIdx=3;applySFZoom();}
+function applySFZoom(){
+  const z=SF_ZOOM_LEVELS[sfZoomIdx];
+  const wrap=document.getElementById('wf-wrap-SF');
+  if(wrap){wrap.style.zoom=z;wrap.style.transform='';wrap.style.transformOrigin='';}
+  const lbl=document.getElementById('sf-zoom-label');
+  if(lbl)lbl.textContent=Math.round(z*100)+'%';
+}
+
+let nfZoomIdx=3;
+const NF_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2];
+function nfZoomIn(){nfZoomIdx=Math.min(NF_ZOOM_LEVELS.length-1,nfZoomIdx+1);applyNFZoom();}
+function nfZoomOut(){nfZoomIdx=Math.max(0,nfZoomIdx-1);applyNFZoom();}
+function nfZoomReset(){nfZoomIdx=3;applyNFZoom();}
+function applyNFZoom(){
+  const z=NF_ZOOM_LEVELS[nfZoomIdx];
+  const wrap=document.getElementById('wf-wrap-NF');
+  if(wrap){wrap.style.zoom=z;wrap.style.transform='';wrap.style.transformOrigin='';}
+  const lbl=document.getElementById('nf-zoom-label');
+  if(lbl)lbl.textContent=Math.round(z*100)+'%';
+}
+
+function printEF(){
+  const wrap = document.getElementById('wf-wrap-EF');
+  if(!wrap) return;
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
+
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{
+      width:100%;
+      height:${headerH}px;
+      background:#224F93;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      border-bottom:4px solid #1a3d72;
+      flex-shrink:0;
+    }
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-meta{display:flex;align-items:center;gap:6px;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
+    .table-wrap{transform-origin:top left;}
+    :root{--cw:50px;--ch:100px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{
+      html,body{overflow:hidden !important;}
+      .table-wrap{page-break-inside:avoid;break-inside:avoid;}
+    }
+  </style>
+  <script>
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center">
+      <div class="ph-title">East Facade &mdash; Elevation</div>
+    </div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta">
+        <span class="ph-date">${printDate}</span>
+      </div>
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
+}
+
+function printWF(){
+  const wrap = document.getElementById('wf-wrap-WF');
+  if(!wrap) return;
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
+
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{
+      width:100%;
+      height:${headerH}px;
+      background:#224F93;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      border-bottom:4px solid #1a3d72;
+      flex-shrink:0;
+    }
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-meta{display:flex;align-items:center;gap:6px;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
+    .table-wrap{transform-origin:top left;}
+    :root{--cw:50px;--ch:150px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{
+      html,body{overflow:hidden !important;}
+      .table-wrap{page-break-inside:avoid;break-inside:avoid;}
+    }
+  </style>
+  <script>
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center">
+      <div class="ph-title">West Facade &mdash; Elevation</div>
+    </div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta">
+        <span class="ph-date">${printDate}</span>
+      </div>
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
+}
+
+function printSF(){
+  const wrap = document.getElementById('wf-wrap-SF');
+  if(!wrap) return;
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
+
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{
+      width:100%;
+      height:${headerH}px;
+      background:#224F93;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      border-bottom:4px solid #1a3d72;
+      flex-shrink:0;
+    }
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-meta{display:flex;align-items:center;gap:6px;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
+    .table-wrap{transform-origin:top left;}
+    :root{--cw:50px;--ch:150px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{
+      html,body{overflow:hidden !important;}
+      .table-wrap{page-break-inside:avoid;break-inside:avoid;}
+    }
+  </style>
+  <script>
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center">
+      <div class="ph-title">South Facade &mdash; Elevation</div>
+    </div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta">
+        <span class="ph-date">${printDate}</span>
+      </div>
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
+}
+
+function printNF(){
+  const wrap = document.getElementById('wf-wrap-NF');
+  if(!wrap) return;
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{width:100%;height:${headerH}px;background:#224F93;display:flex;align-items:center;justify-content:space-between;padding:0 25px;border-bottom:4px solid #1a3d72;flex-shrink:0;}
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-meta{display:flex;align-items:center;gap:6px;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
+    .table-wrap{transform-origin:top left;}
+    :root{--cw:50px;--ch:150px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{html,body{overflow:hidden !important;}.table-wrap{page-break-inside:avoid;break-inside:avoid;}}
+  </style>
+  <script>
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center"><div class="ph-title">North Facade &mdash; Bracket Monitoring</div></div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta"><span class="ph-date">${printDate}</span></div>
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
+}
+
+function filterBarHTML(zid,extraBtn=''){
+  const zid_zoom = zid==='EF'?'ef':zid==='WF'?'wf':zid==='NF'?'nf':'sf';
+  const facadeName = zid==='NF'?'North Facade':zid==='SF'?'South Facade':zid==='EF'?'East Facade':'West Facade';
+  const zoomControls = (zid==='EF'||zid==='WF'||zid==='SF'||zid==='NF') ? `
+    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;">
+      <span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span>
+      <button onclick="${zid_zoom}ZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button>
+      <span id="${zid_zoom}-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">100%</span>
+      <button onclick="${zid_zoom}ZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button>
+      <button onclick="${zid_zoom}ZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;">
+      <button onclick="${zid==='EF'?'printEF':zid==='WF'?'printWF':zid==='NF'?'printNF':'printSF'}()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / PDF
+      </button>
+    </div>
+    <div style="margin-left:10px;font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.03em;white-space:nowrap;">${facadeName}</div>` : '';
+  return`<div id="tb-wrap-${zid}" style="display:block"><div class="tb"><span class="tbl">Filter:</span>${['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'].map(f=>`<button class="fb${fFilters[zid]===f?' af':''}" onclick="setFF('${zid}','${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')}${zoomControls}<div class="spacer"></div>${extraBtn}<button class="btn btn-d" style="font-size:10px;padding:4px 9px" onclick="openIssueModal('${zid}')">+ Log Issue</button></div></div>`;
+}
+
+async function renderProjFinancial(){
+  await loadProjInfo();
+  const cont=document.getElementById('page-proj-financial');
+  const canEdit=sbProfile?.role!=='viewer';
+
+  const sections=[
+    {
+      title:'Contrat',
+      rows:[
+        {key:'fin-marche-initial',   label:'Marché initial',              def:'45 000 000 MAD HT'},
+        {key:'fin-avance',           label:'Avance 10%',                  def:'4 500 000 MAD HT'},
+      ]
+    },
+    {
+      title:'Retenues',
+      rows:[
+        {key:'fin-retenu-garantie',  label:'Retenue de garantie',         def:'10% plafonnée à 7%'},
+        {key:'fin-amortissement',    label:'Amortissement de l\'avance',  def:'10%'},
+        {key:'fin-retenue-trc',      label:'Retenue TRC',                 def:'0,09% — applicable une fois au premier décompte'},
+      ]
+    },
+    {
+      title:'Retenue Prorata 2%',
+      rows:[
+        {key:'fin-prorata-1',        label:'1ère partie',                 def:'1% du montant du marché + avenant — applicable une fois au premier décompte'},
+        {key:'fin-prorata-2',        label:'2ème partie',                 def:'1% du décompte provisoire'},
+      ]
+    },
+    {
+      title:'Garanties Bancaires — Libération de l\'avance',
+      rows:[
+        {key:'fin-caution-a',        label:'Cautions A',                  def:'8 cautions de 540 000 MAD'},
+        {key:'fin-caution-b',        label:'Cautions B',                  def:'4 cautions de 270 000 MAD'},
+      ]
+    },
+  ];
+
+  // Seed defaults into projInfoData if not yet set
+  sections.forEach(s=>s.rows.forEach(r=>{ if(!projInfoData[r.key]) projInfoData[r.key]=r.def; }));
+
+  const editStyle=canEdit?'cursor:text;border-radius:4px;padding:3px 6px;margin:-3px -6px;transition:background 0.15s;':'padding:3px 0;';
+
+  const tableHTML=sections.map(s=>`
+    <div style="margin-bottom:24px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-left:2px;">${s.title}</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+        ${s.rows.map((r,i)=>`
+        <div style="display:flex;align-items:stretch;border-bottom:${i<s.rows.length-1?'1px solid var(--border)':'none'};">
+          <div style="width:260px;flex-shrink:0;padding:14px 18px;background:var(--surface2);font-size:11px;font-weight:600;color:var(--text3);border-right:1px solid var(--border);display:flex;align-items:center;line-height:1.5;">${r.label}</div>
+          <div style="flex:1;padding:14px 18px;font-size:12px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div id="proj-val-${r.key}"
+              ${canEdit?`contenteditable="true"
+              onfocus="this.style.background='var(--surface2)';this.style.boxShadow='0 0 0 2px #224F9340';"
+              onblur="this.style.background='transparent';this.style.boxShadow='none';saveProjInfoField('${r.key}',this.textContent.trim())"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+              onmouseover="if(document.activeElement!==this)this.style.background='var(--surface2)';"
+              onmouseout="if(document.activeElement!==this)this.style.background='transparent';"
+              `:''}
+              style="flex:1;outline:none;line-height:1.6;${editStyle}"
+            >${projInfoData[r.key]||r.def}</div>
+            <span id="proj-save-${r.key}" style="font-size:10px;font-family:var(--mono);min-width:54px;text-align:right;flex-shrink:0;"></span>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 28px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">💰</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Financial Info</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Project Info${canEdit?' · <span style="color:#1a9458;">click any value to edit</span>':''}</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:28px;">
+        <div style="max-width:900px;">
+          ${tableHTML}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderProjPage(id, title, icon){
+  const cont=document.getElementById('page-'+id);
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">${icon}</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">${title}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Project Info</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text3);">
+        <span style="font-size:36px;">🚧</span>
+        <div style="font-size:13px;font-weight:600;color:var(--text2);">Coming soon</div>
+        <div style="font-size:11px;">This section is under construction.</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function renderBatiOrg(){
+  await loadProjInfo();
+  const cont=document.getElementById('page-proj-bati-org');
+  const canEdit=sbProfile?.role!=='viewer';
+  const LC='#94a3b8'; // line color
+
+  const tree={
+    key:'bati-org-top', color:'#2e7d32', def:'Coordination Projet\nRaed Abdel Samad',
+    children:[
+      { key:'bati-org-commercial', color:'#1a3a6b', def:'Commercial\nDirecteur Commercial\nYoussef Sbyk',
+        children:[
+          { key:'bati-org-chiffrage', color:'#4472c4', def:'Responsable Chiffrage:\nMohammed El Housni', children:[] }
+        ]
+      },
+      { key:'bati-org-chantier', color:'#1a3a6b', def:'Chantier\nDirecteur Projet\nRaed Abdel Samad',
+        children:[
+          { key:'bati-org-ucw', color:'#4472c4', def:'Ing Conducteur Travaux UCW:\nSafaa Akkari',
+            children:[
+              { key:'bati-org-sup-ucw', color:'#4472c4', def:'Superviseur Chantier:\nOthmane Houssam',
+                children:[
+                  { key:'bati-org-workers-ucw', color:'#4472c4', def:'4/27 ouvriers', children:[] }
+                ]
+              }
+            ]
+          },
+          { key:'bati-org-scw', color:'#c62828', def:'Ing Conducteur Travaux\nSCW + ACP:\nNon Recruté',
+            children:[
+              { key:'bati-org-sup-scw', color:'#c62828', def:'Superviseur Chantier:\nNon recruté',
+                children:[
+                  { key:'bati-org-workers-scw', color:'#4472c4', def:'28 Ouvriers', children:[] }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { key:'bati-org-qhse', color:'#1a3a6b', def:'Directeur QHSE\nAchraf Nassar',
+        children:[
+          { key:'bati-org-hse', color:'#4472c4', def:'HSE Officer:\nFatima Zahrae Chriki', children:[] }
+        ]
+      },
+      { key:'bati-org-etude', color:'#1a3a6b', def:'Etude\nDirecteur Projet\nRaed Abdel Samad', vertical:true,
+        children:[
+          { key:'bati-org-etude-int', color:'#4472c4', def:'Etude Interne:\nBatiglobe\nRedouane Bella', children:[] },
+          { key:'bati-org-etude-ext1', color:'#4472c4', def:'Etude Externe:\nOpen Facades & Engineering\nChaimaa El Moussaoui', children:[] },
+          { key:'bati-org-etude-ext2', color:'#4472c4', def:'Etude Extérieur:\nGutmann ME\nAli Majed', children:[] }
+        ]
+      },
+      { key:'bati-org-atelier', color:'#1a3a6b', def:'Atelier et Achat\nDirecteur Des Sites\nAmine Bouissef Rekab', vertical:true,
+        children:[
+          { key:'bati-org-ing-atelier', color:'#4472c4', def:'Ingénieur de l\'atelier et\nd\'approvisionnement\nHaitam OUADILA', children:[] },
+          { key:'bati-org-resp-prod', color:'#4472c4', def:'Responsable production\nAziz Kaddouri', children:[] },
+          { key:'bati-org-resp-achat', color:'#4472c4', def:'Responsable achat\nSoukaina Lamri', children:[] }
+        ]
+      },
+      { key:'bati-org-rh', color:'#1a3a6b', def:'Ressource Humaine\nDirecteur Travaux\nAnas Filali', vertical:true,
+        children:[
+          { key:'bati-org-resp-rh', color:'#4472c4', def:'Responsable RH\nHiba Bahreddine', children:[] },
+          { key:'bati-org-chef-chantier', color:'#4472c4', def:'Chef de Chantier\nOthmane Houssam', children:[] }
+        ]
+      }
+    ]
+  };
+
+  function node(n, isRoot){
+    const txt=(projInfoData[n.key]||n.def).replace(/\n/g,'<br>');
+    const bgColor=projInfoData[n.key+'-color']||n.color;
+    const editAttr=canEdit?`contenteditable="true"
+      onfocus="this.style.outline='2px solid rgba(255,255,255,0.6)'"
+      onblur="this.style.outline='none';saveProjInfoField('${n.key}',this.innerText.trim())"`:'' ;
+    const colorBtn=canEdit?`<div onclick="event.stopPropagation();toggleBatiColorPicker('${n.key}',this)" style="position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,0.25);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;opacity:0;transition:opacity 0.15s;" class="bati-clr-btn">🎨</div>`:'';
+    const box=`<div style="position:relative;" onmouseover="this.querySelector('.bati-clr-btn')&&(this.querySelector('.bati-clr-btn').style.opacity='1')" onmouseout="this.querySelector('.bati-clr-btn')&&(this.querySelector('.bati-clr-btn').style.opacity='0')">
+      <div id="bati-box-${n.key}" ${editAttr} style="background:${bgColor};color:#fff;border-radius:5px;padding:6px 9px;font-size:9.5px;font-weight:600;text-align:center;line-height:1.45;min-width:100px;max-width:130px;box-shadow:0 2px 6px rgba(0,0,0,0.2);${canEdit?'cursor:text;':''}white-space:normal;">${txt}</div>
+      ${colorBtn}
+    </div>`;
+    const vTop=isRoot?'':`<div style="width:2px;height:14px;background:${LC};flex-shrink:0;"></div>`;
+    if(!n.children||!n.children.length) return`<li class="boi">${vTop}${box}</li>`;
+    if(n.vertical){
+      const childrenHTML=n.children.map((c,ci)=>{
+        const ctxt=(projInfoData[c.key]||c.def).replace(/\n/g,'<br>');
+        const cbg=projInfoData[c.key+'-color']||c.color;
+        const cedit=canEdit?`contenteditable="true"
+          onfocus="this.style.outline='2px solid rgba(255,255,255,0.6)'"
+          onblur="this.style.outline='none';saveProjInfoField('${c.key}',this.innerText.trim())"`:'' ;
+        const cclrBtn=canEdit?`<div onclick="event.stopPropagation();toggleBatiColorPicker('${c.key}',this)" style="position:absolute;top:3px;right:3px;width:14px;height:14px;border-radius:3px;background:rgba(255,255,255,0.25);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;opacity:0;transition:opacity 0.15s;" class="bati-clr-btn">🎨</div>`:'';
+        return`<div style="display:flex;align-items:center;margin-bottom:${ci<n.children.length-1?'10':'0'}px;">
+          <div style="width:14px;height:2px;background:${LC};flex-shrink:0;"></div>
+          <div style="position:relative;" onmouseover="this.querySelector('.bati-clr-btn')&&(this.querySelector('.bati-clr-btn').style.opacity='1')" onmouseout="this.querySelector('.bati-clr-btn')&&(this.querySelector('.bati-clr-btn').style.opacity='0')">
+            <div id="bati-box-${c.key}" ${cedit} style="background:${cbg};color:#fff;border-radius:5px;padding:6px 9px;font-size:9.5px;font-weight:600;text-align:center;line-height:1.45;min-width:100px;max-width:130px;box-shadow:0 2px 6px rgba(0,0,0,0.2);${canEdit?'cursor:text;':''}white-space:normal;">${ctxt}</div>
+            ${cclrBtn}
+          </div>
+        </div>`;
+      }).join('');
+      return`<li class="boi">
+        ${vTop}
+        ${box}
+        <div style="width:2px;height:14px;background:${LC};flex-shrink:0;"></div>
+        <div style="display:flex;">
+          <div style="width:2px;flex-shrink:0;background:${LC};"></div>
+          <div style="display:flex;flex-direction:column;align-self:flex-start;padding:6px 0;">${childrenHTML}</div>
+        </div>
+      </li>`;
+    }
+    return`<li class="boi">
+      ${vTop}
+      ${box}
+      <div style="width:2px;height:14px;background:${LC};flex-shrink:0;"></div>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;align-items:flex-start;">
+        ${n.children.map(c=>node(c,false)).join('')}
+      </ul>
+    </li>`;
+  }
+
+  const css=`<style>
+    .boi{list-style:none;display:flex;flex-direction:column;align-items:center;position:relative;padding:0 6px;}
+    .boi::before,.boi::after{content:'';position:absolute;top:0;height:2px;background:${LC};width:50%;}
+    .boi::before{right:50%;}.boi::after{left:50%;}
+    .boi:first-child::before,.boi:last-child::after,.boi:only-child::before,.boi:only-child::after{display:none;}
+  </style>`;
+
+  cont.innerHTML=`${css}<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 28px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">🏢</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Batiglobe Organigram</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Project Info${canEdit?' · <span style="color:#1a9458;">click any box to edit</span>':''}</div>
+        </div>
+      </div>
+      <div id="bati-org-container" style="flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <div id="bati-org-wrap" style="transform-origin:center center;">
+          <ul style="list-style:none;padding:0;margin:0;">${node(tree,true)}</ul>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>{
+    const wrap=document.getElementById('bati-org-wrap');
+    const container=document.getElementById('bati-org-container');
+    if(!wrap||!container) return;
+    const cW=container.clientWidth-32, cH=container.clientHeight-32;
+    const wW=wrap.scrollWidth, wH=wrap.scrollHeight;
+    const scale=Math.min(cW/wW, cH/wH, 1);
+    wrap.style.transform=`scale(${scale})`;
+  },50);
+}
+
+function toggleBatiColorPicker(key, btn){
+  const existing=document.getElementById('bati-color-picker');
+  if(existing){if(existing.dataset.key===key){existing.remove();return;}existing.remove();}
+  const colors=[
+    {c:'#2e7d32',label:'Green'},
+    {c:'#1a3a6b',label:'Navy'},
+    {c:'#4472c4',label:'Blue'},
+    {c:'#c62828',label:'Red'},
+  ];
+  const rect=btn.getBoundingClientRect();
+  const picker=document.createElement('div');
+  picker.id='bati-color-picker';
+  picker.dataset.key=key;
+  picker.style.cssText=`position:fixed;top:${rect.bottom+6}px;left:${rect.left-40}px;z-index:9999;background:#fff;border:1px solid #dde3ec;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 4px 18px rgba(0,0,0,0.15);`;
+  picker.innerHTML=`<div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8099b0;margin-bottom:2px;">Cell color</div>
+  <div style="display:flex;gap:7px;">
+    ${colors.map(({c,label})=>`
+    <div title="${label}" onclick="setBatiNodeColor('${key}','${c}');document.getElementById('bati-color-picker')?.remove();"
+      style="width:22px;height:22px;background:${c};border-radius:4px;cursor:pointer;border:2px solid transparent;transition:transform 0.1s,border-color 0.1s;"
+      onmouseover="this.style.transform='scale(1.2)';this.style.borderColor='rgba(0,0,0,0.25)'"
+      onmouseout="this.style.transform='scale(1)';this.style.borderColor='transparent'"
+    ></div>`).join('')}
+  </div>`;
+  document.body.appendChild(picker);
+  setTimeout(()=>{
+    document.addEventListener('click',function h(e){
+      if(!picker.contains(e.target)){picker.remove();document.removeEventListener('click',h);}
+    });
+  },10);
+}
+
+async function setBatiNodeColor(key,color){
+  projInfoData[key+'-color']=color;
+  const box=document.getElementById('bati-box-'+key);
+  if(box) box.style.background=color;
+  await saveProjInfoField(key+'-color', color);
+}
+
+async function renderProjOrg(){
+  await loadProjInfo();
+  const cont=document.getElementById('page-proj-org');
+  const canEdit=sbProfile?.role!=='viewer';
+  const LC='#94a3b8';
+
+  const DB='#1a3a6b'; // dark blue  — level 0 (root) + level 1 (company nodes)
+  const NB='#4472c4'; // normal blue — people levels 1–5
+
+  const tree={
+    key:'proj-org-root', color:DB, def:'Shift Tower',
+    children:[
+      // ── Batiglobe ── NB-L1:spacer / NB-L2:Wassim / NB-L3:Raed / NB-L4:Redouane Balla / NB-L5:Safaa
+      { key:'proj-org-batiglobe', color:DB, def:'Batiglobe\nFacade Contractor',
+        children:[
+          { key:'proj-org-bati-sp1', spacer:true,
+            children:[
+              { key:'proj-org-bati-ceo', color:NB, def:'CEO\nWassim Benani',
+                children:[
+                  { key:'proj-org-bati-dir', color:NB, def:'Directeur Projet:\nRaed Abdel Samad',
+                    children:[
+                      { key:'proj-org-bati-charge', color:NB, def:'Chargé d\'etude\nRedouane Balla',
+                        children:[
+                          { key:'proj-org-bati-cond', color:NB, def:'Conducteur Travaux\nSafaa Akkari', children:[] }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      // ── AMODEV ── NB-L1:spacer / NB-L2:Karim / NB-L3:Youssef / NB-L4:Chaymae / NB-L5:Hamza
+      { key:'proj-org-amodev', color:DB, def:'AMODEV\nAMO',
+        children:[
+          { key:'proj-org-amodev-sp1', spacer:true,
+            children:[
+              { key:'proj-org-amodev-ceo', color:NB, def:'CEO:\nKarim Hajji',
+                children:[
+                  { key:'proj-org-amodev-sm', color:NB, def:'Senior Manager:\nYoussef Sentissi',
+                    children:[
+                      { key:'proj-org-amodev-pm', color:NB, def:'Project Manager:\nChaymae Amri',
+                        children:[
+                          { key:'proj-org-amodev-chef', color:NB, def:'Chef de projet:\nHamza MADHOUNE', children:[] }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      // ── Maydane ── NB-L1:Amine / NB-L2:Othmane Srairi / NB-L3:Redouane Azzaloualidine
+      { key:'proj-org-maydane', color:DB, def:'Maydane\nMO',
+        children:[
+          { key:'proj-org-maydane-ceo', color:NB, def:'CEO:\nAmine Amor',
+            children:[
+              { key:'proj-org-maydane-dir', color:NB, def:'Directeur:\nOthmane Srairi',
+                children:[
+                  { key:'proj-org-maydane-pm', color:NB, def:'Project Manager:\nRedouane Azzaloualidine', children:[] }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      // ── Ferres ── NB-L1:Xavi / NB-L2:spacer / NB-L3:Javier / NB-L4:Roser
+      { key:'proj-org-ferres', color:DB, def:'Ferres Arquitectos\nBET FACADE',
+        children:[
+          { key:'proj-org-ferres-ceo', color:NB, def:'CEO:\nXavi Ferres',
+            children:[
+              { key:'proj-org-ferres-sp2', spacer:true,
+                children:[
+                  { key:'proj-org-ferres-dir', color:NB, def:'Directeur:\nJavier Garcia',
+                    children:[
+                      { key:'proj-org-ferres-ing', color:NB, def:'Ingénieur BET\nRoser Margarit', children:[] }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      // ── OZA ── NB-L1:spacer / NB-L2:spacer / NB-L3:Othmane Zerouali
+      { key:'proj-org-oza', color:DB, def:'OZA\nArchitect',
+        children:[
+          { key:'proj-org-oza-sp1', spacer:true,
+            children:[
+              { key:'proj-org-oza-sp2', spacer:true,
+                children:[
+                  { key:'proj-org-oza-ceo', color:NB, def:'CEO OZA:\nOthmane Zerouali', children:[] }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      // ── KREA ── NB-L1:spacer / NB-L2:spacer / NB-L3:Kacem Benhayoun
+      { key:'proj-org-krea', color:DB, def:'KREA\nArchitect',
+        children:[
+          { key:'proj-org-krea-sp1', spacer:true,
+            children:[
+              { key:'proj-org-krea-sp2', spacer:true,
+                children:[
+                  { key:'proj-org-krea-ceo', color:NB, def:'CEO KREA:\nKacem Benhayoun', children:[] }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      // ── SAVE ── NB-L1:spacer / NB-L2:spacer / NB-L3:Said Idbouali
+      { key:'proj-org-save', color:DB, def:'SAVE CONTROLS\nBCT FACADE',
+        children:[
+          { key:'proj-org-save-sp1', spacer:true,
+            children:[
+              { key:'proj-org-save-sp2', spacer:true,
+                children:[
+                  { key:'proj-org-save-ceo', color:NB, def:'CEO:\nSaid Idbouali', children:[] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  // Returns a horizontal bar + children row for multi-child nodes
+  function childrenRow(children){
+    const multi = children.length > 1;
+    const bar = multi
+      ? `<div style="position:absolute;top:0;left:0;right:0;height:2px;background:${LC};pointer-events:none;z-index:0;"></div>`
+      : '';
+    return `<ul style="list-style:none;padding:0;margin:0;display:flex;align-items:flex-start;position:relative;">
+      ${bar}
+      ${children.map(c=>node(c,false)).join('')}
+    </ul>`;
+  }
+
+  function node(n,isRoot){
+    // Spacer node: invisible placeholder that occupies the same height as a real node,
+    // keeping sibling branches horizontally aligned level-by-level.
+    if(n.spacer){
+      const vTop=isRoot?'':`<div style="width:2px;height:12px;background:${LC};flex-shrink:0;"></div>`;
+      // Vertical line segment — same height as a real box (5+5 padding + 2×11×1.45 ≈ 42px)
+      const ghost=`<div style="width:2px;height:42px;background:${LC};flex-shrink:0;"></div>`;
+      if(!n.children||!n.children.length) return`<li class="poi">${vTop}${ghost}</li>`;
+      return`<li class="poi">
+        ${vTop}
+        ${ghost}
+        <div style="width:2px;height:12px;background:${LC};flex-shrink:0;"></div>
+        ${childrenRow(n.children)}
+      </li>`;
+    }
+    const txt=(projInfoData[n.key]||n.def).replace(/\n/g,'<br>');
+    const editAttr=canEdit?`contenteditable="true"
+      onfocus="this.style.outline='2px solid rgba(255,255,255,0.6)'"
+      onblur="this.style.outline='none';saveProjInfoField('${n.key}',this.innerText.trim())"`:'' ;
+    const box=`<div ${editAttr} style="background:${n.color};color:#fff;border-radius:5px;padding:5px 8px;font-size:11px;font-weight:600;text-align:center;line-height:1.45;min-width:100px;max-width:130px;box-shadow:0 2px 6px rgba(0,0,0,0.20);${canEdit?'cursor:text;':''}white-space:normal;position:relative;z-index:1;">${txt}</div>`;
+    const vTop=isRoot?'':`<div style="width:2px;height:12px;background:${LC};flex-shrink:0;"></div>`;
+    if(!n.children||!n.children.length) return`<li class="poi">${vTop}${box}</li>`;
+    return`<li class="poi">
+      ${vTop}
+      ${box}
+      <div style="width:2px;height:12px;background:${LC};flex-shrink:0;"></div>
+      ${childrenRow(n.children)}
+    </li>`;
+  }
+
+  const css=`<style>
+    .poi{list-style:none;display:flex;flex-direction:column;align-items:center;padding:0 5px;}
+  </style>`;
+
+  cont.innerHTML=`${css}<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 28px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">👥</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Project Organigram</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Project Info${canEdit?' · <span style="color:#1a9458;">click any box to edit</span>':''}</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:30px 20px;">
+        <div style="display:flex;justify-content:center;min-width:max-content;padding-bottom:20px;">
+          <ul style="list-style:none;padding:0;margin:0;">${node(tree,true)}</ul>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+const PROJ_INFO_DEFAULTS={
+  'proj-client-delegate':'Maydane Investissement',
+  'proj-client-owner':'Immvest SA',
+  'proj-prestations':'Unitized CW · Stick CW · Bardage · Lamelle · Fenêtres · Portes',
+  'proj-documents':'Projet de construction d\'une tour Bureaux dans la zone financière dite Casablanca Finance City (Lot 77,2)',
+  'proj-limites':'Facade',
+  'proj-montant':'45 000 000 MAD',
+  'proj-monnaie':'MAD',
+};
+let projInfoData={...PROJ_INFO_DEFAULTS};
+
+async function loadProjInfo(){
+  try{
+    const {data,error}=await sb.from('project_info').select('*').eq('project','shift-tower');
+    if(!error && data && data.length>0){
+      data.forEach(row=>{ projInfoData[row.key]=row.value; });
+    }
+  }catch(e){}
+}
+
+async function saveProjInfoField(key, value){
+  projInfoData[key]=value;
+  const el=document.getElementById('proj-save-'+key);
+  if(el){el.textContent='Saving…';el.style.color='#a07800';}
+  const row={project:'shift-tower',key,value,updated_at:new Date().toISOString()};
+  try{
+    // Try upsert first
+    let {error}=await sb.from('project_info').upsert(row,{onConflict:'project,key'});
+    if(error){
+      console.warn('project_info upsert failed, trying delete+insert:',error.message);
+      // Fallback: delete then insert
+      await sb.from('project_info').delete().eq('project','shift-tower').eq('key',key);
+      const {error:e2}=await sb.from('project_info').insert(row);
+      if(e2){
+        console.error('project_info save failed completely:',e2.message);
+        if(el){el.textContent='Error';el.style.color='#c02020';}
+        toast('Save failed: '+e2.message);
+        return;
+      }
+    }
+    if(el){el.textContent='Saved ✓';el.style.color='#1a9458';setTimeout(()=>{if(el)el.textContent='';},2000);}
+  }catch(e){
+    console.error('project_info exception:',e);
+    if(el){el.textContent='Error';el.style.color='#c02020';}
+    toast('Save error: '+e.message);
+  }
+}
+
+async function renderProjGeneral(){
+  await loadProjInfo();
+  const cont=document.getElementById('page-proj-general');
+  const canEdit=sbProfile?.role!=='viewer';
+  const rows=[
+    {key:'proj-client-delegate', label:'Maître d\'ouvrage délégué'},
+    {key:'proj-client-owner',    label:'Maître d\'ouvrage'},
+    {key:'proj-prestations',     label:'Prestations prévues au contrat'},
+    {key:'proj-documents',       label:'Documents contractuels'},
+    {key:'proj-limites',         label:'Limites de prestations définies au contrat'},
+    {key:'proj-montant',         label:'Montant du contrat (HT)'},
+    {key:'proj-monnaie',         label:'Monnaie du contrat'},
+  ];
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 28px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">📄</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">General Description</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Project Info${canEdit?' · <span style="color:#1a9458;">click any value to edit</span>':''}</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:28px;">
+        <div style="max-width:1010px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:16px;">Client &amp; Contract Details</div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+            ${rows.map((r,i)=>`
+            <div style="display:flex;align-items:stretch;gap:0;border-bottom:${i<rows.length-1?'1px solid var(--border)':'none'};">
+              <div style="width:350px;flex-shrink:0;padding:16px 18px;background:var(--surface2);font-size:11px;font-weight:600;color:var(--text3);border-right:1px solid var(--border);line-height:1.5;display:flex;align-items:center;">${r.label}</div>
+              <div style="width:600px;flex-shrink:0;padding:16px 18px;font-size:12px;color:var(--text);line-height:1.6;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <div id="proj-val-${r.key}"
+                  ${canEdit?`contenteditable="true"
+                  onblur="saveProjInfoField('${r.key}',this.textContent.trim())"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                  style="flex:1;outline:none;border-radius:5px;padding:4px 7px;margin:-4px -7px;cursor:text;transition:background 0.15s,box-shadow 0.15s;"
+                  onfocus="this.style.background='var(--surface2)';this.style.boxShadow='0 0 0 2px #224F9340';"
+                  onmouseout="if(document.activeElement!==this)this.style.background='transparent';"
+                  onmouseover="if(document.activeElement!==this)this.style.background='var(--surface2)';"
+                  onblur="this.style.background='transparent';this.style.boxShadow='none';saveProjInfoField('${r.key}',this.textContent.trim());"
+                  `:`style="flex:1;"`}
+                >${projInfoData[r.key]||''}</div>
+                <span id="proj-save-${r.key}" style="font-size:10px;font-family:var(--mono);min-width:54px;text-align:right;flex-shrink:0;"></span>
+              </div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderWelcome(){
+  const cont=document.getElementById('page-welcome');
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}<div style="flex:1;position:relative;overflow:hidden;">
+    <!-- Background image at 50% opacity -->
+    <div style="position:absolute;inset:0;background:url('shift-tower-bg.jpg') center/50% auto no-repeat;opacity:0.5;"></div>
+  </div></div>`;
+}
+
+const BM_ZONES=[
+  {id:'BM-NF',name:'North Facade',sub:'North Elevation',color:'#2d65bd'},
+  {id:'BM-SF',name:'South Facade',sub:'South Elevation',color:'#1a9458'},
+  {id:'BM-EF',name:'East Facade', sub:'East Elevation', color:'#a07800'},
+  {id:'BM-WF',name:'West Facade', sub:'West Elevation', color:'#6d35d9'},
+];
+function bmZC(zid){
+  const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  allBracketIds(zid.replace('BM-','')).forEach(id=>{
+    c.total++;
+    const s=(panels[id]||{}).status||'pending';
+    c[s]=(c[s]||0)+1;
+  });
+  return c;
+}
+function bmGC(){
+  const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  allBracketPanelIds().forEach(id=>{
+    c.total++;
+    const s=(panels[id]||{}).status||'pending';
+    c[s]=(c[s]||0)+1;
+  });
+  return c;
+}
+
+function renderBMDashboard(){
+  const cont=document.getElementById('page-BM-dashboard');
+  const gc=bmGC();
+  const ss=[
+    {key:'installed',  label:'Installed',                color:'#1a9458'},
+    {key:'delivered',  label:'Delivered',                color:'#a07800'},
+    {key:'fabricated', label:'Fabricated',               color:'#1a5fa8'},
+    {key:'cutting',        label:'CL issued',                color:'#C98BCA'},
+    {key:'cip',           label:'Cutting List in Progress', color:'#A349A4'},
+    {key:'cl_not_issued', label:'CL not issued',            color:'#FF6666'},
+    {key:'defect',     label:'Defect',                   color:'#c02020'},
+  ];
+  const cardsHTML=ss.map(s=>`<div class="sc">
+    <div class="scl">${s.label}</div>
+    <div class="scn" style="color:${s.color}">${gc[s.key]||0}</div>
+    <div class="scb"><div class="scbf" style="width:${gc.total?Math.round((gc[s.key]||0)/gc.total*100):0}%;background:${s.color}"></div></div>
+  </div>`).join('');
+
+  const facadesHTML=BM_ZONES.map(z=>{
+    const c=bmZC(z.id);const activeTotal=(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal?Math.round(c.installed/activeTotal*100):0;
+    const breakdown=ss.map(s=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:10px;color:${s.color};font-weight:600;">${s.label}</span>
+        <span style="font-size:10px;font-weight:700;color:var(--text);font-family:var(--mono);">${c[s.key]||0}</span>
+      </div>`).join('');
+    return`<div class="fc" onclick="navMode='bracket';goPage('${z.id}')" style="cursor:pointer;">
+      <div style="display:flex;align-items:center;">
+        <div class="fcdot" style="background:${z.color}"></div>
+        <div class="fcn" style="flex:1;">${z.name}</div>
+      </div>
+      <div class="fcs">${activeTotal} brackets</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:9px;color:var(--text3)">Installation</span>
+        <span class="fcp" style="color:${z.color}">${pct}%</span>
+      </div>
+      <div class="fcp-bar"><div class="fcp-fill" style="width:${pct}%;background:${z.color}"></div></div>
+      <div style="margin-top:8px;padding-top:6px;border-top:2px solid ${z.color}30;">
+        ${breakdown}
+      </div>
+    </div>`;
+  }).join('');
+
+  cont.innerHTML=`<div class="fpw">
+    ${efSidebarHTML()}
+    <div class="dash" style="flex:1;overflow-y:auto;">
+      <div style="font-size:18px;font-weight:700;margin-bottom:3px;">Bracket Monitoring — Overview</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades — bracket fabrication &amp; installation tracking</div>
+      <div class="cr">${cardsHTML}</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:11px;">Facades</div>
+      <div class="fg">${facadesHTML}</div>
+    </div>
+  </div>`;
+}
+
+function renderBMNF(){
+  if(!fFilters['BM-NF']) fFilters['BM-NF']='all';
+  const cont=document.getElementById('page-BM-NF');
+  const activeF=fFilters['BM-NF']||'all';
+
+  // Left wing cols (65a=corner, 65..54)
+  const colsL=['65a','65','64','63','62','61','60','59','58','57','56','55','54'];
+  // Right wing cols (41..31, 31=corner)
+  const colsR=['41','40','39','38','37','36','35','34','33','32','31'];
+  const cols=[...colsL,'|',...colsR];
+
+  const L_STD=['TB-04','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01'];
+  const L_R2 =colsL.map(()=>'TB-01');
+  const L_R1 =colsL.map(()=>'GB-01');
+  const L_EMP=colsL.map(()=>'');
+  const R_STD=['TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-03'];
+  const R_R2 =colsR.map(()=>'GB-01');
+  const R_EMP=colsR.map(()=>'');
+  const mk=(l,r)=>[...l,'|',...r];
+
+  const rows=[
+    {label:'R+36',data:mk(L_EMP,R_STD)},{label:'R+35',data:mk(L_EMP,R_STD)},
+    {label:'R+34',data:mk(L_EMP,R_STD)},{label:'R+33',data:mk(L_EMP,R_STD)},
+    {label:'R+32',data:mk(L_EMP,R_STD)},{label:'R+31',data:mk(L_EMP,R_STD)},
+    {label:'R+30',data:mk(L_EMP,R_STD)},{label:'R+29',data:mk(L_EMP,R_STD)},
+    {label:'R+28',data:mk(L_EMP,R_STD)},{label:'R+27',data:mk(L_EMP,R_STD)},
+    {label:'R+26',data:mk(L_EMP,R_STD)},
+    {label:'R+25',data:mk(L_STD,R_STD)},{label:'R+24',data:mk(L_STD,R_STD)},
+    {label:'R+23',data:mk(L_STD,R_STD)},{label:'R+22',data:mk(L_STD,R_STD)},
+    {label:'R+21',data:mk(L_STD,R_STD)},{label:'R+20',data:mk(L_STD,R_STD)},
+    {label:'R+19',data:mk(L_STD,R_STD)},{label:'R+18',data:mk(L_STD,R_STD)},
+    {label:'R+17',data:mk(L_STD,R_STD)},{label:'R+16',data:mk(L_STD,R_STD)},
+    {label:'R+15',data:mk(L_STD,R_STD)},{label:'R+14',data:mk(L_STD,R_STD)},
+    {label:'R+13',data:mk(L_STD,R_STD)},{label:'R+12',data:mk(L_STD,R_STD)},
+    {label:'R+11',data:mk(L_STD,R_STD)},{label:'R+10',data:mk(L_STD,R_STD)},
+    {label:'R+9', data:mk(L_STD,R_STD)},{label:'R+8', data:mk(L_STD,R_STD)},
+    {label:'R+7', data:mk(L_STD,R_STD)},{label:'R+6', data:mk(L_STD,R_STD)},
+    {label:'R+5', data:mk(L_STD,R_STD)},{label:'R+4', data:mk(L_STD,R_STD)},
+    {label:'R+3', data:mk(L_STD,R_STD)},{label:'R+2', data:mk(L_R2, R_R2)},
+    {label:'R+1', data:mk(L_R1, R_EMP)},{label:'RDC', data:mk(L_EMP,R_EMP)},
+  ];
+
+  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+
+  const cellW=44, cellH=26, labelW=44;
+
+  const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
+    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setNFBMFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+  }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="nfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="nf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(NF_ZOOM_LEVELS[nfZoomIdx]*100)}%</span><button onclick="nfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="nfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printNF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
+
+  const headerCells=cols.map(c=>{
+    if(c==='|') return`<div style="width:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:18px;background:var(--border2);border-radius:1px;"></div></div>`;
+    return`<div style="width:${cellW}px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8099b0;flex-shrink:0;">${c}</div>`;
+  }).join('');
+
+  const bodyRows=rows.map(r=>{
+    const isFullEmp=r.data.filter(v=>v!=='|').every(v=>v==='');
+    const cells=r.data.map((bracketType,ci)=>{
+      if(bracketType==='|') return`<div style="width:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:${cellH}px;background:var(--border2);"></div></div>`;
+      if(bracketType==='') return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
+      const col=cols[ci];
+      const id=`BM-NF-${r.label.replace('+','')}-${col}`;
+      const status=(panels[id]||{}).status||'pending';
+      const bg=stBg[status],border=stBorder[status],color=stText[status];
+      const dim=activeF!=='all'&&status!==activeF;
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmNFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;">
+      <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isFullEmp?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  const nfCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  rows.forEach(r=>{
+    r.data.forEach((bracketType,ci)=>{
+      if(!bracketType||bracketType==='|') return;
+      const col=cols[ci];
+      const id=`BM-NF-${r.label.replace('+','')}-${col}`;
+      const status=(panels[id]||{}).status||'pending';
+      nfCount[status]=(nfCount[status]||0)+1;
+      nfCount.total++;
+    });
+  });
+
+  const legendItems=[
+    {cls:'st-i',label:'Installed',key:'installed'},{cls:'st-d',label:'Delivered',key:'delivered'},
+    {cls:'st-f',label:'Fabricated',key:'fabricated'},{cls:'st-c',label:'CL issued',key:'cutting'},
+    {cls:'st-cn',label:'CL not issued',key:'cl_not_issued'},
+    {cls:'st-cip',label:'Cutting List in Progress',key:'cip'},{cls:'st-x',label:'Defect',key:'defect'},
+  ];
+  const legendHTML=`
+    <div style="margin-top:18px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
+      ${legendItems.map(it=>`
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="wfc ${it.cls}" style="width:18px;height:18px;border-radius:3px;min-width:18px;flex-shrink:0;"></div>
+          <span style="font-size:11px;color:var(--text2);">${it.label}</span>
+          <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--surface2);border-radius:4px;padding:1px 5px;">${nfCount[it.key]||0}</span>
+        </div>`).join('')}
+    </div>`;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      ${filterBar}
+      <div style="padding:10px 20px 6px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Bracket Monitoring — North Facade</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px;">Left wing (cols 65a→54) · Right wing (cols 41→31) · click a cell to update status</div>
+      </div>
+      <div id="bm-scroll-NF" style="flex:1;overflow:auto;padding:0 20px 10px 0;">
+        <div id="wf-wrap-NF">
+        <div style="display:flex;align-items:center;position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:2px solid var(--border2);padding-bottom:2px;margin-bottom:2px;">
+          <div style="width:${labelW}px;flex-shrink:0;position:sticky;left:0;z-index:35;background:var(--surface);border-right:2px solid var(--border2);"></div>
+          ${headerCells}
+        </div>
+        ${bodyRows}
+        ${legendHTML}
+        </div>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>applyNFZoom(),0);
+}
+
+function setNFBMFilter(f,el){
+  fFilters['BM-NF']=f;
+  document.querySelectorAll('.tb .fb').forEach(b=>b.classList.remove('af'));
+  if(el)el.classList.add('af');
+  renderBMNF();
+}
+
+function handleBmNFClick(e,id,label){
+  if(ctrlHeld||e.ctrlKey){
+    e.stopPropagation();
+    if(multiSelPanels.has(id)){
+      multiSelPanels.delete(id);
+      document.querySelectorAll('.wfc.sel-multi').forEach(el=>{if(el._panelId===id)el.classList.remove('sel-multi');});
+    } else {
+      multiSelPanels.add(id);
+      if(e.currentTarget){e.currentTarget.classList.add('sel-multi');e.currentTarget._panelId=id;}
+    }
+    return;
+  }
+  if(multiSelPanels.size>0){multiSelPanels.clear();document.querySelectorAll('.wfc.sel-multi').forEach(el=>el.classList.remove('sel-multi'));}
+  openBmNFModal(id,label);
+}
+
+function openBmNFModal(id,label){
+  selPanel=id;
+  const p=panels[id]||{status:'pending',notes:'',assigned:''};
+  selStat=p.status||'pending';
+  document.getElementById('m-ttl').textContent=label;
+  document.getElementById('m-sub').textContent='North Facade — Bracket';
+  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Bracket</span><span class="pv">${label}</span></div><div class="pr"><span class="pk">Status</span><span class="pv">${selStat}</span></div>`;
+  const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
+  const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
+  const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
+  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
+  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const btn=document.querySelector('.so.'+map[selStat]);
+  if(btn)btn.classList.add('ss');
+  document.getElementById('pm').classList.add('open');
+}
+
+function renderBMSF(){
+  if(!fFilters['BM-SF']) fFilters['BM-SF']='all';
+  const cont=document.getElementById('page-BM-SF');
+  const activeF=fFilters['BM-SF']||'all';
+
+  // Left wing cols (15a=corner, 15=edge, 14..4)
+  const colsL=['15a','15','14','13','12','11','10','9','8','7','6','5','4'];
+  // Right wing cols (93..81, col 81=corner)
+  const colsR=['93','92','91','90','89','88','87','86','85','84','83','82','81'];
+  // Full cols including separator marker
+  const cols=[...colsL,'|',...colsR];
+
+  // Row data builders
+  const L_STD =['TB-03','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01'];
+  const L_R2  =['TB-03','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01'];
+  const L_EMP =colsL.map(()=>'');
+  const R_STD =['TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-04'];
+  const R_RDC =colsR.map(()=>'GB-01');
+  const R_EMP =colsR.map(()=>'');
+  const mk=(l,r)=>[...l,'|',...r];
+
+  const rows=[
+    {label:'R+36',data:mk(L_STD,R_EMP)},{label:'R+35',data:mk(L_STD,R_EMP)},
+    {label:'R+34',data:mk(L_STD,R_EMP)},{label:'R+33',data:mk(L_STD,R_EMP)},
+    {label:'R+32',data:mk(L_STD,R_EMP)},{label:'R+31',data:mk(L_STD,R_EMP)},
+    {label:'R+30',data:mk(L_STD,R_EMP)},{label:'R+29',data:mk(L_STD,R_EMP)},
+    {label:'R+28',data:mk(L_STD,R_EMP)},{label:'R+27',data:mk(L_STD,R_EMP)},
+    {label:'R+26',data:mk(L_STD,R_EMP)},
+    {label:'R+25',data:mk(L_STD,R_STD)},{label:'R+24',data:mk(L_STD,R_STD)},
+    {label:'R+23',data:mk(L_STD,R_STD)},{label:'R+22',data:mk(L_STD,R_STD)},
+    {label:'R+21',data:mk(L_STD,R_STD)},{label:'R+20',data:mk(L_STD,R_STD)},
+    {label:'R+19',data:mk(L_STD,R_STD)},{label:'R+18',data:mk(L_STD,R_STD)},
+    {label:'R+17',data:mk(L_STD,R_STD)},{label:'R+16',data:mk(L_STD,R_STD)},
+    {label:'R+15',data:mk(L_STD,R_STD)},{label:'R+14',data:mk(L_STD,R_STD)},
+    {label:'R+13',data:mk(L_STD,R_STD)},{label:'R+12',data:mk(L_STD,R_STD)},
+    {label:'R+11',data:mk(L_STD,R_STD)},{label:'R+10',data:mk(L_STD,R_STD)},
+    {label:'R+9', data:mk(L_STD,R_STD)},{label:'R+8', data:mk(L_STD,R_STD)},
+    {label:'R+7', data:mk(L_STD,R_STD)},{label:'R+6', data:mk(L_STD,R_STD)},
+    {label:'R+5', data:mk(L_STD,R_STD)},{label:'R+4', data:mk(L_STD,R_STD)},
+    {label:'R+3', data:mk(L_STD,R_STD)},{label:'R+2', data:mk(L_R2, R_STD)},
+    {label:'R+1', data:mk(L_EMP,R_STD)},{label:'RDC', data:mk(L_EMP,R_RDC)},
+  ];
+
+  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+
+  const cellW=44, cellH=26, labelW=44;
+
+  const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
+    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setSFBMFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+  }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="sfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="sf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(SF_ZOOM_LEVELS[sfZoomIdx]*100)}%</span><button onclick="sfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="sfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printSF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
+
+  // Column headers
+  const headerCells=cols.map(c=>{
+    if(c==='|') return`<div style="width:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:18px;background:var(--border2);border-radius:1px;"></div></div>`;
+    return`<div style="width:${cellW}px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8099b0;flex-shrink:0;">${c}</div>`;
+  }).join('');
+
+  // Grid rows
+  const bodyRows=rows.map(r=>{
+    const isFullEmp=r.data.filter(v=>v!=='|').every(v=>v==='');
+    const cells=r.data.map((bracketType,ci)=>{
+      if(bracketType==='|') return`<div style="width:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:${cellH}px;background:var(--border2);"></div></div>`;
+      if(bracketType==='') return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
+      const col=cols[ci];
+      const id=`BM-SF-${r.label.replace('+','')}-${col}`;
+      const status=(panels[id]||{}).status||'pending';
+      const bg=stBg[status],border=stBorder[status],color=stText[status];
+      const dim=activeF!=='all'&&status!==activeF;
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmSFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;">
+      <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isFullEmp?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  // Count statuses for legend
+  const sfCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  rows.forEach(r=>{
+    r.data.forEach((bracketType,ci)=>{
+      if(!bracketType||bracketType==='|'||bracketType==='x') return;
+      const col=cols[ci];
+      const id=`BM-SF-${r.label.replace('+','')}-${col}`;
+      const status=(panels[id]||{}).status||'pending';
+      sfCount[status]=(sfCount[status]||0)+1;
+      sfCount.total++;
+    });
+  });
+
+  const legendItems=[
+    {cls:'st-i',label:'Installed',key:'installed'},{cls:'st-d',label:'Delivered',key:'delivered'},
+    {cls:'st-f',label:'Fabricated',key:'fabricated'},{cls:'st-c',label:'CL issued',key:'cutting'},
+    {cls:'st-cn',label:'CL not issued',key:'cl_not_issued'},
+    {cls:'st-cip',label:'Cutting List in Progress',key:'cip'},{cls:'st-x',label:'Defect',key:'defect'},
+  ];
+  const legendHTML=`
+    <div style="margin-top:18px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
+      ${legendItems.map(it=>`
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="wfc ${it.cls}" style="width:18px;height:18px;border-radius:3px;min-width:18px;flex-shrink:0;"></div>
+          <span style="font-size:11px;color:var(--text2);">${it.label}</span>
+          <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--surface2);border-radius:4px;padding:1px 5px;">${sfCount[it.key]||0}</span>
+        </div>`).join('')}
+    </div>`;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      ${filterBar}
+      <div style="padding:10px 20px 6px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Bracket Monitoring — South Facade</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px;">Left wing (cols 15a→4) · Right wing (cols 93→81) · click a cell to update status</div>
+      </div>
+      <div id="bm-scroll-SF" style="flex:1;overflow:auto;padding:0 20px 10px 0;">
+        <div id="wf-wrap-SF">
+        <div style="display:flex;align-items:center;position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:2px solid var(--border2);padding-bottom:2px;margin-bottom:2px;">
+          <div style="width:${labelW}px;flex-shrink:0;position:sticky;left:0;z-index:35;background:var(--surface);border-right:2px solid var(--border2);"></div>
+          ${headerCells}
+        </div>
+        ${bodyRows}
+        ${legendHTML}
+        </div>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>applySFZoom(),0);
+}
+
+function setSFBMFilter(f,el){
+  fFilters['BM-SF']=f;
+  el.closest('.tb').querySelectorAll('.fb').forEach(b=>b.classList.remove('af'));
+  el.classList.add('af');
+  renderBMSF();
+}
+
+function handleBmSFClick(e,id,label){
+  if(ctrlHeld||e.ctrlKey){
+    e.stopPropagation();
+    if(multiSelPanels.has(id)){
+      multiSelPanels.delete(id);
+      document.querySelectorAll('.wfc.sel-multi').forEach(el=>{if(el._panelId===id)el.classList.remove('sel-multi');});
+    } else {
+      multiSelPanels.add(id);
+      if(e.currentTarget){e.currentTarget.classList.add('sel-multi');e.currentTarget._panelId=id;}
+    }
+    return;
+  }
+  if(multiSelPanels.size>0){multiSelPanels.clear();document.querySelectorAll('.wfc.sel-multi').forEach(el=>el.classList.remove('sel-multi'));}
+  openBmSFModal(id,label);
+}
+
+function openBmSFModal(id,label){
+  selPanel=id;
+  const p=panels[id]||{status:'pending',notes:'',assigned:''};
+  selStat=p.status||'pending';
+  document.getElementById('m-ttl').textContent=label;
+  document.getElementById('m-sub').textContent='South Facade — Bracket';
+  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Bracket</span><span class="pv">${label}</span></div><div class="pr"><span class="pk">Status</span><span class="pv">${selStat}</span></div>`;
+  const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
+  const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
+  const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
+  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
+  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const btn=document.querySelector('.so.'+map[selStat]);
+  if(btn)btn.classList.add('ss');
+  document.getElementById('pm').classList.add('open');
+}
+
+function renderBMEF(){
+  if(!fFilters['BM-EF']) fFilters['BM-EF']='all';
+  const cont=document.getElementById('page-BM-EF');
+  const activeF=fFilters['BM-EF']||'all';
+
+  const cols=['81a','81','80','79','78','77','76','75','74','73','72','71','70','69','68','67','66','65C'];
+  const STD=['TB-04','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-03'];
+  const X_ROW=cols.map(()=>'x');
+  const EMPTY=cols.map(()=>'');
+  const R01_ROW=['TB-04','TB-02','TB-02','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01'];
+  const RDC_ROW=['GB-01','GB-01','GB-01','','','','','','','','','','','','','','',''];
+
+  const rows=[
+    {label:'R+36',data:EMPTY},{label:'R+35',data:EMPTY},{label:'R+34',data:EMPTY},
+    {label:'R+33',data:EMPTY},{label:'R+32',data:EMPTY},{label:'R+31',data:EMPTY},
+    {label:'R+30',data:EMPTY},{label:'R+29',data:EMPTY},{label:'R+28',data:EMPTY},
+    {label:'R+27',data:EMPTY},{label:'R+26',data:EMPTY},
+    {label:'R+25',data:STD},{label:'R+24',data:STD},{label:'R+23',data:STD},
+    {label:'R+22',data:STD},{label:'R+21',data:STD},{label:'R+20',data:STD},
+    {label:'R+19',data:STD},
+    {label:'R+18',data:STD},
+    {label:'R+17',data:STD},{label:'R+16',data:STD},{label:'R+15',data:STD},
+    {label:'R+14',data:STD},{label:'R+13',data:STD},{label:'R+12',data:STD},
+    {label:'R+11',data:STD},{label:'R+10',data:STD},{label:'R+09',data:STD},
+    {label:'R+08',data:STD},{label:'R+07',data:STD},{label:'R+06',data:STD},
+    {label:'R+05',data:STD},{label:'R+04',data:STD},{label:'R+03',data:STD},
+    {label:'R+02',data:STD},
+    {label:'R+01',data:R01_ROW},
+    {label:'RDC', data:RDC_ROW},
+  ];
+
+  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+
+  const cellW=46, cellH=26, labelW=44;
+
+  const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
+    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setEFBMFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+  }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="efZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="ef-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">100%</span><button onclick="efZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="efZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printEF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
+
+  const headerCells=cols.map(c=>`<div style="width:${cellW}px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8099b0;flex-shrink:0;">${c}</div>`).join('');
+
+  const bodyRows=rows.map(r=>{
+    const isX=r.data[0]==='x';
+    const isFullEmpty=r.data.every(v=>v==='');
+    const cells=r.data.map((bracketType,ci)=>{
+      if(bracketType==='x') return`<div style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;background:#edf0f3;flex-shrink:0;border:1px solid #e0e4ea;">—</div>`;
+      if(bracketType==='') return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
+      const col=cols[ci];
+      const id=`BM-EF-${r.label.replace('+','')}-${col}`;
+      const status=(panels[id]||{}).status||'pending';
+      const bg=stBg[status]; const border=stBorder[status]; const color=stText[status];
+      const dim=activeF!=='all'&&status!==activeF;
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmEFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;">
+      <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isX||isFullEmpty?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  // Count statuses for legend
+  const efCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  rows.forEach(r=>{
+    r.data.forEach((bracketType,ci)=>{
+      if(!bracketType||bracketType==='x') return;
+      const col=cols[ci];
+      const id=`BM-EF-${r.label.replace('+','')}-${col}`;
+      const status=(panels[id]||{}).status||'pending';
+      efCount[status]=(efCount[status]||0)+1;
+      efCount.total++;
+    });
+  });
+
+  const legendItems=[
+    {cls:'st-i',label:'Installed',key:'installed'},
+    {cls:'st-d',label:'Delivered',key:'delivered'},
+    {cls:'st-f',label:'Fabricated',key:'fabricated'},
+    {cls:'st-c',label:'CL issued',key:'cutting'},
+    {cls:'st-cip',label:'Cutting List in Progress',key:'cip'},
+    {cls:'st-cn',label:'CL not issued',key:'cl_not_issued'},
+    {cls:'st-x',label:'Defect',key:'defect'},
+  ];
+  const legendHTML=`
+    <div style="margin-top:18px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
+      ${legendItems.map(it=>`
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="wfc ${it.cls}" style="width:18px;height:18px;border-radius:3px;min-width:18px;flex-shrink:0;"></div>
+          <span style="font-size:11px;color:var(--text2);">${it.label}</span>
+          <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--surface2);border-radius:4px;padding:1px 5px;">${efCount[it.key]||0}</span>
+        </div>`).join('')}
+    </div>`;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      ${filterBar}
+      <div style="padding:10px 20px 6px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Bracket Monitoring — East Facade</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px;">18 columns · 38 levels · click a cell to update status</div>
+      </div>
+      <div id="bm-scroll-EF" style="flex:1;overflow:auto;padding:0 20px 10px 0;">
+        <div id="wf-wrap-EF">
+        <div style="display:flex;align-items:center;position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:2px solid var(--border2);padding-bottom:2px;margin-bottom:2px;">
+          <div style="width:${labelW}px;flex-shrink:0;position:sticky;left:0;z-index:35;background:var(--surface);border-right:2px solid var(--border2);"></div>
+          ${headerCells}
+        </div>
+        ${bodyRows}
+        ${legendHTML}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function setEFBMFilter(f,el){
+  fFilters['BM-EF']=f;
+  el.closest('.tb').querySelectorAll('.fb').forEach(b=>b.classList.remove('af'));
+  el.classList.add('af');
+  renderBMEF();
+}
+
+function handleBmEFClick(e, id, label){
+  if(ctrlHeld || e.ctrlKey){
+    e.stopPropagation();
+    if(multiSelPanels.has(id)){
+      multiSelPanels.delete(id);
+      document.querySelectorAll('.wfc.sel-multi').forEach(el=>{if(el._panelId===id)el.classList.remove('sel-multi');});
+    } else {
+      multiSelPanels.add(id);
+      if(e.currentTarget){e.currentTarget.classList.add('sel-multi');e.currentTarget._panelId=id;}
+    }
+    return;
+  }
+  if(multiSelPanels.size>0){
+    multiSelPanels.clear();
+    document.querySelectorAll('.wfc.sel-multi').forEach(el=>el.classList.remove('sel-multi'));
+  }
+  openBmEFModal(id, label);
+}
+
+function openBmEFModal(id, label){
+  selPanel=id;
+  const p=panels[id]||{status:'pending',notes:'',assigned:''};
+  selStat=p.status||'pending';
+  document.getElementById('m-ttl').textContent=label;
+  document.getElementById('m-sub').textContent='East Facade — Bracket';
+  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Bracket</span><span class="pv">${label}</span></div><div class="pr"><span class="pk">Status</span><span class="pv">${selStat}</span></div>`;
+  const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
+  const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
+  const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
+  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
+  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const activeBtn=document.querySelector('.so.'+map[selStat]);
+  if(activeBtn)activeBtn.classList.add('ss');
+  document.getElementById('pm').classList.add('open');
+}
+
+function renderBMWF(){
+  if(!fFilters['BM-WF']) fFilters['BM-WF']='all';
+  const cont=document.getElementById('page-BM-WF');
+  const activeF=fFilters['BM-WF']||'all';
+
+  const cols=['31-a','31','30','29','28','27','26','25','24','23','22','21','20','19','18','17','16','15'];
+  const STD=['TB-04','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-03'];
+  const X_ROW=cols.map(()=>'x');
+  const GB_ROW=cols.map(()=>'GB-01');
+  const EMPTY=cols.map(()=>'');
+
+  const rows=[
+    {label:'R+34',data:STD},{label:'R+33',data:STD},{label:'R+32',data:STD},
+    {label:'R+31',data:STD},{label:'R+30',data:STD},{label:'R+29',data:STD},
+    {label:'R+28',data:STD},{label:'R+27',data:STD},{label:'R+26',data:STD},
+    {label:'R+25',data:STD},{label:'R+24',data:STD},{label:'R+23',data:STD},
+    {label:'R+22',data:STD},{label:'R+21',data:STD},
+    {label:'R+20',data:STD},
+    {label:'R+19',data:STD},
+    {label:'R+18',data:STD},
+    {label:'R+17',data:STD},{label:'R+16',data:STD},{label:'R+15',data:STD},
+    {label:'R+14',data:STD},{label:'R+13',data:STD},{label:'R+12',data:STD},
+    {label:'R+11',data:STD},{label:'R+10',data:STD},{label:'R+9',data:STD},
+    {label:'R+8',data:STD},{label:'R+7',data:STD},{label:'R+6',data:STD},
+    {label:'R+5',data:STD},{label:'R+4',data:STD},{label:'R+3',data:STD},
+    {label:'R+2',data:GB_ROW},
+    {label:'R+1',data:EMPTY},
+    {label:'RDC',data:EMPTY},
+  ];
+
+  // Status colors — same as facade panels
+  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+
+  const cellW=46, cellH=26, labelW=44;
+
+  // Filter bar
+  const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
+    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setWFFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+  }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="wfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="wf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">100%</span><button onclick="wfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="wfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printWF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
+
+  // Column headers
+  const headerCells=cols.map(c=>`<div style="width:${cellW}px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8099b0;flex-shrink:0;">${c}</div>`).join('');
+
+  // Build grid rows
+  const bodyRows=rows.map(r=>{
+    const isX=r.data[0]==='x';
+    const isEmpty=r.data[0]==='';
+    const cells=r.data.map((bracketType,ci)=>{
+      if(isX) return`<div style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;background:#edf0f3;flex-shrink:0;border:1px solid #e0e4ea;">—</div>`;
+      if(isEmpty) return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
+      const col=cols[ci];
+      const id=`BM-WF-${r.label.replace('+','')}-${col.replace('-','_')}`;
+      const status=(panels[id]||{}).status||'pending';
+      const bg=stBg[status]; const border=stBorder[status]; const color=stText[status];
+      const dim=activeF!=='all'&&status!==activeF;
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmWFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;">
+      <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isX||isEmpty?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  // Count statuses for legend
+  const wfCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  rows.forEach(r=>{
+    if(r.data[0]==='x'||r.data[0]==='') return;
+    r.data.forEach((bracketType,ci)=>{
+      const col=cols[ci];
+      const id=`BM-WF-${r.label.replace('+','')}-${col.replace('-','_')}`;
+      const status=(panels[id]||{}).status||'pending';
+      wfCount[status]=(wfCount[status]||0)+1;
+      wfCount.total++;
+    });
+  });
+
+  const legendItems=[
+    {cls:'st-i',label:'Installed',key:'installed'},
+    {cls:'st-d',label:'Delivered',key:'delivered'},
+    {cls:'st-f',label:'Fabricated',key:'fabricated'},
+    {cls:'st-c',label:'CL issued',key:'cutting'},
+    {cls:'st-cip',label:'Cutting List in Progress',key:'cip'},
+    {cls:'st-cn',label:'CL not issued',key:'cl_not_issued'},
+    {cls:'st-x',label:'Defect',key:'defect'},
+  ];
+  const legendHTML=`
+    <div style="margin-top:18px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;">
+      <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
+      ${legendItems.map(it=>`
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div class="wfc ${it.cls}" style="width:18px;height:18px;border-radius:3px;min-width:18px;flex-shrink:0;"></div>
+          <span style="font-size:11px;color:var(--text2);">${it.label}</span>
+          <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--surface2);border-radius:4px;padding:1px 5px;">${wfCount[it.key]||0}</span>
+        </div>`).join('')}
+    </div>`;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      ${filterBar}
+      <div style="padding:10px 20px 6px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Bracket Monitoring — West Facade</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px;">18 columns · 35 levels · click a cell to update status</div>
+      </div>
+      <div id="bm-scroll-WF" style="flex:1;overflow:auto;padding:0 20px 10px 0;">
+        <div id="wf-wrap-WF">
+        <div style="display:flex;align-items:center;position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:2px solid var(--border2);padding-bottom:2px;margin-bottom:2px;">
+          <div style="width:${labelW}px;flex-shrink:0;position:sticky;left:0;z-index:35;background:var(--surface);border-right:2px solid var(--border2);"></div>
+          ${headerCells}
+        </div>
+        ${bodyRows}
+        ${legendHTML}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function handleBmWFClick(e, id, label){
+  if(ctrlHeld || e.ctrlKey){
+    e.stopPropagation();
+    if(multiSelPanels.has(id)){
+      multiSelPanels.delete(id);
+      document.querySelectorAll('.wfc.sel-multi').forEach(el=>{if(el._panelId===id)el.classList.remove('sel-multi');});
+    } else {
+      multiSelPanels.add(id);
+      if(e.currentTarget){e.currentTarget.classList.add('sel-multi');e.currentTarget._panelId=id;}
+    }
+    return;
+  }
+  // Normal click — clear any multi-selection
+  if(multiSelPanels.size>0){
+    multiSelPanels.clear();
+    document.querySelectorAll('.wfc.sel-multi').forEach(el=>el.classList.remove('sel-multi'));
+  }
+  openBmWFModal(id, label);
+}
+
+function setWFFilter(f,el){
+  fFilters['BM-WF']=f;
+  el.closest('.tb').querySelectorAll('.fb').forEach(b=>b.classList.remove('af'));
+  el.classList.add('af');
+  renderBMWF();
+}
+
+function openBmWFModal(id,label){
+  selPanel=id;
+  const p=panels[id]||{status:'pending',notes:'',assigned:''};
+  selStat=p.status||'pending';
+  document.getElementById('m-ttl').textContent=label;
+  document.getElementById('m-sub').textContent='West Facade — Bracket';
+  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Bracket</span><span class="pv">${label}</span></div><div class="pr"><span class="pk">Status</span><span class="pv">${selStat}</span></div>`;
+  const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
+  const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
+  const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
+  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
+  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const activeBtn=document.querySelector('.so.'+map[selStat]);
+  if(activeBtn)activeBtn.classList.add('ss');
+  document.getElementById('pm').classList.add('open');
+}
+
+function activateUCWMonitoring(){
+  const zid=curPage;
+  const wrap=document.getElementById('tb-wrap-'+zid);
+  if(wrap) wrap.style.display='block';
+}
+
+// SIMPLE FACADES (NF, SF) — no PDF data, generic grid
+function renderSimpleFP(zone){
+  const cont=document.getElementById('page-'+zone.id);
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}<div class="fpm">${filterBarHTML(zone.id)}<div class="gw"><div id="pg-${zone.id}"></div></div></div></div>`;
+  renderSimpleGrid(zone);
+}
+function renderSimpleGrid(zone){
+  const wrap=document.getElementById('pg-'+zone.id);if(!wrap)return;
+  const filter=fFilters[zone.id]||'all';
+  const grid=document.createElement('div');
+  grid.style.cssText=`display:inline-grid;gap:3px;grid-template-columns:repeat(${zone.cols},50px);background:rgba(34,79,147,0.02);border:1px solid var(--border);border-radius:10px;padding:12px;`;
+  for(let r=1;r<=zone.rows;r++)for(let c=1;c<=zone.cols;c++){
+    const id=`${zone.id}-R${r}C${c}`;const p=panels[id]||{status:'pending'};
+    const impliedByFilter=(filter==='delivered'&&(p.status==='installed'||p.status==='delivered')) ||
+                           (filter==='fabricated'&&p.ref&&assemblyPanelRefs.has(p.ref)&&(p.status==='delivered'||p.status==='installed'));
+    const dimmed=filter!=='all'&&p.status!==filter&&!impliedByFilter;
+    const meta=SM[p.status]||SM.pending;
+    const cell=document.createElement('div');cell.className=`wfc ${meta.cls} big-type`;
+    if(dimmed){cell.style.opacity='0.1';cell.style.pointerEvents='none';}
+    if(impliedByFilter&&filter==='delivered'){cell.style.setProperty('background-color','#FFF000','important');cell.style.setProperty('color','#665e00','important');}
+    if(impliedByFilter&&filter==='fabricated'){cell.style.setProperty('background-color','#002DFF','important');cell.style.setProperty('color','#ffffff','important');}
+    if(selPanel===id)cell.classList.add('sel');
+    cell.innerHTML=`<span class="c-type">${meta.icon.split('').join('\n')}</span><span class="c-ref">R${r}C${c}</span>`;
+    cell.onclick=(e)=>handlePanelClick(e,id,null,null,null,null,zone);grid.appendChild(cell);
+  }
+  const hdr=document.createElement('div');hdr.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:10px;';
+  hdr.innerHTML=`<span style="width:9px;height:9px;border-radius:50%;background:${zone.color};display:inline-block"></span><span style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text)">${zone.name}</span>`;
+  wrap.innerHTML='';wrap.appendChild(hdr);wrap.appendChild(grid);
+}
+
+// COMPLEX FACADES (EF, WF) — from PDF data, table layout
+function efSidebarHTML(){
+  const sections=[
+    {id:'projinfo', label:'Project Info', icon:'🏗️', color:'#2d6a8f', subs:['General Description','Batiglobe Organigram','Project Organigram','Financial Info']},
+    {id:'monitoring', label:'Monitoring Sheet', icon:'📊', color:'#6d35d9', subs:['Bracket Monitoring','UCW Monitoring'], subSubs:{'Bracket Monitoring':['Overview','North Facade','South Facade','East Facade','West Facade'],'UCW Monitoring':['Overview','North Facade','South Facade','East Facade','West Facade']}},
+    {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['UCW Fabrication Rate','UCW Delivery Rate','UCW Installation Rate','Bracket Installation Rate','Fabrication Counting']},
+    {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
+    {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
+    {id:'plan', label:'Planning',     icon:'📅', color:'#e05c00', subs:[]},
+    {id:'qc',   label:'Quality Control', icon:'✅', color:'#0097a7', subs:['Template Checklist','Signed Checklist','NCR'], subSubs:{
+      'Template Checklist':['Bracket Installation','Panel Assembly','Panel Prep et Inst'],
+      'Signed Checklist':['Signed Bracket Installation','Signed Panel Assembly','Signed Panel Prep et Inst']
+    }},
+    {id:'logs', label:'Logs',          icon:'📋', color:'#c02020', subs:[
+      'CF Logs (PO)',
+      'BR Logs (Aging Report)',
+      'OF Logs (Fabrication Orders)',
+    ]},
+    {id:'cashflow', label:'Cash Flow',  icon:'💰', color:'#00796b', subs:['Cash-In','Cash-Out','Cash-Flow'], subSubs:{'Cash-Out':['Employees Cost','Material Cost','Other Costs']}},
+    {id:'hr', label:'Human Ressources', icon:'👥', color:'#e53935', subs:['Time Sheet','Labor Curve']},
+    {id:'suggestions', label:'Suggestions', icon:'💡', color:'#f59e0b', subs:[]},
+    {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
+    {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
+    {id:'sitepictures', label:'Site Pictures', icon:'📸', color:'#f97316', subs:[]},
+  ];
+  return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
+    <div class="sbs" style="padding:11px 13px;">
+      ${sections.map(s=>`
+      <div style="margin-bottom:5px;">
+        <div id="ef-sec-${s.id}"
+             style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
+             onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
+             onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
+             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:''}
+        >
+          <span style="font-size:13px;line-height:1;">${s.icon}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
+          ${s.subs.length?`<span id="ef-arr-${s.id}" style="font-size:10px;color:var(--text3);transition:transform 0.2s;"">▸</span>`:`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block;"></span>`}
+        </div>
+        ${s.subs.length?`
+        <div id="ef-sub-${s.id}" style="display:none;margin-top:3px;padding-left:12px;border-left:2px solid ${s.color}30;">
+          ${s.subs.map(sub=>{
+            const hasSub2 = s.subSubs && s.subSubs[sub];
+            const sub2id = s.id+'-'+sub.replace(/\s+/g,'_');
+            if(sub==='General Description'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('proj-general')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Batiglobe Organigram'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('proj-bati-org')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Project Organigram'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('proj-org')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Financial Info'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('proj-financial')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='BR Logs (Aging Report)'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('aging-report')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='CF Logs (PO)'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('po-log')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='OF Logs (Fabrication Orders)'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('of-log')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Cash-In'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('cash-in')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Cash-Flow'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('cash-flow')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Employees Cost'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('monthly-cost')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Labor Curve'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="goPage('labor-curve')">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='UCW Fabrication Rate'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="openFabRateModal()">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='UCW Delivery Rate'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="openDeliveryRateModal()">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='UCW Installation Rate'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="openInstallRateModal()">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Bracket Installation Rate'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="openBracketInstallRateModal()">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Fabrication Counting'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="openFabCountingModal()">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='NCR'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="openNCRModal()">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   ${hasSub2?`onclick="toggleEFSub('${sub2id}',this)"`:''}>
+                <span style="flex:1;">${sub}</span>
+                ${hasSub2?`<span id="ef-arr-${sub2id}" style="font-size:9px;color:var(--text3);transition:transform 0.2s;">▸</span>`:''}
+              </div>
+              ${hasSub2?`
+              <div id="ef-sub-${sub2id}" style="display:none;padding-left:10px;border-left:2px solid ${s.color}18;">
+                ${s.subSubs[sub].map(item=>{
+                  const isBM=sub==='Bracket Monitoring';
+                  const isUCW=sub==='UCW Monitoring';
+                  const isTemplate=sub==='Template Checklist';
+                  const isSigned=sub==='Signed Checklist';
+                  const isCashOut=sub==='Cash-Out';
+                  const ucwMap={'Overview':'dashboard','North Facade':'NF','South Facade':'SF','East Facade':'EF','West Facade':'WF'};
+                  const bmMap={'Overview':'BM-dashboard','North Facade':'BM-NF','South Facade':'BM-SF','East Facade':'BM-EF','West Facade':'BM-WF'};
+                  const checklistMap={'Bracket Installation':'bracket-installation','Panel Assembly':'panel-assembly','Panel Prep et Inst':'panel-preparation'};
+                  const signedMap={'Signed Bracket Installation':'bracket-installation','Signed Panel Assembly':'panel-assembly','Signed Panel Prep et Inst':'panel-preparation'};
+                  const cashOutMap={'Employees Cost':'monthly-cost','Material Cost':'fournitures','Other Costs':'other-costs'};
+                  const zoneId=isUCW?(ucwMap[item]||''):isBM?(bmMap[item]||''):'';
+                  const ckId=isTemplate?(checklistMap[item]||''):'';
+                  const signedId=isSigned?(signedMap[item]||''):'';
+                  const cashOutPage=isCashOut?(cashOutMap[item]||''):'';
+                  const clickFn=isUCW&&zoneId?`navMode='ucw';goPage('${zoneId}');setTimeout(activateUCWMonitoring,80);`
+                    :isBM&&zoneId?`navMode='bracket';goPage('${zoneId}')`
+                    :isTemplate&&ckId?`openQCChecklist('${ckId}','${item}')`
+                    :isSigned&&signedId?`openSignedChecklistsView('${signedId}','${item}')`
+                    :isCashOut&&cashOutPage?`goPage('${cashOutPage}')`
+                    :isCashOut?`alert('${item} — Coming Soon')`:'' ;
+                  return `<div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;${isSigned?'display:flex;align-items:center;gap:5px;':''}"
+                     onmouseover="this.style.background='${s.color}0f'"
+                     onmouseout="this.style.background='transparent'"
+                     ${clickFn?`onclick="${clickFn}"`:''}>
+                  ${isSigned?`<span style="font-size:9px;color:#1a9458;">✦</span>`:''}${item}
+                </div>`;}).join('')}
+              </div>`:''}
+            </div>`;
+          }).join('')}
+        </div>`:''}
+      </div>`).join('')}
+    </div>
+  </aside>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  QC CHECKLISTS
+// ═══════════════════════════════════════════════════════════
+
+const QC_CHECKLISTS = {
+  'panel-assembly': {
+    title: 'Panel Assembly Checklist',
+    items: [
+      'Inclinaison des montants mâle et femelle.\n(Positionner une équerre contre le montant et vérifier que l\'inclinaison est présente)',
+      'Absence de bavures dans les zones usinées.\n(contrôle visuel à l\'œil nu en recherchant la présence de petits copeaux accrochés, d\'arêtes irrégulières ou d\'un aspect déchiré/non net.)',
+      'Laquage conforme\n(Absence de défaut sur les parties apparentes)',
+      'Application de l\'OTTOCOLL dans les jointures.\n(Le cordon de silicone doit être invisible à l\'œil nu (1 mm) . Le contrôle est réalisé après nettoyage de la surface.)',
+      'Contrôle de la présence des vis de serrage du cadre :\n(Vérifier que toutes les vis de fixation sont présentes et correctement installées sur l\'ensemble du cadre.)',
+      'Vérification de la bonne mise en étanchéité des vis d\'assemblage du cadre par enrobage au silicone DOW791.\n(Les vis doivent être imprégnées de silicone avant assemblage.)',
+      'Contrôle de l\'application du silicone DOW791 d\'étanchéité sur les clips.\n(vérifier que chaque clip est correctement enduit de silicone assurant l\'étanchéité, sans manque ni excès apparent.)',
+      'Contrôle de l\'application du silicone DOW791 d\'étanchéité sur les têtes des boulons.\n(vérifier que chaque tête de boulon est correctement recouverte de silicone afin d\'assurer l\'étanchéité, sans manque ni excès visible.)',
+      'Joint monté sur les réservations couvrant toute la longueur 767231 (Bubble Gasket) et siliconé en Silicone Silirub EPDM couvrant l\'ensemble des bords.',
+      'Joints (Saddle gasket ref 417025 et 420154 ) entaillé pour drainage, le joint doit debordere de 2 cm. Distance de l\'entaille de 150 mm pour le joint exterieur et 200 mm pour le joint d\'interieur\nassurer qu\'il a 2 ouvertures de drainages, Rigidité du joint sans',
+      'Chemin de drainage entre le montant et la traverse inférieure non obstrué par le silicone DOW791.\n(vérifier que le passage de drainage n\'est pas bloqué par le silicone.)',
+      'Application de la laine de roche (densité 70 Kg/m³)\n(Vérifier que 100 % de la surface prévue est correctement recouverte de laine de roche, sans manque ni zone non couverte.)',
+      'Contrôle du sens des crochets.\n(Vérifier que les crochets sont correctement orientés dans le bon sens, à la fois horizontalement et verticalement.)',
+      'Contrôle de la fixation des cornières de support vitrage.\n(Vérifier que les cornières sont correctement fixées, solidement serrées et correctement positionnées pour assurer le maintien du vitrage.)',
+      'Contrôle de la présence des cales vitrages.\n(Vérifier que toutes les deux cales de vitrage sont présentes et correctement positionnées.)',
+      'Application du silicone DOW 791 entre les jonctions PVC.\n(Vérifier que le silicone est correctement appliqué sur l\'ensemble des jonctions PVC, sans interruption ni manque.)',
+      'Vitrage et tôle exterieur exempt de rayures et de coloration anormale.\n(Vérifier à une distance d\'environ 3 mètres que le vitrage et la tôle ne présente aucune rayure visible à l\'œil nu.)',
+      'Aucun dépôt, trace, salissure entre les deux verres du double vitrage\n(Contrôle visuel à 3 mètres de distance, sous lumière naturelle)',
+      'Propreté des cotés intérieurs des simples vitrages\n(Nettoyage important)',
+      'Sens de la couche ST167 à l\'intérieur avec une étiquette vers l\'extérieur.\n(Vérifier, avant le dépôt du vitrage dans le module, à l\'aide du dispositif de contrôle Bohle, que la couche argentée est correctement orientée vers l\'intérieur.)',
+      'Application du silicone entre les jonctions des serrures.\n(Vérifier que le silicone est correctement appliqué sur l\'ensemble des jonctions des serrures, sans discontinuité ni manque.)',
+      'Contrôle des vis de fixation serrure/vitrage.\n(Vérifier la présence et le bon serrage de toutes les vis assurant la fixation entre la serrure et le vitrage, sans vis manquante ni desserrée.)',
+      'Application du sillicone structurel (DOW 895)\n(Cadre structure, renfort en diagonal, traverse)',
+      'Longueur des joints Horizontaux extérieurs. ( ref 767871)\n(Vérifier que les joints extérieurs présentent un débordement d\'environ 6 cm.)',
+      'Assurer que la refence du joint est correct:\nJoint interieur pour Double vitrage est 750116 et 750108,\nJoint interieur  pour vitrage simple 750110 et 750203,\nJoint capot serreur 750004',
+      'Aspect esthétique du couple capot/serrure.\n(vérifier l\'alignement et l\'uniformité de l\'ensemble afin d\'assurer un rendu esthétique homogène et sans désalignement visible.)'
+    ]
+  },
+  'bracket-installation': {
+    title: 'Bracket Installation Checklist',
+    items: [
+      'Support type',
+      'Washers brackets',
+      "Boulon d'ancrage inséré jusqu'à la ligne rouge (profondeur effective)",
+      'Les cales sont bien placées',
+      'Alignement Et Niveau Validé',
+      "Alignement de l'ensemble des supports Validé",
+      'Béton bien nettoyé',
+      'Torque des Boulons',
+    ]
+  },
+  'panel-preparation': {
+    title: 'Panel Prep et Inst Checklist',
+    items: [
+      'Bubble gasket 767231 installé à l\'intérieur',
+      'Bubble gasket 767231 installé à l\'extérieur',
+      'Saddle gasket 417025 installé à l\'intérieur',
+      'Saddle gasket 420154 installé à l\'extérieur',
+      'Drainage extérieur conforme (190 mm du bord)',
+      'Drainage extérieur conforme (250 mm du bord)',
+      'Largeur du Drainage conforme (L=30 mm)',
+      'Silirub appliqué sur les brackets fins verticals',
+      'Vis du top transom affleurantes',
+      'Vis du top transom correctement serrées',
+      'Quatres corners bien siliconés',
+      'Boulon du hook correctement serré',
+      'Installation des fins verticals et Horizontales',
+      'Niveau X, Y Z de panneau (avec 3 mm tolerance)',
+      'Gauche droite ( 10 mm de l\'interieur et 18 mm de l\'exterieur)',
+      'Installation des U sleeve',
+      'Etancheité des U sleeve',
+      'Installation des Eponges',
+    ]
+  }
+};
+
+function openQCChecklist(typeId, label, opts={}){
+  // opts = { panelRef, panelId, existingRecord, existingId, readOnly }
+  const ck = QC_CHECKLISTS[typeId];
+  if(!ck){ alert('Checklist not configuré.'); return; }
+
+  // Remove any existing modal
+  const existing = document.getElementById('qc-ck-modal');
+  if(existing) existing.remove();
+
+  const today = new Date().toISOString().split('T')[0];
+  // Auto-resolve project name from the active project
+  const projName = (window._activeProjectId && PROJECT_META[window._activeProjectId]?.name)
+    ? PROJECT_META[window._activeProjectId].name
+    : (lsG('bm_active_proj_name') || '');
+
+  const rec = opts.existingRecord || null;
+  const isReadOnly = !!opts.readOnly;
+  const prefillRef = opts.panelRef || (rec?.panel_ref) || '';
+  const prefillDate = rec?.inspection_date || today;
+  const prefillRemarks = rec?.remarks || '';
+  const roAttr = isReadOnly ? 'readonly disabled' : '';
+  const roBg   = isReadOnly ? 'background:#f0f4f9;cursor:default;' : 'background:#fff;';
+
+  // Per-item: C / NC / N/A
+  const itemsHTML = ck.items.map((txt, i) => {
+    const isSupportType = typeId === 'bracket-installation' && i === 0;
+    if(isSupportType){
+      return `
+    <div style="display:grid;grid-template-columns:28px 1fr;gap:6px;align-items:center;
+         padding:7px 10px;background:#f8fafc;border-radius:6px;margin-bottom:3px;">
+      <span style="font-size:10px;font-weight:700;color:#8099b0;text-align:center;">1</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${txt}</span>
+        <input type="text" id="ck-comment-0" placeholder="ex. T24, console aluminium…" ${roAttr}
+          style="flex:1;font-size:12px;padding:5px 9px;border:1.5px solid #224F93;border-radius:6px;color:#1e3a5f;${roBg}box-sizing:border-box;">
+      </div>
+    </div>`;
+    }
+    return `
+    <div style="display:grid;grid-template-columns:28px 1fr auto auto auto 180px;gap:6px;align-items:center;
+         padding:7px 10px;background:${i%2===0?'#f8fafc':'#fff'};border-radius:6px;margin-bottom:3px;">
+      <span style="font-size:10px;font-weight:700;color:#8099b0;text-align:center;">${i+1}</span>
+      <span style="font-size:12px;color:#1e3a5f;line-height:1.4;">${txt}</span>
+      <label style="display:flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#1a9458;cursor:pointer;white-space:nowrap;">
+        <input type="radio" name="ck-${i}" value="C" style="accent-color:#1a9458;cursor:pointer;"> C
+      </label>
+      <label style="display:flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#c02020;cursor:pointer;white-space:nowrap;">
+        <input type="radio" name="ck-${i}" value="NC" style="accent-color:#c02020;cursor:pointer;"> NC
+      </label>
+      <label style="display:flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#8099b0;cursor:pointer;white-space:nowrap;">
+        <input type="radio" name="ck-${i}" value="NA" style="accent-color:#8099b0;cursor:pointer;"> N/A
+      </label>
+      <input type="text" placeholder="Commentaire…" id="ck-comment-${i}"
+        style="width:100%;font-size:11px;padding:4px 7px;border:1px solid #d0dae8;border-radius:4px;color:#1e3a5f;background:#fff;box-sizing:border-box;">
+    </div>`;
+  }).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'qc-ck-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(14,28,55,0.55);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 10px 40px;';
+  // Store opts on the element for use by save/cancel handlers
+  modal.dataset.existingId = opts.existingId || '';
+  modal.dataset.panelId    = opts.panelId    || '';
+  modal.dataset.readOnly   = isReadOnly ? '1' : '';
+
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:900px;box-shadow:0 12px 48px rgba(0,0,0,0.28);font-family:'Barlow',sans-serif;overflow:hidden;">
+
+      <!-- Header -->
+      <div style="background:linear-gradient(135deg,#224F93,#1a3a6e);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;">
+            Contrôle Qualité — ${projName}
+            ${isReadOnly?'<span style="margin-left:10px;background:#c02020;padding:2px 8px;border-radius:10px;font-size:9px;letter-spacing:0.5px;">🔒 SIGNÉ — LECTURE SEULE</span>':''}
+          </div>
+          <div style="font-size:18px;font-weight:700;color:#fff;margin-top:2px;">${ck.title}</div>
+        </div>
+        <button onclick="_qcCancelChecklist()"
+          style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;width:32px;height:32px;font-size:18px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>
+      </div>
+
+      <!-- Meta — Project (readonly), Ref (prefilled + locked if from panel), Date only -->
+      <div style="padding:14px 20px;background:#f4f7fc;border-bottom:1px solid #d0dae8;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px;">Projet</label>
+          <input id="ck-meta-project" type="text" value="${projName}" readonly
+            style="width:100%;font-size:12px;padding:6px 9px;border:1px solid #d0dae8;border-radius:6px;color:#1e3a5f;background:#eef2f8;box-sizing:border-box;cursor:default;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px;">Référence Panneau</label>
+          <input id="ck-meta-ref" type="text" value="${prefillRef}" ${prefillRef?'readonly':''} placeholder="ex. E-05-80"
+            style="width:100%;font-size:12px;padding:6px 9px;border:1px solid #d0dae8;border-radius:6px;color:#1e3a5f;${prefillRef?'background:#eef2f8;cursor:default;':'background:#fff;'}box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px;">Date</label>
+          <input id="ck-meta-date" type="date" value="${prefillDate}" ${roAttr}
+            style="width:100%;font-size:12px;padding:6px 9px;border:1px solid #d0dae8;border-radius:6px;color:#1e3a5f;${roBg}box-sizing:border-box;">
+        </div>
+      </div>
+
+      <!-- Column headers -->
+      <div style="display:grid;grid-template-columns:28px 1fr 46px 46px 46px 180px;gap:6px;padding:8px 10px;background:#eef2f8;border-bottom:1px solid #d0dae8;">
+        <span style="font-size:10px;font-weight:700;color:#8099b0;text-align:center;">#</span>
+        <span style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;">Description</span>
+        <span style="font-size:10px;font-weight:700;color:#1a9458;text-align:center;white-space:nowrap;">C</span>
+        <span style="font-size:10px;font-weight:700;color:#c02020;text-align:center;white-space:nowrap;">NC</span>
+        <span style="font-size:10px;font-weight:700;color:#8099b0;text-align:center;white-space:nowrap;">N/A</span>
+        <span style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;">Commentaires</span>
+      </div>
+
+      <!-- Checklist items -->
+      <div style="padding:10px;max-height:calc(100vh - 480px);overflow-y:auto;" id="qc-items-scroll">
+        ${itemsHTML}
+      </div>
+
+      <!-- Remarks -->
+      <div style="padding:10px 20px 0;background:#fff;border-top:1px solid #d0dae8;">
+        <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px;">Remarques générales</label>
+        <textarea id="ck-remarks" rows="2" placeholder="Remarques générales…" ${roAttr}
+          style="width:100%;font-size:12px;padding:6px 9px;border:1px solid #d0dae8;border-radius:6px;color:#1e3a5f;${roBg}box-sizing:border-box;resize:vertical;">${prefillRemarks}</textarea>
+      </div>
+
+      <!-- Dual signature pads -->
+      <div style="padding:16px 20px;border-top:1px solid #d0dae8;background:#f9fbfe;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <!-- Contrôleur -->
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:11px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:0.8px;border-bottom:2px solid #224F93;padding-bottom:4px;margin-bottom:4px;">Contrôleur</div>
+          <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;">Nom</label>
+          <input id="ck-sig1-name" type="text" placeholder="Nom du contrôleur…" ${roAttr}
+            style="font-size:12px;padding:6px 9px;border:1px solid #d0dae8;border-radius:6px;color:#1e3a5f;${roBg}box-sizing:border-box;">
+          <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;margin-top:4px;">Signature</label>
+          <div style="position:relative;width:100%;">
+            <canvas id="qc-sig-canvas-1" width="360" height="100"
+              style="border:1.5px solid #d0dae8;border-radius:8px;background:#fff;${isReadOnly?'cursor:default;':'cursor:crosshair;'}touch-action:none;display:block;width:100%;"></canvas>
+            ${isReadOnly&&rec?.signature_data?`<img src="${rec.signature_data}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:8px;pointer-events:none;" />`:''}
+          </div>
+          ${isReadOnly?'':`<button onclick="_qcSigClear('qc-sig-canvas-1')"
+            style="align-self:flex-start;font-size:10px;font-weight:600;padding:4px 12px;border:1px solid #d0dae8;border-radius:5px;background:#fff;color:#8099b0;cursor:pointer;">
+            Effacer
+          </button>`}
+        </div>
+
+        <!-- Sig2 title -->
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:11px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:0.8px;border-bottom:2px solid #224F93;padding-bottom:4px;margin-bottom:4px;">${(typeId==='bracket-installation'||typeId==='panel-preparation')?'Conducteur Travaux':"Chef d'Atelier"}</div>
+          <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;">Nom</label>
+          <input id="ck-sig2-name" type="text" placeholder="${(typeId==='bracket-installation'||typeId==='panel-preparation')?'Nom du conducteur travaux…':"Nom du chef d'atelier…"}" ${roAttr}
+            style="font-size:12px;padding:6px 9px;border:1px solid #d0dae8;border-radius:6px;color:#1e3a5f;${roBg}box-sizing:border-box;">
+          <label style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;margin-top:4px;">Signature</label>
+          <div style="position:relative;width:100%;">
+            <canvas id="qc-sig-canvas-2" width="360" height="100"
+              style="border:1.5px solid #d0dae8;border-radius:8px;background:#fff;${isReadOnly?'cursor:default;':'cursor:crosshair;'}touch-action:none;display:block;width:100%;"></canvas>
+            ${isReadOnly&&rec?.sig2_data?`<img src="${rec.sig2_data}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:8px;pointer-events:none;" />`:''}
+          </div>
+          ${isReadOnly?'':`<button onclick="_qcSigClear('qc-sig-canvas-2')"
+            style="align-self:flex-start;font-size:10px;font-weight:600;padding:4px 12px;border:1px solid #d0dae8;border-radius:5px;background:#fff;color:#8099b0;cursor:pointer;">
+            Effacer
+          </button>`}
+        </div>
+
+      </div>
+
+      <!-- Footer actions -->
+      <div style="padding:14px 20px;background:#f4f7fc;border-top:1px solid #d0dae8;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <div id="qc-save-status" style="font-size:11px;font-weight:600;color:#8099b0;">
+          ${isReadOnly?'<span style="color:#c02020;">🔒 Checklist signée par les deux parties — lecture seule</span>':''}
+          ${(!isReadOnly&&rec)?'<span style="color:#e05c00;">✏️ Modification d\'un checklist existant</span>':''}
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="_qcCancelChecklist()"
+            style="font-size:12px;font-weight:600;padding:8px 20px;border:1.5px solid #d0dae8;border-radius:7px;background:#fff;color:#8099b0;cursor:pointer;">
+            ${isReadOnly?'Fermer':'Annuler'}
+          </button>
+          ${isReadOnly?'':`<button onclick="_qcSaveChecklist('${typeId}','${label}')"
+            style="font-size:12px;font-weight:700;padding:8px 24px;border:none;border-radius:7px;background:linear-gradient(135deg,#224F93,#1a3a6e);color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(34,79,147,0.3);">
+            💾 Enregistrer
+          </button>`}
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  if(!isReadOnly){
+    _qcInitSigPad('qc-sig-canvas-1');
+    _qcInitSigPad('qc-sig-canvas-2');
+  }
+
+  // Pre-fill items and signature names from an existing record
+  if(rec){
+    requestAnimationFrame(()=>{
+      // Pre-fill item radios + comments
+      if(Array.isArray(rec.items)){
+        rec.items.forEach(item=>{
+          const i = item.index - 1;
+          if(item.result){
+            const radio = document.querySelector(`input[name="ck-${i}"][value="${item.result}"]`);
+            if(radio) radio.checked = true;
+          }
+          const commentEl = document.getElementById(`ck-comment-${i}`);
+          if(commentEl && item.comment) commentEl.value = item.comment;
+        });
+      }
+      // Pre-fill signature names
+      const s1n = document.getElementById('ck-sig1-name');
+      const s2n = document.getElementById('ck-sig2-name');
+      if(s1n && rec.signature_name) s1n.value = rec.signature_name;
+      if(s2n && rec.sig2_name)      s2n.value = rec.sig2_name;
+      // Pre-draw existing signatures on canvas if not read-only (editable, partial sign)
+      if(!isReadOnly){
+        if(rec.signature_data) _qcDrawSigImage('qc-sig-canvas-1', rec.signature_data);
+        if(rec.sig2_data)      _qcDrawSigImage('qc-sig-canvas-2', rec.sig2_data);
+      }
+    });
+  }
+}
+
+function _qcInitSigPad(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1e3a5f';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  let drawing = false;
+
+  function getXY(e){
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    if(e.touches){
+      return [(e.touches[0].clientX - r.left)*scaleX, (e.touches[0].clientY - r.top)*scaleY];
+    }
+    return [(e.clientX - r.left)*scaleX, (e.clientY - r.top)*scaleY];
+  }
+
+  function start(e){
+    drawing = true;
+    const [x,y] = getXY(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    e.preventDefault();
+  }
+  function move(e){
+    if(!drawing) return;
+    const [x,y] = getXY(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    e.preventDefault();
+  }
+  function end(){ drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+
+function _qcSigClear(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function _qcSigIsEmpty(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return true;
+  const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+  for(let i = 3; i < data.length; i+=4){ if(data[i] > 10) return false; }
+  return true;
+}
+
+// Draw a base64 PNG signature image onto a canvas (for pre-filling editable existing records)
+function _qcDrawSigImage(canvasId, dataUrl){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas || !dataUrl) return;
+  const img = new Image();
+  img.onload = () => {
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+  img.src = dataUrl;
+}
+
+// Cancel checklist — revert panel status picker to pre-fabricated state if needed
+function _qcCancelChecklist(){
+  const modal = document.getElementById('qc-ck-modal');
+  if(modal) modal.remove();
+  // If the checklist was triggered by clicking Fabricated, revert selStat
+  if(typeof window._preFabStatus !== 'undefined' && selStat === 'fabricated'){
+    const prev = window._preFabStatus;
+    selStat = prev;
+    document.querySelectorAll('.so').forEach(e=>e.classList.remove('ss'));
+    const smap = {installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+    const btn = document.querySelector(`.so.${smap[prev]}`);
+    if(btn) btn.classList.add('ss');
+    const fw = document.getElementById('m-fab-date-wrap');
+    const iw = document.getElementById('m-install-date-wrap');
+    if(fw) fw.style.display = 'none';
+    if(iw) iw.style.display = prev==='installed'?'block':'none';
+  }
+  window._preFabStatus = undefined;
+}
+
+async function _qcSaveChecklist(typeId, label){
+  const ck = QC_CHECKLISTS[typeId];
+  if(!ck) return;
+
+  const modal = document.getElementById('qc-ck-modal');
+  const existingId = modal?.dataset?.existingId || '';
+  const panelId    = modal?.dataset?.panelId    || '';
+
+  const statusEl = document.getElementById('qc-save-status');
+  if(statusEl){ statusEl.textContent = 'Enregistrement…'; statusEl.style.color = '#8099b0'; }
+
+  // Gather header meta
+  const project  = (document.getElementById('ck-meta-project')?.value||'').trim();
+  const ref      = (document.getElementById('ck-meta-ref')?.value||'').trim();
+  const date     = document.getElementById('ck-meta-date')?.value || new Date().toISOString().split('T')[0];
+  const remarks  = (document.getElementById('ck-remarks')?.value||'').trim();
+
+  // Signature 1 — Contrôleur
+  const sig1Name = (document.getElementById('ck-sig1-name')?.value||'').trim();
+  const sig1Data = !_qcSigIsEmpty('qc-sig-canvas-1')
+    ? document.getElementById('qc-sig-canvas-1').toDataURL('image/png') : null;
+
+  // Signature 2 — Conducteur Travaux
+  const sig2Name = (document.getElementById('ck-sig2-name')?.value||'').trim();
+  const sig2Data = !_qcSigIsEmpty('qc-sig-canvas-2')
+    ? document.getElementById('qc-sig-canvas-2').toDataURL('image/png') : null;
+
+  // Gather item results
+  const items = ck.items.map((txt, i)=>{
+    const sel = document.querySelector(`input[name="ck-${i}"]:checked`);
+    const comment = document.getElementById(`ck-comment-${i}`)?.value||'';
+    return { index: i+1, description: txt, result: sel?.value||null, comment };
+  });
+
+  const payload = {
+    checklist_type: typeId,
+    checklist_label: label,
+    project,
+    panel_ref: ref,
+    inspection_date: date,
+    inspector_id: sbUser?.id || null,
+    items,
+    remarks,
+    signature_name: sig1Name,
+    signature_data: sig1Data,
+    sig2_name: sig2Name,
+    sig2_data: sig2Data,
+    updated_by: sbUser?.id || null,
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    let error;
+    if(existingId){
+      // UPDATE existing record
+      ({error} = await sb.from('qc_checklists').update(payload).eq('id', existingId));
+    } else {
+      // INSERT new record
+      ({error} = await sb.from('qc_checklists').insert({...payload, created_at: new Date().toISOString()}));
+    }
+    if(error) throw error;
+
+    if(statusEl){ statusEl.textContent = '✅ Enregistré !'; statusEl.style.color = '#1a9458'; }
+
+    // If triggered from a panel click — update panel status based on checklist type and close panel modal
+    if(panelId && panels[panelId]){
+      const today = new Date().toISOString().split('T')[0];
+      const isInstallChecklist = typeId==='bracket-installation' || typeId==='panel-preparation';
+      const newStatus = isInstallChecklist ? 'installed' : 'fabricated';
+      panels[panelId] = {
+        ...panels[panelId],
+        status: newStatus,
+        installDate: isInstallChecklist ? (panels[panelId].installDate || today) : panels[panelId].installDate||'',
+        fabDate: !isInstallChecklist ? (panels[panelId].fabDate || today) : panels[panelId].fabDate||''
+      };
+      saveData();
+      updateTabs();
+      // Refresh the current grid
+      if(curPage==='dashboard') renderDash();
+      else if(curPage==='BM-dashboard') renderBMDashboard();
+      else {
+        const z = ZONES.find(z=>z.id===curPage);
+        if(z && z.simple) renderSimpleGrid(z);
+        else { const t=document.getElementById('tbl-'+curPage); if(t){t.innerHTML='';buildComplexTable(z);} }
+      }
+      // Close the panel modal
+      cm('pm');
+    }
+
+    setTimeout(()=>{
+      const m = document.getElementById('qc-ck-modal');
+      if(m) m.remove();
+      window._preFabStatus = undefined;
+    }, 1400);
+
+  } catch(e){
+    console.error('QC checklist save error:', e);
+    if(statusEl){ statusEl.textContent = '⚠ Échec : '+(e?.message||e); statusEl.style.color = '#c02020'; }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SIGNED CHECKLISTS VIEWER
+// ─────────────────────────────────────────────────────────────
+async function openSignedChecklistsView(typeId, label){
+  const existing = document.getElementById('qc-signed-modal');
+  if(existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'qc-signed-modal';
+  modal.dataset.typeId = typeId;
+  modal.dataset.label  = label;
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(14,28,55,0.55);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 10px 40px;';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:860px;box-shadow:0 12px 48px rgba(0,0,0,0.28);font-family:'Barlow',sans-serif;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#1a9458,#0f6b3e);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;">Contrôle Qualité — Signés</div>
+          <div style="font-size:17px;font-weight:700;color:#fff;margin-top:2px;">${label}</div>
+        </div>
+        <button onclick="document.getElementById('qc-signed-modal').remove()"
+          style="background:rgba(255,255,255,0.12);border:none;border-radius:8px;width:32px;height:32px;font-size:18px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+      <div id="qc-signed-body" style="padding:20px;min-height:120px;display:flex;align-items:center;justify-content:center;">
+        <div style="font-size:13px;color:#8099b0;">Chargement…</div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  await _loadSignedChecklistBody(typeId, label);
+}
+
+async function _loadSignedChecklistBody(typeId, label){
+  let records = [];
+  try {
+    const {data, error} = await sb.from('qc_checklists')
+      .select('id,panel_ref,project,inspection_date,signature_name,sig2_name,created_at')
+      .eq('checklist_type', typeId)
+      .not('signature_data','is',null)
+      .not('sig2_data','is',null)
+      .order('inspection_date',{ascending:false});
+    if(!error && data) records = data;
+  } catch(e){}
+
+  const body = document.getElementById('qc-signed-body');
+  if(!body) return;
+
+  if(records.length === 0){
+    body.style.cssText = 'padding:20px;min-height:120px;display:flex;align-items:center;justify-content:center;';
+    body.innerHTML = `<div style="text-align:center;padding:30px 20px;">
+      <div style="font-size:32px;margin-bottom:10px;">📋</div>
+      <div style="font-size:13px;font-weight:600;color:#8099b0;">Aucun checklist signé trouvé</div>
+      <div style="font-size:11px;color:#b0bec5;margin-top:4px;">Les checklists apparaîtront ici une fois signés par les deux parties</div>
+    </div>`;
+    return;
+  }
+
+  // Count duplicate panel_ref values
+  const refCount={};
+  records.forEach(r=>{ const k=r.panel_ref||''; refCount[k]=(refCount[k]||0)+1; });
+
+  body.style.cssText = 'padding:16px 20px;';
+  body.innerHTML = `
+    <div style="width:100%;">
+      <!-- Filter bar + actions -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+        <input type="checkbox" id="scl-chk-all" title="Select all" onchange="_sclToggleAll(this)"
+          style="width:15px;height:15px;flex-shrink:0;cursor:pointer;accent-color:#224F93;"/>
+        <div style="position:relative;flex:1;min-width:120px;">
+          <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:#8099b0;pointer-events:none;">🔍</span>
+          <input id="scl-filter-ref" type="text" placeholder="Filter by ref…"
+            oninput="_filterSignedRows()"
+            style="width:100%;box-sizing:border-box;padding:7px 10px 7px 30px;border:1.5px solid #d0dbe8;border-radius:7px;font-size:12px;font-family:'Barlow',sans-serif;color:#1e3a5f;outline:none;transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#d0dbe8'"/>
+        </div>
+        <div style="position:relative;flex:1;min-width:120px;">
+          <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;color:#8099b0;pointer-events:none;">👤</span>
+          <input id="scl-filter-name" type="text" placeholder="Filter by name…"
+            oninput="_filterSignedRows()"
+            style="width:100%;box-sizing:border-box;padding:7px 10px 7px 30px;border:1.5px solid #d0dbe8;border-radius:7px;font-size:12px;font-family:'Barlow',sans-serif;color:#1e3a5f;outline:none;transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#d0dbe8'"/>
+        </div>
+        <span id="scl-count" style="font-size:11px;font-weight:700;color:#8099b0;white-space:nowrap;">${records.length} records</span>
+        <div style="display:flex;gap:5px;margin-left:4px;">
+          <button id="scl-btn-voir" onclick="_sclVoir()" title="Voir le checklist sélectionné"
+            style="font-size:10px;font-weight:700;padding:5px 10px;border:none;border-radius:5px;background:#224F93;color:#fff;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;opacity:0.4;pointer-events:none;">
+            👁 Voir
+          </button>
+          <button id="scl-btn-pdf" onclick="_sclPDF()" title="Imprimer en PDF"
+            style="font-size:10px;font-weight:700;padding:5px 10px;border:none;border-radius:5px;background:#0097a7;color:#fff;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;opacity:0.4;pointer-events:none;">
+            🖨 PDF
+          </button>
+          <button id="scl-btn-del" onclick="_sclDelete()" title="Supprimer la sélection"
+            style="font-size:10px;font-weight:700;padding:5px 10px;border:none;border-radius:5px;background:#fff;color:#c02020;border:1.5px solid #f5b8b8;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;opacity:0.4;pointer-events:none;">
+            🗑 Suppr.
+          </button>
+        </div>
+      </div>
+      <!-- Column headers -->
+      <div style="display:grid;grid-template-columns:20px 1fr 65px 55px 100px 130px 130px;gap:8px;padding:5px 10px;background:#eef2f8;border-radius:6px;margin-bottom:6px;align-items:center;">
+        <span></span>
+        <span onclick="_sclSort('ref')" style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none;" title="Sort by ref">Réf. Panneau <span id="scl-sort-ref" style="font-size:10px;color:#c0cde0;">↕</span></span>
+        <span onclick="_sclSort('facade')" style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none;" title="Sort by facade">Facade <span id="scl-sort-facade" style="font-size:10px;color:#c0cde0;">↕</span></span>
+        <span onclick="_sclSort('floor')" style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none;" title="Sort by floor">Floor <span id="scl-sort-floor" style="font-size:10px;color:#c0cde0;">↕</span></span>
+        <span onclick="_sclSort('date')" style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none;" title="Sort by date">Date <span id="scl-sort-date" style="font-size:10px;color:#c0cde0;">↕</span></span>
+        <span onclick="_sclSort('ctrl')" style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none;" title="Sort by contrôleur">Contrôleur <span id="scl-sort-ctrl" style="font-size:10px;color:#c0cde0;">↕</span></span>
+        <span onclick="_sclSort('cond')" style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;cursor:pointer;display:flex;align-items:center;gap:3px;user-select:none;" title="Sort by conducteur">Conducteur Travaux <span id="scl-sort-cond" style="font-size:10px;color:#c0cde0;">↕</span></span>
+      </div>
+      <!-- Rows -->
+      <div id="scl-rows">
+      ${records.map((r,_ri)=>{
+        const isDup=refCount[r.panel_ref||'']>1;
+        const bgNorm=isDup?'#fff5f5':'#fff';
+        const bgHov=isDup?'#ffe8e8':'#f4f7fc';
+        const border=isDup?'#f5b8b8':'#eef2f8';
+        const {facade:_fac,floor:_flr}=_sclParseRef(r.panel_ref);
+        return`<div id="signed-row-${r.id}"
+          data-record-id="${r.id}"
+          data-orig-idx="${_ri}"
+          data-ref="${(r.panel_ref||'').toLowerCase()}"
+          data-facade="${_fac.toLowerCase()}"
+          data-floor="${_flr}"
+          data-date="${r.inspection_date||''}"
+          data-ctrl="${(r.signature_name||'').toLowerCase()}"
+          data-cond="${(r.sig2_name||'').toLowerCase()}"
+          data-name="${((r.signature_name||'')+' '+(r.sig2_name||'')).toLowerCase()}"
+          style="display:grid;grid-template-columns:20px 1fr 65px 55px 100px 130px 130px;gap:8px;padding:0 10px;height:25px;border-radius:5px;border:1px solid ${border};margin-bottom:3px;align-items:center;transition:background 0.12s;background:${bgNorm};"
+          onmouseover="this.style.background='${bgHov}'" onmouseout="this.style.background=this.querySelector('input').checked?'#e8f0fb':'${bgNorm}'">
+          <input type="checkbox" class="scl-row-chk" data-id="${r.id}"
+            onchange="_sclUpdateButtons();this.closest('[id^=signed-row]').style.background=this.checked?'#e8f0fb':'${bgNorm}'"
+            style="width:13px;height:13px;cursor:pointer;accent-color:#224F93;"/>
+          <div style="display:flex;align-items:center;gap:6px;overflow:hidden;">
+            <span style="font-size:11px;font-weight:700;color:#1e3a5f;white-space:nowrap;">${r.panel_ref||'—'}${isDup?` <span style="font-size:9px;font-weight:700;background:#f5b8b8;color:#c02020;border-radius:4px;padding:1px 4px;">×${refCount[r.panel_ref||'']}</span>`:''}</span>
+            ${r.project?`<span style="font-size:10px;color:#8099b0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.project}</span>`:''}
+          </div>
+          <div style="font-size:10px;color:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${_fac}">${_fac}</div>
+          <div style="font-size:10px;color:#1e3a5f;white-space:nowrap;">${_flr}</div>
+          <div style="font-size:10px;color:#1e3a5f;white-space:nowrap;">${r.inspection_date||'—'}</div>
+          <div style="font-size:10px;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.signature_name||''}">${r.signature_name||'—'}</div>
+          <div style="font-size:10px;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.sig2_name||''}">${r.sig2_name||'—'}</div>
+        </div>`;
+      }).join('')}
+      </div>
+    </div>`;
+}
+
+let _sclSortState={col:null,dir:0};
+function _sclSort(col){
+  if(_sclSortState.col===col){
+    // cycle: asc → desc → none
+    _sclSortState.dir=_sclSortState.dir===1?-1:_sclSortState.dir===-1?0:1;
+    if(_sclSortState.dir===0) _sclSortState.col=null;
+  } else {
+    _sclSortState={col,dir:1};
+  }
+  // Update all header icons
+  ['ref','facade','floor','date','ctrl','cond'].forEach(c=>{
+    const el=document.getElementById('scl-sort-'+c);
+    if(!el) return;
+    const active=c===col&&_sclSortState.dir!==0;
+    el.textContent=active?(_sclSortState.dir===1?'↑':'↓'):'↕';
+    el.style.color=active?'#224F93':'#c0cde0';
+  });
+  // Collect and sort rows
+  const container=document.getElementById('scl-rows');
+  if(!container) return;
+  const rows=[...container.querySelectorAll('[id^="signed-row-"]')];
+  if(_sclSortState.dir===0){
+    rows.sort((a,b)=>+a.dataset.origIdx - +b.dataset.origIdx);
+  } else {
+    const d=_sclSortState.dir;
+    rows.sort((a,b)=>{
+      let av=a.dataset[col]||'', bv=b.dataset[col]||'';
+      if(col==='floor'){
+        const toN=v=>v==='RDC'?0:parseInt(v.replace('R+',''))||0;
+        return d*(toN(av)-toN(bv));
+      }
+      return d*av.localeCompare(bv,undefined,{numeric:true,sensitivity:'base'});
+    });
+  }
+  rows.forEach(r=>container.appendChild(r));
+}
+
+function _sclParseRef(ref){
+  const m=(ref||'').match(/^([WESN])-(\d+)-(\d+)$/i);
+  if(!m) return {facade:'—',floor:'—'};
+  const facadeMap={W:'West',E:'East',S:'South',N:'North'};
+  const facade=facadeMap[m[1].toUpperCase()]||'—';
+  const n=parseInt(m[2],10);
+  const floor=n===0?'RDC':`R+${String(n).padStart(2,'0')}`;
+  return {facade,floor};
+}
+
+function _filterSignedRows(){
+  const ref  = (document.getElementById('scl-filter-ref')?.value||'').toLowerCase().trim();
+  const name = (document.getElementById('scl-filter-name')?.value||'').toLowerCase().trim();
+  const rows = document.querySelectorAll('#scl-rows [id^="signed-row-"]');
+  let visible = 0;
+  rows.forEach(row=>{
+    const matchRef  = !ref  || row.dataset.ref.includes(ref);
+    const matchName = !name || row.dataset.name.includes(name);
+    const show = matchRef && matchName;
+    row.style.display = show ? 'grid' : 'none';
+    if(show) visible++;
+  });
+  const cnt = document.getElementById('scl-count');
+  if(cnt) cnt.textContent = `${visible} / ${rows.length} records`;
+  _sclUpdateButtons();
+}
+
+function _sclToggleAll(chk){
+  document.querySelectorAll('#scl-rows .scl-row-chk').forEach(c=>{
+    const row=c.closest('[id^="signed-row-"]');
+    if(row && row.style.display!=='none'){ c.checked=chk.checked; c.dispatchEvent(new Event('change')); }
+  });
+  _sclUpdateButtons();
+}
+
+function _sclGetSelected(){
+  return [...document.querySelectorAll('#scl-rows .scl-row-chk:checked')].map(c=>c.dataset.id);
+}
+
+function _sclUpdateButtons(){
+  const sel=_sclGetSelected();
+  const n=sel.length;
+  const btnV=document.getElementById('scl-btn-voir');
+  const btnP=document.getElementById('scl-btn-pdf');
+  const btnD=document.getElementById('scl-btn-del');
+  const one=n===1;
+  const any=n>0;
+  if(btnV){btnV.style.opacity=one?'1':'0.4';btnV.style.pointerEvents=one?'auto':'none';}
+  if(btnP){btnP.style.opacity=one?'1':'0.4';btnP.style.pointerEvents=one?'auto':'none';}
+  if(btnD){btnD.style.opacity=any?'1':'0.4';btnD.style.pointerEvents=any?'auto':'none';}
+}
+
+function _sclVoir(){
+  const sel=_sclGetSelected();
+  if(sel.length!==1) return;
+  const modal=document.getElementById('qc-signed-modal');
+  openSignedChecklistRecord(sel[0], modal?.dataset?.label||'');
+}
+
+function _sclPDF(){
+  const sel=_sclGetSelected();
+  if(sel.length!==1) return;
+  const modal=document.getElementById('qc-signed-modal');
+  printSignedChecklist(sel[0], modal?.dataset?.label||'');
+}
+
+async function _sclDelete(){
+  const sel=_sclGetSelected();
+  if(!sel.length) return;
+  const modal=document.getElementById('qc-signed-modal');
+  const typeId=modal?.dataset?.typeId||'';
+  const label=modal?.dataset?.label||'';
+  if(!confirm(`Delete ${sel.length} selected checklist${sel.length>1?'s':''}?`)) return;
+  for(const id of sel){
+    try{ await sb.from('qc_checklists').delete().eq('id',id); }catch(e){}
+    document.getElementById('signed-row-'+id)?.remove();
+  }
+  _sclUpdateButtons();
+  const cnt=document.getElementById('scl-count');
+  const remaining=document.querySelectorAll('#scl-rows [id^="signed-row-"]').length;
+  if(remaining===0) await _loadSignedChecklistBody(typeId,label);
+  else if(cnt){ const vis=[...document.querySelectorAll('#scl-rows [id^="signed-row-"]')].filter(r=>r.style.display!=='none').length; cnt.textContent=`${vis} / ${remaining} records`; }
+}
+
+async function openSignedChecklistRecord(recordId, label){
+  let rec = null;
+  try {
+    const {data, error} = await sb.from('qc_checklists').select('*').eq('id', recordId).single();
+    if(!error && data) rec = data;
+  } catch(e){}
+  if(!rec){ alert('Impossible de charger ce checklist.'); return; }
+
+  const listModal = document.getElementById('qc-signed-modal');
+  if(listModal) listModal.remove();
+
+  openQCChecklist(rec.checklist_type, label, {
+    panelRef: rec.panel_ref,
+    existingRecord: rec,
+    existingId: rec.id,
+    readOnly: true
+  });
+}
+
+async function printSignedChecklist(recordId, label){
+  let rec = null;
+  try {
+    const {data, error} = await sb.from('qc_checklists').select('*').eq('id', recordId).single();
+    if(!error && data) rec = data;
+  } catch(e){}
+  if(!rec){ alert('Impossible de charger ce checklist.'); return; }
+
+  const ck = QC_CHECKLISTS[rec.checklist_type] || {title: label, items:[]};
+  const projName = rec.project || '';
+  const dateStr  = rec.inspection_date || '';
+  const panelRef = rec.panel_ref || '—';
+
+  const itemsRows = (Array.isArray(rec.items) ? rec.items : []).map((item, i)=>{
+    const bg = i%2===0 ? '#f8fafc' : '#fff';
+    const resultColor = item.result==='C'?'#1a9458':item.result==='NC'?'#c02020':'#8099b0';
+    return `<tr style="background:${bg};">
+      <td style="padding:5px 8px;font-size:10px;color:#8099b0;text-align:center;border-bottom:1px solid #eef2f8;">${item.index}</td>
+      <td style="padding:5px 8px;font-size:11px;color:#1e3a5f;border-bottom:1px solid #eef2f8;">${item.description||''}</td>
+      <td style="padding:5px 8px;font-size:11px;font-weight:700;color:${resultColor};text-align:center;border-bottom:1px solid #eef2f8;">${item.result||'—'}</td>
+      <td style="padding:5px 8px;font-size:10px;color:#8099b0;border-bottom:1px solid #eef2f8;">${item.comment||''}</td>
+    </tr>`;
+  }).join('');
+
+  const sig1Img = rec.signature_data ? `<img src="${rec.signature_data}" style="max-width:220px;max-height:70px;object-fit:contain;display:block;margin-top:6px;">` : '<div style="width:220px;height:60px;border-bottom:1.5px solid #1e3a5f;margin-top:30px;"></div>';
+  const sig2Img = rec.sig2_data      ? `<img src="${rec.sig2_data}"      style="max-width:220px;max-height:70px;object-fit:contain;display:block;margin-top:6px;">` : '<div style="width:220px;height:60px;border-bottom:1.5px solid #1e3a5f;margin-top:30px;"></div>';
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>${ck.title} — ${panelRef}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Barlow',Arial,sans-serif;color:#1e3a5f;font-size:12px;padding:20px 28px;}
+    h1{font-size:16px;font-weight:700;margin-bottom:2px;}
+    .sub{font-size:10px;color:#8099b0;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+    .meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;padding:10px 14px;background:#f4f7fc;border-radius:6px;}
+    .meta-lbl{font-size:9px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;}
+    .meta-val{font-size:12px;font-weight:600;color:#1e3a5f;}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+    thead th{background:#224F93;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;padding:6px 8px;text-align:left;}
+    thead th:nth-child(1){width:32px;text-align:center;}
+    thead th:nth-child(3){width:48px;text-align:center;}
+    thead th:nth-child(4){width:160px;}
+    .sig-section{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:10px;}
+    .sig-box{border-top:2px solid #224F93;padding-top:8px;}
+    .sig-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#1e3a5f;margin-bottom:4px;}
+    .sig-name{font-size:11px;color:#8099b0;margin-bottom:6px;}
+    @media print{body{padding:10px 18px;}@page{margin:12mm 10mm;}}
+  </style>
+  </head><body>
+    <div style="background:linear-gradient(135deg,#224F93,#1a3a6e);color:#fff;padding:12px 16px;border-radius:8px;margin-bottom:14px;">
+      <div class="sub" style="color:rgba(255,255,255,0.65);">Contrôle Qualité — ${projName}</div>
+      <h1>${ck.title}</h1>
+    </div>
+    <div class="meta">
+      <div><div class="meta-lbl">Projet</div><div class="meta-val">${projName}</div></div>
+      <div><div class="meta-lbl">Référence Panneau</div><div class="meta-val">${panelRef}</div></div>
+      <div><div class="meta-lbl">Date</div><div class="meta-val">${dateStr}</div></div>
+    </div>
+    <table>
+      <thead><tr>
+        <th>#</th><th>Description</th><th style="text-align:center;">Résultat</th><th>Commentaires</th>
+      </tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    ${rec.remarks?`<div style="background:#f4f7fc;border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:11px;"><span style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8099b0;letter-spacing:0.8px;">Remarques : </span>${rec.remarks}</div>`:''}
+    <div class="sig-section">
+      <div class="sig-box">
+        <div class="sig-title">Contrôleur</div>
+        <div class="sig-name">${rec.signature_name||''}</div>
+        ${sig1Img}
+      </div>
+      <div class="sig-box">
+        <div class="sig-title">Conducteur Travaux</div>
+        <div class="sig-name">${rec.sig2_name||''}</div>
+        ${sig2Img}
+      </div>
+    </div>
+  </body></html>`;
+
+  const win = window.open('','_blank','width=860,height=900');
+  if(!win){ alert("Le navigateur a bloqué la fenêtre. Autorisez les pop-ups pour ce site."); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = ()=>{ win.focus(); win.print(); };
+}
+
+function deleteSignedChecklist(recordId, typeId, label){
+  // Inline confirmation — more reliable than confirm() on all devices
+  const row = document.getElementById(`signed-row-${recordId}`);
+  if(!row) return;
+
+  // If confirm UI already showing on this row, skip
+  if(row.dataset.confirming === '1') return;
+  row.dataset.confirming = '1';
+
+  // Replace the action buttons with a confirm strip
+  const actionsCell = row.querySelector('[data-actions]');
+  const originalHTML = actionsCell ? actionsCell.innerHTML : '';
+  if(actionsCell){
+    actionsCell.innerHTML = `
+      <span style="font-size:10px;font-weight:600;color:#c02020;margin-right:6px;">Confirmer ?</span>
+      <button onclick="_confirmDeleteChecklist('${recordId}','${typeId}','${label}')"
+        style="font-size:10px;font-weight:700;padding:5px 10px;border:none;border-radius:5px;background:#c02020;color:#fff;cursor:pointer;margin-right:4px;">
+        Oui, supprimer
+      </button>
+      <button onclick="_cancelDeleteChecklist('${recordId}')"
+        style="font-size:10px;font-weight:600;padding:5px 10px;border:1px solid #d0dae8;border-radius:5px;background:#fff;color:#8099b0;cursor:pointer;">
+        Annuler
+      </button>`;
+  }
+  row.dataset.originalActions = originalHTML;
+}
+
+function _cancelDeleteChecklist(recordId){
+  const row = document.getElementById(`signed-row-${recordId}`);
+  if(!row) return;
+  const actionsCell = row.querySelector('[data-actions]');
+  if(actionsCell) actionsCell.innerHTML = row.dataset.originalActions || '';
+  delete row.dataset.confirming;
+}
+
+async function _confirmDeleteChecklist(recordId, typeId, label){
+  const row = document.getElementById(`signed-row-${recordId}`);
+  if(row){ row.style.opacity='0.4'; row.style.pointerEvents='none'; }
+
+  try {
+    const {error, count} = await sb
+      .from('qc_checklists')
+      .delete()
+      .eq('id', recordId)
+      .select();                    // forces Supabase to return affected rows
+    if(error) throw error;
+
+    if(row) row.remove();
+    const body = document.getElementById('qc-signed-body');
+    if(body && body.querySelectorAll('[id^="signed-row-"]').length === 0){
+      await _loadSignedChecklistBody(typeId, label);
+    }
+  } catch(e){
+    if(row){ row.style.opacity='1'; row.style.pointerEvents=''; delete row.dataset.confirming; }
+    const body = document.getElementById('qc-signed-body');
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'margin-top:8px;padding:8px 12px;background:#fff0f0;border:1px solid #f5b8b8;border-radius:6px;font-size:11px;color:#c02020;font-weight:600;';
+    errDiv.textContent = '⚠ Échec suppression : ' + (e?.message || e);
+    if(body) body.prepend(errDiv);
+    setTimeout(()=>errDiv.remove(), 5000);
+  }
+}
+
+function renderComplexFP(zone){
+  const cont=document.getElementById('page-'+zone.id);
+  const isEF = zone.id==='EF';
+  const isNF = zone.id==='NF';
+  const sidebarPart = efSidebarHTML();
+  cont.innerHTML=`<div class="fpw">${sidebarPart}<div class="fpm">${filterBarHTML(zone.id)}<div class="gw" id="gw-${zone.id}" style="overflow:auto;"><div class="wf-wrap" id="wf-wrap-${zone.id}" style="transform-origin:top left;display:inline-block;${(zone.id==='WF'||zone.id==='SF'||zone.id==='NF')?'--ch:150px;':''}"><div class="wftitle">${zone.name}</div><table class="wft" id="tbl-${zone.id}"></table>${(isEF||zone.id==='WF'||zone.id==='SF'||isNF)?`<div id="legend-wrap-${zone.id}"></div>`:''}</div></div></div></div>`;
+  buildComplexTable(zone);
+}
+function buildComplexTable(zone){
+  const tbl=document.getElementById('tbl-'+zone.id);if(!tbl)return;
+  const filter=fFilters[zone.id]||'all';
+  const thead=document.createElement('thead');
+  const hr=document.createElement('tr');
+  const thc=document.createElement('th');thc.className='thc';thc.textContent='Floor';hr.appendChild(thc);
+  zone.colNums.forEach((col,ci)=>{
+    const th=document.createElement('th');
+    th.className='thh';
+    th.textContent=zone.id==='EF'?col:zone.id==='WF'?col:zone.id==='SF'?col:zone.id==='NF'?col:'C'+col;
+    if(zone.id==='SF' && (col===1||col===99||col===96)){th.classList.add('col-narrow');th.style.width='25px';th.style.minWidth='25px';th.style.maxWidth='25px';}
+    if(zone.id==='NF' && (col===45||col===47||col===50)){th.classList.add('col-narrow');th.style.width='25px';th.style.minWidth='25px';th.style.maxWidth='25px';}
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);tbl.appendChild(thead);
+  const tbody=document.createElement('tbody');
+  zone.floors.forEach(fl=>{
+    const tr=document.createElement('tr');
+    if(fl==='R+18T'){tr.classList.add('tr-r18t');tr.style.height='25px';}
+    else if(fl==='R+18M'){tr.classList.add('tr-r18m');tr.style.height='50px';}
+    else if(fl==='R+18MD'){tr.classList.add('tr-r18md');tr.style.height='110px';}
+    else if(fl==='R+18B'){tr.classList.add('tr-r18b');tr.style.height='40px';}
+    else if(fl==='R+17T'){tr.classList.add('tr-r17t');tr.style.height='50px';}
+    else if(fl==='R+17B'){tr.classList.add('tr-r17b');tr.style.height='100px';}
+    else if(fl==='RDC')tr.classList.add('tr-gnd');
+    else if(fl==='R+01')tr.classList.add('tr-r01');
+    else if(fl==='R+02'&&zone.id==='EF')tr.classList.add('tr-r02');
+    else if(fl==='R+02'&&zone.id==='WF'){tr.classList.add('tr-r02');tr.style.height='50px';}
+    else if(fl==='R+34'&&zone.id==='WF')tr.style.height='166px';
+    else if(fl==='R+02'&&zone.id==='SF'){tr.classList.add('tr-r02');tr.style.height='50px';}
+    else if(fl==='R+34'&&zone.id==='SF')tr.style.height='166px';
+    else if(fl==='R+34'&&zone.id==='EF')tr.style.height='166px';
+    else if(fl==='R+34'&&zone.id==='NF')tr.style.height='166px';
+    else if(fl==='R+19'&&zone.id==='WF')tr.classList.add('tr-r19');
+    else if(fl==='R+03'&&zone.id==='WF')tr.classList.add('tr-r03wf');
+    const tdf=document.createElement('td');tdf.className='tdf';
+    let note='';
+    // RDC: no sub-note
+    const flLabel = fl.replace('R+18T','R+18').replace('R+18M','R+18').replace('R+18MD','R+18').replace('R+18B','R+17').replace('R+17T','R+17').replace('R+17B','R+17');
+    if(fl==='R+18M'||fl==='R+17T'||fl==='R+17B'){
+      // Skip tdf - covered by rowspan of parent row
+    } else if(zone.id==='WF' && (fl==='R+01'||fl==='RDC')){
+      tdf.innerHTML=`<b>${flLabel}</b>`;
+      tr.appendChild(tdf);
+    } else {
+      if(fl==='R+18T') tdf.setAttribute('rowspan','2');
+      if(fl==='R+18B') tdf.setAttribute('rowspan','3');
+      tdf.innerHTML=`<b>${flLabel}</b>${note}`;
+      tr.appendChild(tdf);
+    }
+    zone.colNums.forEach((col,ci)=>{
+      const id=`${zone.id}-${fl}-C${col}`;
+      const p=panels[id]||{status:'pending'};
+      const pType=(zone.types[fl]||[])[ci]||'';
+      const pRef=(zone.refs[fl]||[])[ci]||'';
+      const td=document.createElement('td');td.className='tdc';
+      if(zone.id==='SF' && (col===1||col===99||col===96)){td.classList.add('col-narrow');td.style.width='25px';td.style.maxWidth='25px';}
+      if(zone.id==='NF' && (col===45||col===47||col===50)){td.classList.add('col-narrow');td.style.width='25px';td.style.maxWidth='25px';}
+
+      // R+01 cols 78-65 (indices 3-16) shrink to 25px
+      const isR01Short = zone.id==='EF' && fl==='R+01' && ci>=3;
+      // WF: R+01 and RDC cells are deleted — render as empty transparent td with preserved height
+      if(zone.id==='WF' && (fl==='R+01'||fl==='RDC')){
+        const h=fl==='RDC'?'200px':'var(--ch)';
+        const spacer=document.createElement('div');
+        spacer.style.cssText=`width:var(--cw);height:${h};`;
+        td.appendChild(spacer);
+        tr.appendChild(td);return;
+      }
+      // WF: col 15-A deleted for all regular floors (not orange R+18/17 rows)
+      if(zone.id==='WF' && col==='15-A' && fl!=='R+18M' && fl!=='R+18MD' && fl!=='R+18B' && fl!=='R+17T'){tr.appendChild(td);return;}
+      // SF: handle 15-A and 15-B cols — empty except orange R+18/17 rows
+      if(zone.id==='SF' && (col==='15-A'||col==='15-B') && fl!=='R+18M' && fl!=='R+18MD' && fl!=='R+18B' && fl!=='R+17T'){tr.appendChild(td);return;}
+      // Dimming: non-matching panels stay visible at 10% opacity (90% transparent)
+      // Implied filter highlights: delivered→yellow (installed+delivered), fabricated→blue (assembly checklist)
+      const _dispRef=zone.id==='WF'?wfPanelRef(fl,col):zone.id==='EF'?efPanelRef(fl,col):zone.id==='SF'?sfPanelRef(fl,col):zone.id==='NF'?nfPanelRef(fl,col):(pRef||'');
+      const impliedByFilter=(filter==='delivered'&&(p.status==='installed'||p.status==='delivered')) ||
+                             (filter==='fabricated'&&_dispRef&&assemblyPanelRefs.has(_dispRef)&&(p.status==='delivered'||p.status==='installed'));
+      const dimmed=filter!=='all'&&p.status!==filter&&!impliedByFilter;
+      if(dimmed){td.style.opacity='0.1';td.style.pointerEvents='none';}
+      if(impliedByFilter) td.dataset.yhl=filter==='delivered'?'yellow':'blue';
+      // SF: empty gap cols (99,98,97,96,94,93) — render as blank spacer (R+18M excluded: falls through to orange row handler)
+      if(zone.id==='SF' && [99,98,97,96,94,93].includes(col) && fl!=='R+18M'){
+        // SF R+18MD: cols 99,98,97,96,94 covered by col 1 colspan=6+rowspan=2; col 93 rendered as orange 50px
+        if(fl==='R+18MD'){
+          if([99,98,97,96,94].includes(col)){return;}
+          if(col===93){
+            const meta93=SM[(panels[id]||{}).status||'pending']||SM.pending;
+            const c=document.createElement('div');
+            c.className=`wfc ef-r18md ${meta93.cls}`;
+            c.style.cssText='width:50px !important;height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1.5px solid #cc6600;';
+            c.style.setProperty('background','#FF8C00','important');
+            c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.setAttribute('rowspan','2');
+            td.style.cssText='width:50px !important;min-width:50px;max-width:50px;height:150px;padding:0;';
+            td.appendChild(c);tr.appendChild(td);return;
+          }
+        }
+        // R+18B: cols 97,96,94,93 covered by R+18MD colspan=6+rowspan=2 — skip here (gap cols block)
+        if(fl==='R+18B' && [97,96,94,93].includes(col)){return;}
+        // R+17T: cols 99,98,97,96,94 covered by col 1 colspan=6 — skip here (gap cols block)
+        if(fl==='R+17T' && [99,98,97,96,94].includes(col)){return;}
+        // S-17T-93: same orange format as S-17T-92
+        if(col===93 && fl==='R+17T'){
+          const meta93=SM[(panels[id]||{}).status||'pending']||SM.pending;
+          const c=document.createElement('div');
+          c.className=`wfc ef-r17t ${meta93.cls}`;
+          c.style.cssText='height:50px !important;min-height:50px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+          td.style.cssText='height:50px;padding:0;';
+          td.appendChild(c);tr.appendChild(td);return;
+        }
+        const pType=(SF_TYPES[fl]||[])[ci]||'';
+        if(!pType){
+          const r18hMap={'R+18T':'25px','R+18M':'50px','R+18MD':'110px','R+18B':'40px','R+17T':'50px','R+17B':'100px'};
+          const spacerH=r18hMap[fl]||'var(--ch)';
+          const spacerW=(col===99||col===96||col===1)?'25px':'var(--cw)';
+          const sfColorFloors=['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03'];
+          // cols 99+98, orange rows: merged cells
+          if((col===99||col===98) && (fl==='R+18MD'||fl==='R+18B'||fl==='R+17T'||fl==='R+17B')){
+            if(fl==='R+18MD'){
+              if(col===99){
+                td.setAttribute('colspan','2');
+                td.setAttribute('rowspan','2'); // spans R+18MD(110px)+R+18B(40px)=150px
+                td.style.verticalAlign='top';
+                const c=document.createElement('div');
+                c.style.cssText='width:75px;height:150px;background:#FF8C00;border:1.5px solid #cc6600;';
+                td.appendChild(c);tr.appendChild(td);
+              }
+              return; // col 98: skip
+            }
+            if(fl==='R+18B'){
+              return; // covered by R+18MD rowspan — don't append
+            }
+          }
+          // cols 94 & 93, R+18T: vlines only (S-18-10 format without red border), height 25px
+          if((col===94||col===93) && fl==='R+18T'){
+            const spacer=document.createElement('div');
+            spacer.style.cssText='width:50px;height:25px;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
+            td.appendChild(spacer);tr.appendChild(td);return;
+          }
+          // S-00-94 / S-00-93 (RDC): same split format as S-01 at 175px height, top-aligned
+          if((col===94||col===93) && fl==='RDC'){
+            const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+            const gapRef=SF_GAP_REFS[`${fl}-${col}`]||'';
+            const vlines='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
+            const hstripes='background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
+            const split=document.createElement('div');
+            split.className=`wfc ${meta0.cls}`;
+            split.style.cssText='width:50px !important;height:175px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden;box-sizing:border-box;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);cursor:pointer;position:relative;';
+            if(col===94){
+              split.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;flex:1;${hstripes}"></div>`;
+            } else {
+              split.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;flex:1;display:flex;flex-direction:row;"><div style="width:25px;height:100%;flex-shrink:0;${hstripes}"></div><div style="width:25px;height:100%;flex-shrink:0;${vlines}"></div></div>`;
+            }
+            split.onclick=(e)=>{e.currentTarget=split;handlePanelClick(e,id,fl,col,gapRef,'',zone);};
+            td.style.verticalAlign='top';
+            td.appendChild(split);tr.appendChild(td);return;
+          }
+          // S-17-94 / S-17-93 (R+17B): horizontal lines + transparent background (same as S-17-3)
+          if((col===94||col===93) && fl==='R+17B'){
+            const hstripes='background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
+            const spacer=document.createElement('div');
+            spacer.style.cssText=`width:50px;height:100px;background-color:transparent;${hstripes}`;
+            td.appendChild(spacer);tr.appendChild(td);return;
+          }
+          // col 94, R+24→R+19 & R+16→R+04: S-32-3 format (vlines top 50px | 2px black divider | hstripes bottom 98px)
+          const sf9493Floors=['R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01'];
+          if((col===94||col===93) && sf9493Floors.includes(fl)){
+            const gapRef=SF_GAP_REFS[`${fl}-${col}`]||'';
+            const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+            // R+25: plain wfc cell matching S-25-92 format
+            if(fl==='R+25'){
+              const plain=document.createElement('div');
+              plain.className=`wfc ${meta0.cls}`;
+              if(selPanel===id)plain.classList.add('sel');
+              plain.title=gapRef?`${gapRef}\nFloor:${fl} Col:${col}\nStatus:${meta0.label}`:`Floor:${fl} Col:${col}`;
+              plain.style.backgroundImage='linear-gradient(to bottom,#fff 100px,transparent 100px)';
+              if(gapRef)plain.innerHTML=`<span class="c-type">${gapRef.split('').join('\n')}</span>`;
+              plain.onclick=(e)=>{e.currentTarget=plain;handlePanelClick(e,id,fl,col,gapRef,'',zone);};
+              td.appendChild(plain);tr.appendChild(td);return;
+            }
+            const vlines='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
+            const hstripes='background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
+            const split=document.createElement('div');
+            split.className=`wfc ${meta0.cls}`;
+            split.style.cssText='width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden;box-sizing:border-box;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);cursor:pointer;position:relative;';
+            split.title=gapRef?`${gapRef}\nFloor:${fl} Col:${col}\nStatus:${meta0.label}`:`Floor:${fl} Col:${col}`;
+            const refLabel=gapRef?`<span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:8px;font-weight:700;color:inherit;z-index:2;pointer-events:none;">${gapRef}</span>`:'';
+            if(col===94){
+              split.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;${hstripes}"></div>${refLabel}`;
+            } else {
+              split.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;display:flex;flex-direction:row;"><div style="width:25px;height:100%;flex-shrink:0;${hstripes}"></div><div style="width:25px;height:100%;flex-shrink:0;${vlines}"></div></div>${refLabel}`;
+            }
+            if(['R+02','R+04','R+06','R+08','R+10','R+12','R+14','R+16','R+21','R+23'].includes(fl)) split.style.borderBottom='5px double #ED1C24';
+            split.onclick=(e)=>{e.currentTarget=split;handlePanelClick(e,id,fl,col,gapRef,'',zone);};
+            td.appendChild(split);tr.appendChild(td);return;
+          }
+          // cols 99-96, R+02/R+01/RDC: same color format as S-03
+          if([99,98,97,96].includes(col) && (fl==='R+02'||fl==='R+01'||fl==='RDC')){
+            const h=fl==='RDC'?'200px':'150px';
+            if(col===99||col===96){
+              const spacer=document.createElement('div');
+              spacer.style.cssText=`width:25px;height:${h};background:#595959;`;
+              td.appendChild(spacer);tr.appendChild(td);return;
+            } else {
+              const split=document.createElement('div');
+              const darkH=fl==='RDC'?'100px':'50px';
+              split.style.cssText=`width:50px;height:${h};display:flex;flex-direction:column;overflow:hidden;`;
+              split.innerHTML=`<div style="width:100%;height:${darkH};flex-shrink:0;background:#595959;"></div><div style="width:100%;flex:1;background:#A6C9EC;"></div>`;
+              td.appendChild(split);tr.appendChild(td);return;
+            }
+          }
+          // S-17-98 / S-17-97: full blue (#A6C9EC) at R+17B height
+          if((col===98||col===97) && fl==='R+17B'){
+            const solid=document.createElement('div');
+            solid.style.cssText='width:50px;height:100px;background:#A6C9EC;';
+            td.appendChild(solid);tr.appendChild(td);return;
+          }
+          // cols 98 & 97, R+19–R+33: split cell top 50px #595959 / bottom 100px #A6C9EC
+          if((col===98||col===97) && sfColorFloors.includes(fl)){
+            const split=document.createElement('div');
+            split.style.cssText='width:50px;height:150px;display:flex;flex-direction:column;overflow:hidden;';
+            split.innerHTML='<div style="width:100%;height:50px;flex-shrink:0;background:#595959;"></div><div style="width:100%;height:100px;flex-shrink:0;background:#A6C9EC;"></div>';
+            td.appendChild(split);tr.appendChild(td);return;
+          }
+          // cols 99,98,97,96 at R+18T: solid #595959
+          if([99,98,97,96].includes(col) && fl==='R+18T'){
+            const w=(col===99||col===96)?'25px':'50px';
+            const spacer=document.createElement('div');spacer.style.cssText=`width:${w};height:25px;background:#595959;`;td.appendChild(spacer);tr.appendChild(td);return;
+          }
+          const spacerBg=(col===99||col===96) && (sfColorFloors.includes(fl)||fl==='R+17B') ? 'background:#595959;' : '';
+          const spacer=document.createElement('div');spacer.style.cssText=`width:${spacerW};height:${spacerH};${spacerBg}`;td.appendChild(spacer);tr.appendChild(td);return;
+        }
+      }
+      // NF: col 45 at R+33–R+19 — same format as SF S-xx-1 (vlines|divider|vlines)
+      const nfColorFloors=['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03'];
+      const nfRedBottomFloors=['R+33','R+31','R+29','R+27','R+25','R+23','R+21','R+19'];
+      if(zone.id==='NF' && col===45 && nfColorFloors.includes(fl)){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.title=`Floor:${fl} Col:${col}\nStatus:${meta0.label}`;
+        const redBot=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);${redBot}`;
+        const vlines='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
+        cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;${vlines}"></div>`;
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // NF: cols 53,52 at R+24–R+19 — same format as N-xx-43 (vlines|divider|hstripes); R+25 uses normal cell
+      const nfFloors5352=['R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02'];
+      if(zone.id==='NF' && [53,52].includes(col) && nfFloors5352.includes(fl)){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cellRef=NF_CELL_REFS[`${fl}-${col}`]||'';
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.title=`${cellRef||('Floor:'+fl+' Col:'+col)}\nStatus:${meta0.label}`;
+        const redBot=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);${redBot}position:relative;`;
+        const refLabel=cellRef?`<span style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:8px;font-weight:700;color:inherit;z-index:2;pointer-events:none;">${cellRef}</span>`:'';
+        cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);"></div>${refLabel}`;
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,cellRef,'',zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // NF: cols 44,43,42 at R+33–R+19 — same format as SF S-xx-2/3 (vlines|divider|hstripes)
+      // NF col 41 at R+02 — 50px cell matching col 42 appearance
+      if(zone.id==='NF' && col===41 && fl==='R+02'){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.style.cssText='height:50px !important;min-height:50px;max-height:50px;position:relative;overflow:hidden;box-sizing:border-box;width:var(--cw);display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(0deg,#9aa3ad 0px,#9aa3ad 2px,#dde1e5 2px,#dde1e5 5px) !important;';
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.style.height='50px';td.style.maxHeight='50px';td.style.padding='0';td.style.verticalAlign='top';
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // NF col 41 at R+16–R+03 only — hstripes (R+33–R+19 show labels from NF_TYPES)
+      const nfCol41HstripeFloors=['R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03'];
+      if(zone.id==='NF' && col===41 && nfCol41HstripeFloors.includes(fl)){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.style.cssText='width:var(--cw);height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden;box-sizing:border-box;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);cursor:pointer;position:relative;';
+        cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);"></div>`;
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      if(zone.id==='NF' && [44,43,42].includes(col) && nfColorFloors.includes(fl)){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.title=`Floor:${fl} Col:${col}\nStatus:${meta0.label}`;
+        const redBot23=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);${redBot23}`;
+        cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);"></div>`;
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // NF: cols 50,49,48,47 at R+02 — 50px height, #595959 (same color as N-03-50)
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+02'){
+        const w=(col===50||col===47)?'25px':'50px';
+        const spacer=document.createElement('div');
+        spacer.style.cssText=`width:${w};height:50px;background:#595959;`;
+        td.style.padding='0';td.style.verticalAlign='top';td.style.height='50px';
+        td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      // NF: cols 50,49,48,47 at R+33–R+19 — same format as SF S-xx-99/98/97/96
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && nfColorFloors.includes(fl)){
+        if(col===50||col===47){
+          // 25px wide, solid #595959 (same as S-xx-99 / S-xx-96)
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:25px;height:150px;background:#595959;';
+          td.appendChild(spacer);tr.appendChild(td);return;
+        } else {
+          // cols 49,48: split top 50px #595959 / bottom 100px #A6C9EC (same as S-xx-98 / S-xx-97)
+          const split=document.createElement('div');
+          split.style.cssText='width:50px;height:150px;display:flex;flex-direction:column;overflow:hidden;';
+          split.innerHTML='<div style="width:100%;height:50px;flex-shrink:0;background:#595959;"></div><div style="width:100%;height:100px;flex-shrink:0;background:#A6C9EC;"></div>';
+          td.appendChild(split);tr.appendChild(td);return;
+        }
+      }
+
+      // NF: cols 50,49,48,47 at R+18T — merged into one cell (colspan=4), #595959
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18T'){
+        if(col===50){
+          td.setAttribute('colspan','4');
+          td.style.cssText='width:150px;min-width:150px;max-width:150px;padding:0;';
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:150px;height:25px;background:#595959;';
+          td.appendChild(spacer);tr.appendChild(td);
+        }
+        return; // skip 49,48,47
+      }
+      // NF: cols 50,49,48,47 at R+18M — merged into one cell (colspan=4), orange
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18M'){
+        if(col===50){
+          td.setAttribute('colspan','4');
+          td.style.cssText='width:150px;min-width:150px;max-width:150px;padding:0;';
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:150px;height:50px;background:#FF8C00;';
+          td.appendChild(spacer);tr.appendChild(td);
+        }
+        return; // skip 49,48,47
+      }
+
+      // NF cols 54,53 at R+18T — merged rowspan=2 (25px+50px=75px), hstripes only (no orange)
+      // at R+18M — skipped; at R+18B/17T/17B — separate hstripes cells
+      if(zone.id==='NF' && [53,52].includes(col) && (fl==='R+18T'||fl==='R+18M'||fl==='R+18B'||fl==='R+17T'||fl==='R+17B')){
+        const hstripes='background-color:transparent;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
+        if(fl==='R+18T'){
+          td.setAttribute('rowspan','2');
+          td.style.cssText='padding:0;height:75px;overflow:hidden;vertical-align:top;';
+          if(col===54){
+            // D1852: dotted bg + red double left border, 75px
+            const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+            const c=document.createElement('div');
+            c.className=`wfc ef-r18t ${meta.cls}`;
+            c.style.cssText='width:50px;height:75px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;border-left:5px double #ED1C24;border-right:5px double #ED1C24;';
+            c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">E1852</span>`;
+            c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(c);
+          } else {
+            const spacer=document.createElement('div');
+            spacer.style.cssText=`width:50px;height:75px;${hstripes}`;
+            td.appendChild(spacer);
+          }
+          tr.appendChild(td);return;
+        } else if(fl==='R+18M'){
+          return; // covered by R+18T rowspan=2
+        } else if(fl==='R+18B'){
+          const spacer=document.createElement('div');
+          spacer.style.cssText=`width:50px;height:40px;${hstripes}`;
+          td.appendChild(spacer);tr.appendChild(td);return;
+        } else if(fl==='R+17T'){
+          const spacer=document.createElement('div');
+          spacer.style.cssText=`width:50px;height:50px;${hstripes}`;
+          td.appendChild(spacer);tr.appendChild(td);return;
+        } else if(fl==='R+17B'){
+          const spacer=document.createElement('div');
+          spacer.style.cssText=`width:50px;height:100px;${hstripes}`;
+          td.appendChild(spacer);tr.appendChild(td);return;
+        }
+      }
+      // NF: cols 45,44,43,42 at R+18T — horizontal stripes; at R+18M — orange
+      if(zone.id==='NF' && [45,44,43,42].includes(col) && (fl==='R+18T'||fl==='R+18M')){
+        if(fl==='R+18T'){
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:50px;height:25px;background-color:transparent;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
+          td.appendChild(spacer);tr.appendChild(td);return;
+        } else {
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:50px;height:50px;background:#FF8C00;';
+          td.appendChild(spacer);tr.appendChild(td);return;
+        }
+      }
+      // NF cols 65,64,63,62 at R+18MD — plain empty (same as N-28-65 wfc-empty appearance)
+      if(zone.id==='NF' && [65,64,63,62].includes(col) && fl==='R+18MD'){
+        const spacer=document.createElement('div');
+        spacer.style.cssText='width:var(--cw);height:110px;background:#fafcff;';
+        td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      // NF cols 50,49,48,47 at R+18MD — merged colspan=4 + rowspan=2 spanning R+18MD(110px)+R+18B(40px)=150px, orange
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18MD'){
+        if(col===50){
+          td.setAttribute('colspan','4');
+          td.setAttribute('rowspan','2');
+          td.style.cssText='padding:0;width:150px;min-width:150px;max-width:none;height:150px;';
+          const c=document.createElement('div');
+          c.style.cssText='width:150px;height:150px;background:#FF8C00;border:1.5px solid #cc6600;';
+          td.appendChild(c);tr.appendChild(td);
+        }
+        return;
+      }
+      // NF cols 50,49,48,47 at R+18B — covered by R+18MD colspan=4+rowspan=2, skip
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18B'){return;}
+      // NF cols 45-31 at R+18MD — rowspan=2 merging R+18MD(110px)+R+18B(40px)=150px, orange
+      if(zone.id==='NF' && [45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18MD'){
+        td.setAttribute('rowspan','2');
+        const w=col===45?'25px':'var(--cw)';
+        td.style.cssText=`padding:0;width:${w};height:150px;overflow:hidden;`;
+        const c=document.createElement('div');
+        c.style.cssText=`width:${w};height:150px;background:#FF8C00;border:1.5px solid #cc6600;`;
+        td.appendChild(c);tr.appendChild(td);return;
+      }
+      // NF cols 45-31 at R+18B — covered by R+18MD rowspan=2, skip
+      if(zone.id==='NF' && [45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18B'){return;}
+      // NF cols 41-31 at R+17B — labelled cells (D1702, R1701, R1706, etc.), SF format, 100px
+      if(zone.id==='NF' && [40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+17B'){
+        const ref=pType||pRef||'';
+        const h='100px';
+        const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const c=document.createElement('div');
+        c.className=`wfc ef-r17b ${meta.cls}`;
+        c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+        if(ref==='R1701'||ref==='C1702'||ref==='C1701'){
+          c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${ref.split('').join('\n')}</span>`;
+        } else if(ref==='R1702'||ref==='D1702'){
+          c.style.borderLeft='5px double #ED1C24';
+          c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${ref.split('').join('\n')}</span>`;
+        } else if(ref==='R1703'||ref==='G1703'){
+          c.style.borderLeft='5px double #ED1C24';
+          c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${ref.split('').join('\n')}</span>`;
+        } else if(ref==='R1706'){
+          c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+          c.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${ref.split('').join('\n')}</span>`;
+        } else if(ref){
+          c.innerHTML=`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${ref}</span>`;
+        }
+        c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.style.height=h;td.style.padding='0';
+        td.appendChild(c);tr.appendChild(td);return;
+      }
+      // NF cols 50,49,48,47 at R+17B — individual cells matching N-19-xx formats
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+17B'){
+        if(col===50||col===47){
+          // solid #595959, 25px wide, 100px tall
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:25px;height:100px;background:#595959;';
+          td.appendChild(spacer);tr.appendChild(td);return;
+        } else {
+          // cols 49,48: full #A6C9EC, 100px
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:50px;height:100px;background:#A6C9EC;';
+          td.appendChild(spacer);tr.appendChild(td);return;
+        }
+      }
+      // NF cols 45,44,43,42 at R+17B — horizontal stripes, 100px
+      if(zone.id==='NF' && [45,44,43,42,41].includes(col) && fl==='R+17B'){
+        const w=col===45?'25px':'var(--cw)';
+        const spacer=document.createElement('div');
+        spacer.style.cssText=`width:${w};height:100px;background-color:transparent;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);`;
+        td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      // NF cols 50,49,48,47 at R+17T — merged colspan=4, orange 50px
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+17T'){
+        if(col===50){
+          td.setAttribute('colspan','4');
+          td.style.cssText='padding:0;width:150px;min-width:150px;max-width:none;height:50px;';
+          const c=document.createElement('div');
+          c.style.cssText='width:150px;height:50px;background:#FF8C00;border:1.5px solid #cc6600;';
+          td.appendChild(c);tr.appendChild(td);
+        }
+        return;
+      }
+      // NF cols 45-31 at R+17T — orange 50px
+      if(zone.id==='NF' && [45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+17T'){
+        const w=col===45?'25px':'var(--cw)';
+        const c=document.createElement('div');
+        c.style.cssText=`width:${w};height:50px;background:#FF8C00;border:1.5px solid #cc6600;`;
+        td.appendChild(c);tr.appendChild(td);return;
+      }
+      // NF cols 50-31 at R+18B, R+17T, R+17B — split into 3 separate plain empty cells
+      if(zone.id==='NF' && [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col) && (fl==='R+18B'||fl==='R+17T'||fl==='R+17B')){
+        const w=[49,48,47,45,50].includes(col)?'25px':'var(--cw)';
+        const h=fl==='R+18B'?'40px':fl==='R+17T'?'50px':'100px';
+        const spacer=document.createElement('div');
+        spacer.style.cssText=`width:${w};height:${h};background:#fafcff;`;
+        td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      // NF cols 65-55,52 at R+18B — merged 3 rows (R+18B 40px + R+17T 50px + R+17B 100px = 190px), labelled
+      // (cols 54,53 are handled separately above with their own hstripes cells)
+      if(zone.id==='NF' && [65,64,63,62,61,60,59,58,57,56,55,54].includes(col) && fl==='R+18B'){
+        td.setAttribute('rowspan','3');
+        td.style.cssText='padding:0;overflow:hidden;vertical-align:top;';
+        const label=pType||pRef||'';
+        if(label && [65,64,63,62,61,60,59,58,57,56,55,54].includes(col)){
+          const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+          const h='100%';const hmin='190px';
+          const c=document.createElement('div');
+          c.className=`wfc ef-r18b ${meta.cls}`;
+          c.style.cssText=`width:var(--cw);height:${h};min-height:${hmin};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+          if(label==='R1754'){
+            // EF format: left col [top 40px plain|vlines+red-right, bottom 150px dots|vlines+red-right] + red horiz at 40px
+            c.style.cssText=`width:var(--cw);height:190px;min-height:190px;overflow:hidden;display:flex;flex-direction:row;padding:0;`;
+            c.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;"></div><div style="width:25px;height:40px;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${label.split('').join('\n')}</span></div></div><div style="width:25px;height:100%;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div></div>`;
+          } else if(label==='R1756'){
+            // EF format: mirror of R1754 — left vlines, right [40px vlines+plain, 150px vlines+dots+text] + red LEFT
+            c.style.cssText=`width:var(--cw);height:190px;min-height:190px;overflow:hidden;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+            c.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:40px;"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${label.split('').join('\n')}</span></div></div></div></div>`;
+          } else if(label==='R1755'){
+            // Mirror of R1756: border-right, left col plain+dots+text, right col vlines+red-left
+            c.style.cssText=`width:var(--cw);height:190px;min-height:190px;overflow:hidden;display:flex;flex-direction:row;padding:0;`;
+            c.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;"></div><div style="width:25px;height:40px;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${label.split('').join('\n')}</span></div></div><div style="width:25px;height:100%;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div></div>`;
+          } else if(label==='R1753'||label==='E1753'){
+            // EF format: 40px vlines+red-left+red-bottom | 150px vlines+red-left+text
+            const rBorder=label==='E1753'?'border-right:5px double #ED1C24;':'';
+            c.style.cssText=`width:var(--cw);height:190px;min-height:190px;overflow:hidden;padding:0;display:block;border-left:1.5px solid rgba(34,79,147,0.2);${rBorder}`;
+            c.innerHTML=`<div style="height:40px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-left:5px double #ED1C24;border-bottom:5px double #ED1C24;"></div><div style="height:150px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-top:none;border-left:5px double #ED1C24;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;position:relative;z-index:1;">${label.split('').join('\n')}</span></div>`;
+          } else {
+            // EF default format for R1751, R1752, R1755, C1703, D1753, etc.
+            // R1752 gets red left border; others get thin border
+            const leftBorder = label==='R1752' ? '5px double #ED1C24' : '1.5px solid rgba(34,79,147,0.2)';
+            c.style.cssText=`width:var(--cw);height:190px;min-height:190px;overflow:hidden;padding:0;display:block;`;
+            c.style.borderLeft=leftBorder;
+            c.innerHTML=`<div style="height:40px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-bottom:5px double #ED1C24;"></div><div style="height:50px;width:100%;box-sizing:border-box;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;"></div><div style="height:100px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${label.split('').join('\n')}</span></div>`;
+          }
+          c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(c);
+        } else {
+          const spacer=document.createElement('div');
+          spacer.style.cssText='width:var(--cw);height:100%;min-height:190px;background:#fafcff;';
+          td.appendChild(spacer);
+        }
+        tr.appendChild(td);return;
+      }
+      // NF cols 65-55,52 at R+17T and R+17B — covered by R+18B rowspan=3, skip
+      // (cols 54,53 are handled separately above)
+      if(zone.id==='NF' && [65,64,63,62,61,60,59,58,57,56,55,54].includes(col) && (fl==='R+17T'||fl==='R+17B')){return;}
+      // NF cols 41-31 at R+18M — orange
+      if(zone.id==='NF' && [41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18M'){
+        const spacer=document.createElement('div');
+        spacer.style.cssText='width:50px;height:50px;background:#FF8C00;';
+        td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      // NF cols 41-31 at R+18T — labelled cells (G1803, R1803, R1802, etc.), 25px, uses pType
+      if(zone.id==='NF' && [41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18T'){
+        const ref=pType||pRef||'';
+        const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const c=document.createElement('div');
+        c.className=`wfc ef-r18t ${meta.cls}`;
+        c.style.cssText='height:25px !important;min-height:25px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;';
+        if(ref==='R1801'){
+          c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        } else if(ref==='R1802'||ref==='C1802'){
+          c.style.borderLeft='5px double #ED1C24';
+          c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        } else if(ref==='R1803'||ref==='G1803'){
+          c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          c.style.borderLeft='5px double #ED1C24';
+          c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        } else if(ref==='R1806'){
+          c.style.cssText='height:25px !important;min-height:25px;overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+          c.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+        } else if(ref){
+          c.innerHTML=`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${ref}</span>`;
+        }
+        c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.style.height='25px';td.style.padding='0';
+        td.appendChild(c);tr.appendChild(td);return;
+      }
+
+      // SF: R+01 / RDC cols 1-3: vertical lines
+      if(zone.id==='SF' && (fl==='R+01'||fl==='RDC') && typeof col==='number' && col>=1 && col<=3){
+        const h=fl==='RDC'?'200px':'var(--ch)';
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.style.cssText=`width:50px !important;height:${h} !important;background-color:transparent !important;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px) !important;overflow:hidden;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);`;
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // SF: R+01 left side empty (cols 1-15, 15-A, 15-B)
+      if(zone.id==='SF' && fl==='R+01' && (col==='15-A'||col==='15-B'||typeof col==='number' && col<=15)){
+        const spacer=document.createElement('div');spacer.style.cssText=`width:var(--cw);height:var(--ch);`;td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      // SF: RDC left side empty
+      if(zone.id==='SF' && fl==='RDC' && (col==='15-A'||col==='15-B'||typeof col==='number' && col<=15)){
+        const spacer=document.createElement('div');spacer.style.cssText=`width:var(--cw);height:200px;`;td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      if((zone.id==='EF'||zone.id==='WF'||zone.id==='SF'||zone.id==='NF') && (fl==='R+18T'||fl==='R+18M'||fl==='R+18MD'||fl==='R+18B'||fl==='R+17T'||fl==='R+17B')){
+        // WF: all columns use same pattern as col 31
+        if(zone.id==='WF'||zone.id==='SF'){
+          const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+          const ref=pRef||pType||'';
+          // Skip 15-A for WF non-orange rows
+          if(col==='15-A' && fl!=='R+18M' && fl!=='R+18MD' && fl!=='R+18B' && fl!=='R+17T'){tr.appendChild(td);return;}
+          // Skip SF gap cols for orange rows
+          if(zone.id==='SF' && [99,98,97,96,94].includes(col) && fl==='R+17T'){return;} // covered by col 1 colspan=6
+          if(zone.id==='SF' && col===93 && fl==='R+17T'){
+            td.style.cssText='width:45px;min-width:45px;max-width:45px;height:50px;padding:0;';
+            const r=document.createElement('div');
+            r.style.cssText='width:45px;height:50px;background:#ED1C24;';
+            td.appendChild(r);tr.appendChild(td);return;
+          }
+          if(zone.id==='SF' && [99,98,97,96,94].includes(col) && fl==='R+18MD'){return;} // covered by col 1 colspan=6+rowspan=2
+          if(zone.id==='SF' && col===93 && fl==='R+18MD'){
+            const c=document.createElement('div');
+            c.className=`wfc ef-r18md ${meta.cls}`;
+            c.style.cssText='width:50px !important;height:110px !important;min-height:110px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1.5px solid #cc6600;';
+            c.style.setProperty('background','#FF8C00','important');
+            c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.style.cssText='width:50px !important;min-width:50px;max-width:50px;height:110px;padding:0;';
+            td.appendChild(c);tr.appendChild(td);return;
+          }
+          // Skip SF 15-A and 15-B for non-orange rows (already handled above) and orange rows
+          if(zone.id==='SF' && (col==='15-A'||col==='15-B') && (fl==='R+18M'||fl==='R+18MD'||fl==='R+18B'||fl==='R+17T')){tr.appendChild(td);return;}
+          // Skip R+18T for cols 28 and 22 (WF) and col 90 (SF) — covered by R+19 rowspan=2
+          if(fl==='R+18T' && (col===28||col===22||(zone.id==='WF'&&(col===27||col===29||col===23||col===21))||(zone.id==='SF'&&(col===90||col===89||col===91)))){return;}
+          if(fl==='R+18T'){
+            // SF cols 81-85: merge with R+18M below (rowspan=2, 75px), normal wfc, no orange
+            const isMerge18M=zone.id==='SF'&&[81,82,83,84,85].includes(col);
+            if(isMerge18M)td.setAttribute('rowspan','2');
+            const c=document.createElement('div');
+            c.className=`wfc ef-r18t ${meta.cls}`;
+            const h=isMerge18M?'75px':'25px';
+            c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+            if(ref==='R1801'||ref==='C1802'||ref==='C1801'){
+              // R301 style: dotted bg + text
+              c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='C1804'){
+              c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='R1851'){
+              c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='R1802'){
+              // R302 style: dotted bg + red left
+              c.style.borderLeft='5px double #ED1C24';
+              c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='R1852'){
+              c.style.borderLeft='5px double #ED1C24';
+              c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='E1852'){
+              c.style.borderLeft='5px double #ED1C24';
+              c.style.borderRight='5px double #ED1C24';
+              c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='R1803'||ref==='D1803'||ref==='G1803'){
+              // R1803/D1803/G1803 style: vlines + red left
+              c.style.borderLeft='5px double #ED1C24';
+              c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+              c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='G1853'){
+              c.style.borderLeft='5px double #ED1C24';
+              c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+              c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='R1804'){
+              // R304 style: dotted left | vlines right + red middle
+              c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+              c.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+            } else if(ref==='R1805'){
+              // R305 style: dotted left | vlines right + red middle + red left
+              c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+              c.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+            } else if(ref==='R1806'){
+              // R306 style: vlines left | dotted right + red middle + red left
+              c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+              c.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+            } else if(ref==='R1853'){
+              c.style.borderLeft='5px double #ED1C24';
+              c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+              c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(ref==='R1856'){
+              c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+              c.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+            } else if(ref){
+              c.innerHTML=`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${ref}</span>`;
+            } else if(zone.id==='SF' && col===1){
+              // S-18-1: white vlines
+              c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(255,255,255,0.85) 0px,rgba(255,255,255,0.85) 2px,transparent 2px,transparent 5px)';
+            } else if(zone.id==='SF' && (col===2||col===3)){
+              // S-18-2/3: dark vlines, transparent background
+              c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+              c.style.setProperty('background-color','transparent','important');
+            }
+            if(isMerge18M)c.style.borderBottom='5px double #ED1C24';
+            if(zone.id==='SF' && col===4 && !/^D(0[1-9]|1[0-2])$/.test(pType)&&!['DM06','D1803','D1705','D304'].includes(pType)) c.style.borderRight='5px double #ED1C24';
+            c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.style.height=h;td.style.padding='0';
+            td.appendChild(c);tr.appendChild(td);return;
+          }
+          if(fl==='R+18M'){
+            // col 1: colspan=6 (1[25]+99[25]+98[50]+97[50]+96[25]+94[50]=225px) orange, 3 equal subcells
+            if(col===1){
+              td.setAttribute('colspan','6');
+              td.style.cssText='padding:0;width:225px !important;min-width:225px !important;max-width:none !important;';
+              const c=document.createElement('div');
+              c.style.cssText='height:50px;width:225px;min-width:225px;overflow:hidden;display:flex;flex-direction:row;align-items:stretch;background:transparent;border:1.5px solid #cc6600;box-sizing:content-box;';
+              c.innerHTML='<div style="width:74px;height:100%;flex-shrink:0;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="width:75px;height:100%;flex-shrink:0;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="width:74px;height:100%;flex-shrink:0;background:#FF8C00;"></div>';
+              c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              td.style.height='50px';td.appendChild(c);tr.appendChild(td);return;
+            }
+            // cols 99,98,97,96,94: covered by col 1 colspan=6
+            if(col===99||col===98||col===97||col===96||col===94){return;}
+            // SF cols 81-85: covered by R+18T rowspan=2
+            if(zone.id==='SF'&&[81,82,83,84,85].includes(col)){return;}
+            const c=document.createElement('div');
+            c.className=`wfc ef-r18m ${meta.cls}`;
+            c.style.cssText='height:50px !important;min-height:50px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+            c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.style.height='50px';td.style.padding='0';
+            td.appendChild(c);tr.appendChild(td);return;
+          }
+          if(fl==='R+18MD'){
+            // SF cols 81-85: light peach cells in R+18MD (rowspan=3 block starts at R+18B)
+            if(zone.id==='SF' && [81,82,83,84,85].includes(col)){
+              const c=document.createElement('div');
+              c.className=`wfc ${meta.cls}`;
+              c.style.cssText='height:110px !important;min-height:110px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FFD9A0;';
+              c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              td.style.height='110px';td.style.padding='0';
+              td.appendChild(c);tr.appendChild(td);return;
+            }
+            // SF col 92: rowspan=2 merging R+18MD(110px)+R+18B(40px)=150px, orange
+            if(zone.id==='SF' && col===92){
+              td.setAttribute('rowspan','2');
+              td.style.cssText='padding:0;height:150px;';
+              const c=document.createElement('div');
+              c.className=`wfc ef-r18md ${meta.cls}`;
+              c.style.cssText='height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1.5px solid #cc6600;';
+              c.style.setProperty('background','#FF8C00','important');
+              c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              td.appendChild(c);tr.appendChild(td);return;
+            }
+            // SF col 1: colspan=6+rowspan=2 (1[25]+99[25]+98[50]+97[50]+96[25]+94[50]=225px, spans R+18MD+R+18B=150px) orange merged cell
+            if(zone.id==='SF' && col===1){
+              td.setAttribute('colspan','6');
+              td.setAttribute('rowspan','2');
+              td.style.cssText='padding:0;width:225px !important;min-width:225px !important;max-width:none !important;';
+              const c=document.createElement('div');
+              c.style.cssText='height:150px;width:225px;min-width:225px;overflow:hidden;background:transparent;border:1.5px solid #cc6600;box-sizing:content-box;display:flex;flex-direction:row;align-items:stretch;';
+              c.innerHTML='<div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div>';
+              c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              td.style.height='150px';td.appendChild(c);tr.appendChild(td);return;
+            }
+            td.setAttribute('rowspan','2');
+            td.style.height='150px';td.style.maxHeight='150px';td.style.overflow='hidden';td.style.padding='0';td.style.verticalAlign='top';
+            const c=document.createElement('div');
+            c.className=`wfc ${meta.cls}`;
+            c.style.cssText='height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+            c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(c);tr.appendChild(td);return;
+          }
+          if(fl==='R+18B'){
+            // Skip gap cols for SF (99-94 covered by R+18MD col 1 colspan=6+rowspan=2)
+            if(zone.id==='SF' && [99,98,97,96,94].includes(col)){return;}
+            if(zone.id==='SF' && col===93){return;} // covered by R+18MD rowspan=2
+            // Skip 15-A/15-B
+            if(col==='15-A'||col==='15-B'){tr.appendChild(td);return;}
+            // SF cols 81-85: rowspan=3 merging R+18B+R+17T+R+17B (40+50+100=190px)
+            if(zone.id==='SF' && [81,82,83,84,85].includes(col)){
+              td.setAttribute('rowspan','3');
+              const sfR17ref=(SF_REFS['R+17B']||[])[ci]||(SF_TYPES['R+17B']||[])[ci]||'';
+              const r17bId=`${zone.id}-R+17B-C${col}`;
+              const r17bMeta=SM[(panels[r17bId]||{}).status||'pending']||SM.pending;
+              const h='190px';
+              const c17=document.createElement('div');
+              c17.className=`wfc ef-r17b ${r17bMeta.cls}`;
+              // R175x: EF format (190px); R17xx: SF format
+              if(sfR17ref==='R1754'){
+                c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;display:flex;flex-direction:row;padding:0;`;
+                c17.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;"></div><div style="width:25px;height:40px;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${sfR17ref.split('').join('\n')}</span></div></div><div style="width:25px;height:100%;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div></div>`;
+              } else if(sfR17ref==='R1756'){
+                c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+                c17.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:40px;"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${sfR17ref.split('').join('\n')}</span></div></div></div></div>`;
+              } else if(sfR17ref==='R1753'){
+                c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;padding:0;display:block;border-left:1.5px solid rgba(34,79,147,0.2);`;
+                c17.innerHTML=`<div style="height:40px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-left:5px double #ED1C24;border-bottom:5px double #ED1C24;"></div><div style="height:150px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-top:none;border-left:5px double #ED1C24;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:17px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;position:relative;z-index:1;">${sfR17ref.split('').join('\n')}</span></div>`;
+              } else if(sfR17ref==='R1751'||sfR17ref==='R1752'||sfR17ref==='C1704'){
+                const leftBorder=(sfR17ref==='R1752')?'5px double #ED1C24':'1.5px solid rgba(34,79,147,0.2)';
+                c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;padding:0;display:block;`;
+                c17.style.borderLeft=leftBorder;
+                c17.innerHTML=`<div style="height:40px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-bottom:5px double #ED1C24;"></div><div style="height:50px;width:100%;box-sizing:border-box;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;"></div><div style="height:100px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${sfR17ref.split('').join('\n')}</span></div>`;
+              } else {
+                c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+                if(sfR17ref==='R1701'||sfR17ref==='C1702'||sfR17ref==='C1701'){
+                  c17.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${sfR17ref.split('').join('\n')}</span>`;
+                } else if(sfR17ref==='R1702'||sfR17ref==='G1703'||sfR17ref==='G1753'){
+                  c17.style.borderLeft='5px double #ED1C24';
+                  c17.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+                  c17.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${sfR17ref.split('').join('\n')}</span>`;
+                } else if(sfR17ref==='R1703'||sfR17ref==='G1703'){
+                  c17.style.borderLeft='5px double #ED1C24';
+                  c17.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+                  c17.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${sfR17ref.split('').join('\n')}</span>`;
+                } else if(sfR17ref==='R1704'){
+                  c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+                  c17.innerHTML=`<div style="width:25px;height:100%;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${sfR17ref.split('').join('\n')}</span>`;
+                } else if(sfR17ref==='G1754'){
+                  c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+                  c17.innerHTML=`<div style="width:25px;height:100%;display:flex;flex-direction:column;flex-shrink:0;border-right:5px double #ED1C24;"><div style="height:40px;flex-shrink:0;"></div><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;"></div></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="position:absolute;top:36px;left:0;right:0;height:0;border-top:5px double #ED1C24;z-index:2;pointer-events:none;"></div><span style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;z-index:3;font-family:var(--mono);font-size:17px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${sfR17ref.split('').join('\n')}</span>`;
+                } else if(sfR17ref==='R1706'){
+                  c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+                  c17.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${sfR17ref.split('').join('\n')}</span>`;
+                } else if(sfR17ref){
+                  c17.innerHTML=`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${sfR17ref}</span>`;
+                }
+              }
+              c17.onclick=(e)=>{e.currentTarget=c17;handlePanelClick(e,r17bId,'R+17B',col,sfR17ref,'',zone);};
+              td.style.height=h;td.style.padding='0';td.style.verticalAlign='top';
+              td.appendChild(c17);tr.appendChild(td);return;
+            }
+            return;
+          }
+          if(fl==='R+17T'){
+            // SF cols 81-85: covered by R+18B rowspan=3
+            if(zone.id==='SF' && [81,82,83,84,85].includes(col)){return;}
+            // SF col 1: colspan=6 merged orange cell (1+99+98+97+96+94)
+            if(zone.id==='SF' && col===1){
+              td.setAttribute('colspan','6');
+              td.style.cssText='padding:0;max-width:none !important;';
+              const c=document.createElement('div');
+              c.style.cssText='height:50px;width:100%;background:transparent;border:1.5px solid #cc6600;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:row;align-items:stretch;';
+              c.innerHTML='<div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div>';
+              c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              td.style.height='50px';td.appendChild(c);tr.appendChild(td);return;
+            }
+            // NF: R+17T is all empty — render as wfc-empty spacer
+            if(zone.id==='NF' && !pType && !pRef){const e=document.createElement('div');e.className='wfc-empty ef-tall';e.style.height='50px';td.style.height='50px';td.appendChild(e);tr.appendChild(td);return;}
+            const c=document.createElement('div');
+            c.className=`wfc ef-r17t ${meta.cls}`;
+            c.style.cssText='height:50px !important;min-height:50px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+            c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.style.height='50px';td.style.padding='0';
+            td.appendChild(c);tr.appendChild(td);return;
+          }
+          if(fl==='R+17B'){
+            // SF cols 81-85: covered by R+18B rowspan=3
+            if(zone.id==='SF' && [81,82,83,84,85].includes(col)){return;}
+            // WF: R+17B ref data is stored in R+17T row
+            const r17ref = (zone.types['R+17T']||[])[ci] || (zone.refs['R+17T']||[])[ci] || pRef || pType || '';
+            const h='100px';
+            const c17=document.createElement('div');
+            c17.className=`wfc ef-r17b ${meta.cls}`;
+            c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+            if(r17ref==='R1701'||r17ref==='C1702'||r17ref==='C1701'){
+              c17.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${r17ref.split('').join('\n')}</span>`;
+            } else if(r17ref==='R1702'){
+              c17.style.borderLeft='5px double #ED1C24';
+              c17.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${r17ref.split('').join('\n')}</span>`;
+            } else if(r17ref==='R1703'||r17ref==='G1703'){
+              c17.style.borderLeft='5px double #ED1C24';
+              c17.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+              c17.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${r17ref.split('').join('\n')}</span>`;
+            } else if(r17ref==='R1754'){
+              // EF format scaled to 100px: left col [21px plain|vlines+red-right, 79px dots|vlines+red-right]
+              c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;display:flex;flex-direction:row;padding:0;`;
+              c17.innerHTML=`<div style="width:50px;height:100px;display:flex;flex-direction:column;"><div style="height:21px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:21px;"></div><div style="width:25px;height:21px;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:26px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${r17ref.split('').join('\n')}</span></div></div><div style="width:25px;height:100%;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div></div>`;
+            } else if(r17ref==='R1756'){
+              // EF format scaled to 100px: mirror of R1754
+              c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+              c17.innerHTML=`<div style="width:50px;height:100px;display:flex;flex-direction:column;"><div style="height:21px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:21px;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:21px;"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:26px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${r17ref.split('').join('\n')}</span></div></div></div></div>`;
+            } else if(r17ref==='R1753'){
+              // EF format scaled to 100px: [21px vlines+red-left+red-bottom | 79px vlines+red-left+label]
+              c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;padding:0;display:block;border-left:1.5px solid rgba(34,79,147,0.2);`;
+              c17.innerHTML=`<div style="height:21px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-left:5px double #ED1C24;border-bottom:5px double #ED1C24;"></div><div style="height:79px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-top:none;border-left:5px double #ED1C24;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;position:relative;z-index:1;">${r17ref.split('').join('\n')}</span></div>`;
+            } else if(r17ref==='R1751'||r17ref==='R1752'){
+              // EF format scaled to 100px: [21px plain+red-bottom | 26px dots | 53px label]
+              const leftBorder=r17ref==='R1752'?'5px double #ED1C24':'1.5px solid rgba(34,79,147,0.2)';
+              c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;padding:0;display:block;`;
+              c17.style.borderLeft=leftBorder;
+              c17.innerHTML=`<div style="height:21px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-bottom:5px double #ED1C24;"></div><div style="height:26px;width:100%;box-sizing:border-box;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;"></div><div style="height:53px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${r17ref.split('').join('\n')}</span></div>`;
+            } else if(r17ref==='R1704'){
+              c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+              c17.innerHTML=`<div style="width:25px;height:100%;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${r17ref.split('').join('\n')}</span>`;
+            } else if(r17ref==='R1705'||r17ref==='D1705'){
+              c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+              c17.innerHTML=`<div style="width:25px;height:100%;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${r17ref.split('').join('\n')}</span>`;
+            } else if(r17ref==='R1706'){
+              c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;`;
+              c17.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${r17ref.split('').join('\n')}</span>`;
+            } else if(r17ref){
+              c17.innerHTML=`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${r17ref}</span>`;
+            } else if(zone.id==='SF' && (col===1||col===2||col===3)){
+              c17.style.setProperty('background-color','transparent','important');
+              c17.style.backgroundImage='repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px)';
+            }
+            if(zone.id==='SF' && col===4 && !/^D(0[1-9]|1[0-2])$/.test(pType)&&!['DM06','D1803','D1705','D304'].includes(pType)) c17.style.borderRight='5px double #ED1C24';
+            c17.onclick=(e)=>{e.currentTarget=c17;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.style.height=h;td.style.padding='0';
+            td.appendChild(c17);tr.appendChild(td);return;
+          }
+        }
+        // Merge ALL of R+18T and R+18M: R+18T spans 2 rows for all cols, R+18M all cols skipped
+        if(fl==='R+18M'){return;} // skipped — all cols covered by R+18T rowspan=2
+        // Merge E-18B-81 + E-17T-81 + E-17B-81: R+18B col 81 spans 3 rows (190px)
+        if(fl==='R+17T'||fl==='R+17B'){return;} // skipped — all cols covered by R+18B rowspan=3
+        // E-17-65 (R+18B col 65): 3 sub-cells (40px | red line | 50px dots | 100px)
+        if(fl==='R+18B' && [65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81].includes(col)){
+          td.setAttribute('rowspan','3');
+          td.style.height='190px';td.style.maxHeight='190px';td.style.overflow='hidden';td.style.padding='0';td.style.verticalAlign='top';
+          const c65=document.createElement('div');
+          c65.className=`wfc ef-r18b ${(SM[((panels[id]||{}).status||'pending')]||SM.pending).cls}`;
+          const ref65 = pRef||pType||'';
+          if(ref65==='R1754'){
+            // R1754: left(40px plain | 50px dots | 100px text) + right(vlines) + red MIDDLE + full-width red horiz at 40px
+            td.setAttribute('rowspan','3');
+            td.style.height='190px';td.style.maxHeight='190px';td.style.overflow='hidden';td.style.padding='0';td.style.verticalAlign='top';
+            c65.style.setProperty('height','190px','important');
+            c65.style.setProperty('max-height','190px','important');
+            c65.style.overflow='hidden';
+            c65.style.display='flex';
+            c65.style.flexDirection='row';
+            c65.style.padding='0';
+            c65.style.width='50px';
+            c65.style.minWidth='50px';
+            c65.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;"></div><div style="width:25px;height:40px;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${ref65.split('').join('\n')}</span></div></div><div style="width:25px;height:100%;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div></div>`;
+            c65.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
+            td.appendChild(c65);tr.appendChild(td);return;
+          }
+          if(ref65==='R1756'){
+            // R1756: mirror of R1754 — left(vlines) + right(40px plain | 50px dots | 100px text) + red MIDDLE + full-width red horiz at 40px
+            td.setAttribute('rowspan','3');
+            td.style.height='190px';td.style.maxHeight='190px';td.style.overflow='hidden';td.style.padding='0';td.style.verticalAlign='top';
+            c65.style.setProperty('height','190px','important');
+            c65.style.setProperty('max-height','190px','important');
+            c65.style.overflow='hidden';
+            c65.style.display='flex';
+            c65.style.flexDirection='row';
+            c65.style.padding='0';
+            c65.style.width='50px';
+            c65.style.minWidth='50px';
+            c65.style.borderLeft='5px double #ED1C24';
+            c65.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:40px;"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${ref65.split('').join('\n')}</span></div></div></div></div>`;
+            c65.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
+            td.appendChild(c65);tr.appendChild(td);return;
+          }
+          const isR1752 = ref65==='R1752';
+          const isR1753 = ref65==='R1753';
+          c65.style.cssText='height:190px !important;max-height:190px !important;overflow:hidden;padding:0;display:block;';
+          const leftBorder = isR1752 ? '5px double #ED1C24' : '1.5px solid rgba(34,79,147,0.2)';
+          c65.style.borderLeft = leftBorder;
+          if(isR1753){
+            // R1753: sub1=40px vlines + red LEFT | sub2=150px vlines + red LEFT
+            c65.innerHTML=`
+              <div style="height:40px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-left:5px double #ED1C24;border-bottom:5px double #ED1C24;"></div>
+              <div style="height:150px;width:100%;box-sizing:border-box;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border:1.5px solid rgba(34,79,147,0.2);border-top:none;border-left:5px double #ED1C24;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:17px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;position:relative;z-index:1;">${ref65.split('').join('\n')}</span></div>`;
+          } else {
+          c65.innerHTML=`
+            <div style="height:40px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-bottom:5px double #ED1C24;"></div>
+            <div style="height:50px;width:100%;box-sizing:border-box;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;"></div>
+            <div style="height:100px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${ref65.split('').join('\n')}</span></div>`;
+          }
+          c65.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
+          td.appendChild(c65);tr.appendChild(td);return;
+        }
+        // R185x in R+18T: apply R20x visual formats at 75px (rowspan=2: 25px+50px)
+        if(fl==='R+18T' && ['R1851','R1852','E1852','R1853','R1854','R1855','R1856','C1803','C1804'].includes(pRef||pType)){
+          const ref18 = pRef||pType;
+          td.setAttribute('rowspan','2');
+          td.style.height='75px';td.style.maxHeight='75px';td.style.overflow='hidden';td.style.padding='0';td.style.verticalAlign='top';
+          const c18=document.createElement('div');
+          c18.className=`wfc ${(SM[((panels[id]||{}).status||'pending')]||SM.pending).cls}`;
+          c18.style.cssText='width:50px;height:75px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;';
+          const label = ref18;
+          if(ref18==='R1851'||ref18==='C1804'){
+            // R201 format: dotted bg + text centered — horizontal 12px
+            c18.style.cssText+='';
+            c18.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${label}</span>`;
+          } else if(ref18==='C1803'){
+            c18.style.cssText+='';
+            c18.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${label}</span>`;
+          } else if(ref18==='R1852'){
+            // R202 format: dotted bg + text + red LEFT — horizontal 12px
+            c18.style.borderLeft='5px double #ED1C24';
+            c18.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${label}</span>`;
+          } else if(ref18==='E1852'){
+            c18.style.borderLeft='5px double #ED1C24';
+            c18.style.borderRight='5px double #ED1C24';
+            c18.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${label}</span>`;
+          } else if(ref18==='R1853'){
+            c18.style.borderLeft='5px double #ED1C24';
+            c18.innerHTML=`<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${label}</span>`;
+          } else if(ref18==='R1854'){
+            // R204 format: dotted left | vlines right + red MIDDLE
+            c18.style.cssText='width:50px;height:75px;overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;';
+            c18.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${label.split('').join('\n')}</span>`;
+          } else if(ref18==='R1855'){
+            // R205 format: dotted left | vlines right + red MIDDLE + red LEFT
+            c18.style.cssText='width:50px;height:75px;overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            c18.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;pointer-events:none;">${label.split('').join('\n')}</span>`;
+          } else if(ref18==='R1856'){
+            // R206 format: vlines left | dotted right + red MIDDLE + red LEFT
+            c18.style.cssText='width:50px;height:75px;overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            c18.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${label}</span>`;
+          }
+          c18.style.borderBottom='5px double #ED1C24';
+          c18.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
+          td.appendChild(c18);tr.appendChild(td);return;
+        }
+        const r18cls = fl==='R+18T'?'ef-r18t':fl==='R+18M'?'ef-r18m':fl==='R+18MD'?'ef-r18md':fl==='R+18B'?'ef-r18b':fl==='R+17T'?'ef-r17t':'ef-r17b';
+        const r18h = fl==='R+18T'?'25px':fl==='R+18M'?'50px':fl==='R+18MD'?'110px':fl==='R+18B'?'40px':fl==='R+17T'?'50px':'100px';
+        const mergedH = (fl==='R+18T') ? '75px' : (fl==='R+18B') ? '190px' : r18h;
+        if(fl==='R+18T'){td.setAttribute('rowspan','2');td.style.minHeight=mergedH;}
+        // NF: R+18B right section is empty; R+17B has its own data — don't merge
+        if(fl==='R+18B'&&zone.id!=='NF'){td.setAttribute('rowspan','3');td.style.minHeight=mergedH;}
+        td.style.height=mergedH;
+        td.style.maxHeight=mergedH;
+        td.style.overflow='hidden';
+        td.style.padding='0';
+        td.style.verticalAlign='top';
+        const c18=document.createElement('div');
+        c18.className=`wfc ${r18cls} ${(SM[((panels[id]||{}).status||'pending')]||SM.pending).cls}`;
+        c18.style.cssText=`height:${mergedH} !important;min-height:${mergedH};overflow:hidden;display:flex;align-items:center;justify-content:center;`;
+        const refStyle='font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;';
+        c18.innerHTML = pRef ? `<span style="${refStyle}">${pRef}</span>` : '';
+        c18.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
+        td.appendChild(c18);tr.appendChild(td);return;
+      }
+
+      const isR01DottedEnd = zone.id==='EF' && fl==='R+01' && col===65;
+      const isMergedDoor = zone.id==='EF' && ((fl==='R+02' && col===74) || (fl==='R+01' && col===74));
+      // Skip R+01 cols 74, 70, 75, 73, 71, 69 entirely — covered by R+02 rowspan=2
+      if(zone.id==='EF' && fl==='R+01' && (col===74||col===70||col===75||col===73||col===71||col===69)){return;}
+      const isRDC = zone.id==='EF' && fl==='RDC';
+      const isRDCRedLeft = zone.id==='EF' && fl==='RDC' && (col===80 || col===79);
+      // SF cols 2 & 3, floors R+19–R+33: split cell — must run BEFORE empty-cell guard
+      const sfSplitFloors=['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03'];
+      const sfRedBottomFloors=['R+33','R+31','R+29','R+27','R+25','R+23','R+21','R+19','R+16','R+14','R+12','R+10','R+08','R+06','R+04'];
+      // SF col 1 R+19–R+33: split cell (top 50px vlines | 2px black divider | bottom 98px vlines)
+      if(zone.id==='SF' && col===1 && sfSplitFloors.includes(fl)){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.title=`${sfPanelRef(fl,col)}\nType:custom\nStatus:${meta0.label}`;
+        const redBot=(sfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);${redBot}`;
+        const vlines='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
+        cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;${vlines}"></div>`;
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      if(zone.id==='SF' && (col===2||col===3) && sfSplitFloors.includes(fl)){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.title=`${sfPanelRef(fl,col)}\nType:custom\nStatus:${meta0.label}`;
+        // Override wfc defaults: clear bg, stretch children, no centering
+        const redBot23=(sfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);${redBot23}`;
+        cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div><div style="width:100%;height:98px;flex-shrink:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);"></div>`;
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // SF R+02 cols 1-3: 150px — vlines 50px | double red separator | vlines remaining — must run BEFORE empty-cell guard
+      if(zone.id==='SF' && fl==='R+02' && typeof col==='number' && col>=1 && col<=3){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        cell0.title=`Floor:${fl} Col:${col}\nStatus:${meta0.label}`;
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);`;
+        const vl='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
+        cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vl}"></div><div style="width:100%;height:5px;flex-shrink:0;border-top:2px solid #ED1C24;border-bottom:2px solid #ED1C24;background:transparent;"></div><div style="width:100%;flex:1;${vl}"></div>`;
+        td.style.verticalAlign='top';
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // NF R+02 cols 45-42: hstripes 50px (must be before empty check — these cols have no panel data)
+      if(zone.id==='NF' && fl==='R+02' && [45,44,43,42].includes(col)){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        cell0.style.cssText=`height:50px !important;min-height:50px;max-height:50px;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);box-sizing:border-box;width:100%;`;
+        td.style.height='50px';td.style.padding='0';td.style.verticalAlign='top';
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // NF R+01 cols 58, 59, 60: covered by R+02 rowspan=2
+      if(zone.id==='NF' && fl==='R+01' && (col===58||col===59||col===60)){return;}
+      // NF R+01 cols 65-52: 25px height, R2xx visual format (must be before empty check — some cols have no panel data)
+      if(zone.id==='NF' && fl==='R+01' && col>=52 && col<=65){
+        const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const ref=pRef||pType||'';
+        const cell0=document.createElement('div');
+        cell0.className=`wfc ${meta0.cls}`;
+        if(selPanel===id)cell0.classList.add('sel');
+        const base=`height:25px !important;min-height:25px;max-height:25px;position:relative;overflow:hidden;box-sizing:border-box;width:100%;`;
+        if(!ref){
+          if(col===52||col===53){
+            cell0.style.cssText=base+`background:repeating-linear-gradient(0deg,#9aa3ad 0px,#9aa3ad 2px,#dde1e5 2px,#dde1e5 5px) !important;`;
+          } else {
+            cell0.style.cssText=base;
+          }
+        } else if(ref==='R201'||ref==='C201'){
+          cell0.style.cssText=base+`display:flex;align-items:center;justify-content:center;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;`;
+          cell0.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        } else if(ref==='R202'){
+          cell0.style.cssText=base+`display:flex;align-items:center;justify-content:center;border-left:5px double #ED1C24;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;`;
+          cell0.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        } else if(ref==='E202'){
+          cell0.style.cssText=base+`display:flex;align-items:center;justify-content:center;border-left:5px double #ED1C24;border-right:5px double #ED1C24;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;`;
+          cell0.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        } else if(ref==='R203'){
+          cell0.style.cssText=base+`display:flex;align-items:center;justify-content:center;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);`;
+          cell0.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        } else if(ref==='R204'||ref==='R211'){
+          cell0.style.cssText=base+`display:flex;flex-direction:row;padding:0;align-items:stretch;`;
+          cell0.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+        } else {
+          cell0.style.cssText=base+`display:flex;align-items:center;justify-content:center;`;
+          cell0.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+        }
+        if(['R201','R202','R203','R204','R211','C201','E202'].includes(ref)) cell0.style.borderBottom='5px double #ED1C24';
+        cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.style.height='25px';td.style.maxHeight='25px';td.style.padding='0';td.style.verticalAlign='top';
+        td.appendChild(cell0);tr.appendChild(td);return;
+      }
+      // filter check removed — non-matching cells now dimmed via td.style.opacity (set above)
+      if(!pType&&!pRef){const e=document.createElement('div');e.className='wfc-empty'+(zone.id==='EF'?(isRDC?' ef-rdc':isR01Short?' ef-r01-short':' ef-tall'):(zone.id==='WF'||zone.id==='SF')?(fl==='R+02'?' ef-tall wf-r02':fl==='R+34'?' ef-tall wf-r34':' ef-tall'):'');if(fl==='R+18')e.style.background='rgba(255,248,225,0.5)';td.appendChild(e);tr.appendChild(td);return;}
+      const meta=SM[p.status]||SM.pending;
+      const cell=document.createElement('div');cell.className=`wfc ${meta.cls}`;
+      const refOnlyFloors=zone.id==='WF'?['R+34','R+02','R+19']:zone.id==='SF'?['R+34','R+02','R+25','R+19','R+18T','R+17B','RDC']:zone.id==='NF'?['R+34','R+25','R+18T','R+18B','R+17B','R+02','R+01']:['R+19','R+25','R+01','RDC'];
+      if(!refOnlyFloors.includes(fl)) cell.classList.add('big-type');
+      if(selPanel===id)cell.classList.add('sel');
+      cell.title=`${zone.id==='EF'?efPanelRef(fl,col):zone.id==='WF'?wfPanelRef(fl,col):`Floor:${fl} Col:C${col}`}\nType:${pType||'—'}\nStatus:${meta.label}`;
+      // R+25 trapezoid cells — applied before empty check
+      if(zone.id==='EF' && fl==='R+25'){
+        const ref25 = pRef||pType||'';
+        const textSpan = ref25 ? `<span class="c-type" style="font-size:12px;line-height:1.4;width:100%;text-align:center;">${ref25.split('').join('\n')}</span>` : '';
+        cell.classList.remove('big-type');
+        if(col===66){
+          cell.classList.add('ef-trap-66');
+          cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;text-align:center;padding-bottom:1px;">${textSpan}</div>`;
+        } else if(col===72){
+          cell.classList.add('ef-trap-72');
+          cell.classList.remove('big-type');
+          // T07: left=plain, right=vertical lines + red MIDDLE, no dots
+          cell.innerHTML=`<div style="width:25px;height:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;flex-shrink:0;border-right:5px double #ED1C24;"><span class="c-type" style="font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
+        } else if(col===79 || col===74){
+          cell.classList.add('ef-trap-'+col);
+          cell.classList.remove('big-type');
+          cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;z-index:1;">${ref25.split('').join('\n')}</span>`;
+        } else if(col===77 || col===75){
+          cell.classList.add('ef-trap-'+col);
+          cell.classList.remove('big-type');
+          cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span class="c-type" style="font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span></div>`;
+        } else if(col===69){
+          cell.classList.add('ef-trap-69');
+          cell.classList.remove('big-type');
+          // T09: left=lines, right=empty (no dots), red LEFT + red MIDDLE
+          cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span class="c-type" style="font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span></div>`;
+        } else if(col===67){
+          cell.classList.add('ef-trap-67');
+          cell.classList.remove('big-type');
+          cell.style.cssText += 'position:relative;';
+          cell.innerHTML = `<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
+        } else if(col===68){
+          cell.classList.add('ef-trap-68-t05');
+          cell.classList.remove('big-type');
+          cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:8px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;z-index:1;">${ref25.split('').join('\n')}</span>`;
+        } else {
+          if(col===81) cell.classList.add('ef-trap-right');
+          else if(col===65) cell.classList.add('ef-trap-left');
+          else cell.classList.add('ef-trap-'+col);
+          // Use absolute positioning to pin text to visual bottom
+          cell.style.cssText += 'position:relative;';
+          cell.innerHTML = `<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
+        }
+        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell);tr.appendChild(td);return;
+      }
+      // SF R+25 trapezoid cells — cols 94→81, slope from left=50/right=47 to left=3/right=0
+      if(zone.id==='SF' && fl==='R+25'){
+        const sfTrapCols=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+        if(sfTrapCols.includes(col)){
+          const ci=sfTrapCols.indexOf(col);
+          const right=Math.round((13-ci)*47/13);
+          const left=right+3;
+          const ref25=pRef||pType||'';
+          cell.classList.remove('big-type');
+          const sfT09cols=[85,83]; // T09: left stripes | red divider | right plain (2-col split)
+          const sfT05cols=[91,89,87]; // T05: full-width vlines + red left + text bottom
+          if(sfT09cols.includes(col)){
+            cell.style.cssText+=`height:150px;border-left:5px double #ED1C24;clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);"><span class="c-type" style="font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span></div>`;
+          } else if(sfT05cols.includes(col)){
+            cell.style.cssText+=`height:150px;border-left:5px double #ED1C24;clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;justify-content:flex-end;padding-bottom:4px;`;
+            cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+            cell.innerHTML=`<span class="c-type" style="position:relative;z-index:1;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
+          } else {
+            const sfRedLeftCols=[90,88,86];
+            const bLeftSF=sfRedLeftCols.includes(col)?'border-left:5px double #ED1C24;':'';
+            cell.style.cssText+=`height:150px;${bLeftSF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
+          }
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+      }
+
+      // NF R+25 trapezoid cells — cols 65→52, left=50+ci*2, right=52+ci*2
+      if(zone.id==='NF' && fl==='R+25'){
+        const nfTrapCols=[65,64,63,62,61,60,59,58,57,56,55,54,53,52];
+        if(nfTrapCols.includes(col)){
+          const ci=nfTrapCols.indexOf(col);
+          const left=50+ci*2;
+          const right=52+ci*2;
+          const ref25=pRef||pType||'';
+          cell.classList.remove('big-type');
+          const nfT07cols=[63,61]; // T07: left(dots+text) | red divider | right(vlines)
+          const nfT05cols=[59,57,55]; // T05: full-width vlines + red left + text bottom
+          if(nfT07cols.includes(col)){
+            cell.style.cssText+=`height:150px;clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+            cell.innerHTML=`<div style="width:25px;height:100%;display:flex;flex-direction:column;flex-shrink:0;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);"><div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span class="c-type" style="font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span></div></div><div style="flex:1;height:100%;flex-shrink:0;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
+          } else if(nfT05cols.includes(col)){
+            cell.style.cssText+=`height:150px;border-left:5px double #ED1C24;clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;justify-content:flex-end;padding-bottom:4px;`;
+            cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+            cell.innerHTML=`<span class="c-type" style="position:relative;z-index:1;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
+          } else {
+            const nfRedLeftCols=[62,60,58,56,54];
+            const bLeftNF=nfRedLeftCols.includes(col)?'border-left:5px double #ED1C24;':'';
+            cell.style.cssText+=`height:150px;${bLeftNF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
+          }
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+      }
+      // NF R+26 trapezoid cells — cols 55,54,53 (R2551,R2550,R2549), flat top at 76px
+      if(zone.id==='NF' && fl==='R+26' && [55,54,53].includes(col)){
+        const ref26=pRef||pType||'';
+        cell.classList.remove('big-type');
+        cell.style.cssText+=`height:150px;clip-path:polygon(0 76px, 100% 76px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
+        cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref26.split('').join('\n')}</span>`;
+        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell);tr.appendChild(td);return;
+      }
+      if((zone.id==='EF'||zone.id==='WF') && pType) cell.setAttribute('data-ptype', pType);
+      // ── W01–W04 single-leaf hinged window variants ─────────────────
+      // W01: plain  W02: +red left  W03: +red bottom  W04: +red left+right
+      if(pType==='W01'||pType==='W02'||pType==='W03'||pType==='W04'){
+        const _wBB=(pType==='W02'||pType==='W04')?'border-bottom:5px double #ED1C24;':'';
+        const _wBL=(pType==='W03'||pType==='W04')?'border-left:5px double #ED1C24;':'';
+        cell.style.cssText=`width:var(--cw);height:150px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;padding:0;border-radius:4px;cursor:pointer;${_wBB}${_wBL}`;
+        cell.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:radial-gradient(circle,rgba(0,0,0,0.55) 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.2);"></div><div style="width:100%;flex:1;position:relative;overflow:hidden;"><svg width="50" height="100" viewBox="0 0 50 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="display:block;position:absolute;top:0;left:0;width:100%;height:100%;"><rect x="1" y="1" width="48" height="98" fill="none" stroke="#2a3a52" stroke-width="3.5"/><rect x="1" y="75" width="48" height="24" fill="rgba(0,0,0,0.18)"/><rect x="1" y="75" width="48" height="24" fill="none" stroke="#2a3a52" stroke-width="1.5"/><line x1="3" y1="77" x2="47" y2="77" stroke="#2a3a52" stroke-width="0.8" opacity="0.35"/><rect x="6" y="8" width="38" height="62" fill="none" stroke="#2a3a52" stroke-width="2.5"/><rect x="7.5" y="9.5" width="35" height="59" fill="rgba(255,255,255,0.35)"/><line x1="42.5" y1="9.5" x2="7.5" y2="39" stroke="#2a3a52" stroke-width="1.1" opacity="0.6"/><line x1="42.5" y1="68.5" x2="7.5" y2="39" stroke="#2a3a52" stroke-width="1.1" opacity="0.6"/></svg><span style="position:absolute;bottom:0;left:0;right:0;height:25px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;z-index:2;letter-spacing:0.03em;">${pType}</span></div>`;
+        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell);tr.appendChild(td);return;
+      }
+      // EF panel type rendering — confirmed formats
+      if((zone.id==='EF' || zone.id==='WF' || zone.id==='SF' || zone.id==='NF') && !isR01Short && !isRDC){
+        cell.classList.remove('big-type');
+        // WF R+02: render R301-R306, C301, C302 with special formats — must come first
+        if(zone.id==='WF' && fl==='R+02'){
+          const ref = pRef||pType||'';
+          cell.classList.add('ef-tall','wf-r02');
+          cell.style.cssText += 'position:relative;overflow:hidden;';
+          if(ref==='R301' || ref==='C301' || ref==='C302'){
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;text-align:center;">${ref}</span>`;
+          } else if(ref==='R302'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;text-align:center;">${ref}</span>`;
+          } else if(ref==='R303'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+            cell.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          } else if(ref==='R304'){
+            cell.style.cssText += 'display:flex;flex-direction:row;padding:0;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else if(ref==='R305'){
+            cell.style.cssText += 'display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else if(ref==='R306'){
+            cell.style.cssText += 'display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else {
+            cell.innerHTML=`<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          }
+          // Double red bottom border for all R+02 ref cells
+          if(['R301','R302','R303','R304','R305','R306','C301','C302'].includes(ref)){
+            cell.style.borderBottom='5px double #ED1C24';
+          }
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+        // NF R+02 cols 50-31: 50px height, top-aligned, R3xx visual formats
+        if(zone.id==='NF' && fl==='R+02' && [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col)){
+          const ref=pRef||pType||'';
+          const w=col===50||col===47||col===45?'25px':'var(--cw)';
+          cell.style.cssText+=`height:50px !important;min-height:50px;max-height:50px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;width:${w};`;
+          if(ref==='R301'||ref==='C302'){
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          } else if(ref==='R302'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          } else if(ref==='R303'||ref==='G303'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+            cell.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          } else if(ref==='R306'){
+            cell.style.cssText+=`display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;align-items:stretch;`;
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else if(ref){
+            cell.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          }
+          if(['R301','R302','R303','G303','R306','C302'].includes(ref)) cell.style.borderBottom='5px double #ED1C24';
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.style.height='50px';td.style.maxHeight='50px';td.style.padding='0';td.style.verticalAlign='top';
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+        // NF R+02: same R3xx visual format as WF R+02 (right section only; cols 54-65 use standard type renderers)
+        if(zone.id==='NF' && fl==='R+02' && col<54){
+          const ref = pRef||pType||'';
+          cell.classList.add('ef-tall');
+          cell.style.cssText += 'position:relative;overflow:hidden;';
+          if(ref==='R301'||ref==='C302'){
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;text-align:center;">${ref}</span>`;
+          } else if(ref==='R302'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;text-align:center;">${ref}</span>`;
+          } else if(ref==='R303'||ref==='G303'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+            cell.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          } else if(ref==='R306'){
+            cell.style.cssText += 'display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else {
+            cell.innerHTML=`<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          }
+          if(['R301','R302','R303','R306','C302','G303'].includes(ref)) cell.style.borderBottom='5px double #ED1C24';
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+        // SF R+02: cols 4-15 render with R301-R306, C301, D304 special formats
+        if(zone.id==='SF' && fl==='R+02' && typeof col==='number' && col>=4 && col<=15){
+          const ref = pRef||pType||'';
+          const fmt = (ref==='D304') ? 'R304' : ref;
+          cell.classList.add('ef-tall');
+          cell.style.cssText += 'position:relative;overflow:hidden;';
+          if(fmt==='R301'||fmt==='C301'){
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;text-align:center;">${ref}</span>`;
+          } else if(fmt==='R302'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;text-align:center;">${ref}</span>`;
+          } else if(fmt==='R303'){
+            cell.style.borderLeft='5px double #ED1C24';
+            cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+            cell.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          } else if(fmt==='R304'){
+            cell.style.cssText += 'display:flex;flex-direction:row;padding:0;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else if(fmt==='R305'){
+            cell.style.cssText += 'display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else if(fmt==='R306'){
+            cell.style.cssText += 'display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${ref}</span>`;
+          } else if(ref){
+            cell.innerHTML=`<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
+          }
+          if(['R301','R302','R303','R304','R305','R306','C301','D304'].includes(ref)){
+            cell.style.borderBottom='5px double #ED1C24';
+          }
+          if(col===4 && !/^D(0[1-9]|1[0-2])$/.test(pType)&&!['DM06','D1803','D1705','D304'].includes(pType)) cell.style.borderRight='5px double #ED1C24';
+          cell.style.setProperty('height','50px','important');
+          td.style.verticalAlign='top';
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+        // effType: use pType, or pRef when pRef is a known D/G format code and pType is empty
+        const effType = pType || (['D05','D06','D07','D08','D10','D11','G03','G04','G05','G06'].includes(pRef) ? pRef : '');
+        // SPLIT CELL types (T01-T04, C03, C04, C07, C08, G03, G04 + WF equivalents)
+        if(['T01','T02','T03','T04','C03','C04','C07','C08','C01','C02','C05','C06','C09','C10','C1902','G03','G04','D01','D02','D03','D04','E01','E02','E03','E04'].includes(pType)){
+          cell.classList.add('split-cell');
+          const c03group = ['T01','C03','C07','C01','C05','C09','C1902','D01','E01'];
+          const c04group = ['T02','C04','C08','C02','C06','C10','C302','C301','D02','E02'];
+          const hasLeft   = ['T03','T04','G03','G04','D03','D04','E03','E04'].includes(pType);
+          const hasBottom = c04group.includes(pType) || ['T04','G04','D04','E04'].includes(pType);
+          if(hasLeft)   cell.style.borderLeft   = '5px double #ED1C24';
+          if(!hasLeft)  cell.style.borderLeft   = '1.5px solid rgba(34,79,147,0.2)';
+          cell.style.borderTop   = '1.5px solid rgba(34,79,147,0.2)';
+          cell.style.borderRight = '1.5px solid rgba(34,79,147,0.2)';
+          cell.style.borderBottom = 'none';
+          const bottomBorder = hasBottom ? '5px double #ED1C24' : 'none';
+          cell.innerHTML=`<div class="c-top"></div><div class="c-bottom" style="border-bottom:${bottomBorder};"><span class="c-type">${(pRef||pType).split('').join('\n')}</span></div>`;
+        }
+        // C101: T05 format without red left border, always shows type name
+        else if(pType==='C101'){
+          cell.style.cssText += 'justify-content:flex-end;padding-bottom:8px;height:150px;';
+          cell.style.backgroundImage = 'repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          cell.innerHTML=`<span class="c-type" style="position:relative;z-index:1;">${pType.split('').join('\n')}</span>`;
+        }
+        // T05/C102/M06/D05/E05/DM06/GM06/G05: vertical lines + text bottom + red left
+        else if(effType==='T05'||effType==='C102'||effType==='M06'||effType==='GM06'||effType==='D05'||effType==='E05'||effType==='DM06'||effType==='G05'){
+          cell.style.cssText += 'border-left:5px double #ED1C24;justify-content:flex-end;padding-bottom:8px;height:150px;';
+          cell.style.backgroundImage = 'repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          const t05label = pRef||pType;
+          cell.innerHTML=`<span class="c-type" style="position:relative;z-index:1;">${t05label.split('').join('\n')}</span>`;
+        }
+        // T06/D06/E06/G06: vertical lines + text bottom + red left + red bottom
+        else if(effType==='T06'||effType==='D06'||effType==='E06'||effType==='G06'){
+          cell.style.cssText += 'border-left:5px double #ED1C24;border-bottom:5px double #ED1C24;justify-content:flex-end;padding-bottom:8px;height:150px;';
+          cell.style.backgroundImage = 'repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          cell.innerHTML=`<span class="c-type" style="position:relative;z-index:1;">${(pRef||pType).split('').join('\n')}</span>`;
+        }
+        // T07-T12 / D07-D12 / E07-E12: 2-column layout
+        else if(['T07','T08','T09','T10','T11','T12','M10','M11','M12','D07','D08','D09','D10','D11','D12','E07','E08','E09','E10','E11','E12'].includes(effType)){
+          cell.classList.add('ef-2col');
+          // Border styles applied inline for reliability
+          const bLeft   = ['T08','T09','T11','T12','M11','M12','D08','D09','D11','D12','E08','E09','E11','E12'].includes(effType) ? 'border-left:5px double #ED1C24;' : '';
+          const bBottom = ['T10','T11','T12','D10','D11','D12','E10','E11','E12'].includes(effType) ? 'border-bottom:5px double #ED1C24;' : '';
+          cell.style.cssText += bLeft + bBottom;
+          const isFlipped = ['T09','T12','M12','D09','D12','E09','E12'].includes(effType);
+          const midStyle = 'border-left:5px double #ED1C24;';
+          const cellLabel = (pRef||pType).split('').join('\n');
+          if(!isFlipped){
+            // Left col: dots top + text bottom | Right col: vertical lines
+            cell.innerHTML=`
+              <div style="width:25px;height:150px;display:flex;flex-direction:column;flex-shrink:0;">
+                <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type">${cellLabel}</span></div>
+              </div>
+              <div style="width:25px;height:150px;flex-shrink:0;${midStyle}background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
+          } else {
+            // Left col: vertical lines | Right col: dots top + text bottom
+            cell.innerHTML=`
+              <div style="width:25px;height:150px;flex-shrink:0;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>
+              <div style="width:25px;height:150px;display:flex;flex-direction:column;flex-shrink:0;">
+                <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type">${cellLabel}</span></div>
+              </div>`;
+          }
+        }
+        // S-00-85/86/87/88: R302/R304/R306 formats at 50px, label top-aligned
+        else if(zone.id==='SF'&&fl==='RDC'&&[85,86,87,88].includes(col)){
+          td.style.verticalAlign='top';
+          cell.style.cssText+='position:relative;overflow:hidden;border-bottom:5px double #ED1C24;';
+          if(col===88){
+            // R304: dots left | vlines right + red middle, no left border
+            cell.style.cssText+='display:flex;flex-direction:row;padding:0;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
+          } else if(col===86){
+            // R306: vlines left | dots right + red middle + red left border
+            cell.style.cssText+='display:flex;flex-direction:row;padding:0;border-left:5px double #ED1C24;';
+            cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div>`;
+          } else if(col===87){
+            // R302 (col 87): dots + red left border
+            cell.style.cssText+='border-left:5px double #ED1C24;';
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div>`;
+          } else {
+            // R301 (col 85): dots only, no left border
+            cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div>`;
+          }
+          cell.innerHTML+=`<span style="position:absolute;top:4px;left:0;right:0;z-index:2;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;text-align:center;">${pRef||pType}</span>`;
+          cell.style.setProperty('height','50px','important');
+        }
+        // S-00-89: 3 sub-cells — left 25px vlines | right-top 25x45 dotted | dbl-red sep | right-bottom 14px white
+        else if(zone.id==='SF'&&fl==='RDC'&&col===89){
+          const vl='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          const dots='background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px';
+          cell.style.cssText+='display:flex;flex-direction:row;padding:0;overflow:hidden;align-items:stretch;position:relative;border-left:5px double #ED1C24;';
+          cell.innerHTML=`
+            <div style="width:25px;flex-shrink:0;${vl};border-right:5px double #ED1C24;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+              <div style="width:100%;height:45px;flex-shrink:0;${dots};"></div>
+              <div style="width:100%;height:5px;flex-shrink:0;border-top:2px solid #ED1C24;border-bottom:2px solid #ED1C24;background:transparent;"></div>
+              <div style="width:25px;flex:1;background:#fff;"></div>
+            </div>
+            <span style="position:absolute;top:4px;left:0;right:0;z-index:3;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;text-align:center;pointer-events:none;">${pRef||pType}</span>`;
+        }
+        // S-00-90 / S-00-91 / S-00-92: same format as S-00-82 (dotted 50px | sep | dotted remaining), height kept at 175px by post-render
+        else if(zone.id==='SF'&&fl==='RDC'&&col===91){
+          cell.style.cssText+='display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:8px;border-left:5px double #ED1C24;overflow:hidden;position:relative;';
+          cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          cell.innerHTML=`<span style="position:absolute;top:4px;left:0;right:0;z-index:3;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;text-align:center;pointer-events:none;">${pRef||pType}</span>`;
+        }
+        else if(zone.id==='SF'&&fl==='RDC'&&(col===90||col===92)){
+          const dots='background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px';
+          cell.style.cssText+='display:flex;flex-direction:column;padding:0;overflow:hidden;align-items:stretch;position:relative;border-left:5px double #ED1C24;';
+          cell.innerHTML=`
+            <div style="width:100%;height:50px;flex-shrink:0;${dots};"></div>
+            <div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>
+            <div style="width:100%;flex:1;"></div>
+            <span style="position:absolute;top:4px;left:0;right:0;z-index:3;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;text-align:center;pointer-events:none;">${pRef||pType}</span>`;
+        }
+        // S-00-84: same format as E-00-81 — vlines 50px | sep | vlines 25px | sep | vlines + door sketch
+        else if(zone.id==='SF'&&fl==='RDC'&&col===84){
+          const vl='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          cell.style.cssText+='display:flex;flex-direction:column;height:200px;padding:0;overflow:hidden;align-items:stretch;position:relative;border-left:5px double #ED1C24;';
+          cell.innerHTML=`
+            <div style="width:100%;height:45px;flex-shrink:0;${vl};"></div>
+            <div style="width:100%;height:5px;flex-shrink:0;border-top:2px solid #ED1C24;border-bottom:2px solid #ED1C24;background:transparent;"></div>
+            <div style="width:100%;height:25px;flex-shrink:0;${vl};"></div>
+            <div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>
+            <div style="width:100%;flex:1;position:relative;${vl};">
+              <svg viewBox="0 0 45 118" width="45" height="118" style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);">
+                <rect x="1.5" y="1.5" width="42" height="115" fill="none" stroke="rgba(0,0,0,0.75)" stroke-width="2"/>
+                <rect x="5" y="5" width="35" height="108" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="1"/>
+                <circle cx="33" cy="65" r="2.5" fill="rgba(0,0,0,0.75)"/>
+              </svg>
+            </div>
+            <span style="position:absolute;top:4px;left:0;right:0;z-index:3;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;text-align:center;pointer-events:none;">${pRef||pType}</span>`;
+        }
+        // C001/R082/R083 (SF RDC cols 81-83): 2 sub-cells — dotted 50px | black separator | dotted remaining
+        else if(pType==='C001'||pRef==='C001'||(zone.id==='SF'&&fl==='RDC'&&(col===82||col===83))){
+          const dots='background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px';
+          cell.style.cssText+='display:flex;flex-direction:column;height:200px;padding:0;overflow:hidden;align-items:stretch;position:relative;'+(col===83?'border-left:5px double #ED1C24;':'');
+          cell.innerHTML=`
+            <div style="width:100%;height:50px;flex-shrink:0;${dots};"></div>
+            <div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>
+            <div style="width:100%;flex:1;"></div>
+            <span style="position:absolute;top:4px;left:0;right:0;z-index:3;font-family:var(--mono);font-size:13px;font-weight:700;color:inherit;text-align:center;pointer-events:none;">${pRef||pType}</span>`;
+        }
+        // All other types: standard 150px cell
+        else {
+          cell.classList.add('ef-tall');
+          if(zone.id==='WF' && fl==='R+34') cell.classList.add('wf-r34');
+          // W-34-31: use same format as E-25-65 (ef-trap-left) scaled to 165px
+          if(zone.id==='WF' && fl==='R+34' && col===31){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            cell.style.cssText += 'height:165px;clip-path:polygon(0 115px, 100% 111px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // W-34-30 to W-34-16: trapezoid with 5px increments
+          if(zone.id==='WF' && fl==='R+34' && [30,29,28,27,26,25,24,23,22,21,20,19,18,17,16].includes(col)){
+            const wfCols=[31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15];
+            const ci=wfCols.indexOf(col);
+            const tl=Math.round(111-(ci-1)*91/15);
+            const tr2=105-(ci-1)*6;
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            const t05cols=[29,27,23,20];
+            const redLeftCols=[28,26,22,18,16];
+            const r306cols=[24]; // R306: vlines left | dotted right + red middle + red left
+            const r304cols=[19,17]; // R304: dotted left | vlines right + red middle
+            if(t05cols.includes(col)){
+              // T05 format: vertical lines + red left border + text bottom
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);`;
+            } else if(r306cols.includes(col)){
+              // R306 modified: vlines left | plain right + red middle + red left
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+              cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);"><span class="c-type" style="font-size:12px;line-height:1.4;">${(pRef||pType||'').split('').join('\n')}</span></div>`;
+              cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              td.appendChild(cell);tr.appendChild(td);return;
+            } else if(r304cols.includes(col)){
+              // R304 modified: plain left | vlines right + red middle + red left border (col 19 only)
+              cell.style.cssText += `height:165px;${col!==17?'border-left:5px double #ED1C24;':''}clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+              cell.innerHTML=`<div style="width:25px;height:100%;flex-shrink:0;border-right:5px double #ED1C24;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span class="c-type" style="font-size:12px;line-height:1.4;">${(pRef||pType||'').split('').join('\n')}</span></div>`;
+              cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+              td.appendChild(cell);tr.appendChild(td);return;
+            } else if(redLeftCols.includes(col)){
+              // Double vertical red left border
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
+            } else {
+              cell.style.cssText += `height:165px;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
+            }
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // W-34-15: trapezoid top-left 5px, top-right 0px
+          if(zone.id==='WF' && fl==='R+34' && col===15){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            cell.style.cssText += 'height:165px;clip-path:polygon(0 20px, 100% 15px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // SF R+34 cols 4–15: progressive slope L=116→101, R=111→95 (n=0 at col15, n=11 at col4)
+          if(zone.id==='SF' && fl==='R+34' && col>=4 && col<=15){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            const n=15-col;
+            const tl=Math.round(16+n*79/11);
+            const tr2=Math.round(20+n*80/11);
+            if([10,8].includes(col)){
+              // T05: vlines + red left border
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);`;
+              cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            } else if([13,11].includes(col)){
+              // R306: vlines-left | plain-right + red
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+              cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);"><span class="c-type" style="font-size:12px;line-height:1.4;">${(pRef||pType||'').split('').join('\n')}</span></div>`;
+            } else if([9,7].includes(col)){
+              // red left border only (no vlines)
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
+              cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            } else {
+              // Plain trapezoid (cols 4,5,6,12,14,15)
+              cell.style.cssText += `height:165px;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
+              cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            }
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // SF R+34 cols 1,2: flat top at 100px plain
+          if(zone.id==='SF' && fl==='R+34' && [1,2].includes(col)){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            cell.style.cssText += 'height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // SF R+34 col 3 (R3403): flat top 100px + vlines + red left (same as R3404)
+          if(zone.id==='SF' && fl==='R+34' && col===3){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            cell.style.cssText += 'height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // SF R+34 cols 91,92 (R3498,R3499): flat top 100px — same as R3402
+          if(zone.id==='SF' && fl==='R+34' && [91,92].includes(col)){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            cell.style.cssText += 'height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // SF R+34 cols 89,90 (R3496,R3497): flat top 100px, no red border
+          if(zone.id==='SF' && fl==='R+34' && [89,90].includes(col)){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            cell.style.cssText += 'height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // SF R+34 col 88 (R4795): flat top 100px, width 25px, no red border
+          if(zone.id==='SF' && fl==='R+34' && col===88){
+            cell.classList.add('wf-r34');
+            cell.classList.remove('big-type');
+            cell.style.cssText += 'width:25px;height:165px;clip-path:polygon(0 100px, 100% 100px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);';
+            cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          // NF R+34 cols 31–41: progressive slope tl=82.5+(41-col)*3.25, tr2=tl+2.5
+          if(zone.id==='NF' && fl==='R+34' && col>=31 && col<=41){
+            cell.classList.remove('big-type');
+            const n=41-col;
+            const tl=82.5+n*3.25;
+            const tr2=tl+2.5;
+            if([40,38,36].includes(col)){
+              // S-34-10 style: T05 vlines + red left
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);`;
+              cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            } else if([35,33].includes(col)){
+              // W-34-19 style: R304 split plain-left|vlines-right + red
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;display:flex;flex-direction:row;padding:0;`;
+              cell.innerHTML=`<div style="width:25px;height:100%;flex-shrink:0;border-right:5px double #ED1C24;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span class="c-type" style="font-size:12px;line-height:1.4;">${(pRef||pType||'').split('').join('\n')}</span></div>`;
+            } else if([39,37,34,32].includes(col)){
+              // plain + red left border only (no vlines)
+              cell.style.cssText += `height:165px;border-left:5px double #ED1C24;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
+              cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            } else {
+              // S-34-14 style: plain trapezoid (no border)
+              cell.style.cssText += `height:165px;clip-path:polygon(0 ${tl}px, 100% ${tr2}px, 100% 165px, 0 165px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 116px,transparent 116px);`;
+              cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${(pRef||pType||'').split('').join('\n')}</span>`;
+            }
+            cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+            td.appendChild(cell);tr.appendChild(td);return;
+          }
+          const isHorizType = (pType||pRef).match(/^R\d+$/) || (isR01Short && (pType||pRef).match(/^C\d+$/));
+          const displayText = isHorizType ? (pType||pRef) : (pType||pRef).split('').join('\n');
+          cell.innerHTML=`${pRef&&!isHorizType?`<span class="c-ref">${pRef}</span>`:''}<span class="c-type" style="${isHorizType?'white-space:normal;font-size:9px;line-height:1.3;':''}">${displayText}</span>`;
+        }
+      } else {
+        // E-01-65: full black dotted cell
+        if(isR01DottedEnd){
+          cell.classList.add('ef-r01-short');
+          // Keep status background color, overlay dots on top via pseudo-like div
+          cell.style.cssText += 'position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+          cell.innerHTML=`
+            <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div>
+            <span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;">${pType||pRef}</span>`;
+        }
+        // E-00-79: split — vertical lines top 50px + horizontal lines bottom 150px
+        else if(zone.id==='EF' && fl==='RDC' && col===79){
+          cell.classList.add('ef-rdc');
+          cell.style.cssText += 'display:flex;flex-direction:column;padding:0;overflow:hidden;border-left:5px double #ED1C24;';
+          cell.innerHTML=`
+            <div style="height:50px;width:100%;flex-shrink:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+            <div style="flex:1;width:100%;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;">
+              <span class="c-type">${(pType||pRef).split('').join('\n')}</span>
+            </div>`;
+        }
+        // E-00-80: split — dotted top 50px + dotted+text bottom 150px
+        else if(zone.id==='EF' && fl==='RDC' && col===80){
+          cell.classList.add('ef-rdc');
+          cell.style.cssText += 'display:flex;flex-direction:column;padding:0;overflow:hidden;border-left:5px double #ED1C24;';
+          cell.innerHTML=`<div style="height:50px;width:100%;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div><div style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:10px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"><span class="c-type">${(pType||pRef).split('').join('\n')}</span></div>`;
+        // C001 (EF RDC col 81): 3 sub-cells — vlines 50px | separator | vlines 25px | separator | vlines + door sketch
+        } else if(zone.id==='EF' && fl==='RDC' && col===81){
+          cell.classList.add('ef-rdc');
+          const vl='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          cell.style.cssText+='position:relative;display:flex;flex-direction:column;height:200px;padding:0;overflow:hidden;align-items:stretch;';
+          cell.innerHTML=`
+            <span style="position:absolute;top:4px;left:0;right:0;text-align:center;z-index:2;font-family:var(--mono);font-size:11px;font-weight:700;color:rgba(0,0,0,0.75);pointer-events:none;">${pType||pRef}</span>
+            <div style="width:100%;height:50px;flex-shrink:0;${vl};"></div>
+            <div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>
+            <div style="width:100%;height:25px;flex-shrink:0;${vl};"></div>
+            <div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>
+            <div style="width:100%;flex:1;position:relative;${vl};">
+              <svg viewBox="0 0 45 118" width="45" height="118" style="position:absolute;bottom:3px;left:50%;transform:translateX(-50%);">
+                <rect x="1.5" y="1.5" width="42" height="115" fill="none" stroke="rgba(0,0,0,0.75)" stroke-width="2"/>
+                <rect x="5" y="5" width="35" height="108" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="1"/>
+                <circle cx="33" cy="65" r="2.5" fill="rgba(0,0,0,0.75)"/>
+              </svg>
+            </div>`;
+        // R201, R202: dotted background + text
+        } else if(isR01Short && (pType||pRef)==='R201'){
+          cell.classList.add('ef-r01-short');
+          cell.style.cssText += 'position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+          cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;">${pType||pRef}</span>`;
+        } else if(isR01Short && (pType||pRef)==='R202'){
+          cell.classList.add('ef-r01-short');
+          cell.style.cssText += 'position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border-left:5px double #ED1C24;';
+          cell.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;">${pType||pRef}</span>`;
+        // R203: vertical black lines + text
+        } else if(isR01Short && (pType||pRef)==='R203'){
+          cell.classList.add('ef-r01-short');
+          cell.style.cssText += 'position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border-left:5px double #ED1C24;';
+          cell.innerHTML=`<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;white-space:normal;line-height:1.3;color:inherit;">${pType||pRef}</span>`;
+        // R204/R211: dotted left | vlines right + red MIDDLE
+        } else if(isR01Short && ((pType||pRef)==='R204'||(pType||pRef)==='R211')){
+          cell.classList.add('ef-r01-short');
+          cell.style.cssText += 'position:relative;display:flex;flex-direction:row;padding:0;overflow:hidden;';
+          cell.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;pointer-events:none;">${pType||pRef}</span>`;
+        // R205: same as R204 + red LEFT border
+        } else if(isR01Short && (pType||pRef)==='R205'){
+          cell.classList.add('ef-r01-short');
+          cell.style.cssText += 'position:relative;display:flex;flex-direction:row;padding:0;overflow:hidden;border-left:5px double #ED1C24;';
+          cell.innerHTML=`<div style="width:25px;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;pointer-events:none;">${pType||pRef}</span>`;
+        // R206: mirror of R205 — vlines left | dotted right + red MIDDLE + red LEFT
+        } else if(isR01Short && (pType||pRef)==='R206'){
+          cell.classList.add('ef-r01-short');
+          cell.style.cssText += 'position:relative;display:flex;flex-direction:row;padding:0;overflow:hidden;border-left:5px double #ED1C24;';
+          cell.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;pointer-events:none;">${pType||pRef}</span>`;
+        } else {
+          cell.classList.add(isRDC?'ef-rdc':isR01Short?'ef-r01-short':'ef-tall');
+          if(isRDCRedLeft && col!==80) cell.style.borderLeft='5px double #ED1C24';
+          const isHorizType2 = zone.id==='EF' && ((pType||pRef).match(/^R\d+$/) || (isR01Short && (pType||pRef).match(/^C\d+$/) && (pType||pRef)!=='C102'));
+          const displayText2 = isHorizType2 ? (pType||pRef) : (pType||pRef).split('').join('\n');
+          cell.innerHTML=`${pRef&&!isHorizType2?`<span class="c-ref">${pRef}</span>`:''}<span class="c-type" style="${isHorizType2?'white-space:normal;font-size:15px;line-height:1;text-align:center;display:flex;align-items:center;justify-content:center;width:100%;':''}">${displayText2}</span>`;
+        }
+      }
+      // E01-E12 (NF edge types): double red right border
+      if(/^E(0[1-9]|1[0-2])$/.test(pType)) cell.style.borderRight='5px double #ED1C24';
+      // NF C09, C10, C1902, C302: double red right border
+      if(zone.id==='NF' && ['C09','C10','C1902','C302'].includes(pType)) cell.style.borderLeft='5px double #ED1C24';
+      // SF col 4: double red right border for R+33–R+19 and R+16–R+02 (R+02 handled above in its own branch)
+      if(zone.id==='SF' && col===4 && !['R+34','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+01','RDC','R+02'].includes(fl) && !/^D(0[1-9]|1[0-2])$/.test(pType)&&!['DM06','D1803','D1705','D304'].includes(pType)){
+        cell.style.borderRight='5px double #ED1C24';
+      }
+      // S-00-89 to S-00-92: reduce height by 25px (200→175px), align to top of row
+      if(zone.id==='SF' && fl==='RDC' && [89,90,91,92].includes(col)){
+        cell.style.setProperty('height','175px','important');
+        td.style.verticalAlign='top';
+      }
+      // EF R+02 col 71 (R209): T03 format, merged with R+01 below (rowspan=2), 175px + dots last 25px
+      if(zone.id==='EF' && fl==='R+02' && col===71){
+        td.setAttribute('rowspan','2');
+        td.style.cssText='vertical-align:top;padding:0;';
+        cell.classList.remove('big-type');
+        cell.style.cssText='border-left:5px double #ED1C24;height:175px;min-height:175px;display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:4px;justify-content:flex-start;position:relative;';
+        const cellLabel=(pRef||pType).split('').join('\n');
+        cell.innerHTML=`
+          <div style="width:100%;height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.2);flex-shrink:0;"></div>
+          <div style="width:100%;height:100px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="c-type" style="font-size:15.3px;">${cellLabel}</span></div>
+          <div style="width:100%;height:25px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;"></div>
+          <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
+        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell);tr.appendChild(td);return;
+      }
+      // EF R+02 cols 73 and 69 (R208): T09 format, merged with R+01 below (rowspan=2), 175px
+      if(zone.id==='EF' && fl==='R+02' && (col===73||col===69)){
+        td.setAttribute('rowspan','2');
+        td.style.cssText='vertical-align:top;padding:0;';
+        cell.classList.remove('big-type');
+        cell.style.cssText='border-left:5px double #ED1C24;height:175px;min-height:175px;display:flex;flex-direction:row;padding:0;gap:0;overflow:hidden;border-radius:4px;position:relative;';
+        const cellLabel=(pRef||pType).split('').join('\n');
+        cell.innerHTML=`
+          <div style="width:25px;height:175px;flex-shrink:0;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>
+          <div style="width:25px;height:175px;display:flex;flex-direction:column;flex-shrink:0;">
+            <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type" style="font-size:15.3px;">${cellLabel}</span></div>
+            <div style="height:25px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;"></div>
+          </div>
+          <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
+        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell);tr.appendChild(td);return;
+      }
+      // EF R+02 col 75 (R207): T05 format, merged with R+01 below (rowspan=2), 175px
+      if(zone.id==='EF' && fl==='R+02' && col===75){
+        td.setAttribute('rowspan','2');
+        td.style.cssText='vertical-align:top;padding:0;';
+        cell.classList.remove('big-type');
+        cell.style.cssText='border-left:5px double #ED1C24;justify-content:flex-end;padding-bottom:8px;height:175px;min-height:175px;position:relative;';
+        cell.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+        cell.innerHTML=`<div style="position:absolute;left:0;right:0;top:150px;height:2px;background:#fff;z-index:2;"></div><span class="c-type" style="position:relative;z-index:1;font-size:15.3px;">${(pRef||pType).split('').join('\n')}</span>`;
+        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell);tr.appendChild(td);return;
+      }
+      // Handle merged door cell
+      if(zone.id==='EF' && fl==='R+02' && (col===74||col===70)){
+        td.setAttribute('rowspan','2');
+        td.style.cssText='vertical-align:top;padding:0;';
+        const doorId='EF-R+02-C'+col;
+        const doorStatus=(panels[doorId]||{}).status||'pending';
+        const doorMeta=SM[doorStatus]||SM.pending;
+        const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+        const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
+        td.innerHTML=`<div style="width:50px;height:175px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('EF-R+02-C'+${col},'R+02',${col},'','Door',ZONES.find(z=>z.id==='EF'))">
+            <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
+            <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">${col===74?'Door 3':'Door 2'}</span></div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
+              <svg width="42" height="100" viewBox="0 0 42 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <rect x="22" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <path d="M3 6 Q10 6 10 14 L10 86 Q10 94 3 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <path d="M39 6 Q32 6 32 14 L32 86 Q32 94 39 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <circle cx="20" cy="50" r="1.5" fill="#224F93"/>
+                <circle cx="22" cy="50" r="1.5" fill="#224F93"/>
+                <line x1="20" y1="1" x2="20" y2="99" stroke="#224F93" stroke-width="0.5" stroke-dasharray="3 3"/>
+                <rect x="3" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+                <rect x="25" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>`;
+        tr.appendChild(td);
+      } else if(zone.id==='EF' && fl==='R+01' && (col===74||col===75||col===73||col===71||col===69)){
+        // Skip — merged with R+02 above via rowspan=2
+      } else {
+        // SF R+19 cols 89, 91: merge with R+18T below (rowspan=2), 175px
+        if(zone.id==='SF' && fl==='R+19' && (col===89||col===91)){
+          td.setAttribute('rowspan','2');
+          td.style.padding='0';td.style.verticalAlign='top';
+          const meta8991=SM[(panels[id]||{}).status||'pending']||SM.pending;
+          const c8991=document.createElement('div');
+          c8991.className=`wfc ${meta8991.cls}`;
+          c8991.style.cssText='height:175px !important;min-height:175px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:8px;border-left:5px double #ED1C24;border-radius:4px;position:relative;';
+          c8991.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          const label8991=pRef||pType||'';
+          if(label8991) c8991.innerHTML=`<span class="c-type" style="position:relative;z-index:1;">${label8991.split('').join('\n')}</span><div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
+          c8991.onclick=(e)=>{e.currentTarget=c8991;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(c8991);tr.appendChild(td);return;
+        }
+        // SF R+19 col 90: merge with R+18T below (rowspan=2), Door format like E-02-74
+        if(zone.id==='SF' && fl==='R+19' && col===90){
+          td.setAttribute('rowspan','2');
+          td.style.padding='0';td.style.verticalAlign='top';
+          const doorStatus=(panels[id]||{}).status||'pending';
+          const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
+          const mergedH=150+25; // R+19 (150px) + R+18T (25px)
+          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('SF-R+19-C90','R+19',90,'','Door',ZONES.find(z=>z.id==='SF'))">
+            <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
+            <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">${pRef||'Door 4'}</span></div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
+              <svg width="42" height="100" viewBox="0 0 42 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <rect x="22" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <path d="M3 6 Q10 6 10 14 L10 86 Q10 94 3 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <path d="M39 6 Q32 6 32 14 L32 86 Q32 94 39 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <circle cx="20" cy="50" r="1.5" fill="#224F93"/>
+                <circle cx="22" cy="50" r="1.5" fill="#224F93"/>
+                <line x1="20" y1="1" x2="20" y2="99" stroke="#224F93" stroke-width="0.5" stroke-dasharray="3 3"/>
+                <rect x="3" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+                <rect x="25" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>`;
+          tr.appendChild(td);return;
+        }
+        // NF R+02 col 58 (R208): T09 format, merged with R+01 below (rowspan=2), 175px
+        if(zone.id==='NF' && fl==='R+02' && col===58){
+          td.setAttribute('rowspan','2');
+          td.style.padding='0';td.style.verticalAlign='top';
+          cell.classList.remove('big-type');
+          cell.style.cssText='border-left:5px double #ED1C24;height:175px;min-height:175px;display:flex;flex-direction:row;padding:0;gap:0;overflow:hidden;border-radius:4px;position:relative;';
+          const cellLabel=(pRef||pType).split('').join('\n');
+          cell.innerHTML=`
+            <div style="width:25px;height:175px;flex-shrink:0;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>
+            <div style="width:25px;height:175px;display:flex;flex-direction:column;flex-shrink:0;">
+              <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type" style="font-size:15.3px;">${cellLabel}</span></div>
+              <div style="height:25px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;"></div>
+            </div>
+            <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+        // NF R+02 col 60 (R210): mirror of R208 (T07-style), merged with R+01 below (rowspan=2), 175px
+        if(zone.id==='NF' && fl==='R+02' && col===60){
+          td.setAttribute('rowspan','2');
+          td.style.padding='0';td.style.verticalAlign='top';
+          cell.classList.remove('big-type');
+          cell.style.cssText='height:175px;min-height:175px;display:flex;flex-direction:row;padding:0;gap:0;overflow:hidden;border-radius:4px;position:relative;';
+          const cellLabel=(pRef||pType).split('').join('\n');
+          cell.innerHTML=`
+            <div style="width:25px;height:175px;display:flex;flex-direction:column;flex-shrink:0;">
+              <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type" style="font-size:15.3px;">${cellLabel}</span></div>
+              <div style="height:25px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;"></div>
+            </div>
+            <div style="width:25px;height:175px;flex-shrink:0;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>
+            <div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
+          cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(cell);tr.appendChild(td);return;
+        }
+        // NF R+02 col 59: merge with R+01 below (rowspan=2) — Door 1, same format as E-02-70
+        if(zone.id==='NF' && fl==='R+02' && col===59){
+          td.setAttribute('rowspan','2');
+          td.style.padding='0';td.style.verticalAlign='top';
+          const doorStatus=(panels[id]||{}).status||'pending';
+          const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
+          const mergedH = 150 + 25; // R+02 (150px) + R+01 (25px)
+          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('NF-R+02-C59','R+02',59,'','DOOR',ZONES.find(z=>z.id==='NF'))">
+            <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
+            <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">Door 1</span></div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
+              <svg width="42" height="80" viewBox="0 0 42 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <rect x="22" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <path d="M3 6 Q10 6 10 14 L10 86 Q10 94 3 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <path d="M39 6 Q32 6 32 14 L32 86 Q32 94 39 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <circle cx="20" cy="50" r="1.5" fill="#224F93"/>
+                <circle cx="22" cy="50" r="1.5" fill="#224F93"/>
+                <line x1="20" y1="1" x2="20" y2="99" stroke="#224F93" stroke-width="0.5" stroke-dasharray="3 3"/>
+                <rect x="3" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+                <rect x="25" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>`;
+          tr.appendChild(td);return;
+        }
+        // WF R+19 cols 29,23 (R1803): T05 format, merge with R+18T (rowspan=2, 175px)
+        if(zone.id==='WF' && fl==='R+19' && (col===29||col===23)){
+          const mergedH=175;
+          td.setAttribute('rowspan','2');
+          td.style.padding='0';td.style.verticalAlign='top';
+          const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+          const c=document.createElement('div');
+          c.className=`wfc ${meta0.cls}`;
+          if(selPanel===id)c.classList.add('sel');
+          c.style.cssText=`height:${mergedH}px !important;min-height:${mergedH}px;max-height:${mergedH}px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;border-left:5px double #ED1C24;`;
+          c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
+          c.title=`Floor:${fl} Col:C${col}\nType:${pType||'—'}\nStatus:${meta0.label}`;
+          const t05label=pRef||pType;
+          if(t05label)c.innerHTML=`<span class="c-type" style="position:relative;z-index:1;">${t05label.split('').join('\n')}</span>`;
+          c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(c);tr.appendChild(td);return;
+        }
+        // WF R+19 cols 27,21 (R1804): T07 format, merge with R+18T (rowspan=2, 175px)
+        if(zone.id==='WF' && fl==='R+19' && (col===27||col===21)){
+          const mergedH=175;
+          td.setAttribute('rowspan','2');
+          td.style.padding='0';td.style.verticalAlign='top';
+          const meta0=SM[(panels[id]||{}).status||'pending']||SM.pending;
+          const c=document.createElement('div');
+          c.className=`wfc ${meta0.cls} ef-2col`;
+          if(selPanel===id)c.classList.add('sel');
+          c.style.cssText=`height:${mergedH}px !important;min-height:${mergedH}px;max-height:${mergedH}px;overflow:hidden;position:relative;`;
+          c.title=`Floor:${fl} Col:C${col}\nType:${pType||'—'}\nStatus:${meta0.label}`;
+          const cellLabel=(pRef||pType||'').split('').join('\n');
+          c.innerHTML=`
+            <div style="width:25px;height:${mergedH}px;display:flex;flex-direction:column;flex-shrink:0;">
+              <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type">${cellLabel}</span></div>
+            </div>
+            <div style="width:25px;height:${mergedH}px;flex-shrink:0;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
+          c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+          td.appendChild(c);tr.appendChild(td);return;
+        }
+        // WF R+19 cols 28 and 22: merge with R+18T below (rowspan=2)
+        if(zone.id==='WF' && fl==='R+19' && (col===28||col===22)){
+          td.setAttribute('rowspan','2');
+          td.style.verticalAlign='middle';
+          const doorName = col===28 ? 'Door 6' : 'Door 5';
+          const doorStatus=(panels[id]||{}).status||'pending';
+          const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
+          const mergedH = 150+25; // R+19 (150px) + R+18T (25px)
+          td.style.padding='0';
+          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('WF-R+19-C${col}','R+19',${col},'','Door',ZONES.find(z=>z.id==='WF'))">
+            <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
+            <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">${doorName}</span></div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
+              <svg width="42" height="100" viewBox="0 0 42 100" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <rect x="22" y="1" width="19" height="98" rx="2" fill="none" stroke="#224F93" stroke-width="1.5"/>
+                <path d="M3 6 Q10 6 10 14 L10 86 Q10 94 3 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <path d="M39 6 Q32 6 32 14 L32 86 Q32 94 39 94" fill="none" stroke="#224F93" stroke-width="1"/>
+                <circle cx="20" cy="50" r="1.5" fill="#224F93"/>
+                <circle cx="22" cy="50" r="1.5" fill="#224F93"/>
+                <line x1="20" y1="1" x2="20" y2="99" stroke="#224F93" stroke-width="0.5" stroke-dasharray="3 3"/>
+                <rect x="3" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+                <rect x="25" y="44" width="14" height="10" rx="1" fill="none" stroke="#a07800" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>`;
+          tr.appendChild(td);return;
+        }
+        // EF R+02 cols 75,73,71,69: extend rowspan to cover the empty R+01 row below
+        if(zone.id==='EF' && fl==='R+02' && [75,73,71,69].includes(col)){
+          td.setAttribute('rowspan','2');
+          td.style.verticalAlign='top';
+          td.style.padding='0';
+          cell.style.setProperty('height','175px','important');
+          cell.style.setProperty('min-height','175px','important');
+          cell.style.setProperty('max-height','175px','important');
+        }
+        cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(cell);tr.appendChild(td);
+      }
+    });
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+
+  // Yellow: delivered+installed when filter="delivered"
+  if(filter==='delivered'){
+    tbl.querySelectorAll('td[data-yhl="yellow"] .wfc').forEach(cell=>{
+      cell.style.setProperty('background-color','#FFF000','important');
+      cell.style.setProperty('color','#665e00','important');
+    });
+  }
+  // Blue: panels with panel-assembly checklist when filter="fabricated"
+  if(filter==='fabricated'){
+    tbl.querySelectorAll('td[data-yhl="blue"] .wfc').forEach(cell=>{
+      cell.style.setProperty('background-color','#002DFF','important');
+      cell.style.setProperty('color','#ffffff','important');
+    });
+  }
+
+  // For EF and WF: render legend below the table
+  if(zone.id==='EF' || zone.id==='WF' || zone.id==='SF' || zone.id==='NF'){
+    const legendWrap=document.getElementById('legend-wrap-'+zone.id);
+    if(legendWrap){
+      const c=zC(zone.id);
+      const legendItems=[
+        {cls:'st-i',label:'Installed',key:'installed'},
+        {cls:'st-d',label:'Delivered',key:'delivered'},
+        {cls:'st-f',label:'Fabricated',key:'fabricated'},
+        {cls:'st-c',label:'CL issued',key:'cutting'},
+        {cls:'st-cn',label:'CL not issued',key:'cl_not_issued'},
+        {cls:'st-cip',label:'Cutting List in Progress',key:'cip'},
+        {cls:'st-x',label:'Defect',key:'defect'},
+          ];
+      legendWrap.innerHTML=`
+        <div style="margin-top:18px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;">
+          <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
+          ${legendItems.map(it=>`
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="wfc ${it.cls}" style="width:18px;height:18px;border-radius:3px;min-width:18px;flex-shrink:0;"></div>
+              <span style="font-size:11px;color:var(--text2);">${it.label}</span>
+              <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--surface2);border-radius:4px;padding:1px 5px;">${c[it.key]||0}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+  }
+}
+
+async function _loadAssemblyPanels(){
+  try{
+    const {data}=await sb.from('qc_checklists').select('panel_ref').eq('checklist_type','panel-assembly');
+    if(data) assemblyPanelRefs=new Set(data.map(r=>r.panel_ref).filter(Boolean));
+  }catch(e){}
+}
+
+async function _loadPrepInstPanels(){
+  try{
+    const {data}=await sb.from('qc_checklists').select('panel_ref').eq('checklist_type','panel-preparation');
+    if(data) prepInstPanelRefs=new Set(data.map(r=>r.panel_ref).filter(Boolean));
+  }catch(e){}
+}
+
+async function setFF(zid,f,el){
+  fFilters[zid]=f;
+  el.closest('.tb').querySelectorAll('.fb').forEach(b=>b.classList.remove('af'));
+  el.classList.add('af');
+  if(f==='fabricated') await _loadAssemblyPanels(); // refresh assembly checklist cache
+  const z=ZONES.find(z=>z.id===zid);
+  if(z&&z.simple)renderSimpleGrid(z);
+  else{const t=document.getElementById('tbl-'+zid);if(t){t.innerHTML='';buildComplexTable(z);}}
+}
+
+function openSimpleModal(id,zone){
+  selPanel=id;const p=panels[id]||{status:'pending',notes:'',assigned:''};
+  document.getElementById('m-ttl').textContent=`Panel ${id}`;
+  document.getElementById('m-sub').textContent=zone.name;
+  const row=id.match(/R(\d+)C(\d+)/);
+  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Panel ID</span><span class="pv">${id}</span></div><div class="pr"><span class="pk">Row/Col</span><span class="pv">R${row?row[1]:'?'}/C${row?row[2]:'?'}</span></div><div class="pr"><span class="pk">Zone</span><span class="pv">${zone.name}</span></div>`;
+  const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
+  const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
+  const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
+  if((p.status||'pending')==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if((p.status||'pending')==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
+  if((p.status||'pending')==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  selStat=p.status||'pending';document.querySelectorAll('.so').forEach(el=>{el.classList.remove('ss');if(el.classList.contains(SMAP[selStat]))el.classList.add('ss');});
+  document.getElementById('pm').classList.add('open');
+}
+function handlePanelClick(e, id, fl, col, ref, type, zone){
+  if(ctrlHeld || e.ctrlKey){
+    e.stopPropagation();
+    if(multiSelPanels.has(id)){
+      multiSelPanels.delete(id);
+      // Remove highlight
+      document.querySelectorAll('.wfc.sel-multi').forEach(el=>{
+        if(el._panelId===id) el.classList.remove('sel-multi');
+      });
+    } else {
+      multiSelPanels.add(id);
+      // Highlight the cell
+      if(e.currentTarget) {
+        e.currentTarget.classList.add('sel-multi');
+        e.currentTarget._panelId=id;
+      }
+    }
+    return;
+  }
+  // Normal click — clear multi-selection highlights if any
+  if(multiSelPanels.size>0){
+    multiSelPanels.clear();
+    document.querySelectorAll('.wfc.sel-multi').forEach(el=>el.classList.remove('sel-multi'));
+  }
+  if(zone.simple) openSimpleModal(id,zone);
+  else openComplexModal(id,fl,col,ref,type,zone);
+}
+
+function openBulkStatusModal(){
+  if(multiSelPanels.size===0) return;
+  document.getElementById('bulk-count').textContent=multiSelPanels.size+' panel'+(multiSelPanels.size>1?'s':'')+' selected';
+  // Reset button states
+  document.querySelectorAll('.bso').forEach(el=>el.classList.remove('bss'));
+  document.getElementById('bsm').style.display='flex';
+}
+
+function closeBulkModal(){
+  document.getElementById('bsm').style.display='none';
+  // Clear highlights
+  multiSelPanels.clear();
+  document.querySelectorAll('.wfc.sel-multi').forEach(el=>el.classList.remove('sel-multi'));
+}
+
+async function applyBulkStatus(status){
+  if(sbProfile?.role==='viewer'){toast('Viewers cannot edit panels.');closeBulkModal();return;}
+  const today=new Date().toISOString().split('T')[0];
+  multiSelPanels.forEach(id=>{
+    const p=panels[id]||{status:'pending',notes:'',assigned:''};
+    panels[id]={
+      ...p,
+      status,
+      installDate: status==='installed'? (p.installDate||today) : p.installDate||'',
+      fabDate: status==='fabricated'? (p.fabDate||today) : p.fabDate||'',
+      deliveryDate: status==='delivered'? (p.deliveryDate||today) : p.deliveryDate||'',
+    };
+    _dirtyPanels.add(id);
+  });
+  saveData();
+  closeBulkModal();
+  updateTabs();
+  // Re-render current page
+  const z=ZONES.find(z=>z.id===curPage);
+  if(z){
+    if(z.simple) renderSimpleFP(z);
+    else{const t=document.getElementById('tbl-'+z.id);if(t){t.innerHTML='';buildComplexTable(z);}}
+  }
+  if(curPage==='dashboard') renderDash();
+  if(curPage==='BM-dashboard') renderBMDashboard();
+  if(curPage==='BM-WF') renderBMWF();
+  if(curPage==='BM-EF') renderBMEF();
+  if(curPage==='BM-SF') renderBMSF();
+  if(curPage==='BM-NF') renderBMNF();
+}
+
+function efPanelRef(fl, col){
+  // E-{floor number}-{col number}  e.g. E-24-80
+  const flNum = fl.replace('R+18T','18').replace('R+18M','18').replace('R+18MD','18').replace('R+18B','17').replace('R+17T','17').replace('R+17B','17').replace('R+','').replace('RDC','00').replace('R+34','34');
+  return `E-${flNum}-${col}`;
+}
+
+function wfPanelRef(fl, col){
+  // W-{floor number}-{col number}  e.g. W-03-15
+  const flNum = fl.replace('R+','').replace('RDC','00').padStart?
+    fl.replace('R+','').replace('RDC','00') : fl.replace('R+','').replace('RDC','00');
+  const n = fl==='RDC'?'00':fl.replace('R+','');
+  const padded = n.padStart(2,'0');
+  return `W-${padded}-${col}`;
+}
+
+function sfPanelRef(fl, col){
+  // S-{floor number}-{col}  e.g. S-03-15
+  const n = fl==='RDC'?'00':fl.replace('R+18T','18').replace('R+18M','18').replace('R+18MD','18').replace('R+18B','17').replace('R+17T','17').replace('R+17B','17').replace('R+','');
+  const padded = n.padStart(2,'0');
+  return `S-${padded}-${col}`;
+}
+
+function nfPanelRef(fl, col){
+  // N-{floor number}-{col}  e.g. N-05-52
+  const n = fl==='RDC'?'00':fl.replace('R+18T','18').replace('R+18M','18').replace('R+18MD','18').replace('R+18B','17').replace('R+17T','17').replace('R+17B','17').replace('R+','');
+  return `N-${String(n).padStart(2,'0')}-${col}`;
+}
+
+// Derive a human-readable panel reference from a panel ID string
+// Panel IDs for complex zones are: ZONE-FLOOR-CCOL  e.g. EF-R+05-C80, NF-R+18T-C65
+function _panelDisplayRef(panelId){
+  const m = panelId.match(/^([A-Z]+)-(.*)-C(\d+)$/);
+  if(!m) return panelId;
+  const [,zone,fl,colStr] = m;
+  const col = parseInt(colStr);
+  if(zone==='EF') return efPanelRef(fl, col);
+  if(zone==='WF') return wfPanelRef(fl, col);
+  if(zone==='SF') return sfPanelRef(fl, col);
+  if(zone==='NF') return nfPanelRef(fl, col);
+  return panelId;
+}
+
+function openComplexModal(id,fl,col,ref,type,zone){
+  selPanel=id;const p=panels[id]||{status:'pending',notes:'',assigned:''};
+  const displayRef = zone.id==='EF' ? efPanelRef(fl,col) : zone.id==='WF' ? wfPanelRef(fl,col) : zone.id==='SF' ? sfPanelRef(fl,col) : (ref||'—');
+  const flClean = fl.replace('R+18T','R+18').replace('R+18M','R+18').replace('R+18MD','R+18').replace('R+18B','R+17').replace('R+17T','R+17').replace('R+17B','R+17');
+  document.getElementById('m-ttl').textContent=type||displayRef||`${col}`;
+  document.getElementById('m-sub').textContent=zone.id==='EF'?`East Facade · Floor ${flClean} · Col ${col}`:zone.id==='WF'?`West Facade · Floor ${flClean} · Col ${col}`:zone.id==='SF'?`South Facade · Floor ${flClean} · Col ${col}`:`${zone.name} · Floor ${flClean} · Col C${col}`;
+  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Panel Ref</span><span class="pv">${displayRef}</span></div><div class="pr"><span class="pk">Panel Type</span><span class="pv">${type||'—'}</span></div><div class="pr"><span class="pk">Floor</span><span class="pv">${flClean}</span></div><div class="pr"><span class="pk">Column</span><span class="pv">${(zone.id==='EF'||zone.id==='WF'||zone.id==='SF')?col:'C'+col}</span></div>${p.fabDate?`<div class="pr"><span class="pk">Fabricated On</span><span class="pv" style="color:#1a5fa8;font-weight:600;">${p.fabDate}</span></div>`:''}${p.deliveryDate?`<div class="pr"><span class="pk">Delivered On</span><span class="pv" style="color:#a07800;font-weight:600;">${p.deliveryDate}</span></div>`:''}${p.installDate?`<div class="pr"><span class="pk">Installed On</span><span class="pv" style="color:#1a9458;font-weight:600;">${p.installDate}</span></div>`:''}${p.installRef?`<div class="pr"><span class="pk">Install Ref</span><span class="pv" style="color:#1a9458;font-weight:600;">${p.installRef}</span></div>`:''}`;
+  const _iw2=document.getElementById('m-install-date-wrap'),_id2=document.getElementById('m-install-date');
+  const _fw2=document.getElementById('m-fab-date-wrap'),_fd2=document.getElementById('m-fab-date');
+  const _rw2=document.getElementById('m-install-ref-wrap'),_ir2=document.getElementById('m-install-ref');
+  if((p.status||'pending')==='installed'){_iw2.style.display='block';_id2.value=p.installDate||new Date().toISOString().split('T')[0];_rw2.style.display='block';_ir2.value=p.installRef||'';}else{_iw2.style.display='none';_id2.value='';_rw2.style.display='none';_ir2.value='';}
+  if((p.status||'pending')==='fabricated'){_fw2.style.display='block';_fd2.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw2.style.display='none';_fd2.value='';}
+  const _dw2=document.getElementById('m-del-date-wrap'),_dd2=document.getElementById('m-del-date');
+  if((p.status||'pending')==='delivered'){_dw2.style.display='block';_dd2.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw2.style.display='none';_dd2.value='';}
+  selStat=p.status||'pending';document.querySelectorAll('.so').forEach(el=>{el.classList.remove('ss');if(el.classList.contains(SMAP[selStat]))el.classList.add('ss');});
+  document.getElementById('pm').classList.add('open');
+}
+function setSt(s,el){
+  // Remember previous status so we can revert if checklist is cancelled
+  window._preFabStatus = selStat;
+  selStat=s;
+  document.querySelectorAll('.so').forEach(e=>e.classList.remove('ss'));
+  el.classList.add('ss');
+  const iw=document.getElementById('m-install-date-wrap');
+  const id=document.getElementById('m-install-date');
+  const fw=document.getElementById('m-fab-date-wrap');
+  const fd=document.getElementById('m-fab-date');
+  const dw=document.getElementById('m-del-date-wrap');
+  const dd=document.getElementById('m-del-date');
+  const rw=document.getElementById('m-install-ref-wrap');
+  if(s==='installed'){
+    iw.style.display='block';
+    if(!id.value)id.value=new Date().toISOString().split('T')[0];
+    rw.style.display='block';
+    if(selPanel && selPanel.startsWith('BM-')) _openBracketInstalledChecklist(selPanel);
+    else if(selPanel) _openInstalledChecklist(selPanel);
+  } else {iw.style.display='none';rw.style.display='none';}
+  if(s==='fabricated'){
+    fw.style.display='block';
+    if(!fd.value)fd.value=new Date().toISOString().split('T')[0];
+    // Open Panel Assembly checklist — create new or review/edit existing
+    if(selPanel) _openFabricatedChecklist(selPanel);
+  } else {
+    fw.style.display='none';
+  }
+  if(s==='delivered'){
+    dw.style.display='block';
+    if(!dd.value)dd.value=new Date().toISOString().split('T')[0];
+  } else {dw.style.display='none';}
+}
+async function _openFabricatedChecklist(panelId){
+  const displayRef = _panelDisplayRef(panelId);
+  let existingRecord = null;
+
+  // Query Supabase for an existing panel-assembly checklist for this panel
+  try {
+    const {data, error} = await sb.from('qc_checklists')
+      .select('*')
+      .eq('checklist_type','panel-assembly')
+      .eq('panel_ref', displayRef)
+      .order('created_at', {ascending:false})
+      .limit(1);
+    if(!error && data && data.length > 0) existingRecord = data[0];
+  } catch(e){ /* Supabase unavailable — proceed with fresh form */ }
+
+  // A checklist is locked (read-only) only when BOTH signatures are present
+  const readOnly = !!(existingRecord && existingRecord.signature_data && existingRecord.sig2_data);
+
+  openQCChecklist('panel-assembly', 'Panel Assembly', {
+    panelRef: displayRef,
+    panelId,
+    existingRecord,
+    existingId: existingRecord?.id || null,
+    readOnly
+  });
+}
+
+async function _openBracketInstalledChecklist(panelId){
+  const displayRef = _panelDisplayRef(panelId);
+  let existingRecord = null;
+  try {
+    const {data, error} = await sb.from('qc_checklists')
+      .select('*')
+      .eq('checklist_type','bracket-installation')
+      .eq('panel_ref', displayRef)
+      .order('created_at', {ascending:false})
+      .limit(1);
+    if(!error && data && data.length > 0) existingRecord = data[0];
+  } catch(e){ /* Supabase unavailable — proceed with fresh form */ }
+
+  const readOnly = !!(existingRecord && existingRecord.signature_data && existingRecord.sig2_data);
+
+  openQCChecklist('bracket-installation', 'Bracket Installation', {
+    panelRef: displayRef,
+    panelId,
+    existingRecord,
+    existingId: existingRecord?.id || null,
+    readOnly
+  });
+}
+
+async function _openInstalledChecklist(panelId){
+  const displayRef = _panelDisplayRef(panelId);
+  let existingRecord = null;
+  try {
+    const {data, error} = await sb.from('qc_checklists')
+      .select('*')
+      .eq('checklist_type','panel-preparation')
+      .eq('panel_ref', displayRef)
+      .order('created_at', {ascending:false})
+      .limit(1);
+    if(!error && data && data.length > 0) existingRecord = data[0];
+  } catch(e){ /* Supabase unavailable — proceed with fresh form */ }
+
+  const readOnly = !!(existingRecord && existingRecord.signature_data && existingRecord.sig2_data);
+
+  openQCChecklist('panel-preparation', 'Panel Prep et Inst', {
+    panelRef: displayRef,
+    panelId,
+    existingRecord,
+    existingId: existingRecord?.id || null,
+    readOnly
+  });
+}
+
+async function savePanel(){
+  if(!selPanel)return;
+  if(sbProfile?.role==='viewer'){toast('Viewers cannot edit panels.');return;}
+  const installDate = selStat==='installed' ? document.getElementById('m-install-date').value : (panels[selPanel]||{}).installDate||'';
+  const installRef = selStat==='installed' ? document.getElementById('m-install-ref').value : (panels[selPanel]||{}).installRef||'';
+  const fabDate = selStat==='fabricated' ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
+  const deliveryDate = selStat==='delivered' ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
+  panels[selPanel]={...panels[selPanel],status:selStat,installDate,installRef,fabDate,deliveryDate};
+  _dirtyPanels.add(selPanel);
+  saveData();
+  // Immediate single-row Supabase save — faster and more reliable than waiting for bulk sync
+  (async()=>{
+    const p=panels[selPanel];
+    const _zone=selPanel.startsWith('BM-')?selPanel.split('-').slice(0,2).join('-'):selPanel.split('-')[0];
+    const _row={
+      id:selPanel, zone:_zone,
+      status:p.status||'pending',
+      notes:p.notes||null,
+      assigned:p.assigned||null,
+      panel_ref:p.ref||null,
+      panel_type:p.type||null,
+      fab_date:p.fabDate||null,
+      delivery_date:p.deliveryDate||null,
+      install_date:p.installDate||null,
+      install_ref:p.installRef||null,
+      updated_by:sbUser?.id||null,
+      updated_at:new Date().toISOString()
+    };
+    let{error:_e}=await sb.from('panels').upsert(_row,{onConflict:'id'});
+    // If new columns missing in DB, retry without them
+    if(_e&&_e.message&&(_e.message.includes('delivery_date')||_e.message.includes('install_ref'))){
+      const safe={..._row};delete safe.delivery_date;delete safe.install_ref;
+      ({error:_e}=await sb.from('panels').upsert(safe,{onConflict:'id'}));
+    }
+    if(_e) console.warn('Direct panel save error:',_e.message);
+  })();
+  cm('pm');updateTabs();
+  if(curPage==='dashboard')renderDash();
+  else if(curPage==='BM-dashboard')renderBMDashboard();
+  else if(curPage==='BM-WF')renderBMWF();
+  else if(curPage==='BM-EF')renderBMEF();
+  else if(curPage==='BM-SF')renderBMSF();
+  else if(curPage==='BM-NF')renderBMNF();
+  else{const z=ZONES.find(z=>z.id===curPage);if(z&&z.simple)renderSimpleGrid(z);else{const t=document.getElementById('tbl-'+curPage);if(t){t.innerHTML='';buildComplexTable(z);}}}
+  toast('Panel updated');
+}
+function openIssueModal(zid){
+  const sel=document.getElementById('i-pan');sel.innerHTML='';
+  const ids=zid?allIds(zid):allPanelIds();
+  ids.forEach(id=>{const o=document.createElement('option');o.value=id;o.textContent=id;sel.appendChild(o);});
+  document.getElementById('i-desc').value='';document.getElementById('i-rep').value='';
+  document.getElementById('im').classList.add('open');
+}
+async function saveIssue(){
+  const pid=document.getElementById('i-pan').value;const type=document.getElementById('i-type').value;
+  const desc=document.getElementById('i-desc').value;const rep=document.getElementById('i-rep').value;
+  if(!pid)return;
+  const issId=Date.now().toString(36).toUpperCase();
+  const newIssue={id:issId,panelId:pid,type,desc,reporter:rep,date:new Date().toLocaleDateString()};
+  issues.push(newIssue);
+  if(panels[pid])panels[pid].status='defect';
+  // Save to Supabase
+  try{
+    await sb.from('issues').insert({
+      id:issId, panel_id:pid, issue_type:type,
+      description:desc, reporter:rep,
+      reported_at:new Date().toISOString().split('T')[0]
+    });
+  }catch(e){}
+  saveData();cm('im');updateTabs();
+  if(curPage==='dashboard')renderDash();
+  else{const z=ZONES.find(z=>z.id===curPage);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
+  toast('Issue logged');
+}
+function cm(id){document.getElementById(id).classList.remove('open');if(id==='pm')selPanel=null;}
+function updateTabs(){ZONES.forEach(z=>{const c=zC(z.id);const pct=c.total?Math.round(c.installed/c.total*100):0;const el=document.getElementById('tp-'+z.id);if(el)el.textContent=pct+'%';});}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+function openDeliveryRateModal(){
+  const dateMap={};
+  const facadeMap={NF:{},SF:{},EF:{},WF:{}};
+  // A panel that progressed beyond 'delivered' (→ installed) still has deliveryDate and was delivered
+  const wasDelivered=s=>s==='delivered'||s==='installed';
+  ['NF','SF','EF','WF'].forEach(zid=>{
+    allIds(zid).forEach(id=>{
+      const p=panels[id]||{};
+      if(wasDelivered(p.status) && p.deliveryDate){
+        dateMap[p.deliveryDate]=(dateMap[p.deliveryDate]||0)+1;
+        facadeMap[zid][p.deliveryDate]=(facadeMap[zid][p.deliveryDate]||0)+1;
+      }
+    });
+  });
+  const _gc=gC();const total=(_gc.installed||0)+(_gc.delivered||0)+(_gc.fabricated||0)+(_gc.cutting||0)+(_gc.cip||0)+(_gc.cl_not_issued||0)+(_gc.defect||0);
+  const totalDelivered=allPanelIds().filter(id=>wasDelivered((panels[id]||{}).status)).length;
+  const rows=[];
+  const start=new Date('2026-01-01');
+  const end=new Date('2027-12-31');
+  let cumulative=0;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.toISOString().split('T')[0];
+    const count=dateMap[key]||0;
+    cumulative+=count;
+    rows.push({date:key,display:d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear(),day:days[d.getDay()],count,nf:facadeMap.NF[key]||0,sf:facadeMap.SF[key]||0,ef:facadeMap.EF[key]||0,wf:facadeMap.WF[key]||0,cumulative,isWeekend:d.getDay()===0||d.getDay()===6,isMonthStart:d.getDate()===1});
+  }
+  const tbody=document.getElementById('dr-tbody');
+  tbody.innerHTML='';
+  let lastMonth='';
+  rows.forEach(r=>{
+    if(r.count===0) return;
+    const month=r.date.slice(0,7);
+    if(month!==lastMonth){
+      lastMonth=month;
+      const mtr=document.createElement('tr');
+      mtr.innerHTML=`<td colspan="10" style="padding:10px 12px 4px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--surface2);border-top:2px solid var(--border2);">${r.display.slice(r.display.indexOf(' ')+1)}</td>`;
+      tbody.appendChild(mtr);
+    }
+    const tr=document.createElement('tr');
+    tr.style.background=r.isWeekend?'rgba(34,79,147,0.03)':'transparent';
+    if(r.count>0)tr.style.background='rgba(160,120,0,0.06)';
+    const pct=total?Math.round(r.cumulative/total*100):0;
+    const barW=Math.min(pct,100);
+    const fmtZ=(n,c)=>n>0?`<span style="font-weight:700;color:${c};">+${n}</span>`:'<span style="color:var(--text3);">—</span>';
+    tr.innerHTML=`
+      <td style="padding:5px 12px;font-size:11px;color:var(--text);font-family:var(--mono);border-bottom:1px solid var(--border);">${r.display}</td>
+      <td style="padding:5px 12px;text-align:center;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);">${r.day}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.nf,'#2d65bd')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.sf,'#1a9458')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.ef,'#a07800')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.wf,'#6d35d9')}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:#a07800;border-bottom:1px solid var(--border);">+${r.count}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--text);border-bottom:1px solid var(--border);">${r.cumulative}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">${pct}%</td>
+      <td style="padding:5px 12px;border-bottom:1px solid var(--border);">
+        <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${barW}%;background:#a07800;border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('dr-summary').textContent=`${totalDelivered} / ${total} delivered`;
+  document.getElementById('drm').classList.add('open');
+}
+
+function openInstallRateModal(){
+  // Build date→count map from all facades
+  const dateMap={};
+  const facadeMap={NF:{},SF:{},EF:{},WF:{}};
+  ['NF','SF','EF','WF'].forEach(zid=>{
+    allIds(zid).forEach(id=>{
+      const p=panels[id]||{};
+      if(p.status==='installed' && p.installDate){
+        dateMap[p.installDate]=(dateMap[p.installDate]||0)+1;
+        facadeMap[zid][p.installDate]=(facadeMap[zid][p.installDate]||0)+1;
+      }
+    });
+  });
+  const _gc=gC();const total=(_gc.installed||0)+(_gc.delivered||0)+(_gc.fabricated||0)+(_gc.cutting||0)+(_gc.cip||0)+(_gc.cl_not_issued||0)+(_gc.defect||0);
+  const totalInstalled=allPanelIds().filter(id=>(panels[id]||{}).status==='installed').length;
+
+  // Generate all dates Jan 1 2026 → Dec 31 2027
+  const rows=[];
+  const start=new Date('2026-01-01');
+  const end=new Date('2027-12-31');
+  let cumulative=0;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.toISOString().split('T')[0];
+    const count=dateMap[key]||0;
+    cumulative+=count;
+    rows.push({
+      date:key,
+      display: d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear(),
+      day:days[d.getDay()],
+      count,
+      nf:facadeMap.NF[key]||0,
+      sf:facadeMap.SF[key]||0,
+      ef:facadeMap.EF[key]||0,
+      wf:facadeMap.WF[key]||0,
+      cumulative,
+      isWeekend: d.getDay()===0||d.getDay()===6,
+      isMonthStart: d.getDate()===1
+    });
+  }
+
+  // Render table
+  const tbody=document.getElementById('ir-tbody');
+  tbody.innerHTML='';
+  let lastMonth='';
+  rows.forEach(r=>{
+    if(r.count===0) return;
+    const month=r.date.slice(0,7);
+    if(month!==lastMonth){
+      lastMonth=month;
+      const mtr=document.createElement('tr');
+      mtr.innerHTML=`<td colspan="10" style="padding:10px 12px 4px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--surface2);border-top:2px solid var(--border2);">${r.display.slice(r.display.indexOf(' ')+1)}</td>`;
+      tbody.appendChild(mtr);
+    }
+    const tr=document.createElement('tr');
+    tr.style.background = r.isWeekend ? 'rgba(34,79,147,0.03)' : 'transparent';
+    if(r.count>0) tr.style.background='rgba(46,194,126,0.06)';
+    const pct=total?Math.round(r.cumulative/total*100):0;
+    const barW=Math.min(pct,100);
+    const fmtZ=(n,c)=>n>0?`<span style="font-weight:700;color:${c};">+${n}</span>`:'<span style="color:var(--text3);">—</span>';
+    tr.innerHTML=`
+      <td style="padding:5px 12px;font-size:11px;color:var(--text);font-family:var(--mono);border-bottom:1px solid var(--border);">${r.display}</td>
+      <td style="padding:5px 12px;text-align:center;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);">${r.day}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.nf,'#2d65bd')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.sf,'#1a9458')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.ef,'#a07800')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.wf,'#6d35d9')}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:#1a9458;border-bottom:1px solid var(--border);">+${r.count}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--text);border-bottom:1px solid var(--border);">${r.cumulative}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">${pct}%</td>
+      <td style="padding:5px 12px;border-bottom:1px solid var(--border);">
+        <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${barW}%;background:#1a9458;border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Summary
+  document.getElementById('ir-summary').textContent=`${totalInstalled} / ${total} installed`;
+  document.getElementById('irm').classList.add('open');
+}
+
+function allBracketIds(zid){
+  return Object.keys(panels).filter(id=>id.startsWith('BM-'+zid+'-'));
+}
+function allBracketPanelIds(){
+  return Object.keys(panels).filter(id=>id.startsWith('BM-'));
+}
+
+
+function openFabCountingModal(){
+  // Collect type data across all UCW zones
+  const typeMap={};
+  ZONES.forEach(z=>{
+    if(z.simple||!z.floors||!z.colNums||!z.types) return;
+    z.floors.forEach(fl=>{
+      z.colNums.forEach((col,ci)=>{
+        const pType=(z.types[fl]||[])[ci]||'';
+        const pRef=(z.refs&&z.refs[fl]?z.refs[fl][ci]:'')||'';
+        const key=pType||pRef;
+        if(!key) return;
+        const id=`${z.id}-${fl}-C${col}`;
+        const st=(panels[id]||{}).status||'pending';
+        if(!typeMap[key]) typeMap[key]={total:0,fabricated:0,delivered:0,installed:0};
+        typeMap[key].total++;
+        if(st==='fabricated') typeMap[key].fabricated++;
+        if(st==='delivered') typeMap[key].delivered++;
+        if(st==='installed') typeMap[key].installed++;
+      });
+    });
+  });
+  // Halve counts for shared/corner types counted twice across facades
+  const halfTypes=new Set(['C01','C02','C03','C04','C05','C06','C07','C08','C09','C10','C001','C101','C201','C301','C302','C1701','C1702','C1703','C1704','C1801','C1802','C1803','C1804','C1902','R2565','R2581','R3415','R3431']);
+  halfTypes.forEach(t=>{
+    if(!typeMap[t]) return;
+    const d=typeMap[t];
+    d.total=Math.round(d.total/2);
+    d.fabricated=Math.round(d.fabricated/2);
+    d.delivered=Math.round(d.delivered/2);
+    d.installed=Math.round(d.installed/2);
+  });
+  // Pattern-based group definitions
+  const groupDefs=[
+    {label:'Typical Panel',          color:'#224F93', match:t=>/^T\d{2}$/.test(t)},
+    {label:'Corner Panel',           color:'#1a9458', match:t=>/^C0[1-9]$|^C10$/.test(t)},
+    {label:'Droite Panel',           color:'#a07800', match:t=>/^D\d{2}$/.test(t)||t==='DM06'},
+    {label:'Gauche Panel',           color:'#0099aa', match:t=>/^G\d{2}$/.test(t)||t==='GM06'},
+    {label:'Droite Panel avec BS a Gauche', color:'#6d35d9', match:t=>/^E\d{2}$/.test(t)},
+    {label:'Middle Panel',           color:'#8B4513', match:t=>/^M\d{2}$/.test(t)},
+    {label:'RDC Starter Panel',      color:'#555',    match:t=>/^R0\d{2}$/.test(t)||/^C0\d{2}$/.test(t)},
+    {label:'R+01 Corner Panel',      color:'#555',    match:t=>/^C1\d{2}$/.test(t)&&!/^C1[789]\d{2}$/.test(t)},
+    {label:'R+02 Starter Panel',     color:'#555',    match:t=>/^R2\d{2}$/.test(t)||t==='C201'||t==='E202'},
+    {label:'R+03 Starter Panel',     color:'#555',    match:t=>/^[RCD]3\d{2}$/.test(t)||t==='G303'},
+    {label:'R+17 End Panel',         color:'#5a7a9a', match:t=>/^[RCDEGM]170\d$/.test(t)},
+    {label:'R+17 End Panel + Balustrade', color:'#5a7a9a', match:t=>/^[RCDEGM]175\d$/.test(t)},
+    {label:'R+18 Starter Panel',     color:'#7a5a9a', match:t=>/^[RCDEGM]180\d$/.test(t)},
+    {label:'R+18 Starter Panel Big', color:'#7a5a9a', match:t=>/^[RCDEGM]185\d$/.test(t)},
+    {label:'R+19 Corner Panel',      color:'#1a9458', match:t=>t==='C1902'},
+    {label:'R+25 Coiffe Panel',      color:'#2d65bd', match:t=>/^R25\d{2}$/.test(t)},
+    {label:'R+34 Coiffe Panel',      color:'#6d35d9', match:t=>/^R34\d{2}$/.test(t)},
+  ];
+  // Assign each type to its group
+  const allTypes=Object.keys(typeMap);
+  const groups=groupDefs.map(g=>({...g,types:[]}));
+  const unmatched=[];
+  allTypes.forEach(t=>{
+    const g=groups.find(g=>g.match(t));
+    if(g) g.types.push(t);
+    else unmatched.push(t);
+  });
+  // Sort types within each group
+  groups.forEach(g=>g.types.sort());
+  unmatched.sort();
+  if(unmatched.length) groups.push({label:'Door',color:'#888',types:unmatched});
+  // Build table
+  const thStyle='padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border2);white-space:nowrap;';
+  const tdN='padding:6px 10px;text-align:right;font-size:12px;font-family:var(--mono);border-bottom:1px solid var(--border);';
+  const tdL='padding:6px 10px;font-size:11px;border-bottom:1px solid var(--border);';
+  let gIdx=0;
+  let html=`<table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="position:sticky;top:0;z-index:10;background:var(--surface);">
+      <th style="${thStyle}text-align:left;">Type</th>
+      <th style="${thStyle}">Total</th>
+      <th style="${thStyle}">Done</th>
+      <th style="${thStyle}min-width:120px;"></th>
+    </tr></thead><tbody>`;
+  groups.forEach(g=>{
+    if(!g.types.length) return;
+    const gid='fcg'+gIdx++;
+    const gDone=g.types.reduce((s,t)=>{const d=typeMap[t];return s+(d.fabricated+d.delivered+d.installed);},0);
+    const gTotal=g.types.reduce((s,t)=>s+(typeMap[t].total||0),0);
+    const gPct=gTotal>0?Math.round(gDone/gTotal*100):0;
+    html+=`<tr style="cursor:pointer;background:var(--surface2);" onclick="(function(el){const tb=document.getElementById('${gid}');const open=tb.style.display!=='none';tb.style.display=open?'none':'table-row-group';el.querySelector('.fc-arr').textContent=open?'▸':'▾';})(this)">
+      <td colspan="4" style="padding:9px 10px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${g.color};border-top:2px solid ${g.color}33;">
+        <span class="fc-arr" style="font-size:9px;margin-right:6px;color:${g.color};">▾</span>${g.label}
+        <span style="font-size:10px;font-weight:500;color:var(--text3);margin-left:8px;">${gDone}/${gTotal} · ${gPct}%</span>
+      </td>
+    </tr>
+    <tbody id="${gid}">`;
+    g.types.forEach(t=>{
+      const d=typeMap[t];
+      const done=d.fabricated+d.delivered+d.installed;
+      const pct=d.total>0?Math.round(done/d.total*100):0;
+      html+=`<tr onmouseover="this.style.background='rgba(34,79,147,0.04)'" onmouseout="this.style.background=''">
+        <td style="${tdL}font-weight:600;color:var(--text);font-family:var(--mono);padding-left:24px;">${t}</td>
+        <td style="${tdN}color:var(--text2);">${d.total}</td>
+        <td style="${tdN}font-weight:700;color:${done>0?'#1a5fa8':'var(--text3)'};">${done>0?done:'—'}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${pct===100?'#00cc44':'#1a5fa8'};border-radius:3px;transition:width 0.3s;"></div>
+            </div>
+            <span style="font-size:10px;font-family:var(--mono);color:var(--text3);min-width:28px;text-align:right;">${pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    });
+    html+=`</tbody>`;
+  });
+  html+=`</tbody></table>`;
+  const grandTotal=Object.values(typeMap).reduce((a,d)=>({total:a.total+d.total,fabricated:a.fabricated+d.fabricated,delivered:a.delivered+d.delivered,installed:a.installed+d.installed}),{total:0,fabricated:0,delivered:0,installed:0});
+  const grandDone=grandTotal.fabricated+grandTotal.delivered+grandTotal.installed;
+  const grandPct=grandTotal.total>0?Math.round(grandDone/grandTotal.total*100):0;
+  document.getElementById('fcm-summary').innerHTML=`${grandDone} / ${grandTotal.total} done &nbsp;·&nbsp; <b>${grandPct}%</b>`;
+  document.getElementById('fcm-body').innerHTML=html;
+  document.getElementById('fcm').classList.add('open');
+}
+
+function openBracketInstallRateModal(){
+  const dateMap={};
+  const facadeMap={NF:{},SF:{},EF:{},WF:{}};
+  ['NF','SF','EF','WF'].forEach(zid=>{
+    allBracketIds(zid).forEach(id=>{
+      const p=panels[id]||{};
+      if(p.status==='installed' && p.installDate){
+        dateMap[p.installDate]=(dateMap[p.installDate]||0)+1;
+        facadeMap[zid][p.installDate]=(facadeMap[zid][p.installDate]||0)+1;
+      }
+    });
+  });
+  const total=allBracketPanelIds().length;
+  const totalInstalled=allBracketPanelIds().filter(id=>(panels[id]||{}).status==='installed').length;
+  const rows=[];
+  const start=new Date('2026-01-01');
+  const end=new Date('2027-12-31');
+  let cumulative=0;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.toISOString().split('T')[0];
+    const count=dateMap[key]||0;
+    cumulative+=count;
+    rows.push({date:key,display:d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear(),day:days[d.getDay()],count,nf:facadeMap.NF[key]||0,sf:facadeMap.SF[key]||0,ef:facadeMap.EF[key]||0,wf:facadeMap.WF[key]||0,cumulative,isWeekend:d.getDay()===0||d.getDay()===6,isMonthStart:d.getDate()===1});
+  }
+  const tbody=document.getElementById('bir-tbody');
+  tbody.innerHTML='';
+  let lastMonth='';
+  rows.forEach(r=>{
+    if(r.count===0) return;
+    const month=r.date.slice(0,7);
+    if(month!==lastMonth){
+      lastMonth=month;
+      const mtr=document.createElement('tr');
+      mtr.innerHTML=`<td colspan="10" style="padding:10px 12px 4px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--surface2);border-top:2px solid var(--border2);">${r.display.slice(r.display.indexOf(' ')+1)}</td>`;
+      tbody.appendChild(mtr);
+    }
+    const tr=document.createElement('tr');
+    tr.style.background=r.isWeekend?'rgba(34,79,147,0.03)':'transparent';
+    if(r.count>0)tr.style.background='rgba(46,194,126,0.06)';
+    const pct=total?Math.round(r.cumulative/total*100):0;
+    const barW=Math.min(pct,100);
+    const fmtZ=(n,c)=>n>0?`<span style="font-weight:700;color:${c};">+${n}</span>`:'<span style="color:var(--text3);">—</span>';
+    tr.innerHTML=`
+      <td style="padding:5px 12px;font-size:11px;color:var(--text);font-family:var(--mono);border-bottom:1px solid var(--border);">${r.display}</td>
+      <td style="padding:5px 12px;text-align:center;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);">${r.day}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.nf,'#2d65bd')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.sf,'#1a9458')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.ef,'#a07800')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.wf,'#6d35d9')}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:#1a9458;border-bottom:1px solid var(--border);">+${r.count}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--text);border-bottom:1px solid var(--border);">${r.cumulative}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">${pct}%</td>
+      <td style="padding:5px 12px;border-bottom:1px solid var(--border);">
+        <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${barW}%;background:#1a9458;border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('bir-summary').textContent=`${totalInstalled} / ${total} installed`;
+  document.getElementById('birm').classList.add('open');
+}
+
+function openFabRateModal(){
+  const dateMap={};
+  const facadeMap={NF:{},SF:{},EF:{},WF:{}};
+  // A panel that progressed beyond 'fabricated' (→ delivered, installed) still has fabDate and was fabricated
+  const wasFabricated=s=>s==='fabricated'||s==='delivered'||s==='installed';
+  ['NF','SF','EF','WF'].forEach(zid=>{
+    allIds(zid).forEach(id=>{
+      const p=panels[id]||{};
+      if(wasFabricated(p.status) && p.fabDate){
+        dateMap[p.fabDate]=(dateMap[p.fabDate]||0)+1;
+        facadeMap[zid][p.fabDate]=(facadeMap[zid][p.fabDate]||0)+1;
+      }
+    });
+  });
+  const _gc=gC();const total=(_gc.installed||0)+(_gc.delivered||0)+(_gc.fabricated||0)+(_gc.cutting||0)+(_gc.cip||0)+(_gc.cl_not_issued||0)+(_gc.defect||0);
+  const totalFab=allPanelIds().filter(id=>wasFabricated((panels[id]||{}).status)).length;
+  const rows=[];
+  const start=new Date('2026-01-01');
+  const end=new Date('2027-12-31');
+  let cumulative=0;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.toISOString().split('T')[0];
+    const count=dateMap[key]||0;
+    cumulative+=count;
+    rows.push({date:key,display:d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear(),day:days[d.getDay()],count,nf:facadeMap.NF[key]||0,sf:facadeMap.SF[key]||0,ef:facadeMap.EF[key]||0,wf:facadeMap.WF[key]||0,cumulative,isWeekend:d.getDay()===0||d.getDay()===6,isMonthStart:d.getDate()===1});
+  }
+  const tbody=document.getElementById('fr-tbody');
+  tbody.innerHTML='';
+  let lastMonth='';
+  rows.forEach(r=>{
+    if(r.count===0) return;
+    const month=r.date.slice(0,7);
+    if(month!==lastMonth){
+      lastMonth=month;
+      const mtr=document.createElement('tr');
+      mtr.innerHTML=`<td colspan="10" style="padding:10px 12px 4px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--surface2);border-top:2px solid var(--border2);">${r.display.slice(r.display.indexOf(' ')+1)}</td>`;
+      tbody.appendChild(mtr);
+    }
+    const tr=document.createElement('tr');
+    tr.style.background=r.isWeekend?'rgba(34,79,147,0.03)':'transparent';
+    if(r.count>0)tr.style.background='rgba(74,144,217,0.06)';
+    const pct=total?Math.round(r.cumulative/total*100):0;
+    const barW=Math.min(pct,100);
+    const fmtZ=(n,c)=>n>0?`<span style="font-weight:700;color:${c};">+${n}</span>`:'<span style="color:var(--text3);">—</span>';
+    tr.innerHTML=`
+      <td style="padding:5px 12px;font-size:11px;color:var(--text);font-family:var(--mono);border-bottom:1px solid var(--border);">${r.display}</td>
+      <td style="padding:5px 12px;text-align:center;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);">${r.day}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.nf,'#2d65bd')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.sf,'#1a9458')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.ef,'#a07800')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(r.wf,'#6d35d9')}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:#1a5fa8;border-bottom:1px solid var(--border);">+${r.count}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--text);border-bottom:1px solid var(--border);">${r.cumulative}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">${pct}%</td>
+      <td style="padding:5px 12px;border-bottom:1px solid var(--border);">
+        <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${barW}%;background:#1a5fa8;border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  // Count panels at/past fabricated that are missing a fabDate
+  const missingDate=allPanelIds().filter(id=>{const p=panels[id]||{};return wasFabricated(p.status)&&!p.fabDate;});
+  const missingByZone={NF:0,SF:0,EF:0,WF:0};
+  missingDate.forEach(id=>{
+    ['NF','SF','EF','WF'].forEach(zid=>{if(allIds(zid).includes(id))missingByZone[zid]++;});
+  });
+  document.getElementById('fr-summary').textContent=`${totalFab} / ${total} fabricated`;
+  const misEl=document.getElementById('fr-missing');
+  if(misEl){
+    if(missingDate.length>0){
+      const parts=Object.entries(missingByZone).filter(([,n])=>n>0).map(([z,n])=>`${z}:${n}`).join(' · ');
+      misEl.textContent=`⚠ ${missingDate.length} missing fab date${parts?' ('+parts+')':''}`;
+      misEl.style.color='#c05000';misEl.style.display='block';
+    } else {
+      misEl.style.display='none';
+    }
+  }
+  document.getElementById('frm').classList.add('open');
+}
+
+// ── BR LOG BASE RAW — global so CF log can SUMIF against it ──
+// [sqn,projet,allocation,fournisseur,po,br,dateBR,montant,statusFac,terms,datePaye,paye]
+const BR_LOG_BASE_RAW=[
+  [1,'STC','Prototype','SEPALUMIC MAROC','CF25-2173','BR25-3554','16/09/2025',1793.93,'Facturé',120,'14/01/2026','OUI'],
+  [2,'STC','Prototype','SEPALUMIC MAROC','CF25-2173','BR25-3555','16/09/2025',1993.19,'Facturé',120,'14/01/2026','OUI'],
+  [3,'STC','Prototype','ASTIGLASS','CF25-2226','BR25-3588','19/09/2025',41066.00,'Facturé',60,'18/11/2025','OUI'],
+  [4,'STC','Prototype','SEPALUMIC MAROC','CF25-2173','BR25-3630','16/09/2025',7121.40,'Facturé',120,'14/01/2026','OUI'],
+  [5,'STC','Prototype','CIPLI INDUSTRIE','CF25-2257','BR25-3988','24/09/2025',1800.00,'Facturé',0,'24/09/2025','OUI'],
+  [6,'STC','Prototype','SEPALUMIC MAROC','CF25-2173','BR25-4030','16/10/2025',1177.20,'Facturé',120,'13/02/2026','OUI'],
+  [7,'STC','Prototype','STAC MAROC','CF25-2516','BR25-4144','24/10/2025',5310.00,'Facturé',120,'21/02/2026','OUI'],
+  [8,'STC','Prototype','PROFESSIONNEL VITRAGE','CF25-2533','BR25-4251','25/10/2025',17148.70,'Facturé',120,'22/02/2026','OUI'],
+  [9,'STC','Prototype','PROFESSIONNEL VITRAGE','CF25-2533','BR25-4253','27/10/2025',7946.75,'Facturé',120,'24/02/2026','OUI'],
+  [10,'STC','Prototype','SEPALUMIC MAROC','CF25-2173','BR25-4312','12/11/2025',538.59,'Facturé',120,'12/03/2026','OUI'],
+  [11,'STC','Bolts and Screws','HILTI MAROC','CF25-2708','BR25-4369','20/11/2025',12800.00,'Facturé',120,'20/03/2026','OUI'],
+  [12,'STC','Prototype','ARMETAL','CF25-2585','BR25-4389','29/10/2025',2280.00,'Facturé',120,'26/02/2026','OUI'],
+  [13,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2784','BR25-4409','25/11/2025',65214.16,'Facturé',120,'25/03/2026','Non'],
+  [14,'STC','factory','ATLAS SOUSS','CF25-2711','BR25-4441','25/11/2025',45000.00,'Facturé',30,'25/12/2025','OUI'],
+  [15,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2784','BR25-4459','26/11/2025',33510.68,'Facturé',120,'26/03/2026','Non'],
+  [16,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2784','BR25-4640','05/12/2025',821.04,'Facturé',120,'04/04/2026','Non'],
+  [17,'STC','factory','AVAL','CF25-2705','BR25-4678','10/12/2025',1469.60,'Facturé',120,'09/04/2026','Non'],
+  [18,'STC','consumables','CABALLUS INDUSTRIE','CF25-2952','BR25-4700','11/12/2025',11401.10,'Facturé',120,'10/04/2026','Non'],
+  [19,'STC','factory','AVAL','CF25-2953','BR25-4711','09/12/2025',6616.74,'Facturé',120,'08/04/2026','Non'],
+  [20,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2784','BR25-4732','12/12/2025',12969.36,'Facturé',120,'11/04/2026','Non'],
+  [21,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR25-4759','12/12/2025',233240.01,'Facturé',120,'11/04/2026','Non'],
+  [22,'STC','general cost','LEICA GEOSYSTEMS','CF25-2745','BR25-4871','14/11/2025',118000.00,'Facturé',120,'14/03/2026','OUI'],
+  [23,'STC','factory','CIBEX SARL AU','CF25-3114','BR25-4917','26/12/2025',2190.00,'Facturé',120,'25/04/2026','Non'],
+  [24,'STC','factory','FIMADIS','CF25-2703','BR26-222','02/02/2026',12490.00,'Non Facturé',120,'02/06/2026','Non'],
+  [25,'STC','Bolts and Screws','HILTI MAROC','CF25-2708','BR26-342','10/02/2026',24960.00,'Non Facturé',120,'10/06/2026','Non'],
+  [26,'STC','Non System','FEN MAC','CF26-295','BR26-387','13/02/2026',3074.98,'Non Facturé',120,'13/06/2026','Non'],
+  [27,'STC','factory','SOCIETE IMPORT EXPORT DOUTILLAGE SEFRAOUI','CF26-224','BR26-394','11/02/2026',1100.00,'Non Facturé',120,'11/06/2026','Non'],
+  [28,'STC','Bolts and Screws','HILTI MAROC','CF25-2955','BR26-401','16/02/2026',13117.44,'Non Facturé',120,'16/06/2026','Non'],
+  [29,'STC','Bolts and Screws','HILTI MAROC','CF26-305','BR26-402','16/02/2026',9530.40,'Non Facturé',120,'16/06/2026','Non'],
+  [30,'STC','Bolts and Screws','HILTI MAROC','CF26-305','BR26-403','16/02/2026',482.40,'Non Facturé',120,'16/06/2026','Non'],
+  [31,'STC','Bolts and Screws','HILTI MAROC','CF26-314','BR26-404','16/02/2026',11684.06,'Non Facturé',120,'16/06/2026','Non'],
+  [32,'STC','Non System','DECOUPE LASER PLUS','CF26-189','BR26-466','19/02/2026',13132.80,'Non Facturé',120,'19/06/2026','Non'],
+  [33,'STC','Non System','DECOUPE LASER PLUS','CF26-294','BR26-468','19/02/2026',325.00,'Non Facturé',120,'19/06/2026','Non'],
+  [34,'STC','factory','DELTA STEEL','CF26-69','BR26-47','20/01/2026',2249.99,'Non Facturé',120,'20/05/2026','Non'],
+  [35,'STC','factory','SODEPRIM','CF26-287','BR26-488','10/02/2026',1375.00,'Non Facturé',120,'10/06/2026','Non'],
+  [36,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR26-494','23/02/2026',463559.07,'Non Facturé',120,'23/06/2026','Non'],
+  [37,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR26-495','19/02/2026',372908.96,'Non Facturé',120,'19/06/2026','Non'],
+  [38,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2661','BR26-496','19/02/2026',180327.66,'Non Facturé',120,'19/06/2026','Non'],
+  [39,'STC','Non System','DECOUPE LASER PLUS','CF26-188','BR26-510','24/02/2026',24570.00,'Non Facturé',120,'24/06/2026','Non'],
+  [40,'STC','silicone','SOUDAL','CF26-369','BR26-516','25/02/2026',21158.28,'Non Facturé',120,'25/06/2026','Non'],
+  [41,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR26-520','19/02/2026',66034.80,'Non Facturé',120,'19/06/2026','Non'],
+  [42,'STC','Non System','DECOUPE LASER PLUS','CF26-189','BR26-522','26/02/2026',1167.20,'Non Facturé',120,'26/06/2026','Non'],
+  [43,'STC','factory','SOUDAL','CF26-444','BR26-558','26/02/2026',756.60,'Non Facturé',120,'26/06/2026','Non'],
+  [44,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR26-563','26/02/2026',125603.55,'Non Facturé',120,'26/06/2026','Non'],
+  [45,'STC','rockwool','MULTIPROBAT','CF25-3129','BR26-588','27/02/2026',90763.20,'Non Facturé',120,'27/06/2026','Non'],
+  [46,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR26-606','02/03/2026',216536.62,'Non Facturé',120,'30/06/2026','Non'],
+  [47,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR26-607','02/03/2026',23647.34,'Non Facturé',120,'30/06/2026','Non'],
+  [48,'STC','Non System','FEN MAC','CF26-473','BR26-636','04/03/2026',1041.66,'Non Facturé',120,'02/07/2026','Non'],
+  [49,'STC','Non System','DECOUPE LASER PLUS','CF26-291','BR26-647','05/03/2026',24510.00,'Non Facturé',120,'03/07/2026','Non'],
+  [50,'STC','Bolts and Screws','TOUVIS','CF26-356','BR26-658','05/03/2026',15844.77,'Non Facturé',120,'03/07/2026','Non'],
+  [51,'STC','Alu Sheet','DETAIL INOX MAROC','CF26-296','BR26-660','02/03/2026',6351.40,'Non Facturé',120,'30/06/2026','Non'],
+  [52,'STC','Non System','BATIFER','CF26-289','BR26-667','02/02/2026',69120.00,'Non Facturé',120,'02/06/2026','Non'],
+  [53,'STC','silicone','SOUDAL','CF26-495','BR26-678','05/03/2026',1166.40,'Non Facturé',120,'03/07/2026','Non'],
+  [54,'STC','factory','TECHNIQUE ACIER','CF26-504','BR26-679','06/03/2026',1500.00,'Non Facturé',120,'04/07/2026','Non'],
+  [55,'STC','GI sheet','DELTA STEEL','CF26-523','BR26-722','12/03/2026',625.00,'Non Facturé',120,'10/07/2026','Non'],
+  [56,'STC','Non System','DECOUPE LASER PLUS','CF26-291','BR26-728','11/03/2026',5544.00,'Non Facturé',120,'09/07/2026','Non'],
+  [57,'STC','Non System','ALUMINIUM DU MAROC','CF26-300','BR26-748','16/03/2026',32940.70,'Non Facturé',120,'14/07/2026','Non'],
+  [58,'STC','silicone','SOUDAL','CF26-369','BR26-759','17/03/2026',13716.00,'Non Facturé',120,'15/07/2026','Non'],
+  [59,'STC','Alu System','ALUMINIUM DU MAROC','CF25-2244','BR26-767','17/03/2026',455967.39,'Non Facturé',120,'15/07/2026','Non'],
+  [60,'STC','Bolts and Screws','HILTI MAROC','CF26-534','BR26-771','12/03/2026',2694.00,'Non Facturé',120,'10/07/2026','Non'],
+  [61,'STC','Bolts and Screws','HILTI MAROC','CF26-534','BR26-772','12/03/2026',360.00,'Non Facturé',120,'10/07/2026','Non'],
+  [62,'STC','Bolts and Screws','TOUVIS','CF26-356','BR26-798','19/03/2026',21976.27,'Non Facturé',120,'17/07/2026','Non'],
+  [63,'STC','Non System','DECOUPE LASER PLUS','CF26-293','BR26-803','18/03/2026',32500.00,'Non Facturé',120,'16/07/2026','Non'],
+  [64,'STC','Alu Sheet','SEPALUMIC MAROC','CF26-512','BR26-804','18/03/2026',777.00,'Non Facturé',120,'16/07/2026','Non'],
+  [65,'STC','Bolts and Screws','FOURNIDIV','CF26-587','BR26-805','18/03/2026',1728.00,'Non Facturé',120,'16/07/2026','Non'],
+  [66,'STC','rockwool','FOURNIDIV','CF26-34','BR26-96','15/01/2026',1246.00,'Non Facturé',120,'15/05/2026','Non'],
+];
+function brSumif(cf){
+  const base=BR_LOG_BASE_RAW.filter(r=>r[4]===cf).reduce((s,r)=>s+r[7],0);
+  const custom=(brLogCustomRows||[]).filter(r=>r.po===cf).reduce((s,r)=>s+(r.montant||0),0);
+  return base+custom;
+}
+
+// CF log CF#→allocation (index 3=CF, index 2=alloc) — global, always available
+const CF_ALLOC_MAP=(function(){const m={};[
+  ['CF25-2173','Prototype'],['CF25-2226','Prototype'],['CF25-2244','Alu System'],['CF25-2257','Prototype'],['CF25-2516','Prototype'],
+  ['CF25-2533','Prototype'],['CF25-2585','Prototype'],['CF25-2661','Alu System'],['CF25-2703','factory'],['CF25-2704','factory'],
+  ['CF25-2705','factory'],['CF25-2708','Bolts and Screws'],['CF25-2710','factory'],['CF25-2711','factory'],['CF25-2745','General Cost'],
+  ['CF25-2747','Glass'],['CF25-2784','Alu System'],['CF25-2952','consumables'],['CF25-2953','factory'],['CF25-2955','Bolts and Screws'],
+  ['CF25-3031','Bolts and Screws'],['CF25-3114','factory'],['CF25-3129','rockwool'],['CF26-34','rockwool'],['CF26-48','Engineering'],
+  ['CF26-68','AEV'],['CF26-69','factory'],['CF26-188','Non System'],['CF26-189','Non System'],['CF26-207','consumables'],
+  ['CF26-224','factory'],['CF26-244','AEV'],['CF26-249','Bolts and Screws'],['CF26-256','Prototype'],['CF26-287','factory'],
+  ['CF26-289','Non System'],['CF26-290','rockwool'],['CF26-291','Non System'],['CF26-292','Non System'],['CF26-293','Non System'],
+  ['CF26-294','Non System'],['CF26-295','Non System'],['CF26-296','Alu Sheet'],['CF26-297','Alu Sheet'],['CF26-300','Non System'],
+  ['CF26-305','Bolts and Screws'],['CF26-314','Bolts and Screws'],['CF26-356','Bolts and Screws'],['CF26-362','silicone'],['CF26-369','silicone'],
+  ['CF26-421','Bolts and Screws'],['CF26-444','factory'],['CF26-455','GI sheet'],['CF26-456','GI sheet'],['CF26-457','GI sheet'],
+  ['CF26-458','GI sheet'],['CF26-473','non system'],['CF26-495','silicone'],['CF26-497','Alu Sheet'],['CF26-504','factory'],
+  ['CF26-512','Alu Sheet'],['CF26-523','GI sheet'],['CF26-534','Bolts and Screws'],['CF26-587','Bolts and Screws'],['CF26-595','rockwool'],
+  ['CF26-611','consumables'],['CF26-612','non system'],['CF26-617','consumables'],['CF26-618','factory'],['CF26-619','consumables']
+].forEach(([cf,a])=>m[cf]=a);return m;})();
+
+// Build CF→allocation map from BR log (always available synchronously)
+window._cfAllocMap = {};
+BR_LOG_BASE_RAW.forEach(r=>{ window._cfAllocMap[r[4]] = r[2]; });
+
+// ── AGING REPORT ─────────────────────────────────────────────
+// ── BR LOG STORAGE ─────────────────────────────────────────────
+let brLogCustomRows=[];
+let brLogPayeOverrides={};
+let brLogBaseOverrides={};
+let brLogDeletedSqns=[];
+
+async function loadBRLogCustomRows(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','br-log-custom-rows');
+    if(data&&data.length>0) try{brLogCustomRows=JSON.parse(data[0].value)||[];}catch(e){brLogCustomRows=[];}
+  }catch(e){}
+  try{const v=localStorage.getItem('br-log-custom-rows');if(v&&brLogCustomRows.length===0)brLogCustomRows=JSON.parse(v)||[];}catch(e){}
+}
+
+async function saveBRLogCustomRows(){
+  const json=JSON.stringify(brLogCustomRows);
+  try{localStorage.setItem('br-log-custom-rows',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','br-log-custom-rows');
+    await sb.from('project_info').insert({project:'shift-tower',key:'br-log-custom-rows',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadBRLogPayeOverrides(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','br-log-paye-overrides');
+    if(data&&data.length>0) try{brLogPayeOverrides=JSON.parse(data[0].value)||{};}catch(e){brLogPayeOverrides={};}
+  }catch(e){}
+  try{const v=localStorage.getItem('br-log-paye-overrides');if(v&&Object.keys(brLogPayeOverrides).length===0)brLogPayeOverrides=JSON.parse(v)||{};}catch(e){}
+}
+
+async function saveBRLogPayeOverrides(){
+  const json=JSON.stringify(brLogPayeOverrides);
+  try{localStorage.setItem('br-log-paye-overrides',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','br-log-paye-overrides');
+    await sb.from('project_info').insert({project:'shift-tower',key:'br-log-paye-overrides',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadBRLogBaseOverrides(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','br-log-base-overrides');
+    if(data&&data.length>0) try{brLogBaseOverrides=JSON.parse(data[0].value)||{};}catch(e){brLogBaseOverrides={};}
+  }catch(e){}
+  try{const v=localStorage.getItem('br-log-base-overrides');if(v&&Object.keys(brLogBaseOverrides).length===0)brLogBaseOverrides=JSON.parse(v)||{};}catch(e){}
+}
+
+async function saveBRLogBaseOverrides(){
+  const json=JSON.stringify(brLogBaseOverrides);
+  try{localStorage.setItem('br-log-base-overrides',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','br-log-base-overrides');
+    await sb.from('project_info').insert({project:'shift-tower',key:'br-log-base-overrides',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadBRLogDeletedSqns(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','br-log-deleted-sqns');
+    if(data&&data.length>0) try{brLogDeletedSqns=JSON.parse(data[0].value)||[];}catch(e){brLogDeletedSqns=[];}
+  }catch(e){}
+  try{const v=localStorage.getItem('br-log-deleted-sqns');if(v&&brLogDeletedSqns.length===0)brLogDeletedSqns=JSON.parse(v)||[];}catch(e){}
+}
+
+async function saveBRLogDeletedSqns(){
+  const json=JSON.stringify(brLogDeletedSqns);
+  try{localStorage.setItem('br-log-deleted-sqns',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','br-log-deleted-sqns');
+    await sb.from('project_info').insert({project:'shift-tower',key:'br-log-deleted-sqns',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+// ───────────────────────────────────────────────────────────────
+// ── Shared table export helpers ──────────────────────────────────
+window._exportTableCSV = function(tableId, filename){
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>Export</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>
+  table{border-collapse:collapse;}
+  th,td{border:1px solid #bbb;padding:4px 6px;font-family:Calibri,Arial,sans-serif;font-size:10pt;white-space:nowrap;}
+</style>
+</head><body>${table.outerHTML}</body></html>`;
+  const blob = new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=filename+'.xls'; a.click(); URL.revokeObjectURL(a.href);
+};
+
+window._exportTablePDF = function(tableId, title, subtitle, filename){
+  const table = document.getElementById(tableId);
+  if(!table) return;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>${title}</title>
+<style>
+  @page{size:A3 landscape;margin:8mm;}
+  body{margin:0;padding:8px;font-family:Calibri,Arial,sans-serif;font-size:8pt;}
+  h2{margin:0 0 2px;font-size:12pt;color:#1a3a6b;}
+  p{margin:0 0 6px;font-size:8pt;color:#555;}
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #bbb;padding:3px 5px;white-space:nowrap;}
+  thead th{background:#1a3a6b;color:#fff;font-weight:700;font-size:7pt;text-transform:uppercase;letter-spacing:0.04em;}
+  tbody tr:nth-child(even){background:#f5f7fa;}
+  tfoot td{background:#1a3a6b;color:#fff;font-weight:700;}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+</style></head><body>
+<h2>${title}</h2><p>${subtitle} · Exporté le ${new Date().toLocaleDateString('fr-FR')}</p>
+${table.outerHTML}
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+  const w=window.open('','_blank'); w.document.write(html); w.document.close();
+};
+// ────────────────────────────────────────────────────────────────
+
+// ── MONTHLY COST ─────────────────────────────────────────────────────────────
+let monthlyCostOv={};
+async function loadMonthlyCostOv(){
+  try{const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','monthly-cost-ov');if(data&&data.length>0)try{monthlyCostOv=JSON.parse(data[0].value)||{};}catch(e){monthlyCostOv={};}}catch(e){}
+  try{const v=localStorage.getItem('monthly-cost-ov');if(v&&!Object.keys(monthlyCostOv).length)monthlyCostOv=JSON.parse(v)||{};}catch(e){}
+}
+async function saveMonthlyCostOv(){
+  const json=JSON.stringify(monthlyCostOv);
+  try{localStorage.setItem('monthly-cost-ov',json);}catch(e){}
+  try{await sb.from('project_info').delete().eq('project','shift-tower').eq('key','monthly-cost-ov');await sb.from('project_info').insert({project:'shift-tower',key:'monthly-cost-ov',value:json,updated_at:new Date().toISOString()});}catch(e){}
+}
+
+async function renderMonthlyCost(){
+  const cont=document.getElementById('page-monthly-cost');
+  if(!cont) return;
+
+  const _mcKey='mc_auth_'+(sbUser?.id||'anon');
+  if(!sessionStorage.getItem(_mcKey)){
+    cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+      <div class="fpm" style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg2);">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:40px 48px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.15);min-width:320px;">
+          <div style="font-size:36px;margin-bottom:12px;">🔒</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">Monthly Cost — Personnel</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:24px;">This page is restricted. Enter the password to continue.</div>
+          <input id="mc-pwd-input" type="password" placeholder="Password"
+            style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg2);color:var(--text);outline:none;margin-bottom:10px;"
+            onkeydown="if(event.key==='Enter')_mcCheckPwd()">
+          <div id="mc-pwd-err" style="font-size:11px;color:#e53935;min-height:16px;margin-bottom:8px;"></div>
+          <button onclick="_mcCheckPwd()"
+            style="width:100%;padding:10px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
+            Unlock
+          </button>
+        </div>
+      </div>
+    </div>`;
+    setTimeout(()=>{const i=document.getElementById('mc-pwd-input');if(i)i.focus();},50);
+    return;
+  }
+
+  await loadMonthlyCostOv();
+
+
+  const MONTHS=[
+    {label:'Aug-25',d:new Date(2025,7,1)},{label:'Sep-25',d:new Date(2025,8,1)},
+    {label:'Oct-25',d:new Date(2025,9,1)},{label:'Nov-25',d:new Date(2025,10,1)},
+    {label:'Dec-25',d:new Date(2025,11,1)},{label:'Jan-26',d:new Date(2026,0,1)},
+    {label:'Feb-26',d:new Date(2026,1,1)},{label:'Mar-26',d:new Date(2026,2,1)},
+    {label:'Apr-26',d:new Date(2026,3,1)},{label:'May-26',d:new Date(2026,4,1)},
+    {label:'Jun-26',d:new Date(2026,5,1)},{label:'Jul-26',d:new Date(2026,6,1)},
+    {label:'Aug-26',d:new Date(2026,7,1)},{label:'Sep-26',d:new Date(2026,8,1)},
+    {label:'Oct-26',d:new Date(2026,9,1)},{label:'Nov-26',d:new Date(2026,10,1)},
+    {label:'Dec-26',d:new Date(2026,11,1)},
+  ];
+  const today=new Date();
+  const todayYM=today.getFullYear()*12+today.getMonth();
+  let curIdx=MONTHS.findIndex(m=>m.d.getFullYear()*12+m.d.getMonth()===todayYM);
+  if(curIdx<0) curIdx=MONTHS.length-1;
+
+  const BASE=[
+    {id:'fg',label:'Total Frais Generaux',budget:3158074.64,prmTotal:3683142,people:[
+      {id:'p1',name:'Redouane Balla',     salary:9000, prm:108000,pra:108000,m:[0.5,0.5,0.5,1,1,1,1,1,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p2',name:'Jalal Elguennouny', salary:5500, prm:0,    pra:49500, m:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p3',name:'Youssef Sbyk',      salary:50000,prm:200000,pra:200000,m:[1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p4',name:'Raed Abdel Samad',  salary:75000,prm:900000,pra:900000,m:[0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p5',name:'Safaa Akkari',      salary:11000,prm:176000,pra:176000,m:[1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p6',name:'Abdelilah Charrafi',salary:11000,prm:77000, pra:77000, m:[1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p7',name:'Ayoub Jdi',         salary:11000,prm:99000, pra:99000, m:[0,0,0,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p8',name:'Haitam Ouadila',    salary:11000,prm:176000,pra:176000,m:[1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p9',name:'Other Frais Generaux',salary:null,prm:null,pra:null,isOther:true,m:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],po:0},
+    ]},
+    {id:'sl',label:'Site labor + Topographe',budget:1060000,people:[
+      {id:'p10',name:'Foreman+',   salary:10000,prm:380000,pra:380000,m:[0,0,0,0,0.1,0.1,0.1,0.35,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p11',name:'Skilled',    salary:5000, prm:795000,pra:795000,m:[0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0],po:0},
+      {id:'p12',name:'Semi Skilled',salary:4000,prm:933333,pra:933333,m:[0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0],po:0},
+    ]},
+    {id:'fab',label:'Fabrication cost',budget:2120000,people:[
+      {id:'p13',name:'Aziz',   salary:24000,prm:72000, pra:72000, m:[0,0,0,0,0,0.1,0.1,0.1,0.5,0,0,0,0,0,0,0,0],po:0},
+      {id:'p14',name:'Skilled',salary:6000, prm:648000,pra:648000,m:[0,0,0,0,0,2,4,4,10,0,0,0,0,0,0,0,0],po:0},
+    ]},
+    {id:'topo',label:'Topographe Externe',budget:400000,people:[
+      {id:'p15',name:'Topographe Externe',salary:0,prc:400000,prm:80000,pra:80000,m:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],po:0},
+    ]},
+  ];
+
+  // Apply overrides and compute "Other FG" residual
+  const secs=BASE.map(sec=>({...sec,people:sec.people.map(p=>{
+    const ov=monthlyCostOv[p.id]||{};
+    return{...p,salary:ov.salary!==undefined?ov.salary:p.salary,m:ov.m||p.m,po:ov.po!==undefined?ov.po:p.po};
+  })}));
+  const fgSec=secs[0];
+  const oi=fgSec.people.findIndex(p=>p.isOther);
+  if(oi>=0){
+    const sumPRM=fgSec.people.filter((_,i)=>i!==oi).reduce((s,p)=>s+(p.prm||0),0);
+    const sumPRA=fgSec.people.filter((_,i)=>i!==oi).reduce((s,p)=>s+(p.pra||0),0);
+    fgSec.people[oi].prm=fgSec.prmTotal-sumPRM;
+    fgSec.people[oi].pra=fgSec.prmTotal-sumPRA;
+  }
+
+  const fmtN=n=>{if(!n&&n!==0)return'';const r=Math.round(n);return r.toLocaleString('fr-FR');};
+  const fmtMAD=n=>{if(!n&&n!==0)return'—';return Math.round(n).toLocaleString('fr-FR')+' MAD';};
+  const fmtPct=(v,b)=>b?Math.round(v/b*100)+'%':'—';
+  const fmtAtt=v=>{if(!v)return'';return Math.round(v*100)+'%';};
+
+  function kpi(p){
+    const s=p.salary||0,m=p.m;
+    const cum=m.slice(0,curIdx+1).reduce((a,b)=>a+b,0)*s;
+    const last=m.slice(0,curIdx).reduce((a,b)=>a+b,0)*s;
+    const cur2=(m[curIdx]||0)*s;
+    const po=p.po||0;
+    const rem=(p.pra||0)-cum-po;
+    return{cum,last,cur2,po,rem};
+  }
+
+  // Colors matching Excel
+  const HBG='#4472C4',HBG2='#2F5597',BBGT='#F2F2F2',SUBBG='#D6DCF0',TOTBG='#BDD7EE',FONT="Calibri, 'Calibri', Arial, sans-serif";
+  const TH=`style="background:${HBG};color:#fff;font-family:${FONT};font-size:9.5px;font-weight:700;padding:5px 7px;border:1px solid #1F3864;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:5;"`;
+  const TH2=`style="background:${HBG2};color:#fff;font-family:${FONT};font-size:9.5px;font-weight:700;padding:4px 7px;border:1px solid #1F3864;text-align:center;white-space:nowrap;position:sticky;top:28px;z-index:4;"`;
+  const TD=(bg,bold,italic,right)=>`style="background:${bg||BBGT};font-family:${FONT};font-size:9.5px;padding:4px 7px;border:1px solid #D0D7E8;${bold?'font-weight:700;':''}${italic?'font-style:italic;':''}text-align:${right?'right':'left'};white-space:nowrap;"`;
+  const TDS=(bg)=>`style="background:${bg||SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:center;white-space:nowrap;"`;
+
+  const showSal=!!window._mcSalVisible;
+
+  // Build rows HTML
+  let rows=''; let sqn=0;
+  for(const sec of secs){
+    let secPRM=0,secPRA=0,secCum=0,secLast=0,secCur=0,secPO=0,secRem=0;
+    const secMTotals=new Array(17).fill(0);
+    for(const p of sec.people){
+      sqn++;
+      const k=kpi(p);
+      secPRM+=p.prm||0; secPRA+=p.pra||0;
+      secCum+=k.cum; secLast+=k.last; secCur+=k.cur2; secPO+=k.po; secRem+=k.rem;
+      p.m.forEach((v,i)=>secMTotals[i]+=v*(p.salary||0));
+      const mCells=p.m.map((v,mi)=>`<td onclick="mcEditCell('${p.id}',${mi})" title="Click to edit" style="background:${BBGT};font-family:${FONT};font-size:9.5px;padding:4px 6px;border:1px solid #D0D7E8;text-align:center;cursor:pointer;white-space:nowrap;min-width:48px;">${fmtAtt(v)}</td>`).join('');
+      rows+=`<tr>
+        <td ${TD()}>${sqn}</td>
+        <td style="background:${BBGT};font-family:${FONT};font-size:9.5px;padding:4px 8px;border:1px solid #D0D7E8;font-style:italic;white-space:nowrap;min-width:160px;">${p.name}</td>
+        ${showSal?(p.id==='p4'?(window._mcRaedSalVisible?`<td onclick="mcEditSalary('${p.id}')" title="Click to edit" style="background:${BBGT};font-family:${FONT};font-size:9.5px;padding:4px 7px;border:1px solid #D0D7E8;font-weight:700;text-align:right;white-space:nowrap;">${fmtN(p.salary)} MAD</td>`:`<td onclick="mcUnlockRaedSal()" title="Click to reveal salary" style="background:#fff8e1;font-family:${FONT};font-size:9.5px;padding:4px 7px;border:1px solid #ffe082;font-weight:700;text-align:center;white-space:nowrap;cursor:pointer;color:#b8860b;">🔒 ••••••</td>`):`<td onclick="mcEditSalary('${p.id}')" title="Click to edit" style="background:${BBGT};font-family:${FONT};font-size:9.5px;padding:4px 7px;border:1px solid #D0D7E8;font-weight:700;text-align:right;white-space:nowrap;">${p.salary?fmtN(p.salary)+' MAD':'—'}</td>`)  :''}
+        <td ${TD(null,false,false,true)}>${p.prc?fmtN(p.prc)+' MAD':''}</td>
+        <td ${TD(null,false,false,true)}>${p.prm||p.prm===0?fmtN(p.prm)+' MAD':'—'}</td>
+        <td ${TD(null,false,false,true)}>${p.pra||p.pra===0?fmtN(p.pra)+' MAD':'—'}</td>
+        <td ${TD()}></td>
+        ${mCells}
+        <td ${TD(null,false,false,true)}>${fmtMAD(k.cum)}</td>
+        <td ${TD(null,false,false,true)}>${fmtPct(k.cum,p.pra)}</td>
+        <td ${TD(null,false,false,true)}>${fmtMAD(k.last)}</td>
+        <td ${TD(null,false,false,true)}>${fmtPct(k.last,p.pra)}</td>
+        <td ${TD(null,false,false,true)}>${fmtMAD(k.cur2)}</td>
+        <td ${TD(null,false,false,true)}>${fmtPct(k.cur2,p.pra)}</td>
+        <td onclick="mcEditPO('${p.id}')" title="Click to edit" ${TD(null,false,false,true)}>${k.po?fmtMAD(k.po):'—'}</td>
+        <td ${TD(null,false,false,true)}>${fmtPct(k.po,p.pra)}</td>
+        <td ${TD(null,false,false,true)}>${fmtMAD(k.rem)}</td>
+        <td ${TD(null,false,false,true)}>${fmtPct(k.rem,p.pra)}</td>
+      </tr>`;
+    }
+    // Subtotal row
+    rows+=`<tr>
+      <td colspan="2" ${TDS()}>${sec.label}</td>
+      ${showSal?`<td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:center;white-space:nowrap;"></td>`:''}
+      <td ${TDS()} style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;white-space:nowrap;">${fmtN(sec.budget)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;white-space:nowrap;">${fmtN(secPRM)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;white-space:nowrap;">${fmtN(secPRA)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;white-space:nowrap;color:${secPRA-sec.budget<0?'#c00':'#0a5c36'};">${fmtN(secPRA-sec.budget)}</td>
+      ${secMTotals.map(v=>`<td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 6px;border:1px solid #A8B8D8;font-weight:700;text-align:right;white-space:nowrap;">${v?fmtN(v):'—'}</td>`).join('')}
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtMAD(secCum)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtPct(secCum,secPRA)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtMAD(secLast)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtPct(secLast,secPRA)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtMAD(secCur)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtPct(secCur,secPRA)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${secPO?fmtMAD(secPO):'—'}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtPct(secPO,secPRA)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtMAD(secRem)}</td>
+      <td style="background:${SUBBG};font-family:${FONT};font-size:9.5px;padding:5px 8px;border:1px solid #A8B8D8;font-weight:700;text-align:right;">${fmtPct(secRem,secPRA)}</td>
+    </tr>`;
+  }
+
+  // Grand total row
+  const allPeople=secs.flatMap(s=>s.people);
+  const totPRM=secs.reduce((s,sec)=>s+sec.people.reduce((a,p)=>a+(p.prm||0),0),0);
+  const totPRA=secs.reduce((s,sec)=>s+sec.people.reduce((a,p)=>a+(p.pra||0),0),0);
+  const totBudget=secs.reduce((s,sec)=>s+sec.budget,0);
+  const totMV=new Array(17).fill(0);
+  allPeople.forEach(p=>p.m.forEach((v,i)=>totMV[i]+=v*(p.salary||0)));
+  const tCum=allPeople.reduce((s,p)=>s+kpi(p).cum,0);
+  const tLast=allPeople.reduce((s,p)=>s+kpi(p).last,0);
+  const tCur=allPeople.reduce((s,p)=>s+kpi(p).cur2,0);
+  const tPO=allPeople.reduce((s,p)=>s+kpi(p).po,0);
+  const tRem=allPeople.reduce((s,p)=>s+kpi(p).rem,0);
+  const TS=`style="background:${TOTBG};font-family:${FONT};font-size:9.5px;padding:6px 8px;border:1px solid #9BB8D4;font-weight:700;text-align:right;white-space:nowrap;"`;
+  const TSC=`style="background:${TOTBG};font-family:${FONT};font-size:9.5px;padding:6px 8px;border:1px solid #9BB8D4;font-weight:700;text-align:center;white-space:nowrap;"`;
+  rows+=`<tr>
+    <td colspan="2" ${TSC}>Total</td>
+    ${showSal?`<td style="background:${TOTBG};font-family:${FONT};font-size:9.5px;padding:6px 8px;border:1px solid #9BB8D4;font-weight:700;text-align:right;white-space:nowrap;"></td>`:''}
+    <td ${TS}>${fmtN(totBudget)}</td>
+    <td ${TS}>${fmtN(totPRM)}</td>
+    <td ${TS}>${fmtN(totPRA)}</td>
+    <td ${TS} style="${TS.slice(7)} color:${totPRA-totBudget<0?'#c00':'#0a5c36'};">${fmtN(totPRA-totBudget)}</td>
+    ${totMV.map(v=>`<td ${TS}>${v?fmtN(v):'—'}</td>`).join('')}
+    <td ${TS}>${fmtMAD(tCum)}</td><td ${TS}>${fmtPct(tCum,totPRA)}</td>
+    <td ${TS}>${fmtMAD(tLast)}</td><td ${TS}>${fmtPct(tLast,totPRA)}</td>
+    <td ${TS}>${fmtMAD(tCur)}</td><td ${TS}>${fmtPct(tCur,totPRA)}</td>
+    <td ${TS}>${tPO?fmtMAD(tPO):'—'}</td><td ${TS}>${fmtPct(tPO,totPRA)}</td>
+    <td ${TS}>${fmtMAD(tRem)}</td><td ${TS}>${fmtPct(tRem,totPRA)}</td>
+  </tr>`;
+
+  // Header rows
+  const kpiGroups=[
+    {label:'Budget Utilisé Cumulatif',bg:'#1F4E79'},
+    {label:'Budget Utilisé Mois dernier',bg:'#1F4E79'},
+    {label:'Budget utilisé ce mois',bg:'#1F4E79'},
+    {label:'Bon de Commande ouvert',bg:'#375623'},
+    {label:'Coût pour terminer',bg:'#833C00'},
+  ];
+
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">👥</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Monthly Cost — Personnel</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · ${allPeople.length} people · Current month: ${MONTHS[curIdx]?.label||'—'} · Click cells to edit</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button id="mc-sal-toggle" onclick="mcToggleSalary()" title="${showSal?'Hide':'Show'} Monthly Salary" style="padding:6px 12px;background:#6a3fa0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;line-height:1;">${showSal?'−':'+'}</button>
+          <button onclick="_exportTableCSV('mc-table','Monthly_Cost')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">⬇ Excel</button>
+          <button onclick="_exportTablePDF('mc-table','Monthly Cost — Personnel','Shift Tower','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">🖨 PDF</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:12px 24px;">
+        <table id="mc-table" style="border-collapse:collapse;min-width:max-content;">
+          <thead>
+            <tr>
+              <th rowspan="2" ${TH}>N°</th>
+              <th rowspan="2" ${TH} style="background:${HBG};color:#fff;font-family:${FONT};font-size:9.5px;font-weight:700;padding:5px 12px;border:1px solid #1F3864;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:5;min-width:160px;">Name</th>
+              ${showSal?`<th rowspan="2" style="background:${HBG};color:#fff;font-family:${FONT};font-size:9.5px;font-weight:700;padding:5px 7px;border:1px solid #1F3864;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:5;">Monthly Salary</th>`:''}
+              <th rowspan="2" ${TH}>PRC<br><span style="font-weight:400;font-size:8px;">(Prix de revient Commercial)</span></th>
+              <th rowspan="2" ${TH}>PRM<br><span style="font-weight:400;font-size:8px;">(Prix de revient Marché)</span></th>
+              <th rowspan="2" ${TH}>PRA<br><span style="font-weight:400;font-size:8px;">(Prix de revient Achat)</span></th>
+              <th rowspan="2" ${TH}>Deviation</th>
+              ${MONTHS.map((m,i)=>`<th ${TH} style="background:${i===curIdx?'#1F4E79':HBG};color:#fff;font-family:${FONT};font-size:9.5px;font-weight:700;padding:5px 6px;border:1px solid #1F3864;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:5;min-width:52px;">${m.label}${i===curIdx?'<br><span style="font-size:7px;opacity:0.8;">◄ now</span>':''}</th>`).join('')}
+              ${kpiGroups.map(g=>`<th colspan="2" style="background:${g.bg};color:#fff;font-family:${FONT};font-size:9.5px;font-weight:700;padding:5px 8px;border:1px solid #0d2244;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:5;">${g.label}</th>`).join('')}
+            </tr>
+            <tr>
+              ${MONTHS.map(()=>`<th ${TH2}></th>`).join('')}
+              ${kpiGroups.map(g=>`<th ${TH2} style="background:${g.bg}cc;color:#fff;font-family:${FONT};font-size:9px;font-weight:700;padding:4px 6px;border:1px solid #0d2244;text-align:center;white-space:nowrap;position:sticky;top:28px;z-index:4;">Valeur</th><th ${TH2} style="background:${g.bg}cc;color:#fff;font-family:${FONT};font-size:9px;font-weight:700;padding:4px 6px;border:1px solid #0d2244;text-align:center;white-space:nowrap;position:sticky;top:28px;z-index:4;">%</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+
+  window._mcSecs=secs;
+  window._mcCurIdx=curIdx;
+}
+
+window.mcToggleSalary=function(){
+  window._mcSalVisible=!window._mcSalVisible;
+  if(!window._mcSalVisible) window._mcRaedSalVisible=false; // re-lock when column hidden
+  renderMonthlyCost();
+};
+
+window.mcUnlockRaedSal=function(){
+  // Show inline password prompt over the cell
+  const existing=document.getElementById('raed-sal-prompt');
+  if(existing){existing.remove();return;}
+  const div=document.createElement('div');
+  div.id='raed-sal-prompt';
+  div.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:1.5px solid #ffe082;border-radius:10px;padding:24px 28px;box-shadow:0 8px 32px rgba(0,0,0,0.18);z-index:9999;text-align:center;min-width:260px;';
+  div.innerHTML=`
+    <div style="font-size:18px;margin-bottom:8px;">🔒</div>
+    <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:4px;">Salary protégé</div>
+    <div style="font-size:11px;color:#888;margin-bottom:14px;">Entrez le mot de passe pour révéler</div>
+    <input id="raed-sal-pwd" type="password" placeholder="Mot de passe"
+      style="width:100%;box-sizing:border-box;padding:8px 12px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;outline:none;margin-bottom:8px;"
+      onkeydown="if(event.key==='Enter')mcCheckRaedPwd()">
+    <div id="raed-sal-err" style="font-size:11px;color:#e53935;min-height:14px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="document.getElementById('raed-sal-prompt').remove()" style="flex:1;padding:8px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;font-size:12px;cursor:pointer;">Annuler</button>
+      <button onclick="mcCheckRaedPwd()" style="flex:1;padding:8px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">Révéler</button>
+    </div>`;
+  document.body.appendChild(div);
+  setTimeout(()=>{const i=document.getElementById('raed-sal-pwd');if(i)i.focus();},50);
+};
+
+window.mcCheckRaedPwd=function(){
+  const input=document.getElementById('raed-sal-pwd');
+  const err=document.getElementById('raed-sal-err');
+  if(!input)return;
+  if(input.value==='RAED'){
+    window._mcRaedSalVisible=true;
+    document.getElementById('raed-sal-prompt').remove();
+    renderMonthlyCost();
+  } else {
+    err.textContent='Mot de passe incorrect.';
+    input.value='';
+    input.focus();
+  }
+};
+
+window._mcCheckPwd=function(){
+  const input=document.getElementById('mc-pwd-input');
+  const err=document.getElementById('mc-pwd-err');
+  if(!input) return;
+  if(input.value==='RAED'){
+    const _mcKey='mc_auth_'+(sbUser?.id||'anon');
+    sessionStorage.setItem(_mcKey,'1');
+    renderMonthlyCost();
+  } else {
+    if(err) err.textContent='Incorrect password. Please try again.';
+    input.value='';
+    input.focus();
+  }
+};
+
+window.mcEditCell=function(pid,mi){
+  const secs=window._mcSecs||[];
+  let person=null;
+  for(const sec of secs){const p=sec.people.find(x=>x.id===pid);if(p){person=p;break;}}
+  if(!person) return;
+  const cur=person.m[mi];
+  const val=prompt(`Attendance for ${person.name} — ${['Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26','Feb-26','Mar-26','Apr-26','May-26','Jun-26','Jul-26','Aug-26','Sep-26','Oct-26','Nov-26','Dec-26'][mi]}\n\nEnter as decimal (0.5=50%, 1=100%, 2=200%):`,(cur||0).toString());
+  if(val===null) return;
+  const n=parseFloat(val)||0;
+  const ov=monthlyCostOv[pid]||{};
+  const newM=[...(ov.m||person.m)];
+  newM[mi]=n;
+  monthlyCostOv[pid]={...ov,m:newM};
+  saveMonthlyCostOv().then(()=>renderMonthlyCost());
+};
+
+window.mcEditSalary=function(pid){
+  const secs=window._mcSecs||[];
+  let person=null;
+  for(const sec of secs){const p=sec.people.find(x=>x.id===pid);if(p){person=p;break;}}
+  if(!person||person.isOther) return;
+  const val=prompt(`Monthly Salary for ${person.name} (MAD):`,(person.salary||0).toString());
+  if(val===null) return;
+  const n=parseFloat(val)||0;
+  monthlyCostOv[pid]={...(monthlyCostOv[pid]||{}),salary:n};
+  saveMonthlyCostOv().then(()=>renderMonthlyCost());
+};
+
+window.mcEditPO=function(pid){
+  const secs=window._mcSecs||[];
+  let person=null;
+  for(const sec of secs){const p=sec.people.find(x=>x.id===pid);if(p){person=p;break;}}
+  if(!person) return;
+  const val=prompt(`Open PO for ${person.name} (MAD):`,(person.po||0).toString());
+  if(val===null) return;
+  const n=parseFloat(val)||0;
+  monthlyCostOv[pid]={...(monthlyCostOv[pid]||{}),po:n};
+  saveMonthlyCostOv().then(()=>renderMonthlyCost());
+};
+
+// ── BR LOGS ───────────────────────────────────────────────────────────────────
+async function renderAgingReport(){
+  const cont=document.getElementById('page-aging-report');
+  await Promise.all([loadBRLogCustomRows(),loadBRLogPayeOverrides(),loadBRLogBaseOverrides(),loadBRLogDeletedSqns()]);
+
+  const MONTHS=[
+    {label:'Apr-26',date:new Date('2026-04-01')},
+    {label:'May-26',date:new Date('2026-05-01')},
+    {label:'Jun-26',date:new Date('2026-06-01')},
+    {label:'Jul-26',date:new Date('2026-07-01')},
+    {label:'Aug-26',date:new Date('2026-08-01')},
+    {label:'Sep-26',date:new Date('2026-09-01')},
+    {label:'Oct-26',date:new Date('2026-10-01')},
+    {label:'Nov-26',date:new Date('2026-11-01')},
+  ];
+
+  const RAW=BR_LOG_BASE_RAW;
+
+  function parseDate(s){const[d,m,y]=s.split('/');return new Date(y,m-1,d);}
+  function fmt(n){if(!n)return'—';return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+  function buildBRRow(sqn,projet,alloc,fourn,po,br,dateBR,montant,statusFac,terms,datePaye,rawPaye,isCustom){
+    const effectivePaye=brLogPayeOverrides[br]!==undefined?brLogPayeOverrides[br]:rawPaye;
+    const paid=effectivePaye.toLowerCase()==='oui';
+    const remaining=paid?0:montant;
+    const montantTTC=montant*1.2;
+    const prevPaid=paid?montantTTC:0;
+    const due=parseDate(datePaye);
+    const monthVals=MONTHS.map(()=>0);
+    if(!paid){
+      for(let i=0;i<MONTHS.length;i++){
+        if(due<MONTHS[i].date){
+          if(i===0||monthVals.slice(0,i).every(v=>v===0)) monthVals[i]=montantTTC;
+          break;
+        }
+      }
+    }
+    return{sqn,projet,alloc,fourn,po,br,dateBR,montant,statusFac,terms,datePaye,paye:effectivePaye,paid,remaining,prevPaid,monthVals,isCustom};
+  }
+
+  // Compute derived columns
+  const baseRows=RAW.filter(r=>!brLogDeletedSqns.includes(r[0])).map(r=>{
+    const[sqn,projet,alloc,fourn,po,br,dateBR,montant,statusFac,terms,datePaye,paye]=r;
+    const ov=brLogBaseOverrides[sqn]||{};
+    return buildBRRow(sqn,ov.projet||projet,ov.alloc||alloc,ov.fourn||fourn,ov.po||po,ov.br||br,ov.dateBR||dateBR,ov.montant!==undefined?ov.montant:montant,ov.statusFac||statusFac,ov.terms!==undefined?ov.terms:terms,ov.datePaye||datePaye,ov.paye||paye,false);
+  });
+
+  const customMapped=brLogCustomRows.map((r,i)=>({
+    ...buildBRRow(baseRows.length+i+1,r.projet,r.alloc,r.fourn,r.po,r.br,r.dateBR,r.montant,r.statusFac,r.terms,r.datePaye,r.paye,true),
+    customIdx:i
+  }));
+
+  let rows=[...baseRows,...customMapped];
+  window._brAllRowsForFilter=rows; // unfiltered, for dropdown values
+
+  // Apply column sort
+  const _sc=window._brSortCol, _sd=window._brSortDir||'asc';
+  if(_sc){
+    const _pd=s=>{const[d,m,y]=(s||'').split('/');return new Date(y,m-1,d);};
+    rows.sort((a,b)=>{
+      let av,bv;
+      if(_sc.startsWith('month_')){const mi=parseInt(_sc.split('_')[1]);av=a.monthVals[mi]||0;bv=b.monthVals[mi]||0;}
+      else if(_sc==='dateBR'||_sc==='datePaye'){av=_pd(a[_sc]);bv=_pd(b[_sc]);}
+      else{av=a[_sc];bv=b[_sc];}
+      if(av<bv)return _sd==='asc'?-1:1;
+      if(av>bv)return _sd==='asc'?1:-1;
+      return 0;
+    });
+  }
+
+  // Apply column filters
+  if(window._brFilters){
+    const _getBRVal=(r,ck)=>ck.startsWith('month_')?r.monthVals[parseInt(ck.split('_')[1])]||0:r[ck];
+    Object.entries(window._brFilters).forEach(([ck,vals])=>{
+      if(vals&&vals.size>0) rows=rows.filter(r=>vals.has(String(_getBRVal(r,ck))));
+    });
+  }
+
+  // Build supplier→terms map for autocomplete
+  window._brSupplierTerms={};
+  rows.forEach(r=>{if(r.fourn) window._brSupplierTerms[r.fourn.toUpperCase()]=r.terms;});
+  window._brAllRows=rows;
+
+  // Compute column totals
+  const totPrevPaid=rows.reduce((s,r)=>s+r.prevPaid,0);
+  const totMonths=MONTHS.map((_,i)=>rows.reduce((s,r)=>s+r.monthVals[i],0));
+
+  // Summary by allocation — categories derived dynamically so custom-added rows are always included
+  const _allocCatsBase=['factory','Prototype','general cost','consumables','Alu System','Non System','Alu Sheet','GI sheet','Bolts and Screws','rockwool','silicone'];
+  const _allocMap=new Map(_allocCatsBase.map(c=>[c.toLowerCase(),c]));
+  // Use unfiltered rows so summary always reflects all data regardless of active column filters
+  window._brAllRowsForFilter.forEach(r=>{const k=r.alloc.toLowerCase();if(!_allocMap.has(k))_allocMap.set(k,r.alloc);});
+  const allocCats=[..._allocMap.values()];
+  window._brSummaryMode = window._brSummaryMode || 'HT';
+  window._brSummaryRows = allocCats.map(cat=>{
+    const catRows=window._brAllRowsForFilter.filter(r=>r.alloc.toLowerCase()===cat.toLowerCase());
+    const totalBR=catRows.reduce((s,r)=>s+r.montant,0);
+    const totalFac=catRows.filter(r=>r.statusFac.toLowerCase().includes('facturé')&&!r.statusFac.toLowerCase().includes('non')).reduce((s,r)=>s+r.montant,0);
+    const totalNonFac=catRows.filter(r=>r.statusFac.toLowerCase().includes('non')).reduce((s,r)=>s+r.montant,0);
+    const totalRegle=catRows.filter(r=>r.paid).reduce((s,r)=>s+r.montant,0);
+    const totalNonRegle=catRows.filter(r=>!r.paid).reduce((s,r)=>s+r.montant,0);
+    return{cat,totalBR,totalFac,totalNonFac,totalRegle,totalNonRegle};
+  });
+  const summaryRows=window._brSummaryRows;
+
+  const headerCols=['SQN','Actions','Projet','Allocation','Fournisseur','PO#','Bon de Réception','Date BR','Montant HT','Montant TTC','Status Facture','Terms','Date à Payer','Payé','Remaining','Prev. Paid',...MONTHS.map(m=>m.label)];
+
+  const statusColor=s=>{
+    const sl=s.toLowerCase();
+    if(sl.includes('non')) return{bg:'#fff3cd',color:'#856404'};
+    return{bg:'#d1e7dd',color:'#0a5c36'};
+  };
+
+  const tableRows=rows.map((r,i)=>{
+    const sc=statusColor(r.statusFac);
+    const payeBg=r.paid?'#d1e7dd':'#f8d7da';
+    const payeColor=r.paid?'#0a5c36':'#842029';
+    const rowBase=i%2===0?'#fff':'#f0fef4';
+    const mCells=r.monthVals.map(v=>v>0?`<td style="padding:4px 8px;text-align:right;font-size:10px;font-weight:700;color:#0a5c36;background:#d1e7dd;border:1px solid #dee2e6;white-space:nowrap;">${fmt(v)}</td>`:`<td style="padding:4px 8px;text-align:right;font-size:10px;color:#aaa;border:1px solid #dee2e6;">—</td>`).join('');
+    return`<tr style="background:${rowBase};transition:background 0.1s;" onmouseover="this.style.background='#f0f4fb'" onmouseout="this.style.background='${rowBase}'">
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;color:#8099b0;">${r.sqn}${r.isCustom?'<span style="color:#1a9458;font-size:8px;margin-left:3px;">●</span>':''}</td>
+      <td style="padding:4px 6px;text-align:center;border:1px solid #dee2e6;white-space:nowrap;">
+        <button onclick="openEditBRRowModal(${r.sqn},${r.isCustom},${r.isCustom?r.customIdx:-1})" title="Edit" style="padding:2px 6px;font-size:10px;background:#e8f0fb;border:1px solid #b8c8e8;border-radius:4px;cursor:pointer;color:#1a3a6b;margin-right:2px;">✏️</button>${r.isCustom?`<button onclick="deleteBRRow(${r.customIdx})" title="Delete" style="padding:2px 6px;font-size:10px;background:#fee;border:1px solid #fcc;border-radius:4px;cursor:pointer;color:#c02020;">🗑</button>`:`<button onclick="deleteBRBaseRow(${r.sqn})" title="Delete" style="padding:2px 6px;font-size:10px;background:#fee;border:1px solid #fcc;border-radius:4px;cursor:pointer;color:#c02020;">🗑</button>`}
+      </td>
+      <td style="padding:4px 8px;font-size:10px;border:1px solid #dee2e6;">${r.projet}</td>
+      <td style="padding:4px 8px;font-size:10px;border:1px solid #dee2e6;font-weight:600;">${r.alloc}</td>
+      <td style="padding:4px 8px;font-size:10px;border:1px solid #dee2e6;max-width:180px;">${r.fourn}</td>
+      <td style="padding:4px 8px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;">${r.po}</td>
+      <td style="padding:4px 8px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;">${r.br}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;white-space:nowrap;">${r.dateBR}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:700;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;">${fmt(r.montant)}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:700;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;color:#1a5c9a;">${fmt(r.montant*1.2)}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;background:${sc.bg};color:${sc.color};font-weight:600;">${r.statusFac}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;">${r.terms}j</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;white-space:nowrap;">${r.datePaye}</td>
+      <td onclick="window.toggleBRPaye('${r.br}')" title="Click to toggle Payé" style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;background:${payeBg};color:${payeColor};font-weight:700;cursor:pointer;user-select:none;">${r.paye}&nbsp;<span style="font-size:8px;opacity:0.5;">✎</span></td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #dee2e6;${r.remaining>0?'color:#842029;font-weight:700;':''}">${r.remaining>0?fmt(r.remaining):'—'}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #dee2e6;${r.prevPaid>0?'color:#0a5c36;font-weight:700;':''}">${r.prevPaid>0?fmt(r.prevPaid):'—'}</td>
+      ${mCells}
+    </tr>`;
+  }).join('');
+
+  const totRow=`<tr style="background:#1a3a6b;color:#fff;font-weight:700;">
+    <td colspan="15" style="padding:6px 10px;font-size:10px;border:1px solid #0d2244;text-align:right;letter-spacing:0.05em;">TOTAL</td>
+    <td style="padding:6px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0d2244;">${fmt(totPrevPaid)}</td>
+    ${totMonths.map(v=>`<td style="padding:6px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0d2244;">${v>0?fmt(v):'—'}</td>`).join('')}
+  </tr>`;
+
+  window.brRenderSummary=function(){
+    const mode=window._brSummaryMode||'HT';
+    const m=mode==='TTC'?1.2:1;
+    const fmtS=n=>n>0?fmt(n*m):'—';
+    const sr=window._brSummaryRows||[];
+    const isHT=mode==='HT';
+    document.getElementById('br-sum-ht-btn').style.background=isHT?'#1a3a6b':'#e8f0fb';
+    document.getElementById('br-sum-ht-btn').style.color=isHT?'#fff':'#1a3a6b';
+    document.getElementById('br-sum-ttc-btn').style.background=!isHT?'#1a3a6b':'#e8f0fb';
+    document.getElementById('br-sum-ttc-btn').style.color=!isHT?'#fff':'#1a3a6b';
+    document.getElementById('br-sum-tbody').innerHTML=sr.map((s,i)=>`<tr style="background:${i%2===0?'#f8fafd':'#fff'};">
+      <td style="padding:5px 12px;border:1px solid #dee2e6;font-weight:600;">${s.cat}</td>
+      <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);">${fmtS(s.totalBR)}</td>
+      <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);color:#0a5c36;">${fmtS(s.totalFac)}</td>
+      <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);color:#856404;">${fmtS(s.totalNonFac)}</td>
+      <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);color:#0a5c36;font-weight:700;">${fmtS(s.totalRegle)}</td>
+      <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);color:#842029;font-weight:700;">${fmtS(s.totalNonRegle)}</td>
+    </tr>`).join('')+`<tr style="background:#1a3a6b;color:#fff;font-weight:700;">
+      <td style="padding:6px 12px;border:1px solid #0d2244;">TOTAL</td>
+      ${['totalBR','totalFac','totalNonFac','totalRegle','totalNonRegle'].map(k=>`<td style="padding:6px 12px;border:1px solid #0d2244;text-align:right;font-family:var(--mono);">${fmt(sr.reduce((s,r)=>s+r[k],0)*m)}</td>`).join('')}
+    </tr>`;
+  };
+
+  const summaryHTML=`
+    <div style="margin-top:28px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);">Summary by Allocation</div>
+        <button id="br-sum-ht-btn" onclick="window._brSummaryMode='HT';window.brRenderSummary();" style="padding:3px 10px;font-size:10px;font-weight:700;border:1px solid #1a3a6b;border-radius:4px;cursor:pointer;">HT</button>
+        <button id="br-sum-ttc-btn" onclick="window._brSummaryMode='TTC';window.brRenderSummary();" style="padding:3px 10px;font-size:10px;font-weight:700;border:1px solid #1a3a6b;border-radius:4px;cursor:pointer;">TTC</button>
+      </div>
+      <table style="border-collapse:collapse;width:100%;font-size:10px;">
+        <thead>
+          <tr style="background:#1a3a6b;color:#fff;">
+            <th style="padding:7px 12px;text-align:left;border:1px solid #0d2244;">Allocation</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid #0d2244;">Total BR</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid #0d2244;">Facturé</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid #0d2244;">Non Facturé</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid #0d2244;">Total Réglé</th>
+            <th style="padding:7px 12px;text-align:right;border:1px solid #0d2244;">Total Non-Réglé</th>
+          </tr>
+        </thead>
+        <tbody id="br-sum-tbody"></tbody>
+      </table>
+    </div>`;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">📋</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">BR Logs — Aging Report</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · ${rows.length} entries · À payer avant le (Apr–Nov 2026)${brLogCustomRows.length>0?` <span style="color:#1a9458;">(+${brLogCustomRows.length} added)</span>`:''}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+          <input id="ar-search" type="text" placeholder="Search supplier, PO, allocation…" oninput="arFilter()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:11px;width:260px;outline:none;">
+          <select id="ar-paye" onchange="arFilter()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;">
+            <option value="all">All</option>
+            <option value="Non">Non Réglé</option>
+            <option value="OUI">Réglé</option>
+          </select>
+          <button onclick="_exportTableCSV('ar-table','BR_Logs_AgingReport')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
+          <button onclick="_exportTablePDF('ar-table','BR Logs — Aging Report','Shift Tower','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
+          <button onclick="openAddBRRowModal(window._brAllRows)" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">＋ Add Row</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 24px;">
+        <table style="border-collapse:collapse;min-width:max-content;width:100%;" id="ar-table">
+          <thead>
+            <tr style="position:sticky;top:0;z-index:10;background:#1a3a6b;color:#fff;">
+              ${(()=>{
+                const sm={'SQN':'sqn','Projet':'projet','Allocation':'alloc','Fournisseur':'fourn','PO#':'po','Bon de Réception':'br','Date BR':'dateBR','Montant HT':'montant','Status Facture':'statusFac','Terms':'terms','Date à Payer':'datePaye','Payé':'paye','Remaining':'remaining','Prev. Paid':'prevPaid',...Object.fromEntries(MONTHS.map((m,i)=>[m.label,`month_${i}`]))};
+                const rightAlign=['Montant HT','Montant TTC','Remaining','Prev. Paid',...MONTHS.map(m=>m.label)];
+                return headerCols.map(h=>{
+                  const sk=sm[h];
+                  const active=sk&&window._brSortCol===sk;
+                  const arrow=active?(window._brSortDir==='asc'?' ▲':' ▼'):'';
+                  const hasFilter=sk&&window._brFilters&&window._brFilters[sk]&&window._brFilters[sk].size>0;
+                  const filterDot=hasFilter?'<span style="color:#FFD700;margin-left:3px;font-size:9px;">▼</span>':'';
+                  return`<th ${sk?`onclick="setBRSort('${sk}')" oncontextmenu="openBRColumnFilter(event,'${sk}');return false;" `:''}style="padding:7px 8px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0d2244;text-align:${rightAlign.includes(h)?'right':'center'};${sk?'cursor:pointer;user-select:none;':''}${hasFilter?'background:#2a5a9b;':''}">${h}${arrow}${filterDot}</th>`;
+                }).join('');
+              })()}
+            </tr>
+          </thead>
+          <tbody id="ar-tbody">${tableRows}</tbody>
+          <tfoot>${totRow}</tfoot>
+        </table>
+        ${summaryHTML}
+      </div>
+    </div>
+  </div>`;
+  window.brRenderSummary();
+}
+
+window.setBRSort=async function(col){
+  if(window._brSortCol===col){window._brSortDir=window._brSortDir==='asc'?'desc':'asc';}
+  else{window._brSortCol=col;window._brSortDir='asc';}
+  const pane=document.querySelector('#page-aging-report .fpm');
+  const st=pane?pane.scrollTop:0;
+  await renderAgingReport();
+  const p=document.querySelector('#page-aging-report .fpm');
+  if(p)p.scrollTop=st;
+};
+
+window._brFilters=window._brFilters||{};
+
+window.openBRColumnFilter=function(event,colKey){
+  event.preventDefault();
+  document.getElementById('br-col-filter-drop')?.remove();
+
+  const allRows=window._brAllRowsForFilter||[];
+  const getBRVal=(r,ck)=>ck.startsWith('month_')?r.monthVals[parseInt(ck.split('_')[1])]||0:r[ck];
+  const fmt2=n=>(n===0||n===null||n===undefined)?'0.00':Number(n).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const numericKeys=new Set(['sqn','montant','terms','remaining','prevPaid','month_0','month_1','month_2','month_3','month_4','month_5','month_6','month_7']);
+  const dateKeys=new Set(['dateBR','datePaye']);
+
+  // Collect unique display values + raw string key
+  const seen=new Map();
+  allRows.forEach(r=>{
+    const raw=getBRVal(r,colKey);
+    const key=String(raw??'');
+    if(!seen.has(key)){
+      let display;
+      if(numericKeys.has(colKey)) display=fmt2(raw);
+      else display=key||'(vide)';
+      seen.set(key,display);
+    }
+  });
+  const entries=[...seen.entries()].sort((a,b)=>{
+    if(numericKeys.has(colKey)) return Number(a[0])-Number(b[0]);
+    if(dateKeys.has(colKey)){
+      const pd=s=>{const[d,m,y]=(s||'').split('/');return new Date(y,m-1,d);};
+      return pd(a[0])-pd(b[0]);
+    }
+    return a[1].localeCompare(b[1]);
+  });
+
+  const activeVals=window._brFilters[colKey]||null;
+  const allChecked=!activeVals||activeVals.size===0;
+
+  const drop=document.createElement('div');
+  drop.id='br-col-filter-drop';
+  drop.style.cssText=`position:fixed;z-index:20000;background:#fff;border:1px solid #b0bec5;border-radius:8px;box-shadow:0 8px 32px rgba(20,40,80,0.18);min-width:200px;max-width:280px;font-family:var(--font);font-size:11px;`;
+  drop.innerHTML=`
+    <div style="padding:8px 12px;border-bottom:1px solid #e8edf4;font-weight:700;color:#1a3a6b;font-size:11px;display:flex;align-items:center;justify-content:space-between;">
+      <span>Filter</span>
+      <button onclick="document.getElementById('br-col-filter-drop').remove()" style="background:none;border:none;cursor:pointer;font-size:13px;color:#8099b0;line-height:1;">✕</button>
+    </div>
+    <div style="padding:6px 12px;border-bottom:1px solid #e8edf4;display:flex;gap:8px;">
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:#1a3a6b;font-weight:600;">
+        <input type="checkbox" id="brcf-all" ${allChecked?'checked':''} onchange="brCFToggleAll(this,'${colKey}')"> Select All
+      </label>
+    </div>
+    <div style="max-height:240px;overflow-y:auto;padding:4px 0;">
+      ${entries.map(([key,display])=>`
+        <label style="display:flex;align-items:center;gap:6px;padding:4px 12px;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#f0f4fb'" onmouseout="this.style.background=''">
+          <input type="checkbox" class="brcf-val" data-key="${key.replace(/"/g,'&quot;')}" ${allChecked||activeVals?.has(key)?'checked':''}>
+          <span style="color:#333;">${display}</span>
+        </label>`).join('')}
+    </div>
+    <div style="padding:8px 12px;border-top:1px solid #e8edf4;display:flex;gap:8px;">
+      <button onclick="brCFClear('${colKey}')" style="flex:1;padding:6px;background:#f0f4f9;border:1px solid #c8d4e8;border-radius:5px;cursor:pointer;font-size:10px;font-weight:600;color:#555;">Clear</button>
+      <button onclick="brCFApply('${colKey}')" style="flex:2;padding:6px;background:#1a3a6b;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:10px;font-weight:700;">Apply</button>
+    </div>`;
+
+  // Position near cursor, keep inside viewport
+  document.body.appendChild(drop);
+  const vw=window.innerWidth,vh=window.innerHeight;
+  const dw=drop.offsetWidth,dh=drop.offsetHeight;
+  let x=event.clientX,y=event.clientY+4;
+  if(x+dw>vw-8) x=vw-dw-8;
+  if(y+dh>vh-8) y=event.clientY-dh-4;
+  drop.style.left=x+'px';
+  drop.style.top=y+'px';
+
+  // Close on outside click
+  setTimeout(()=>document.addEventListener('mousedown',function _cls(e){
+    if(!drop.contains(e.target)){drop.remove();document.removeEventListener('mousedown',_cls);}
+  }),50);
+};
+
+window.brCFToggleAll=function(cb,colKey){
+  document.querySelectorAll('.brcf-val').forEach(el=>el.checked=cb.checked);
+};
+
+window.brCFApply=async function(colKey){
+  const checked=[...document.querySelectorAll('.brcf-val:checked')].map(el=>el.dataset.key);
+  const all=document.querySelectorAll('.brcf-val').length;
+  if(checked.length===all||checked.length===0){
+    delete window._brFilters[colKey];
+  } else {
+    window._brFilters[colKey]=new Set(checked);
+  }
+  document.getElementById('br-col-filter-drop')?.remove();
+  const pane=document.querySelector('#page-aging-report .fpm');
+  const st=pane?pane.scrollTop:0;
+  await renderAgingReport();
+  const p=document.querySelector('#page-aging-report .fpm');
+  if(p)p.scrollTop=st;
+};
+
+window.brCFClear=async function(colKey){
+  delete window._brFilters[colKey];
+  document.getElementById('br-col-filter-drop')?.remove();
+  const pane=document.querySelector('#page-aging-report .fpm');
+  const st=pane?pane.scrollTop:0;
+  await renderAgingReport();
+  const p=document.querySelector('#page-aging-report .fpm');
+  if(p)p.scrollTop=st;
+};
+
+window.arFilter=function(){
+  const q=(document.getElementById('ar-search').value||'').toLowerCase();
+  const paye=document.getElementById('ar-paye').value;
+  document.querySelectorAll('#ar-tbody tr').forEach(tr=>{
+    const txt=tr.textContent.toLowerCase();
+    const matchQ=!q||txt.includes(q);
+    const matchP=paye==='all'||txt.includes(paye.toLowerCase());
+    tr.style.display=(matchQ&&matchP)?'':'none';
+  });
+};
+
+// ── BR LOG ADD ROW & PAYE TOGGLE ───────────────────────────────
+window.toggleBRPaye=async function(br){
+  const cur=brLogPayeOverrides[br]||(window._brAllRows||[]).find(r=>r.br===br)?.paye||'Non';
+  brLogPayeOverrides[br]=cur.toLowerCase()==='oui'?'Non':'OUI';
+  await saveBRLogPayeOverrides();
+  const pane=document.querySelector('#page-aging-report .fpm');
+  const st=pane?pane.scrollTop:0;
+  await renderAgingReport();
+  const p=document.querySelector('#page-aging-report .fpm');
+  if(p)p.scrollTop=st;
+};
+
+function openAddBRRowModal(allRows){
+  const supplierTerms=window._brSupplierTerms||{};
+  const suppliers=Object.keys(supplierTerms).sort();
+  const nextSqn=allRows.length+1;
+
+  const existing=document.getElementById('add-br-modal');
+  if(existing) existing.remove();
+
+  const modal=document.createElement('div');
+  modal.id='add-br-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10002;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:var(--surface);border-radius:14px;width:620px;max-width:calc(100vw - 32px);padding:28px;box-shadow:0 20px 60px rgba(34,79,147,0.2);max-height:calc(100vh - 60px);overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Add BR Row</div>
+        <button onclick="document.getElementById('add-br-modal').remove()" style="width:28px;height:28px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.15);border-radius:6px;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <datalist id="br-supplier-list">${suppliers.map(s=>`<option value="${s}">`).join('')}</datalist>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">PO#</label>
+          <input id="abr-po" placeholder="CF26-000" oninput="window.abrPoChanged()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">BR#</label>
+          <input id="abr-br" placeholder="BR26-000" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Allocation</label>
+          <input id="abr-alloc" placeholder="Alu System, factory…" list="abr-alloc-list" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+          <datalist id="abr-alloc-list">${['Prototype','factory','Alu System','Non System','Alu Sheet','GI sheet','Bolts and Screws','rockwool','silicone','consumables','general cost','Glass'].map(a=>`<option value="${a}">`).join('')}</datalist>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Status Facture</label>
+          <select id="abr-statusfac" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+            <option value="Non Facturé">Non Facturé</option>
+            <option value="Facturé">Facturé</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Fournisseur</label>
+          <input id="abr-fourn" placeholder="Supplier name" list="br-supplier-list"
+            oninput="window.abrSupplierChanged()"
+            style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+          <div id="abr-supplier-hint" style="font-size:10px;color:#1a9458;margin-top:3px;display:none;">✓ Known supplier — Délai PMT auto-filled</div>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Délai PMT (jours)</label>
+          <input id="abr-terms" type="number" placeholder="120" oninput="window.abrCalcDatePaye()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Date BR</label>
+          <input id="abr-date" type="date" oninput="window.abrCalcDatePaye()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Montant (HT)</label>
+          <input id="abr-montant" type="number" placeholder="0.00" step="0.01" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Date à Payer <span style="font-weight:400;text-transform:none;">(auto)</span></label>
+          <input id="abr-datepaye" placeholder="auto from Date BR + Terms" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:#f4f8fd;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Payé</label>
+          <select id="abr-paye" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+            <option value="Non">Non</option>
+            <option value="OUI">OUI</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button onclick="document.getElementById('add-br-modal').remove()" style="flex:1;padding:10px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="window.saveNewBRRow(${nextSqn})" style="flex:2;padding:10px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Add Row</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  document.getElementById('abr-date').value=new Date().toISOString().split('T')[0];
+  window.abrCalcDatePaye();
+}
+
+window.abrPoChanged=function(){
+  const cf=document.getElementById('abr-po').value.trim();
+  const brRow=BR_LOG_BASE_RAW.find(r=>r[4]===cf);
+  const alloc=brRow?brRow[2]:(CF_ALLOC_MAP[cf]||(window._cfAllocMap||{})[cf]||null);
+  const el=document.getElementById('abr-alloc');
+  if(alloc){el.value=alloc;el.style.background='#f0faf4';}
+  else{el.style.background='';}
+};
+
+window.ebrPoChanged=function(){
+  const cf=document.getElementById('ebr-po').value.trim();
+  const brRow=BR_LOG_BASE_RAW.find(r=>r[4]===cf);
+  const alloc=brRow?brRow[2]:(CF_ALLOC_MAP[cf]||(window._cfAllocMap||{})[cf]||null);
+  const el=document.getElementById('ebr-alloc');
+  if(alloc){el.value=alloc;el.style.background='#f0faf4';}
+  else{el.style.background='';}
+};
+
+window.abrSupplierChanged=function(){
+  const val=document.getElementById('abr-fourn').value.trim().toUpperCase();
+  const map=window._brSupplierTerms||{};
+  const hint=document.getElementById('abr-supplier-hint');
+  if(map[val]!==undefined){
+    document.getElementById('abr-terms').value=map[val];
+    document.getElementById('abr-terms').style.background='#f0faf4';
+    hint.style.display='block';
+    window.abrCalcDatePaye();
+  }else{
+    document.getElementById('abr-terms').style.background='';
+    hint.style.display='none';
+  }
+};
+
+window.abrCalcDatePaye=function(){
+  const rawDate=document.getElementById('abr-date')?.value;
+  const terms=parseInt(document.getElementById('abr-terms')?.value)||0;
+  if(!rawDate) return;
+  const[y,m,d]=rawDate.split('-').map(Number);
+  const due=new Date(y,m-1,d+terms);
+  const dd=String(due.getDate()).padStart(2,'0');
+  const mm=String(due.getMonth()+1).padStart(2,'0');
+  const yy=due.getFullYear();
+  const el=document.getElementById('abr-datepaye');
+  if(el) el.value=`${dd}/${mm}/${yy}`;
+};
+
+window.saveNewBRRow=async function(sqn){
+  const fourn=document.getElementById('abr-fourn').value.trim();
+  const po=document.getElementById('abr-po').value.trim();
+  const br=document.getElementById('abr-br').value.trim();
+  const alloc=document.getElementById('abr-alloc').value.trim();
+  const statusFac=document.getElementById('abr-statusfac').value;
+  const terms=parseInt(document.getElementById('abr-terms').value)||0;
+  const rawDate=document.getElementById('abr-date').value;
+  const montant=parseFloat(document.getElementById('abr-montant').value)||0;
+  const datePaye=document.getElementById('abr-datepaye').value;
+  const paye=document.getElementById('abr-paye').value;
+
+  if(!fourn){toast('Fournisseur is required');return;}
+  if(!rawDate){toast('Date BR is required');return;}
+  if(!br){toast('BR# is required');return;}
+
+  const[y,m,d]=rawDate.split('-');
+  const dateBR=`${d}/${m}/${y}`;
+  const computedDatePaye=datePaye||dateBR;
+
+  const newRow={projet:'STC',alloc,fourn:fourn.toUpperCase(),po,br,dateBR,montant,statusFac,terms,datePaye:computedDatePaye,paye};
+  brLogCustomRows.push(newRow);
+  await saveBRLogCustomRows();
+  document.getElementById('add-br-modal').remove();
+  toast('Row added ✓');
+  await renderAgingReport();
+};
+
+window.openEditBRRowModal=function(sqn,isCustom,customIdx){
+  const allRows=window._brAllRows||[];
+  const r=allRows.find(x=>x.sqn===sqn);
+  if(!r) return;
+  const suppliers=[...new Set(allRows.map(x=>x.fourn).filter(Boolean))].sort();
+  const existing=document.getElementById('edit-br-modal');
+  if(existing) existing.remove();
+  const[dd,mm,yyyy]=r.dateBR.split('/');
+  const isoDate=`${yyyy}-${mm}-${dd}`;
+  const modal=document.createElement('div');
+  modal.id='edit-br-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10002;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:var(--surface);border-radius:14px;width:620px;max-width:calc(100vw - 32px);padding:28px;box-shadow:0 20px 60px rgba(34,79,147,0.2);max-height:calc(100vh - 60px);overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Edit BR Row — SQN ${sqn}</div>
+        <button onclick="document.getElementById('edit-br-modal').remove()" style="width:28px;height:28px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.15);border-radius:6px;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <datalist id="ebr-supplier-list">${suppliers.map(s=>`<option value="${s}">`).join('')}</datalist>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">PO#</label>
+          <input id="ebr-po" value="${r.po}" oninput="window.ebrPoChanged()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">BR#</label>
+          <input id="ebr-br" value="${r.br}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Allocation</label>
+          <input id="ebr-alloc" value="${r.alloc}" list="ebr-alloc-list" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+          <datalist id="ebr-alloc-list">${['Prototype','factory','Alu System','Non System','Alu Sheet','GI sheet','Bolts and Screws','rockwool','silicone','consumables','general cost','Glass'].map(a=>`<option value="${a}">`).join('')}</datalist>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Status Facture</label>
+          <select id="ebr-statusfac" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+            <option value="Non Facturé"${r.statusFac==='Non Facturé'?' selected':''}>Non Facturé</option>
+            <option value="Facturé"${r.statusFac==='Facturé'?' selected':''}>Facturé</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Fournisseur</label>
+          <input id="ebr-fourn" value="${r.fourn}" list="ebr-supplier-list" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Délai PMT (jours)</label>
+          <input id="ebr-terms" type="number" value="${r.terms}" oninput="ebrCalcDatePaye()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Date BR</label>
+          <input id="ebr-date" type="date" value="${isoDate}" oninput="ebrCalcDatePaye()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Montant (HT)</label>
+          <input id="ebr-montant" type="number" step="0.01" value="${r.montant}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Date à Payer <span style="font-weight:400;text-transform:none;">(auto)</span></label>
+          <input id="ebr-datepaye" value="${r.datePaye}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:#f4f8fd;outline:none;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Payé</label>
+          <select id="ebr-paye" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+            <option value="Non"${r.paye!=='OUI'?' selected':''}>Non</option>
+            <option value="OUI"${r.paye==='OUI'?' selected':''}>OUI</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button onclick="document.getElementById('edit-br-modal').remove()" style="flex:1;padding:10px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="saveEditedBRRow(${sqn},${isCustom},${customIdx})" style="flex:2;padding:10px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Save Changes</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+};
+
+window.ebrCalcDatePaye=function(){
+  const rawDate=document.getElementById('ebr-date')?.value;
+  const terms=parseInt(document.getElementById('ebr-terms')?.value)||0;
+  if(!rawDate) return;
+  const[y,m,d]=rawDate.split('-').map(Number);
+  const due=new Date(y,m-1,d+terms);
+  const dd=String(due.getDate()).padStart(2,'0');
+  const mm=String(due.getMonth()+1).padStart(2,'0');
+  const yy=due.getFullYear();
+  const el=document.getElementById('ebr-datepaye');
+  if(el) el.value=`${dd}/${mm}/${yy}`;
+};
+
+window.saveEditedBRRow=async function(sqn,isCustom,customIdx){
+  const fourn=document.getElementById('ebr-fourn').value.trim().toUpperCase();
+  const po=document.getElementById('ebr-po').value.trim();
+  const br=document.getElementById('ebr-br').value.trim();
+  const alloc=document.getElementById('ebr-alloc').value.trim();
+  const statusFac=document.getElementById('ebr-statusfac').value;
+  const terms=parseInt(document.getElementById('ebr-terms').value)||0;
+  const rawDate=document.getElementById('ebr-date').value;
+  const montant=parseFloat(document.getElementById('ebr-montant').value)||0;
+  const datePaye=document.getElementById('ebr-datepaye').value;
+  const paye=document.getElementById('ebr-paye').value;
+  if(!fourn||!rawDate){toast('Fournisseur and date are required');return;}
+  const[y,m,d]=rawDate.split('-');
+  const dateBR=`${d}/${m}/${y}`;
+  const updated={projet:'STC',alloc,fourn,po,br,dateBR,montant,statusFac,terms,datePaye:datePaye||dateBR,paye};
+  if(isCustom){
+    brLogCustomRows[customIdx]={...brLogCustomRows[customIdx],...updated};
+    await saveBRLogCustomRows();
+  } else {
+    brLogBaseOverrides[sqn]=updated;
+    await saveBRLogBaseOverrides();
+  }
+  document.getElementById('edit-br-modal').remove();
+  toast('Saved ✓');
+  await renderAgingReport();
+};
+
+window.deleteBRRow=async function(customIdx){
+  if(!confirm('Delete this row?')) return;
+  brLogCustomRows.splice(customIdx,1);
+  await saveBRLogCustomRows();
+  toast('Row deleted');
+  await renderAgingReport();
+};
+
+window.deleteBRBaseRow=async function(sqn){
+  if(!confirm('Delete this row?')) return;
+  if(!brLogDeletedSqns.includes(sqn)) brLogDeletedSqns.push(sqn);
+  await saveBRLogDeletedSqns();
+  toast('Row deleted');
+  await renderAgingReport();
+};
+
+// ── PO LOG ───────────────────────────────────────────────────
+let poLogCustomRows=[];
+let poLogBaseOverrides={};
+let poLogDeletedSqns=[];
+
+async function loadPOLogCustomRows(){
+  try{
+    const {data,error}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','po-log-custom-rows');
+    if(!error && data && data.length>0){
+      try{ poLogCustomRows=JSON.parse(data[0].value)||[]; }catch(e){ poLogCustomRows=[]; }
+    }
+  }catch(e){}
+  // Also check localStorage fallback
+  try{
+    const v=localStorage.getItem('po-log-custom-rows');
+    if(v && poLogCustomRows.length===0) poLogCustomRows=JSON.parse(v)||[];
+  }catch(e){}
+}
+
+async function savePOLogCustomRows(){
+  const json=JSON.stringify(poLogCustomRows);
+  try{ localStorage.setItem('po-log-custom-rows',json); }catch(e){}
+  try{
+    const row={project:'shift-tower',key:'po-log-custom-rows',value:json,updated_at:new Date().toISOString()};
+    let {error}=await sb.from('project_info').upsert(row,{onConflict:'project,key'});
+    if(error){
+      await sb.from('project_info').delete().eq('project','shift-tower').eq('key','po-log-custom-rows');
+      await sb.from('project_info').insert(row);
+    }
+  }catch(e){}
+}
+
+async function loadPOLogBaseOverrides(){
+  try{
+    const{data,error}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','po-log-base-overrides');
+    if(!error&&data&&data.length>0) try{poLogBaseOverrides=JSON.parse(data[0].value)||{};}catch(e){poLogBaseOverrides={};}
+  }catch(e){}
+  try{const v=localStorage.getItem('po-log-base-overrides');if(v&&Object.keys(poLogBaseOverrides).length===0)poLogBaseOverrides=JSON.parse(v)||{};}catch(e){}
+}
+
+async function savePOLogBaseOverrides(){
+  const json=JSON.stringify(poLogBaseOverrides);
+  try{localStorage.setItem('po-log-base-overrides',json);}catch(e){}
+  try{
+    const row={project:'shift-tower',key:'po-log-base-overrides',value:json,updated_at:new Date().toISOString()};
+    let{error}=await sb.from('project_info').upsert(row,{onConflict:'project,key'});
+    if(error){
+      await sb.from('project_info').delete().eq('project','shift-tower').eq('key','po-log-base-overrides');
+      await sb.from('project_info').insert(row);
+    }
+  }catch(e){}
+}
+
+async function loadPOLogDeletedSqns(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','po-log-deleted-sqns');
+    if(data&&data.length>0) try{poLogDeletedSqns=JSON.parse(data[0].value)||[];}catch(e){poLogDeletedSqns=[];}
+  }catch(e){}
+  try{const v=localStorage.getItem('po-log-deleted-sqns');if(v&&poLogDeletedSqns.length===0)poLogDeletedSqns=JSON.parse(v)||[];}catch(e){}
+}
+
+async function savePOLogDeletedSqns(){
+  const json=JSON.stringify(poLogDeletedSqns);
+  try{localStorage.setItem('po-log-deleted-sqns',json);}catch(e){}
+  try{
+    const row={project:'shift-tower',key:'po-log-deleted-sqns',value:json,updated_at:new Date().toISOString()};
+    let{error}=await sb.from('project_info').upsert(row,{onConflict:'project,key'});
+    if(error){
+      await sb.from('project_info').delete().eq('project','shift-tower').eq('key','po-log-deleted-sqns');
+      await sb.from('project_info').insert(row);
+    }
+  }catch(e){}
+}
+
+function openAddPORowModal(allRows){
+  // Build unique supplier→terms map from all existing rows
+  const supplierTerms={};
+  allRows.forEach(r=>{ if(r.supplier) supplierTerms[r.supplier.toUpperCase()]=r.terms; });
+  const suppliers=Object.keys(supplierTerms).sort();
+  const nextSqn=allRows.length+1;
+
+  const existing=document.getElementById('add-po-modal');
+  if(existing) existing.remove();
+
+  const modal=document.createElement('div');
+  modal.id='add-po-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10002;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:var(--surface);border-radius:14px;width:560px;max-width:calc(100vw - 32px);padding:28px;box-shadow:0 20px 60px rgba(34,79,147,0.2);max-height:calc(100vh - 60px);overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Add PO Row</div>
+        <button onclick="document.getElementById('add-po-modal').remove()" style="width:28px;height:28px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.15);border-radius:6px;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <datalist id="po-supplier-list">${suppliers.map(s=>`<option value="${s}">`).join('')}</datalist>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">CF#</label>
+          <input id="apo-cf" placeholder="CF26-000" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Allocation</label>
+          <input id="apo-alloc" placeholder="Alu System, factory…" list="apo-alloc-list" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+          <datalist id="apo-alloc-list">${['Prototype','factory','Alu System','Non System','Alu Sheet','GI sheet','Bolts and Screws','rockwool','silicone','consumables','General Cost','Glass','AEV','Engineering'].map(a=>`<option value="${a}">`).join('')}</datalist>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Fournisseur</label>
+          <input id="apo-supplier" placeholder="Supplier name" list="po-supplier-list"
+            oninput="apoPOSupplierChanged()"
+            style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+          <div id="apo-supplier-hint" style="font-size:10px;color:#1a9458;margin-top:3px;display:none;">✓ Known supplier — délai PMT auto-filled</div>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Délai PMT (jours)</label>
+          <input id="apo-terms" type="number" placeholder="120" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Date</label>
+          <input id="apo-date" type="date" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Total HT</label>
+          <input id="apo-ht" type="number" placeholder="0.00" step="0.01" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Total Soldé</label>
+          <input id="apo-solde" type="number" placeholder="0.00" step="0.01" oninput="apoCalcRem()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Total Rem HT <span style="font-weight:400;text-transform:none;">(= Total HT − Total Soldé, auto-computed)</span></label>
+          <input id="apo-rem" type="number" placeholder="0.00" step="0.01" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:#f4f8fd;outline:none;" readonly>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Status</label>
+          <select id="apo-status" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+            <option value="automatique" selected>Automatique</option>
+            <option value="c'est soldé">C'est Soldé</option>
+            <option value="non soldé">Non Soldé</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button onclick="document.getElementById('add-po-modal').remove()" style="flex:1;padding:10px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="saveNewPORow(${nextSqn})" style="flex:2;padding:10px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Add Row</button>
+      </div>
+    </div>`;
+
+  // Store supplierTerms map on window for the callback
+  window._apoSupplierTerms=supplierTerms;
+  document.body.appendChild(modal);
+  // Set today's date as default
+  document.getElementById('apo-date').value=new Date().toISOString().split('T')[0];
+}
+
+window.apoPOSupplierChanged=function(){
+  const val=document.getElementById('apo-supplier').value.trim().toUpperCase();
+  const map=window._apoSupplierTerms||{};
+  const hint=document.getElementById('apo-supplier-hint');
+  if(map[val]!==undefined){
+    document.getElementById('apo-terms').value=map[val];
+    document.getElementById('apo-terms').style.background='#f0faf4';
+    hint.style.display='block';
+  } else {
+    document.getElementById('apo-terms').style.background='';
+    hint.style.display='none';
+  }
+};
+
+window.apoCalcRem=function(){
+  const ht=parseFloat(document.getElementById('apo-ht').value)||0;
+  const sol=parseFloat(document.getElementById('apo-solde').value)||0;
+  document.getElementById('apo-rem').value=(ht-sol).toFixed(2);
+};
+
+window.saveNewPORow=async function(sqn){
+  const cf=document.getElementById('apo-cf').value.trim();
+  const alloc=document.getElementById('apo-alloc').value.trim();
+  const supplier=document.getElementById('apo-supplier').value.trim();
+  const terms=parseInt(document.getElementById('apo-terms').value)||0;
+  const rawDate=document.getElementById('apo-date').value; // yyyy-mm-dd
+  const ht=parseFloat(document.getElementById('apo-ht').value)||0;
+  const sol=parseFloat(document.getElementById('apo-solde').value)||0;
+  const rem=ht-sol;
+  const status=document.getElementById('apo-status').value;
+
+  if(!supplier){toast('Fournisseur is required');return;}
+  if(!rawDate){toast('Date is required');return;}
+
+  // Convert date yyyy-mm-dd → dd/mm/yyyy for display
+  const [y,m,d]=rawDate.split('-');
+  const displayDate=`${d}/${m}/${y}`;
+
+  const newRow={sqn,project:'STC',allocation:alloc,cf,supplier:supplier.toUpperCase(),terms,date:displayDate,totalHT:ht,_manualStatus:status};
+  poLogCustomRows.push(newRow);
+  await savePOLogCustomRows();
+  document.getElementById('add-po-modal').remove();
+  toast('Row added ✓');
+  renderPOLog();
+};
+
+window.openEditPORowModal=function(sqn,isCustom,customIdx){
+  const allRows=window._poAllRows||[];
+  const r=allRows.find(x=>x.sqn===sqn);
+  if(!r) return;
+  const suppliers=[...new Set(allRows.map(x=>x.supplier).filter(Boolean))].sort();
+  const existing=document.getElementById('edit-po-modal');
+  if(existing) existing.remove();
+  // Convert dd/mm/yyyy → yyyy-mm-dd for date input
+  const[dd,mm,yyyy]=r.date.split('/');
+  const isoDate=`${yyyy}-${mm}-${dd}`;
+  const modal=document.createElement('div');
+  modal.id='edit-po-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10002;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:var(--surface);border-radius:14px;width:560px;max-width:calc(100vw - 32px);padding:28px;box-shadow:0 20px 60px rgba(34,79,147,0.2);max-height:calc(100vh - 60px);overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Edit PO Row — SQN ${sqn}</div>
+        <button onclick="document.getElementById('edit-po-modal').remove()" style="width:28px;height:28px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.15);border-radius:6px;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <datalist id="epo-supplier-list">${suppliers.map(s=>`<option value="${s}">`).join('')}</datalist>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">CF#</label>
+          <input id="epo-cf" value="${r.cf}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Allocation</label>
+          <input id="epo-alloc" value="${r.allocation}" list="apo-alloc-list2" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+          <datalist id="apo-alloc-list2">${['Prototype','factory','Alu System','Non System','Alu Sheet','GI sheet','Bolts and Screws','rockwool','silicone','consumables','General Cost','Glass','AEV','Engineering'].map(a=>`<option value="${a}">`).join('')}</datalist>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Fournisseur</label>
+          <input id="epo-supplier" value="${r.supplier}" list="epo-supplier-list" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Délai PMT (jours)</label>
+          <input id="epo-terms" type="number" value="${r.terms}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Date</label>
+          <input id="epo-date" type="date" value="${isoDate}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Total HT</label>
+          <input id="epo-ht" type="number" step="0.01" value="${r.totalHT}" oninput="epoCalcRem()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Total Soldé <span style="font-weight:400;text-transform:none;color:#8099b0;">(type - to revert to auto BR formula)</span></label>
+          <input id="epo-solde" type="text" value="${!isCustom && poLogBaseOverrides[sqn]?.totalSolde===undefined ? '-' : r.totalSolde}" oninput="epoCalcRem()" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Total Rem HT <span style="font-weight:400;text-transform:none;">(auto-computed)</span></label>
+          <input id="epo-rem" type="number" step="0.01" value="${r.totalRemHT}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;background:#f4f8fd;outline:none;" readonly>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Status</label>
+          <select id="epo-status" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;">
+            <option value="automatique"${(!isCustom&&(poLogBaseOverrides[sqn]?.status===undefined||poLogBaseOverrides[sqn]?.status==='automatique'))||(isCustom&&(!r._manualStatus||r._manualStatus==='automatique'))?' selected':''}>Automatique</option>
+            <option value="c'est soldé"${(!isCustom&&poLogBaseOverrides[sqn]?.status==="c'est soldé")||(isCustom&&r._manualStatus==="c'est soldé")?' selected':''}>C'est Soldé</option>
+            <option value="non soldé"${(!isCustom&&poLogBaseOverrides[sqn]?.status==='non soldé')||(isCustom&&r._manualStatus==='non soldé')?' selected':''}>Non Soldé</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button onclick="document.getElementById('edit-po-modal').remove()" style="flex:1;padding:10px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="saveEditedPORow(${sqn},${isCustom},${customIdx})" style="flex:2;padding:10px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Save Changes</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+};
+
+window.epoCalcRem=function(){
+  const ht=parseFloat(document.getElementById('epo-ht').value)||0;
+  const solRaw=document.getElementById('epo-solde').value.trim();
+  if(solRaw==='-'){document.getElementById('epo-rem').value='auto';return;}
+  const sol=parseFloat(solRaw)||0;
+  document.getElementById('epo-rem').value=(ht-sol).toFixed(2);
+};
+
+window.saveEditedPORow=async function(sqn,isCustom,customIdx){
+  const cf=document.getElementById('epo-cf').value.trim();
+  const alloc=document.getElementById('epo-alloc').value.trim();
+  const supplier=document.getElementById('epo-supplier').value.trim().toUpperCase();
+  const terms=parseInt(document.getElementById('epo-terms').value)||0;
+  const rawDate=document.getElementById('epo-date').value;
+  const ht=parseFloat(document.getElementById('epo-ht').value)||0;
+  const status=document.getElementById('epo-status').value;
+  if(!supplier||!rawDate){toast('Fournisseur and date are required');return;}
+  const[y,m,d]=rawDate.split('-');
+  const displayDate=`${d}/${m}/${y}`;
+  const statusVal=document.getElementById('epo-status').value;
+  if(isCustom){
+    poLogCustomRows[customIdx]={...poLogCustomRows[customIdx],cf,allocation:alloc,supplier,terms,date:displayDate,totalHT:ht,_manualStatus:statusVal};
+    await savePOLogCustomRows();
+  } else {
+    const solRaw=document.getElementById('epo-solde').value.trim();
+    const isAuto=solRaw==='-';
+    const existing=poLogBaseOverrides[sqn]||{};
+    if(isAuto){
+      const{totalSolde:_r1,totalRemHT:_r2,...rest}=existing;
+      poLogBaseOverrides[sqn]={...rest,cf,allocation:alloc,supplier,terms,date:displayDate,totalHT:ht,status:statusVal};
+    } else {
+      const sol=parseFloat(solRaw)||0;
+      const rem=ht-sol;
+      poLogBaseOverrides[sqn]={...existing,cf,allocation:alloc,supplier,terms,date:displayDate,totalHT:ht,totalRemHT:rem,totalSolde:sol,status:statusVal};
+    }
+    await savePOLogBaseOverrides();
+  }
+  document.getElementById('edit-po-modal').remove();
+  toast('Saved ✓');
+  renderPOLog();
+};
+
+window.deletePORow=async function(customIdx){
+  if(!confirm('Delete this row?')) return;
+  poLogCustomRows.splice(customIdx,1);
+  await savePOLogCustomRows();
+  toast('Row deleted');
+  renderPOLog();
+};
+
+window.deletePOBaseRow=async function(sqn){
+  if(!confirm('Delete this row?')) return;
+  if(!poLogDeletedSqns.includes(sqn)) poLogDeletedSqns.push(sqn);
+  await savePOLogDeletedSqns();
+  toast('Row deleted');
+  renderPOLog();
+};
+
+async function renderPOLog(){
+  await Promise.all([loadPOLogCustomRows(),loadPOLogBaseOverrides(),loadPOLogDeletedSqns()]);
+  const cont=document.getElementById('page-po-log');
+
+  // [sqn,project,allocation,cf,supplier,terms,date,totalHT,totalRemHT,totalSolde,status]
+  const RAW=[
+    [1,'STC','Prototype','CF25-2173','SEPALUMIC MAROC',120,'12/09/2025',12624.88,0.57,12624.31,"c'est soldé"],
+    [2,'STC','Prototype','CF25-2226','ASTIGLASS',60,'18/09/2025',1094.50,-39971.50,41066.00,"c'est soldé"],
+    [3,'STC','Alu System','CF25-2244','ALUMINIUM DU MAROC',120,'19/09/2025',6255874.83,4298377.09,1957497.74,'non soldé'],
+    [4,'STC','Prototype','CF25-2257','CIPLI INDUSTRIE',0,'22/09/2025',1800.00,0,1800.00,"c'est soldé"],
+    [5,'STC','Prototype','CF25-2516','STAC MAROC',120,'20/10/2025',5310.00,0,5310.00,"c'est soldé"],
+    [6,'STC','Prototype','CF25-2533','PROFESSIONNEL VITRAGE',120,'21/10/2025',25095.46,0.01,25095.45,"c'est soldé"],
+    [7,'STC','Prototype','CF25-2585','ARMETAL',120,'24/10/2025',2280.00,0,2280.00,"c'est soldé"],
+    [8,'STC','Alu System','CF25-2661','ALUMINIUM DU MAROC',120,'03/11/2025',849899.67,669572.01,180327.66,'non soldé'],
+    [9,'STC','factory','CF25-2703','FIMADIS',120,'10/11/2025',12490.00,0,12490.00,"c'est soldé"],
+    [10,'STC','factory','CF25-2704','BIA INDUSTRIE',120,'10/11/2025',2000.00,2000.00,0,'non soldé'],
+    [11,'STC','factory','CF25-2705','AVAL',120,'10/11/2025',1469.60,0,1469.60,"c'est soldé"],
+    [12,'STC','Bolts and Screws','CF25-2708','HILTI MAROC',120,'10/11/2025',64000.00,26240.00,37760.00,'non soldé'],
+    [13,'STC','factory','CF25-2710','NOOR TOOLS',120,'10/11/2025',15675.00,15675.00,0,'non soldé'],
+    [14,'STC','factory','CF25-2711','ATLAS SOUSS',30,'10/11/2025',45000.00,0,45000.00,"c'est soldé"],
+    [15,'STC','General Cost','CF25-2745','LEICA GEOSYSTEMS',120,'13/11/2025',118000.00,0,118000.00,"c'est soldé"],
+    [16,'STC','Glass','CF25-2747','ASTIGLASS',60,'13/11/2025',302100.00,302100.00,0,'non soldé'],
+    [17,'STC','Alu System','CF25-2784','ALUMINIUM DU MAROC',120,'19/11/2025',112515.16,-0.08,112515.24,"c'est soldé"],
+    [18,'STC','consumables','CF25-2952','CABALLUS INDUSTRIE',120,'05/12/2025',11401.10,0,11401.10,"c'est soldé"],
+    [19,'STC','factory','CF25-2953','AVAL',120,'05/12/2025',7678.39,1061.65,6616.74,'non soldé'],
+    [20,'STC','Bolts and Screws','CF25-2955','HILTI MAROC',120,'05/12/2025',13117.44,0,13117.44,"c'est soldé"],
+    [21,'STC','Bolts and Screws','CF25-3031','HILTI MAROC',120,'15/12/2025',79422.00,79422.00,0,'non soldé'],
+    [22,'STC','factory','CF25-3114','CIBEX SARL AU',120,'23/12/2025',2190.00,0,2190.00,"c'est soldé"],
+    [23,'STC','rockwool','CF25-3129','MULTIPROBAT',120,'24/12/2025',557085.60,466322.40,90763.20,'non soldé'],
+    [24,'STC','rockwool','CF26-34','FOURNIDIV',120,'07/01/2026',1246.00,0,1246.00,"c'est soldé"],
+    [25,'STC','Engineering','CF26-48','OPEN FACADES AND ENGINEERING',120,'08/01/2026',0,0,0,"c'est soldé"],
+    [26,'STC','AEV','CF26-68','THOMAS BELL-WRIGHT',120,'13/01/2026',212620.01,212620.01,0,'non soldé'],
+    [27,'STC','factory','CF26-69','DELTA STEEL',120,'13/01/2026',2249.99,0,2249.99,"c'est soldé"],
+    [28,'STC','Non System','CF26-188','DECOUPE LASER PLUS',120,'29/01/2026',24570.00,0,24570.00,"c'est soldé"],
+    [29,'STC','Non System','CF26-189','DECOUPE LASER PLUS',120,'29/01/2026',14300.00,0,14300.00,"c'est soldé"],
+    [30,'STC','consumables','CF26-207','FIRST PROTECTION',120,'30/01/2026',3037.50,3037.50,0,'non soldé'],
+    [31,'STC','factory','CF26-224','SOCIETE IMPORT EXPORT DOUTILLAGE SEFRAOUI',120,'02/02/2026',1100.00,0,1100.00,"c'est soldé"],
+    [32,'STC','AEV','CF26-244','WKFACADES',120,'04/02/2026',6530.00,6530.00,0,'non soldé'],
+    [33,'STC','Bolts and Screws','CF26-249','HILTI MAROC',120,'04/02/2026',32000.00,32000.00,0,'non soldé'],
+    [34,'STC','Prototype','CF26-256','LEKDAM SERVICE',120,'04/02/2026',10000.00,10000.00,0,'non soldé'],
+    [35,'STC','factory','CF26-287','SODEPRIM',120,'06/02/2026',1375.00,0,1375.00,"c'est soldé"],
+    [36,'STC','Non System','CF26-289','BATIFER',120,'06/02/2026',69120.00,0,69120.00,"c'est soldé"],
+    [37,'STC','rockwool','CF26-290','MAZECH BUILDING',120,'06/02/2026',59900.00,59900.00,0,'non soldé'],
+    [38,'STC','Non System','CF26-291','DECOUPE LASER PLUS',120,'06/02/2026',41104.00,11050.00,30054.00,'non soldé'],
+    [39,'STC','Non System','CF26-292','DECOUPE LASER PLUS',120,'06/02/2026',16900.00,16900.00,0,'non soldé'],
+    [40,'STC','Non System','CF26-293','DECOUPE LASER PLUS',120,'06/02/2026',39000.00,6500.00,32500.00,'non soldé'],
+    [41,'STC','Non System','CF26-294','DECOUPE LASER PLUS',120,'06/02/2026',325.00,0,325.00,"c'est soldé"],
+    [42,'STC','Non System','CF26-295','FEN MAC',120,'06/02/2026',3074.98,0,3074.98,"c'est soldé"],
+    [43,'STC','Alu Sheet','CF26-296','DETAIL INOX MAROC',120,'06/02/2026',1594200.22,1587848.82,6351.40,'non soldé'],
+    [44,'STC','Alu Sheet','CF26-297','DETAIL INOX MAROC',120,'06/02/2026',1046710.72,1046710.72,0,'non soldé'],
+    [45,'STC','Non System','CF26-300','ALUMINIUM DU MAROC',120,'06/02/2026',70711.21,37770.51,32940.70,'non soldé'],
+    [46,'STC','Bolts and Screws','CF26-305','HILTI MAROC',120,'09/02/2026',10012.80,0,10012.80,"c'est soldé"],
+    [47,'STC','Bolts and Screws','CF26-314','HILTI MAROC',120,'10/02/2026',11821.30,137.24,11684.06,'non soldé'],
+    [48,'STC','Bolts and Screws','CF26-356','TOUVIS',120,'16/02/2026',38068.54,247.50,37821.04,'non soldé'],
+    [49,'STC','silicone','CF26-362','MULTICOLLE',120,'17/02/2026',615450.00,615450.00,0,'non soldé'],
+    [50,'STC','silicone','CF26-369','SOUDAL',120,'17/02/2026',52898.00,18023.72,34874.28,'non soldé'],
+    [51,'STC','Bolts and Screws','CF26-421','HERBA SARL',120,'23/02/2026',169063.84,169063.84,0,'non soldé'],
+    [52,'STC','factory','CF26-444','SOUDAL',120,'25/02/2026',680.94,-75.66,756.60,"c'est soldé"],
+    [53,'STC','GI sheet','CF26-455','TUBE ET PROFIL',120,'27/02/2026',319303.30,319303.30,0,'non soldé'],
+    [54,'STC','GI sheet','CF26-456','TUBE ET PROFIL',120,'27/02/2026',319303.30,319303.30,0,'non soldé'],
+    [55,'STC','GI sheet','CF26-457','TUBE ET PROFIL',120,'27/02/2026',319303.30,319303.30,0,'non soldé'],
+    [56,'STC','GI sheet','CF26-458','TUBE ET PROFIL',120,'27/02/2026',319303.30,319303.30,0,'non soldé'],
+    [57,'STC','non system','CF26-473','FEN MAC',120,'03/03/2026',1041.66,0,1041.66,"c'est soldé"],
+    [58,'STC','silicone','CF26-495','SOUDAL',120,'05/03/2026',1166.40,0,1166.40,"c'est soldé"],
+    [59,'STC','Alu Sheet','CF26-497','IMARAQ TRADING',120,'05/03/2026',185895.00,185895.00,0,'non soldé'],
+    [60,'STC','factory','CF26-504','TECHNIQUE ACIER',120,'06/03/2026',1500.00,0,1500.00,"c'est soldé"],
+    [61,'STC','Alu Sheet','CF26-512','SEPALUMIC MAROC',120,'06/03/2026',987.00,210.00,777.00,'non soldé'],
+    [62,'STC','GI sheet','CF26-523','DELTA STEEL',120,'09/03/2026',625.00,0,625.00,"c'est soldé"],
+    [63,'STC','Bolts and Screws','CF26-534','HILTI MAROC',120,'10/03/2026',3054.00,0,3054.00,"c'est soldé"],
+    [64,'STC','Bolts and Screws','CF26-587','FOURNIDIV',120,'17/03/2026',1728.00,0,1728.00,"c'est soldé"],
+    [65,'STC','rockwool','CF26-595','MAZECH BUILDING',120,'19/03/2026',75600.00,75600.00,0,'non soldé'],
+    [66,'STC','consumables','CF26-611','CORDERIE DOR MAROC',120,'24/03/2026',125239.45,125239.45,0,'non soldé'],
+    [67,'STC','non system','CF26-612','FEN MAC',120,'24/03/2026',20833.20,20833.20,0,'non soldé'],
+    [68,'STC','consumables','CF26-617','FEN MAC',120,'25/03/2026',2374.98,2374.98,0,'non soldé'],
+    [69,'STC','factory','CF26-618','TECHNIQUE ACIER',120,'25/03/2026',800.00,800.00,0,'non soldé'],
+    [70,'STC','consumables','CF26-619','CORDERIE DOR MAROC',120,'25/03/2026',51676.80,51676.80,0,'non soldé'],
+  ];
+
+  // Build global CF→allocation map for use in BR log forms
+  window._cfAllocMap = {};
+  RAW.forEach(r=>{ window._cfAllocMap[r[3]] = r[2]; });
+  (poLogCustomRows||[]).forEach(r=>{ if(r.cf) window._cfAllocMap[r.cf] = r.allocation; });
+
+  function fmt(n){if(n===0)return'0.00';return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function parseDate(s){const[d,m,y]=s.split('/');return new Date(y,m-1,d);}
+
+  // Merge base rows with user-added custom rows
+  const baseRows=RAW.filter(r=>!poLogDeletedSqns.includes(r[0])).map(r=>{
+    const[sqn,project,allocation,cf,supplier,terms,date,totalHT,totalRemHT,totalSolde,status]=r;
+    const ov=poLogBaseOverrides[sqn]||{};
+    const effectiveCF=ov.cf||cf;
+    const effectiveHT=ov.totalHT!==undefined?ov.totalHT:totalHT;
+    // totalSolde: use manual override if set, otherwise auto-compute via brSumif
+    const computedSolde=ov.totalSolde!==undefined ? ov.totalSolde : brSumif(effectiveCF);
+    const computedRem=effectiveHT-computedSolde;
+    const autoStatus=computedRem<=1?"c'est soldé":'non soldé';
+    const manualStatus=ov.status&&ov.status!=='automatique'?ov.status:null;
+    const finalStatus=manualStatus||autoStatus;
+    return{sqn,project:ov.project||project,allocation:ov.allocation||allocation,cf:effectiveCF,supplier:ov.supplier||supplier,terms:ov.terms!==undefined?ov.terms:terms,date:ov.date||date,totalHT:effectiveHT,totalRemHT:computedRem,totalSolde:computedSolde,status:finalStatus,dateObj:parseDate(ov.date||date),isCustom:false};
+  });
+  const customMapped=poLogCustomRows.map((r,i)=>{
+    const computedSolde=brSumif(r.cf);
+    const computedRem=(r.totalHT||0)-computedSolde;
+    const autoStatus=computedRem<=1?"c'est soldé":'non soldé';
+    const manualStatus=r._manualStatus&&r._manualStatus!=='automatique'?r._manualStatus:null;
+    return{...r,sqn:baseRows.length+i+1,customIdx:i,dateObj:parseDate(r.date),isCustom:true,totalSolde:computedSolde,totalRemHT:computedRem,status:manualStatus||autoStatus};
+  });
+  const rows=[...baseRows,...customMapped];
+
+  // Cutoff selector state — persists across re-renders
+  const today=new Date();
+  if(!window._poCutoffVal){
+    // Default: last completed month
+    const pm=today.getMonth()===0?12:today.getMonth();
+    const py=today.getMonth()===0?today.getFullYear()-1:today.getFullYear();
+    window._poCutoffVal=`${py}-${pm}`;
+  }
+  const[cY,cM]=window._poCutoffVal.split('-').map(Number);
+  const cutoffDate=new Date(cY,cM,1); // first day of month AFTER chosen month
+  const cutoffMonthLabel=new Date(cY,cM-1,1).toLocaleString('en-US',{month:'long',year:'numeric'});
+
+  // "This month" range: 1st to today
+  const thisMonStart=new Date(today.getFullYear(),today.getMonth(),1);
+  const thisMonLabel=today.toLocaleString('en-US',{month:'long'});
+  const thisMonthDayRange=`${thisMonLabel} 1\u2013${today.getDate()}, ${today.getFullYear()}`;
+
+  // Build selector options (Sept 2025 → current month inclusive)
+  const cutoffOptions=(()=>{
+    const opts=[];
+    let oy=2025,om=9;
+    const maxM=today.getMonth()+1,maxY=today.getFullYear();
+    while(oy<maxY||(oy===maxY&&om<=maxM)){
+      const lbl=new Date(oy,om-1,1).toLocaleString('en-US',{month:'long',year:'numeric'});
+      opts.push(`<option value="${oy}-${om}"${window._poCutoffVal===`${oy}-${om}`?' selected':''}>${lbl}</option>`);
+      om++;if(om>12){om=1;oy++;}
+    }
+    return opts.join('');
+  })();
+
+  // Summary helper — CATS derived dynamically so custom-added rows are always included
+  const CATS_BASE=['AEV','Engineering','factory','Prototype','General Cost','consumables','Alu System','Non System','Steel Structure','Glass','Alu Sheet','GI sheet','Bolts and Screws','rockwool','silicone','Windows','Doors','Coping','ACP'];
+  const _catsMap=new Map(CATS_BASE.map(c=>[c.toLowerCase(),c]));
+  rows.forEach(r=>{const k=r.allocation.toLowerCase();if(!_catsMap.has(k))_catsMap.set(k,r.allocation);});
+  const CATS=[..._catsMap.values()];
+  function buildSummary(subset){
+    return CATS.map(cat=>{
+      const cr=subset.filter(r=>r.allocation.toLowerCase()===cat.toLowerCase());
+      const totalCF=cr.reduce((s,r)=>s+r.totalHT,0);
+      const totalRem=cr.reduce((s,r)=>s+r.totalRemHT,0);
+      const totalSol=cr.reduce((s,r)=>s+r.totalSolde,0);
+      return{cat,totalCF,totalRem,totalSol};
+    });
+  }
+  const cumData=buildSummary(rows);
+  const cutoffData=buildSummary(rows.filter(r=>r.dateObj<cutoffDate));
+  const thisMonthData=buildSummary(rows.filter(r=>r.dateObj>=thisMonStart&&r.dateObj<=today));
+
+  function sumTable(data,title,accent){
+    const totCF=data.reduce((s,r)=>s+r.totalCF,0);
+    const totRem=data.reduce((s,r)=>s+r.totalRem,0);
+    const totSol=data.reduce((s,r)=>s+r.totalSol,0);
+    return`<div style="margin-bottom:24px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${accent};margin-bottom:8px;padding:6px 12px;background:${accent}18;border-left:3px solid ${accent};border-radius:0 6px 6px 0;">${title}</div>
+      <table style="border-collapse:collapse;width:100%;font-size:10px;">
+        <thead>
+          <tr style="background:${accent};color:#fff;">
+            <th style="padding:6px 12px;text-align:left;border:1px solid rgba(0,0,0,0.15);">Allocation</th>
+            <th style="padding:6px 12px;text-align:right;border:1px solid rgba(0,0,0,0.15);">Total CF (HT)</th>
+            <th style="padding:6px 12px;text-align:right;border:1px solid rgba(0,0,0,0.15);">Total Non Soldé</th>
+            <th style="padding:6px 12px;text-align:right;border:1px solid rgba(0,0,0,0.15);">Total Soldé</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.filter(r=>r.totalCF!==0||r.totalRem!==0||r.totalSol!==0).map((r,i)=>`<tr style="background:${i%2===0?'#f8fafd':'#fff'};">
+            <td style="padding:5px 12px;border:1px solid #dee2e6;font-weight:600;">${r.cat}</td>
+            <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);">${fmt(r.totalCF)}</td>
+            <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);color:#842029;font-weight:700;">${fmt(r.totalRem)}</td>
+            <td style="padding:5px 12px;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);color:#0a5c36;font-weight:700;">${fmt(r.totalSol)}</td>
+          </tr>`).join('')}
+          <tr style="background:${accent};color:#fff;font-weight:700;">
+            <td style="padding:6px 12px;border:1px solid rgba(0,0,0,0.15);">TOTAL</td>
+            <td style="padding:6px 12px;border:1px solid rgba(0,0,0,0.15);text-align:right;font-family:var(--mono);">${fmt(totCF)}</td>
+            <td style="padding:6px 12px;border:1px solid rgba(0,0,0,0.15);text-align:right;font-family:var(--mono);">${fmt(totRem)}</td>
+            <td style="padding:6px 12px;border:1px solid rgba(0,0,0,0.15);text-align:right;font-family:var(--mono);">${fmt(totSol)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  const tableRows=rows.map((r,i)=>{
+    const solde=r.status==="c'est soldé";
+    const statusBg=solde?'#d1e7dd':'#fff3cd';
+    const statusCol=solde?'#0a5c36':'#856404';
+    const rowBase=r.isCustom?(i%2===0?'#fff':'#f0fef4'):(i%2===0?'#fff':'#fafcff');
+    const editBtn=`<button onclick="openEditPORowModal(${r.sqn},${r.isCustom},${r.isCustom?r.customIdx:-1})" title="Edit" style="padding:2px 6px;font-size:10px;background:#e8f0fb;border:1px solid #b8c8e8;border-radius:4px;cursor:pointer;color:#1a3a6b;margin-right:2px;">✏️</button>`;
+    const delBtn=r.isCustom?`<button onclick="deletePORow(${r.customIdx})" title="Delete" style="padding:2px 6px;font-size:10px;background:#fee;border:1px solid #fcc;border-radius:4px;cursor:pointer;color:#c02020;">🗑</button>`:`<button onclick="deletePOBaseRow(${r.sqn})" title="Delete" style="padding:2px 6px;font-size:10px;background:#fee;border:1px solid #fcc;border-radius:4px;cursor:pointer;color:#c02020;">🗑</button>`;
+    return`<tr style="background:${rowBase};transition:background 0.1s;" onmouseover="this.style.background='#e8f0fb'" onmouseout="this.style.background='${rowBase}'">
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;color:#8099b0;">${r.sqn}${r.isCustom?'<span style="color:#1a9458;font-size:8px;margin-left:3px;">●</span>':''}</td>
+      <td style="padding:4px 8px;font-size:10px;border:1px solid #dee2e6;">${r.project}</td>
+      <td style="padding:4px 8px;font-size:10px;font-weight:600;border:1px solid #dee2e6;">${r.allocation}</td>
+      <td style="padding:4px 8px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;">${r.cf}</td>
+      <td style="padding:4px 8px;font-size:10px;border:1px solid #dee2e6;max-width:200px;">${r.supplier}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;">${r.terms}j</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;white-space:nowrap;">${r.date}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:700;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;">${fmt(r.totalHT)}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;${r.totalRemHT>0?'color:#842029;font-weight:700;':r.totalRemHT<0?'color:#6d35d9;':''}">${fmt(r.totalRemHT)}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;${r.totalSolde>0?'color:#0a5c36;font-weight:700;':''}">${fmt(r.totalSolde)}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:center;border:1px solid #dee2e6;background:${statusBg};color:${statusCol};font-weight:700;">${r.status}</td>
+      <td style="padding:4px 6px;text-align:center;border:1px solid #dee2e6;white-space:nowrap;">${editBtn}${delBtn}</td>
+      <td style="padding:4px 8px;font-size:10px;text-align:right;font-weight:700;font-family:var(--mono);border:1px solid #dee2e6;white-space:nowrap;">${fmt(r.totalHT*1.2)}</td>
+    </tr>`;
+  }).join('');
+
+  const totHT=rows.reduce((s,r)=>s+r.totalHT,0);
+  const totRem=rows.reduce((s,r)=>s+r.totalRemHT,0);
+  const totSol=rows.reduce((s,r)=>s+r.totalSolde,0);
+  const totRow=`<tr style="background:#1a3a6b;color:#fff;font-weight:700;">
+    <td colspan="7" style="padding:6px 12px;font-size:10px;border:1px solid #0d2244;text-align:right;letter-spacing:0.05em;">TOTAL</td>
+    <td style="padding:6px 12px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0d2244;">${fmt(totHT)}</td>
+    <td style="padding:6px 12px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0d2244;">${fmt(totRem)}</td>
+    <td style="padding:6px 12px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0d2244;">${fmt(totSol)}</td>
+    <td style="padding:6px 12px;border:1px solid #0d2244;"></td>
+    <td style="padding:6px 12px;border:1px solid #0d2244;"></td>
+    <td style="padding:6px 12px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0d2244;">${fmt(totHT*1.2)}</td>
+  </tr>`;
+
+  window._poAllRows=rows; // expose for modal supplier lookup
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">📑</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">CF Logs — PO Log</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · ${rows.length} purchase orders${poLogCustomRows.length>0?` <span style="color:#1a9458;">(+${poLogCustomRows.length} added)</span>`:''}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+          <input id="po-search" type="text" placeholder="Search supplier, CF#, allocation…" oninput="poFilter()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:11px;width:240px;outline:none;">
+          <select id="po-status" onchange="poFilter()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;">
+            <option value="all">All</option>
+            <option value="non soldé">Non Soldé</option>
+            <option value="c'est soldé">C'est Soldé</option>
+          </select>
+          <button onclick="_exportTableCSV('po-table','CF_Logs_PO')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
+          <button onclick="_exportTablePDF('po-table','CF Logs — PO Log','Shift Tower','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
+          <button onclick="openAddPORowModal(window._poAllRows)" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">＋ Add Row</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 24px;">
+        <table id="po-table" style="border-collapse:collapse;min-width:max-content;width:100%;">
+          <thead>
+            <tr style="position:sticky;top:0;z-index:10;background:#1a3a6b;color:#fff;">
+              ${['SQN','Projet','Allocation','CF#','Fournisseur','Délai Pmt','Date','Total HT','Total Rem HT','Total Soldé','Status','Actions','Total TTC'].map(h=>`<th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0d2244;text-align:${['Total HT','Total Rem HT','Total Soldé','Total TTC'].includes(h)?'right':'center'};">${h}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody id="po-tbody">${tableRows}</tbody>
+          <tfoot>${totRow}</tfoot>
+        </table>
+        <div style="margin-top:32px;">
+          <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f0f4fa;border:1px solid #d0d8ea;border-radius:8px;">
+            <span style="font-size:13px;">📅</span>
+            <span style="font-size:11px;font-weight:700;color:#1a3a6b;">Summary cutoff — Until end of:</span>
+            <select id="po-cutoff-sel" onchange="window.setPOCutoff(this.value)" style="padding:5px 10px;border:1px solid #aab8cc;border-radius:6px;font-size:11px;font-weight:600;color:#1a3a6b;outline:none;cursor:pointer;background:#fff;">${cutoffOptions}</select>
+            <span style="font-size:10px;color:#6b7e99;margin-left:4px;">· 3rd table always shows current month up to today</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+            ${sumTable(cumData,'Cumulative — All POs','#1a3a6b')}
+            ${sumTable(cutoffData,`Until End of ${cutoffMonthLabel}`,'#1a7a3a')}
+            ${sumTable(thisMonthData,`During This Month (${thisMonthDayRange})`,'#a07800')}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── OF LOG (FABRICATION ORDERS) ────────────────────────────────
+let ofLogQtyOverrides={};
+let ofLogCustomGroups=[];
+
+async function loadOFLogQtyOverrides(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-qty-overrides');
+    if(data&&data.length>0) try{ofLogQtyOverrides=JSON.parse(data[0].value)||{};}catch(e){ofLogQtyOverrides={};}
+  }catch(e){}
+  try{const v=localStorage.getItem('of-log-qty-overrides');if(v&&Object.keys(ofLogQtyOverrides).length===0)ofLogQtyOverrides=JSON.parse(v)||{};}catch(e){}
+}
+
+async function saveOFLogQtyOverrides(){
+  const json=JSON.stringify(ofLogQtyOverrides);
+  try{localStorage.setItem('of-log-qty-overrides',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-qty-overrides');
+    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-qty-overrides',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadOFLogCustomGroups(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-custom-groups');
+    if(data&&data.length>0) try{ofLogCustomGroups=JSON.parse(data[0].value)||[];}catch(e){ofLogCustomGroups=[];}
+  }catch(e){}
+  try{const v=localStorage.getItem('of-log-custom-groups');if(v&&ofLogCustomGroups.length===0)ofLogCustomGroups=JSON.parse(v)||[];}catch(e){}
+}
+
+async function saveOFLogCustomGroups(){
+  const json=JSON.stringify(ofLogCustomGroups);
+  try{localStorage.setItem('of-log-custom-groups',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-custom-groups');
+    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-custom-groups',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CASH-IN PAGE
+// ─────────────────────────────────────────────────────────────────
+// Persistent overrides: { 'ref__month': { p, v } }
+if(!window._cashInOverrides) window._cashInOverrides = {};
+
+function renderPlanning(){
+  const cont = document.getElementById('page-planning');
+
+  // ── Persistent actual dates (localStorage) ──
+  window._planActual = window._planActual || JSON.parse(localStorage.getItem('bm_planActual')||'{}');
+
+  // ── Default proposed dates (only set if not already edited) ──
+  const _propDefaults={
+    '4.1__propStart':'2026-04-06','4.1__propEnd':'2026-05-01',
+    '4.2__propStart':'2026-04-27','4.2__propEnd':'2026-05-22',
+    '4.3__propStart':'2026-05-18','4.3__propEnd':'2026-06-12',
+    '4.4__propStart':'2026-06-01','4.4__propEnd':'2026-06-26',
+    '4.5__propStart':'2026-06-22','4.5__propEnd':'2026-07-17',
+    '4.6__propStart':'2026-07-13','4.6__propEnd':'2026-08-07',
+    '4.7__propStart':'2026-07-27','4.7__propEnd':'2026-08-14',
+    '4.8__propStart':'2026-08-10','4.8__propEnd':'2026-08-28',
+    '4.9__propStart':'2026-07-06','4.9__propEnd':'2026-07-31',
+    '4.10__propStart':'2026-08-03','4.10__propEnd':'2026-10-02',
+    '5.3__propStart':'2026-04-02','5.3__propEnd':'2026-05-08',
+    '5.4__propStart':'2026-05-04','5.4__propEnd':'2026-06-05',
+    '5.5__propStart':'2026-06-01','5.5__propEnd':'2026-07-03',
+    '5.6__propStart':'2026-06-29','5.6__propEnd':'2026-07-31',
+    '5.7__propStart':'2026-07-27','5.7__propEnd':'2026-08-28',
+    '5.8__propStart':'2026-08-24','5.8__propEnd':'2026-09-11',
+    '5.9__propStart':'2026-09-14','5.9__propEnd':'2026-09-30',
+    '5.10__propStart':'2026-10-01','5.10__propEnd':'2026-12-31',
+    '5.11__propStart':'2026-05-01','5.11__propEnd':'2026-12-31',
+    '5.12__propStart':'2026-06-01','5.12__propEnd':'2026-09-30',
+    '5.13__propStart':'2026-09-30','5.13__propEnd':'2026-12-31',
+  };
+  let _propChanged=false;
+  Object.entries(_propDefaults).forEach(([k,v])=>{ if(!(k in window._planActual)){window._planActual[k]=v;_propChanged=true;} });
+  if(_propChanged) localStorage.setItem('bm_planActual',JSON.stringify(window._planActual));
+
+  // fmt helper needed before TASKS are defined — captured in closure after render
+  function _planFmt(d){ return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+String(d.getFullYear()).slice(-2); }
+  function _planBarGeom(startStr, endStr, tlStart, colW){
+    const MS=86400000, s=new Date(startStr), e=new Date(endStr);
+    const left=((s-tlStart)/MS/7*colW).toFixed(1);
+    const width=Math.max(4,((e-s)/MS/7*colW)).toFixed(1);
+    return {left:left+'px', width:width+'px'};
+  }
+
+  window.planRefreshBar = function(taskId){
+    const container = document.getElementById('plan-bar-'+taskId);
+    if(!container) return;
+    const t = (window._planTasks||[]).find(x=>x.id===taskId);
+    if(!t) return;
+    const TLS = new Date('2025-10-27'), CW = 38;
+    const pS = window._planActual[taskId+'__propStart'];
+    const pE = window._planActual[taskId+'__propEnd'];
+    const aS = window._planActual[taskId+'__start'];
+    const aE = window._planActual[taskId+'__end'];
+    // Redraw only the bar layers (keep stripe divs untouched via IDs)
+    const theoEl  = container.querySelector('.plan-bar-theo');
+    const propEl  = container.querySelector('.plan-bar-prop');
+    const actEl   = container.querySelector('.plan-bar-act');
+    if(theoEl){ const g=_planBarGeom(t.start,t.end,TLS,CW); theoEl.style.left=g.left; theoEl.style.width=g.width; }
+    if(propEl){
+      if(pS&&pE){ const g=_planBarGeom(pS,pE,TLS,CW); propEl.style.left=g.left; propEl.style.width=g.width; propEl.style.display=''; propEl.title='Proposé: '+_planFmt(new Date(pS))+' → '+_planFmt(new Date(pE)); }
+      else { propEl.style.display='none'; }
+    }
+    if(actEl){
+      if(aS&&aE){ const g=_planBarGeom(aS,aE,TLS,CW); actEl.style.left=g.left; actEl.style.width=g.width; actEl.style.background='#00FF32'; actEl.style.display=''; actEl.title='Réel: '+_planFmt(new Date(aS))+' → '+_planFmt(new Date(aE)); }
+      else { actEl.style.display='none'; }
+    }
+  };
+
+  window.planSetActual = function(taskId, field, cell){
+    const key = taskId+'__'+field;
+    const cur = window._planActual[key] || '';
+    const dash = '<span style="color:var(--text3);font-style:italic;">—</span>';
+    cell.innerHTML = `<input type="date" value="${cur}"
+      style="width:70px;border:1px solid var(--accent,#1a5fa8);border-radius:3px;font-size:10px;
+             font-family:var(--mono);padding:1px 2px;background:var(--surface);color:var(--text);outline:none;">`;
+    const inp = cell.querySelector('input');
+    inp.focus();
+    let saved = false;
+    function commit(){
+      if(saved) return; saved=true;
+      if(inp.value) window._planActual[key] = inp.value;
+      else delete window._planActual[key];
+      localStorage.setItem('bm_planActual', JSON.stringify(window._planActual));
+      // Update cell display in-place
+      cell.innerHTML = window._planActual[key] ? _planFmt(new Date(window._planActual[key])) : dash;
+      // Refresh only this row's bars
+      window.planRefreshBar(taskId);
+    }
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('keydown', e=>{
+      if(e.key==='Enter') inp.blur();
+      if(e.key==='Escape'){ saved=true; cell.innerHTML = cur ? _planFmt(new Date(cur)) : dash; }
+    });
+  };
+
+  // ── Timeline bounds ──
+  const TL_START  = new Date('2025-10-27');
+  const TL_END    = new Date('2027-01-04');
+  const MS_DAY    = 86400000;
+  const TL_DAYS   = (TL_END - TL_START) / MS_DAY;
+  const COL_W     = 38; // px per week column
+
+  function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+  function fmt(d){ return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+String(d.getFullYear()).slice(-2); }
+  function weekLabel(d){ const e=addDays(d,6); return d.getDate()+'-'+e.getDate(); }
+  const MONTHS_FR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  // ── Build weekly columns ──
+  const weeks=[];
+  let c=new Date(TL_START);
+  while(c<TL_END){ weeks.push(new Date(c)); c=addDays(c,7); }
+  const totalCols=weeks.length;
+
+  // ── Month grouping for top header ──
+  const monthGroups=[];
+  weeks.forEach((d,i)=>{
+    const mk=d.getFullYear()*100+d.getMonth();
+    const last=monthGroups[monthGroups.length-1];
+    if(!last||last.mk!==mk) monthGroups.push({mk,label:MONTHS_FR[d.getMonth()]+' '+d.getFullYear(),count:1,colStart:i});
+    else last.count++;
+  });
+
+  // ── Today line ──
+  const today=new Date('2026-04-12');
+  const todayCol=(today-TL_START)/MS_DAY/7;
+
+  // ── Task data ──
+  const TASKS=[
+    {id:'4',   label:'FABRICATION',                                                              type:'section', color:'#1565c0'},
+    {id:'4.1', label:'Fabrication des cadres Bloc en aluminium yc remplissage du 1 au 5 ème étage',    start:'2025-11-10',end:'2025-12-08',dur:28,  delay:0, status:'done'},
+    {id:'4.2', label:'Fabrication des cadres Bloc en aluminium yc remplissage du 6 au 10 ème étage',   start:'2025-12-09',end:'2026-01-06',dur:28,  delay:0, status:'done'},
+    {id:'4.3', label:'Fabrication des cadres Bloc en aluminium yc remplissage du 11 au 15 ème étage',  start:'2026-01-07',end:'2026-02-04',dur:28,  delay:0, status:'done'},
+    {id:'4.4', label:'Fabrication des cadres Bloc en aluminium yc remplissage du 16 au 20 ème étage',  start:'2026-02-05',end:'2026-03-05',dur:28,  delay:0, status:'done'},
+    {id:'4.5', label:'Fabrication des cadres Bloc en aluminium yc remplissage du 21 au 25 ème étage',  start:'2026-03-06',end:'2026-04-03',dur:28,  delay:0, status:'done'},
+    {id:'4.6', label:'Fabrication des cadres Bloc en aluminium yc remplissage du 26 au 30 ème étage',  start:'2026-04-04',end:'2026-05-02',dur:28,  delay:0, status:'progress'},
+    {id:'4.7', label:'Fabrication du Mur rideau du RDC',                                               start:'2026-05-03',end:'2026-05-24',dur:21,  delay:0, status:'planned'},
+    {id:'4.8', label:'Fabrication des baies vitrées (habillage)',                                      start:'2026-05-25',end:'2026-06-15',dur:21,  delay:0, status:'planned'},
+    {id:'4.9', label:'Fabrication des éléments architecturaux spéciaux',                               start:'2025-11-17',end:'2025-12-15',dur:28,  delay:0, status:'done'},
+    {id:'4.10',label:'Fabrication des produits divers',                                                start:'2025-11-17',end:'2026-01-16',dur:60,  delay:0, status:'done'},
+    {id:'5',   label:'POSE & INSTALLATION',                                                      type:'section', color:'#1565c0'},
+    {id:'5.3', label:'Pose des cadres Bloc en aluminium yc remplissage 11 au 15 ème étage',            start:'2025-11-25',end:'2025-12-30',dur:35,  delay:0, status:'done'},
+    {id:'5.4', label:'Pose des cadres Bloc en aluminium yc remplissage 16 au 20 ème étage',            start:'2025-12-24',end:'2026-01-28',dur:35,  delay:0, status:'done'},
+    {id:'5.5', label:'Pose des cadres Bloc en aluminium yc remplissage 21 au 25 ème étage',            start:'2026-01-22',end:'2026-02-26',dur:35,  delay:0, status:'done'},
+    {id:'5.6', label:'Pose des cadres Bloc en aluminium yc remplissage 26 au 30 ème étage',            start:'2026-02-20',end:'2026-03-27',dur:35,  delay:0, status:'done'},
+    {id:'5.7', label:'Pose du Mur rideau du RDC / Porte Tambour',                                      start:'2026-03-21',end:'2026-04-25',dur:35,  delay:0, status:'progress'},
+    {id:'5.8', label:'Pose de la structure extérieure du 1 au 25 ème étage (à partir de la réception du support avec le gros oeuvre)', start:'2026-04-19',end:'2026-05-24',dur:35,  delay:0, status:'planned'},
+    {id:'5.9', label:'Pose des panneaux de bardage et habillage façades',                              start:'2026-05-18',end:'2026-06-22',dur:35,  delay:0, status:'planned'},
+    {id:'5.10',label:'Travaux de finition extérieure et étanchéité',                                   start:'2026-06-23',end:'2026-07-14',dur:21,  delay:0, status:'planned'},
+    {id:'5.11',label:'Essais, tests étanchéité et levée de réserves',                                  start:'2025-12-30',end:'2026-02-28',dur:60,  delay:0, status:'done'},
+    {id:'5.12',label:'Finition et Réception / OPR',                                                    start:'2026-01-16',end:'2026-03-13',dur:56,  delay:0, status:'done'},
+    {id:'5.13',label:'Travaux de parachèvement, levée de réserves et réception provisoire',            start:'2026-05-15',end:'2026-07-29',dur:75,  delay:0, status:'planned'},
+  ];
+  window._planTasks = TASKS.filter(t=>!t.type);
+
+  // ── Bar geometry ──
+  function barGeom(startStr,endStr){
+    const s=new Date(startStr), e=new Date(endStr);
+    const leftCol=(s-TL_START)/MS_DAY/7;
+    const widCols=(e-s)/MS_DAY/7;
+    return {left:(leftCol*COL_W).toFixed(1)+'px', width:Math.max(4,(widCols*COL_W)).toFixed(1)+'px'};
+  }
+
+  const STATUS_COLOR={done:'#1a9458',progress:'#e67e22',planned:'#1565c0',late:'#c0392b'};
+  function barColor(t){
+    if(t.status==='progress'&&t.delay>0) return STATUS_COLOR.late;
+    return STATUS_COLOR[t.status]||STATUS_COLOR.planned;
+  }
+
+  // ── Legend ──
+  const legendHTML=`
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+      <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <span style="width:22px;height:16px;border-radius:3px;background:#1565c0;opacity:0.28;display:inline-block;flex-shrink:0;"></span>
+        Théorique
+      </span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <span style="width:22px;height:10px;border-radius:2px;background:#1565c0;opacity:0.85;display:inline-block;flex-shrink:0;"></span>
+        Proposé
+      </span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <span style="width:22px;height:8px;border-radius:2px;background:#00FF32;opacity:0.95;display:inline-block;flex-shrink:0;"></span>
+        Actuel
+      </span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);">
+        <span style="width:2px;height:16px;background:#e74c3c;display:inline-block;flex-shrink:0;"></span>
+        Aujourd'hui
+      </span>
+    </div>`;
+
+  // ── Header row 1: months ──
+  const monthsHTML=monthGroups.map(m=>
+    `<th colspan="${m.count}" style="min-width:${m.count*COL_W}px;padding:4px 0;text-align:center;font-size:10px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);background:var(--surface2);">${m.label}</th>`
+  ).join('');
+
+  // ── Header row 2: weeks ──
+  const fnHTML=weeks.map((d,i)=>
+    `<th style="min-width:${COL_W}px;width:${COL_W}px;padding:3px 1px;text-align:center;font-size:8px;color:var(--text3);border-right:1px solid var(--border);white-space:nowrap;background:var(--surface2);">${weekLabel(d)}</th>`
+  ).join('');
+
+  // ── Task rows ──
+  const ganttTotalW=weeks.length*COL_W;
+  const CELL_TH='padding:10px 5px;font-size:10px;font-weight:700;color:var(--text2);text-align:left;border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:var(--surface2);white-space:nowrap;';
+
+  const rowsHTML=TASKS.map((t,ri)=>{
+    if(t.type==='section'){
+      return `<tr>
+        <td colspan="10" style="padding:5px 10px;background:${t.color};color:#fff;font-size:11px;font-weight:700;letter-spacing:0.5px;">${t.id} — ${t.label}</td>
+        <td style="padding:0;background:${t.color};position:relative;" colspan="${totalCols}">
+          <div style="position:relative;width:${ganttTotalW}px;height:26px;">
+            <div style="position:absolute;top:0;bottom:0;left:${(todayCol*COL_W).toFixed(1)}px;width:2px;background:rgba(255,255,255,0.4);"></div>
+          </div>
+        </td>
+      </tr>`;
+    }
+    const bg = ri%2===0 ? 'var(--surface)' : 'var(--surface2)';
+    const gTheo = barGeom(t.start, t.end);
+    const bc    = barColor(t);
+    const pS = window._planActual[t.id+'__propStart'];
+    let delayStr;
+    if(pS){
+      const diff = Math.round((new Date(pS) - new Date(t.start)) / 86400000);
+      delayStr = diff===0 ? '<span style="color:var(--text3);">0j</span>'
+               : diff<0   ? `<span style="color:#1a9458;font-weight:600;">${diff}j</span>`
+               :             `<span style="color:#c0392b;font-weight:600;">+${diff}j</span>`;
+    } else {
+      delayStr = '<span style="color:var(--text3);">—</span>';
+    }
+
+    // Actual dates
+    const aStart = window._planActual[t.id+'__start'];
+    const aEnd   = window._planActual[t.id+'__end'];
+    const aStartDisplay = aStart ? fmt(new Date(aStart)) : '<span style="color:var(--text3);font-style:italic;">—</span>';
+    const aEndDisplay   = aEnd   ? fmt(new Date(aEnd))   : '<span style="color:var(--text3);font-style:italic;">—</span>';
+
+    const pStart = pS;
+    const pEnd   = window._planActual[t.id+'__propEnd'];
+    const gProp  = pStart && pEnd ? barGeom(pStart, pEnd) : null;
+    const gAct   = aStart && aEnd ? barGeom(aStart, aEnd) : null;
+    const dash   = '<span style="color:var(--text3);font-style:italic;">—</span>';
+
+    return `<tr style="background:${bg};">
+      <td style="padding:2px 4px;font-size:10px;font-weight:600;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:30px;">${t.id}</td>
+      <td style="padding:2px 4px;font-size:10px;color:var(--text);min-width:200px;max-width:260px;border-right:1px solid var(--border);">${t.label}</td>
+      <td style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;background:#bbdefb28;">${fmt(new Date(t.start))}</td>
+      <td style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;background:#bbdefb28;">${fmt(new Date(t.end))}</td>
+      <td style="padding:2px 4px;font-size:10px;color:var(--text2);text-align:right;border-right:1px solid var(--border);min-width:28px;">${t.dur}</td>
+      <td style="padding:2px 4px;font-size:10px;text-align:right;border-right:1px solid var(--border);min-width:36px;">${delayStr}</td>
+      <td onclick="planSetActual('${t.id}','propStart',this)"
+          style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:66px;cursor:pointer;background:#1565c014;"
+          title="Cliquer pour éditer">${pStart ? fmt(new Date(pStart)) : dash}</td>
+      <td onclick="planSetActual('${t.id}','propEnd',this)"
+          style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;cursor:pointer;background:#1565c014;"
+          title="Cliquer pour éditer">${pEnd ? fmt(new Date(pEnd)) : dash}</td>
+      <td onclick="planSetActual('${t.id}','start',this)"
+          style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:66px;cursor:pointer;background:#1b5e2014;"
+          title="Cliquer pour éditer">${aStartDisplay}</td>
+      <td onclick="planSetActual('${t.id}','end',this)"
+          style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;cursor:pointer;background:#1b5e2014;"
+          title="Cliquer pour éditer">${aEndDisplay}</td>
+      <td style="padding:0;position:relative;border-right:1px solid var(--border);" colspan="${totalCols}">
+        <div id="plan-bar-${t.id}" style="position:relative;width:${ganttTotalW}px;height:28px;overflow:hidden;">
+          <div class="plan-bar-theo" style="position:absolute;top:6px;height:16px;border-radius:3px;background:#1565c0;opacity:0.28;left:${gTheo.left};width:${gTheo.width};z-index:1;"
+               title="Théorique: ${fmt(new Date(t.start))} → ${fmt(new Date(t.end))} | ${t.dur} jours"></div>
+          <div class="plan-bar-prop" style="position:absolute;top:9px;height:10px;border-radius:2px;background:#1565c0;opacity:0.85;left:${gProp?gProp.left:'0px'};width:${gProp?gProp.width:'0px'};z-index:2;display:${gProp?'':'none'};"
+               title="${gProp?'Proposé: '+fmt(new Date(pStart))+' → '+fmt(new Date(pEnd)):''}"></div>
+          <div class="plan-bar-act" style="position:absolute;top:4px;height:8px;border-radius:2px;background:#00FF32;opacity:0.95;left:${gAct?gAct.left:'0px'};width:${gAct?gAct.width:'0px'};z-index:3;display:${gAct?'':'none'};"
+               title="${gAct?'Réel: '+fmt(new Date(aStart))+' → '+fmt(new Date(aEnd)):''}"></div>
+          <div style="position:absolute;top:0;bottom:0;left:${(todayCol*COL_W).toFixed(1)}px;width:2px;background:#e74c3c;opacity:0.8;z-index:4;"></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // ── Export helpers ──
+  window.planExportCSV = function(){
+    const A = window._planActual || {};
+    const fD = v => v ? _planFmt(new Date(v)) : '';
+
+    const BASE = 'font-family:Calibri,Arial,sans-serif;font-size:10pt;border:1px solid #bbb;';
+    const TH_BASE = BASE+'font-weight:700;text-align:center;vertical-align:middle;';
+    const TD_BASE = BASE+'vertical-align:middle;padding:3px 6px;';
+
+    // ── Month header row ──
+    let monthCells = `<td colspan="10" style="${TH_BASE}background:#d9d9d9;"></td>`;
+    monthGroups.forEach(m=>{
+      monthCells += `<td colspan="${m.count}" style="${TH_BASE}background:#1565c0;color:#fff;">${m.label}</td>`;
+    });
+
+    // ── Week header row ──
+    const fixedHeaders = [
+      ['Réf','#d9d9d9'],['Description','#d9d9d9'],['Date début','#bbdefb'],['Date fin','#bbdefb'],
+      ['Jours','#d9d9d9'],['Retard (j)','#d9d9d9'],['Début Proposé','#c5cae9'],['Fin Proposé','#c5cae9'],
+      ['Début Actuel','#c8e6c9'],['Fin Actuel','#c8e6c9']
+    ];
+    let weekRow = fixedHeaders.map(([h,bg])=>`<td style="${TH_BASE}background:${bg};white-space:nowrap;">${h}</td>`).join('');
+    weeks.forEach(d=>{
+      const e = addDays(d,6);
+      weekRow += `<td style="${TH_BASE}background:#e8eaf6;font-size:8pt;white-space:nowrap;">${d.getDate()}-${e.getDate()}</td>`;
+    });
+
+    // ── Task rows ──
+    let taskRows = '';
+    TASKS.forEach(t=>{
+      if(t.type==='section'){
+        const span = 10 + weeks.length;
+        taskRows += `<tr><td colspan="${span}" style="${TD_BASE}background:${t.color};color:#fff;font-weight:700;font-size:11pt;letter-spacing:0.5px;">${t.id} — ${t.label}</td></tr>`;
+        return;
+      }
+      const pS2 = A[t.id+'__propStart'], pE2 = A[t.id+'__propEnd'];
+      const aS2 = A[t.id+'__start'],    aE2 = A[t.id+'__end'];
+      const delay = pS2 ? Math.round((new Date(pS2)-new Date(t.start))/86400000) : '';
+      const delayColor = delay==='' ? '#666' : delay<0 ? '#1a7a3a' : delay>0 ? '#c0392b' : '#666';
+      const delayVal = delay==='' ? '—' : delay<0 ? delay+'j' : delay===0 ? '0j' : '+'+delay+'j';
+
+      // Gantt cells: mark weeks that overlap each bar
+      const tS=new Date(t.start), tE=new Date(t.end);
+      const ppS=pS2?new Date(pS2):null, ppE=pE2?new Date(pE2):null;
+      const aaS=aS2?new Date(aS2):null, aaE=aE2?new Date(aE2):null;
+
+      let ganttCells = '';
+      weeks.forEach(w=>{
+        const wE = addDays(w,7);
+        const inTheo = w < tE && wE > tS;
+        const inProp = ppS && ppE && w < ppE && wE > ppS;
+        const inAct  = aaS && aaE && w < aaE && wE > aaS;
+        let bg = '';
+        if(inAct)       bg = '#00FF32';
+        else if(inProp) bg = '#3f51b5';
+        else if(inTheo) bg = '#bbdefb';
+        ganttCells += `<td style="${TD_BASE}background:${bg};padding:0;min-width:20px;"></td>`;
+      });
+
+      taskRows += `<tr>
+        <td style="${TD_BASE}font-weight:600;white-space:nowrap;">${t.id}</td>
+        <td style="${TD_BASE}min-width:200px;">${t.label}</td>
+        <td style="${TD_BASE}background:#e3f2fd;text-align:center;white-space:nowrap;">${fmt(new Date(t.start))}</td>
+        <td style="${TD_BASE}background:#e3f2fd;text-align:center;white-space:nowrap;">${fmt(new Date(t.end))}</td>
+        <td style="${TD_BASE}text-align:right;">${t.dur||''}</td>
+        <td style="${TD_BASE}text-align:right;color:${delayColor};font-weight:600;">${delayVal}</td>
+        <td style="${TD_BASE}background:#e8eaf6;text-align:center;white-space:nowrap;">${fD(pS2)}</td>
+        <td style="${TD_BASE}background:#e8eaf6;text-align:center;white-space:nowrap;">${fD(pE2)}</td>
+        <td style="${TD_BASE}background:#e8f5e9;text-align:center;white-space:nowrap;">${fD(aS2)}</td>
+        <td style="${TD_BASE}background:#e8f5e9;text-align:center;white-space:nowrap;">${fD(aE2)}</td>
+        ${ganttCells}
+      </tr>`;
+    });
+
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+<x:Name>Planning</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+</head><body>
+<table style="border-collapse:collapse;white-space:nowrap;">
+  <thead>
+    <tr>${monthCells}</tr>
+    <tr>${weekRow}</tr>
+  </thead>
+  <tbody>${taskRows}</tbody>
+</table>
+</body></html>`;
+
+    const blob = new Blob([html], {type:'application/vnd.ms-excel;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'Planning_ShiftTower.xls'; a.click(); URL.revokeObjectURL(a.href);
+  };
+
+  window.planPrint = function(){
+    const A = window._planActual || {};
+    const fD = v => v ? _planFmt(new Date(v)) : '';
+
+    const BASE = 'font-family:Calibri,Arial,sans-serif;font-size:8pt;border:1px solid #bbb;';
+    const TH_BASE = BASE+'font-weight:700;text-align:center;vertical-align:middle;padding:4px 3px;';
+    const TD_BASE = BASE+'vertical-align:middle;padding:2px 4px;';
+
+    // Month header
+    let monthCells = `<td colspan="10" style="${TH_BASE}background:#d9d9d9;"></td>`;
+    monthGroups.forEach(m=>{
+      monthCells += `<td colspan="${m.count}" style="${TH_BASE}background:#1565c0;color:#fff;">${m.label}</td>`;
+    });
+
+    // Week header
+    const fixedHeaders=[
+      ['Réf','#d9d9d9'],['Description','#d9d9d9'],['Date début','#bbdefb'],['Date fin','#bbdefb'],
+      ['Jours','#d9d9d9'],['Retard','#d9d9d9'],['Début Proposé','#c5cae9'],['Fin Proposé','#c5cae9'],
+      ['Début Actuel','#c8e6c9'],['Fin Actuel','#c8e6c9']
+    ];
+    let weekRow = fixedHeaders.map(([h,bg])=>`<td style="${TH_BASE}background:${bg};white-space:nowrap;">${h}</td>`).join('');
+    weeks.forEach(d=>{
+      const e=addDays(d,6);
+      weekRow += `<td style="${TH_BASE}background:#e8eaf6;font-size:7pt;white-space:nowrap;">${d.getDate()}-${e.getDate()}</td>`;
+    });
+
+    // Task rows
+    let taskRows='';
+    TASKS.forEach((t,ri)=>{
+      if(t.type==='section'){
+        taskRows+=`<tr><td colspan="${10+weeks.length}" style="${TD_BASE}background:${t.color};color:#fff;font-weight:700;font-size:10pt;">${t.id} — ${t.label}</td></tr>`;
+        return;
+      }
+      const pS2=A[t.id+'__propStart'], pE2=A[t.id+'__propEnd'];
+      const aS2=A[t.id+'__start'],    aE2=A[t.id+'__end'];
+      const delay=pS2?Math.round((new Date(pS2)-new Date(t.start))/86400000):'';
+      const delayColor=delay===''?'#666':delay<0?'#1a7a3a':delay>0?'#c0392b':'#666';
+      const delayVal=delay===''?'—':delay<0?delay+'j':delay===0?'0j':'+'+delay+'j';
+      const rowBg=ri%2===0?'#ffffff':'#f5f7fa';
+
+      const tS=new Date(t.start), tE=new Date(t.end);
+      const ppS=pS2?new Date(pS2):null, ppE=pE2?new Date(pE2):null;
+      const aaS=aS2?new Date(aS2):null, aaE=aE2?new Date(aE2):null;
+
+      let ganttCells='';
+      weeks.forEach(w=>{
+        const wE=addDays(w,7);
+        const inTheo=w<tE&&wE>tS;
+        const inProp=ppS&&ppE&&w<ppE&&wE>ppS;
+        const inAct=aaS&&aaE&&w<aaE&&wE>aaS;
+        let bg=rowBg;
+        if(inAct)       bg='#00FF32';
+        else if(inProp) bg='#3f51b5';
+        else if(inTheo) bg='#bbdefb';
+        ganttCells+=`<td style="${TD_BASE}background:${bg};padding:0;width:${COL_W}px;"></td>`;
+      });
+
+      taskRows+=`<tr style="background:${rowBg};">
+        <td style="${TD_BASE}font-weight:600;white-space:nowrap;background:${rowBg};">${t.id}</td>
+        <td style="${TD_BASE}min-width:180px;background:${rowBg};">${t.label}</td>
+        <td style="${TD_BASE}background:#e3f2fd;text-align:center;white-space:nowrap;">${fmt(new Date(t.start))}</td>
+        <td style="${TD_BASE}background:#e3f2fd;text-align:center;white-space:nowrap;">${fmt(new Date(t.end))}</td>
+        <td style="${TD_BASE}text-align:right;background:${rowBg};">${t.dur||''}</td>
+        <td style="${TD_BASE}text-align:right;color:${delayColor};font-weight:600;background:${rowBg};">${delayVal}</td>
+        <td style="${TD_BASE}background:#e8eaf6;text-align:center;white-space:nowrap;">${fD(pS2)}</td>
+        <td style="${TD_BASE}background:#e8eaf6;text-align:center;white-space:nowrap;">${fD(pE2)}</td>
+        <td style="${TD_BASE}background:#e8f5e9;text-align:center;white-space:nowrap;">${fD(aS2)}</td>
+        <td style="${TD_BASE}background:#e8f5e9;text-align:center;white-space:nowrap;">${fD(aE2)}</td>
+        ${ganttCells}
+      </tr>`;
+    });
+
+    // Legend
+    const legend=`<div style="display:flex;gap:16px;align-items:center;margin-bottom:10px;font-family:Calibri,Arial;font-size:9pt;">
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:12px;background:#bbdefb;display:inline-block;border:1px solid #aaa;"></span>Théorique</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:12px;background:#3f51b5;display:inline-block;border:1px solid #aaa;"></span>Proposé</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:20px;height:12px;background:#00FF32;display:inline-block;border:1px solid #aaa;"></span>Actuel</span>
+    </div>`;
+
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Planning — Shift Tower</title>
+<style>
+  @page{size:A3 landscape;margin:8mm;}
+  body{margin:0;padding:8px;font-family:Calibri,Arial,sans-serif;}
+  table{border-collapse:collapse;width:100%;}
+  h2{margin:0 0 6px;font-size:13pt;color:#1565c0;}
+  p{margin:0 0 6px;font-size:9pt;color:#555;}
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+</style>
+</head><body>
+<h2>Planning Général — Shift Tower</h2>
+<p>Programme des travaux de façade · Exporté le ${_planFmt(new Date())}</p>
+${legend}
+<table>
+  <thead>
+    <tr>${monthCells}</tr>
+    <tr>${weekRow}</tr>
+  </thead>
+  <tbody>${taskRows}</tbody>
+</table>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+
+    const w=window.open('','_blank');
+    w.document.write(html);
+    w.document.close();
+  };
+
+  const btnStyle='padding:5px 12px;border-radius:5px;border:1px solid var(--border);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;';
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:10px 20px 9px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span style="font-size:22px;">📅</span>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Planning Général</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Programme des travaux de façade</div>
+        </div>
+        ${legendHTML}
+        <div class="plan-print-hide" style="display:flex;gap:8px;flex-shrink:0;">
+          <button onclick="planExportCSV()" style="${btnStyle}background:#1a7a3a;color:#fff;border-color:#1a7a3a;">
+            ⬇ Excel / CSV
+          </button>
+          <button onclick="planPrint()" style="${btnStyle}background:#1565c0;color:#fff;border-color:#1565c0;">
+            🖨 PDF
+          </button>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;">
+        <table style="border-collapse:collapse;min-width:100%;font-family:var(--mono);">
+          <thead style="position:sticky;top:0;z-index:10;">
+            <tr>
+              <th colspan="10" style="background:var(--surface2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);"></th>
+              ${monthsHTML}
+            </tr>
+            <tr>
+              <th style="${CELL_TH}min-width:30px;">Réf</th>
+              <th style="${CELL_TH}min-width:200px;">Description</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#bbdefb50;">Date<br>début</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#bbdefb50;">Date<br>fin</th>
+              <th style="${CELL_TH}min-width:28px;text-align:right;">Jrs</th>
+              <th style="${CELL_TH}min-width:36px;text-align:right;">Retard</th>
+              <th style="${CELL_TH}min-width:66px;white-space:normal;text-align:center;background:#1565c028;">Début<br>Proposé</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#1565c028;">Fin<br>Proposé</th>
+              <th style="${CELL_TH}min-width:66px;white-space:normal;text-align:center;background:#1b5e2028;">Début<br>Actuel</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#1b5e2028;">Fin<br>Actuel</th>
+              ${fnHTML}
+            </tr>
+          </thead>
+          <tbody>${rowsHTML}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SUGGESTIONS
+// ═══════════════════════════════════════════════════════════
+// EmailJS config — fill in your own keys from emailjs.com
+const EMAILJS_PUBLIC_KEY  = 'tohqMfWKJ3jrDtUlo';
+const EMAILJS_SERVICE_ID  = 'service_h4zb4br';
+const EMAILJS_TEMPLATE_ID = 'template_c81k7v7';
+const SUGGESTION_TO_EMAIL = 'r.abdelsamad@batiglobe.com';
+
+let _supaSortState={col:null,dir:0};
+function _supaSort(col){
+  if(_supaSortState.col===col){
+    _supaSortState.dir=_supaSortState.dir===1?-1:_supaSortState.dir===-1?0:1;
+    if(_supaSortState.dir===0) _supaSortState.col=null;
+  } else {
+    _supaSortState={col,dir:1};
+  }
+  ['ref','panelref','paneltype','zone','floor','col','status','asm','fab','del','inst','instref'].forEach(c=>{
+    const el=document.getElementById('ss-'+c);
+    if(!el) return;
+    const active=c===col&&_supaSortState.dir!==0;
+    el.textContent=active?(_supaSortState.dir===1?'↑':'↓'):'↕';
+    el.style.color=active?'#3ecf8e':'#c0cde0';
+  });
+  const tbody=document.getElementById('supabase-tbody');
+  if(!tbody) return;
+  const rows=[...tbody.querySelectorAll('tr')];
+  if(_supaSortState.dir===0){
+    rows.sort((a,b)=>+a.dataset.origIdx - +b.dataset.origIdx);
+  } else {
+    const d=_supaSortState.dir;
+    rows.sort((a,b)=>{
+      const av=a.dataset[col]||'', bv=b.dataset[col]||'';
+      // Numeric columns: floor, col, asm
+      if(col==='floor'||col==='col'||col==='asm') return d*(+av - +bv);
+      // Date columns: sort lexicographically (YYYY-MM-DD sorts correctly; empty → last)
+      if(col==='fab'||col==='del'||col==='inst'){
+        if(!av&&!bv) return 0;
+        if(!av) return d;
+        if(!bv) return -d;
+      }
+      return d*av.localeCompare(bv,undefined,{sensitivity:'base'});
+    });
+  }
+  rows.forEach(r=>tbody.appendChild(r));
+}
+
+async function _supaUpdateRefsTypes(){
+  if(!confirm('Are you sure you want to update Panel Refs & Types for all panels?\n\nThis will overwrite existing values in Supabase.')) return;
+  const btn=document.getElementById('supa-update-btn');
+  if(btn){btn.disabled=true;btn.textContent='Building…';}
+
+  const refFns={WF:wfPanelRef,EF:efPanelRef,SF:sfPanelRef,NF:nfPanelRef};
+  const updates=[];
+
+  ['WF','NF','EF','SF'].forEach(zid=>{
+    const zone=ZONES.find(z=>z.id===zid);
+    if(!zone) return;
+    const refFn=refFns[zid];
+    zone.floors.forEach(fl=>{
+      zone.colNums.forEach((col,ci)=>{
+        const id=`${zid}-${fl}-C${col}`;
+        const panel_ref=refFn?refFn(fl,col):null;
+        const panel_type=(zone.types[fl]||[])[ci]||null;
+        updates.push({id, zone:zid, status:(panels[id]?.status)||'pending', panel_ref:panel_ref||null, panel_type:panel_type||null});
+      });
+    });
+  });
+
+  // Upsert in batches of 500
+  const BATCH=500;
+  let done=0;
+  for(let i=0;i<updates.length;i+=BATCH){
+    const batch=updates.slice(i,i+BATCH);
+    const{error}=await sb.from('panels').upsert(batch,{onConflict:'id'});
+    if(error){
+      if(btn){btn.disabled=false;btn.textContent='⬆ Update Refs & Types';}
+      alert('Supabase error: '+error.message);
+      return;
+    }
+    done+=batch.length;
+    if(btn) btn.textContent=`Updating… ${done}/${updates.length}`;
+  }
+
+  // Sync ref/type back into in-memory panels so bulk sync stays consistent
+  updates.forEach(u=>{
+    if(panels[u.id]){panels[u.id].ref=u.panel_ref||'';panels[u.id].type=u.panel_type||'';}
+  });
+  if(btn){btn.disabled=false;btn.textContent='✓ Done';}
+  setTimeout(()=>{if(btn)btn.textContent='⬆ Update Refs & Types';},3000);
+  // Refresh the table
+  await openSupabasePanel();
+}
+
+const _SUPA_COLS=['ref','panelref','paneltype','zone','floor','col','status','asm','fab','del','prepinst','inst','instref'];
+
+function _supaDropSearch(col, input){
+  const q=(input.value||'').toLowerCase().trim();
+  const drop=document.getElementById('sfd-'+col);
+  if(!drop) return;
+  drop.querySelectorAll('label[data-label]').forEach(lbl=>{
+    lbl.style.display=(!q||lbl.dataset.label.includes(q))?'':'none';
+  });
+}
+
+function _supaToggleMulti(col){
+  // Close every other dropdown and reset their search
+  _SUPA_COLS.forEach(c=>{
+    if(c!==col){
+      const d=document.getElementById('sfd-'+c);
+      if(d){d.style.display='none';const si=d.querySelector('input[type=text]');if(si){si.value='';_supaDropSearch(c,si);}}
+    }
+  });
+  const drop=document.getElementById('sfd-'+col);
+  if(drop) drop.style.display=drop.style.display==='block'?'none':'block';
+}
+
+function _supaToggleAll(col,allCb){
+  const drop=document.getElementById('sfd-'+col);
+  if(!drop) return;
+  drop.querySelectorAll('input[data-item]').forEach(cb=>cb.checked=allCb.checked);
+  _supaFilter();
+}
+
+function _supaMultiCbChange(col){
+  const drop=document.getElementById('sfd-'+col);
+  const allCb=document.getElementById('sfa-'+col);
+  if(!drop||!allCb) return;
+  allCb.checked=[...drop.querySelectorAll('input[data-item]')].every(cb=>cb.checked);
+  _supaFilter();
+}
+
+function _supaFilter(){
+  const filters={};
+  _SUPA_COLS.forEach(c=>{
+    const drop=document.getElementById('sfd-'+c);
+    if(!drop){filters[c]=null;return;}
+    const allCb=document.getElementById('sfa-'+c);
+    if(allCb&&allCb.checked){filters[c]=null;return;}
+    const vals=[...drop.querySelectorAll('input[data-item]')].filter(cb=>cb.checked).map(cb=>cb.value);
+    filters[c]=vals.length?vals:null;
+  });
+  const tbody=document.getElementById('supabase-tbody');
+  if(!tbody) return;
+  const _fDsKey={floor:'floordisplay',col:'coldisplay'};
+  let visible=0,total=0;
+  [...tbody.querySelectorAll('tr')].forEach(tr=>{
+    const show=_SUPA_COLS.every(c=>!filters[c]||filters[c].includes(tr.dataset[_fDsKey[c]||c]||''));
+    tr.style.display=show?'':'none';
+    if(show)visible++;
+    total++;
+  });
+  document.getElementById('supa-count').textContent=`${visible} / ${total} panels`;
+  // Update button labels to reflect active filters
+  _SUPA_COLS.forEach(c=>{
+    const btn=document.getElementById('sfb-'+c);
+    if(!btn) return;
+    if(!filters[c]){btn.textContent=(btn.dataset.label||'All')+' ▾';btn.style.color='#8099b0';btn.style.fontWeight='400';}
+    else{btn.textContent=filters[c].length+' selected ▾';btn.style.color='#224F93';btn.style.fontWeight='700';}
+  });
+}
+
+// Close all multi-select dropdowns when clicking outside
+document.addEventListener('click',function(e){
+  if(!_SUPA_COLS.some(c=>{const w=document.getElementById('sf-'+c);return w&&w.contains(e.target);}))
+    _SUPA_COLS.forEach(c=>{const d=document.getElementById('sfd-'+c);if(d)d.style.display='none';});
+});
+
+// --- Supabase sheet inline cell edit ---
+async function _supaEditCell(panelId, field, value, el){
+  if(el){el.style.opacity='0.5';el.style.outline='2px solid #1976d2';}
+  const update={updated_at:new Date().toISOString()};
+  update[field]=value||null;
+  const{error}=await sb.from('panels').update(update).eq('id',panelId);
+  if(el){el.style.opacity='1';el.style.outline='';}
+  if(error){
+    alert('Save error: '+error.message);
+    if(el&&el.dataset.orig!==undefined){if(el.tagName==='SELECT'||el.tagName==='INPUT')el.value=el.dataset.orig||'';}
+    return;
+  }
+  // Sync change into in-memory panels so bulk cloud sync doesn't overwrite it
+  if(panels[panelId]){
+    const memKey={panel_ref:'ref',panel_type:'type',status:'status',fab_date:'fabDate',delivery_date:'deliveryDate',install_date:'installDate',install_ref:'installRef'}[field];
+    if(memKey) panels[panelId][memKey]=value||'';
+  }
+  _dirtyPanels.add(panelId);
+  // Update parent tr dataset so sort/filter still works
+  const tr=el?.closest('tr');
+  if(tr){
+    const dsKey={panel_ref:'panelref',panel_type:'paneltype',status:'status',fab_date:'fab',delivery_date:'del',install_date:'inst',install_ref:'instref'}[field];
+    if(dsKey) tr.dataset[dsKey]=(value||'').toLowerCase();
+  }
+  // Update status badge colours live
+  if(el&&field==='status'){
+    const bgMap={cl_not_issued:'#ffebee',cip:'#fce4ec',cutting:'#f3e5f5',fabricated:'#e3f2fd',delivered:'#fff8e1',installed:'#e8f5e9',defect:'#fbe9e7',pending:'#f5f5f5'};
+    const clMap={cl_not_issued:'#b71c1c',cip:'#c2185b',cutting:'#7b1fa2',fabricated:'#1a5fa8',delivered:'#a07800',installed:'#1a9458',defect:'#bf360c',pending:'#757575'};
+    el.style.background=bgMap[value]||'#f5f5f5';
+    el.style.color=clMap[value]||'#757575';
+  }
+  if(el){
+    el.dataset.orig=value||'';
+    el.style.background='#e8f5e9';
+    setTimeout(()=>{
+      if(el){
+        if(field==='status'){const bgMap={cl_not_issued:'#ffebee',cip:'#fce4ec',cutting:'#f3e5f5',fabricated:'#e3f2fd',delivered:'#fff8e1',installed:'#e8f5e9',defect:'#fbe9e7',pending:'#f5f5f5'};el.style.background=bgMap[el.value]||'#f5f5f5';}
+        else el.style.background='transparent';
+      }
+    },1200);
+  }
+}
+
+function _supaPasswordGate(){
+  if(_supaUnlocked){ openSupabasePanel(); return; }
+  const modal=document.getElementById('supa-pw-modal');
+  if(!modal) return;
+  const inp=document.getElementById('supa-pw-input');
+  const err=document.getElementById('supa-pw-err');
+  if(inp) inp.value='';
+  if(err) err.style.display='none';
+  modal.classList.add('open');
+  setTimeout(()=>{ if(inp) inp.focus(); },120);
+}
+
+function _supaPwSubmit(){
+  const inp=document.getElementById('supa-pw-input');
+  const err=document.getElementById('supa-pw-err');
+  if((inp?.value||'').trim()==='DATA'){
+    _supaUnlocked=true;
+    cm('supa-pw-modal');
+    openSupabasePanel();
+  } else {
+    if(err){ err.style.display='block'; }
+    if(inp){ inp.value=''; inp.focus(); }
+  }
+}
+
+async function openSupabasePanel(){
+  // Open modal immediately and show loading state
+  document.getElementById('supabase-modal').classList.add('open');
+  document.getElementById('supa-count').textContent='Syncing…';
+  document.getElementById('supabase-tbody').innerHTML=
+    '<tr><td colspan="9" style="padding:40px;text-align:center;color:#8099b0;font-size:13px;">⏳ Fetching data from Supabase…</td></tr>';
+
+  // Fetch all panels fresh from Supabase (paginated) — use select('*') to avoid missing-column errors
+  const allRows=[];
+  const PAGE=1000;
+  let from=0;
+  try{
+    while(true){
+      const {data,error}=await sb.from('panels').select('*').in('zone',['WF','NF','EF','SF']).neq('status','pending').range(from,from+PAGE-1);
+      if(error){
+        document.getElementById('supabase-tbody').innerHTML=
+          `<tr><td colspan="9" style="padding:40px;text-align:center;color:#c02020;font-size:12px;">❌ Supabase error: ${error.message||JSON.stringify(error)}</td></tr>`;
+        document.getElementById('supa-count').textContent='Error';
+        return;
+      }
+      if(!data||data.length===0) break;
+      allRows.push(...data);
+      if(data.length<PAGE) break;
+      from+=PAGE;
+    }
+  }catch(e){
+    document.getElementById('supabase-tbody').innerHTML=
+      `<tr><td colspan="9" style="padding:40px;text-align:center;color:#c02020;font-size:12px;">❌ Error: ${e.message||'Failed to fetch'}</td></tr>`;
+    document.getElementById('supa-count').textContent='Error';
+    return;
+  }
+
+  // Load assembly and prep-inst checklists in parallel
+  await Promise.all([_loadAssemblyPanels(), _loadPrepInstPanels()]);
+
+  const statusColors={
+    installed:    {bg:'#e8f5e9',color:'#1a9458'},
+    delivered:    {bg:'#fff8e1',color:'#a07800'},
+    fabricated:   {bg:'#e3f2fd',color:'#1a5fa8'},
+    cutting:      {bg:'#f3e5f5',color:'#7b1fa2'},
+    cip:          {bg:'#fce4ec',color:'#c2185b'},
+    cl_not_issued:{bg:'#ffebee',color:'#b71c1c'},
+    defect:       {bg:'#fbe9e7',color:'#bf360c'},
+    pending:      {bg:'#f5f5f5',color:'#757575'},
+  };
+
+  // Parse zone / floor / column from panel_ref (e.g. W-06-20) or fallback to ID
+  function parseRef(ref,id){
+    const m=(ref||'').match(/^([WESN])-(\d+)-(\d+)$/i);
+    if(m){
+      const zm={W:'West Facade',E:'East Facade',S:'South Facade',N:'North Facade'};
+      const n=parseInt(m[2]);
+      return{zone:zm[m[1].toUpperCase()]||m[1], floor:n===0?'RDC':`R+${String(n).padStart(2,'0')}`, col:m[3]};
+    }
+    // Fallback: WF-R+06-C20
+    const m2=(id||'').match(/^(WF|EF|SF|NF)-(.+)-C(\d+)$/);
+    if(m2){
+      const zm={WF:'West Facade',EF:'East Facade',SF:'South Facade',NF:'North Facade'};
+      return{zone:zm[m2[1]]||m2[1], floor:m2[2], col:m2[3]};
+    }
+    return{zone:'—',floor:'—',col:'—'};
+  }
+
+  // Build the set of valid panel IDs from the ZONES grid definition
+  const validIds=new Set();
+  ['WF','NF','EF','SF'].forEach(zid=>{
+    const zone=ZONES.find(z=>z.id===zid);
+    if(!zone) return;
+    zone.floors.forEach(fl=>{
+      zone.colNums.forEach(col=>{
+        validIds.add(`${zid}-${fl}-C${col}`);
+      });
+    });
+  });
+  // Keep only rows that match a real grid cell; track orphans for the info line
+  // Also exclude the boundary columns: EF C81/C65 and WF C15/C31
+  const _excludedIds=new Set(['EF-R+01-C75','EF-R+01-C73','EF-R+01-C71','EF-R+01-C69','NF-R+01-C60','NF-R+01-C58','SF-R+18T-C91','SF-R+18T-C89','WF-R+18T-C29','WF-R+18T-C27','WF-R+18T-C23','WF-R+18T-C21']);
+  const _edgeExclude=r=>/^EF-.*-C(81|65)$/.test(r.id)||/^WF-.*-C(15|31)$/.test(r.id)||_excludedIds.has(r.id);
+  const ucwRows=allRows.filter(r=>validIds.has(r.id)&&!_edgeExclude(r));
+  const orphanCount=allRows.length-ucwRows.length;
+
+  const tbody=document.getElementById('supabase-tbody');
+  tbody.innerHTML='';
+  const dash='<span style="color:#c0cde0;">—</span>';
+  const cell=(val,align='left',mono=false,last=false)=>
+    `<td style="padding:5px 12px;font-size:11px;${mono?'font-family:var(--mono);':''}color:var(--text);border-bottom:1px solid #eef2f8;${last?'':'border-right:1px solid #eef2f8;'}text-align:${align};white-space:nowrap;">${val}</td>`;
+
+  ucwRows.forEach((r,i)=>{
+    const{zone,floor,col}=parseRef(r.panel_ref,r.id);
+    const status=r.status||'pending';
+    const sc=statusColors[status]||statusColors.pending;
+    const meta=SM[status]||SM.pending;
+    const hasAssembly=assemblyPanelRefs.has(r.panel_ref||'');
+    const hasPrepInst=prepInstPanelRefs.has(r.panel_ref||'');
+    const floorNum=floor==='RDC'?0:parseInt((floor||'').replace('R+',''))||0;
+    const colNum=parseInt(col)||0;
+    const tr=document.createElement('tr');
+    const sqn=String(i+1).padStart(3,'0');
+    const instRef=r.install_ref||r.installRef||'';
+    const panelRef=r.panel_ref||'';
+    const panelType=r.panel_type||r.type||'';
+    tr.dataset.origIdx=i;
+    tr.dataset.ref=(r.id).toLowerCase();
+    tr.dataset.panelref=panelRef.toLowerCase();
+    tr.dataset.paneltype=panelType.toLowerCase();
+    tr.dataset.zone=zone.toLowerCase();
+    tr.dataset.floor=String(floorNum).padStart(4,'0');
+    tr.dataset.floordisplay=floor;
+    tr.dataset.col=String(colNum).padStart(4,'0');
+    tr.dataset.coldisplay=col;
+    tr.dataset.status=status;
+    tr.dataset.asm=hasAssembly?'1':'0';
+    tr.dataset.prepinst=hasPrepInst?'1':'0';
+    tr.dataset.fab=r.fab_date||'';
+    tr.dataset.del=r.delivery_date||r.deliveryDate||'';
+    tr.dataset.inst=r.install_date||'';
+    tr.dataset.instref=instRef.toLowerCase();
+    tr.style.background=i%2===0?'#ffffff':'#f8fafd';
+    tr.onmouseover=()=>tr.style.background='#eef5ff';
+    tr.onmouseout=()=>{const idx=+tr.dataset.origIdx;tr.style.background=idx%2===0?'#ffffff':'#f8fafd';};
+    // Editable input shared styles
+    const eIs=`border:1px solid transparent;border-radius:4px;font-size:11px;padding:2px 6px;font-family:inherit;background:transparent;width:100%;box-sizing:border-box;outline:none;cursor:pointer;`;
+    const eFocus=`onfocus="this.style.borderColor='#1976d2';this.style.background='#f0f7ff'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"`;
+    const eTd=`padding:4px 8px;border-bottom:1px solid #eef2f8;border-right:1px solid #eef2f8;`;
+    const eTdLast=`padding:4px 8px;border-bottom:1px solid #eef2f8;`;
+    const statusOpts=['cl_not_issued','cip','cutting','fabricated','delivered','installed','defect']
+      .map(s=>`<option value="${s}"${status===s?' selected':''}>${(SM[s]||SM.pending).label}</option>`).join('');
+    const fabVal=r.fab_date||'';
+    const delVal=r.delivery_date||r.deliveryDate||'';
+    const instVal=r.install_date||'';
+    tr.innerHTML=
+      `<td style="padding:5px 12px;font-size:11px;font-family:var(--mono);color:#a0aec0;border-bottom:1px solid #eef2f8;border-right:1px solid #eef2f8;text-align:center;white-space:nowrap;">${sqn}</td>`+
+      cell(`<span style="font-weight:700;color:#1e3a5f;">${r.id}</span>`,'left',true)+
+      // Panel Ref — editable text
+      `<td style="${eTd}"><input type="text" value="${panelRef}" data-orig="${panelRef}" data-id="${r.id}" data-field="panel_ref" style="${eIs}font-family:var(--mono);font-weight:600;color:#1e3a5f;" ${eFocus} onchange="_supaEditCell(this.dataset.id,this.dataset.field,this.value,this)"></td>`+
+      // Panel Type — editable text
+      `<td style="${eTd}"><input type="text" value="${panelType}" data-orig="${panelType}" data-id="${r.id}" data-field="panel_type" style="${eIs}color:#555;" ${eFocus} onchange="_supaEditCell(this.dataset.id,this.dataset.field,this.value,this)"></td>`+
+      cell(zone)+
+      cell(floor,'left',true)+
+      cell(col,'center',true)+
+      // Status — editable select
+      `<td style="${eTd}"><select data-orig="${status}" data-id="${r.id}" data-field="status" style="border:1px solid transparent;border-radius:4px;font-size:10px;font-weight:700;padding:2px 6px;background:${sc.bg};color:${sc.color};cursor:pointer;outline:none;" onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='transparent'" onchange="_supaEditCell(this.dataset.id,this.dataset.field,this.value,this)">${statusOpts}</select></td>`+
+      // Assembly — read-only
+      `<td style="padding:5px 12px;border-bottom:1px solid #eef2f8;border-right:1px solid #eef2f8;text-align:center;">${
+        hasAssembly
+          ?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:#e8f5e9;color:#1a9458;">Yes</span>'
+          :'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:#f5f5f5;color:#9e9e9e;">No</span>'
+      }</td>`+
+      // Fabricated Date — editable date
+      `<td style="${eTd}"><input type="date" value="${fabVal}" data-orig="${fabVal}" data-id="${r.id}" data-field="fab_date" style="${eIs}color:#1a5fa8;" ${eFocus} onchange="_supaEditCell(this.dataset.id,this.dataset.field,this.value,this)"></td>`+
+      // Delivery Date — editable date
+      `<td style="${eTd}"><input type="date" value="${delVal}" data-orig="${delVal}" data-id="${r.id}" data-field="delivery_date" style="${eIs}color:#a07800;" ${eFocus} onchange="_supaEditCell(this.dataset.id,this.dataset.field,this.value,this)"></td>`+
+      // Checklist Prep & Inst — read-only
+      `<td style="padding:5px 12px;border-bottom:1px solid #eef2f8;border-right:1px solid #eef2f8;text-align:center;">${
+        hasPrepInst
+          ?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:#e8f5e9;color:#1a9458;">Yes</span>'
+          :'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:#f5f5f5;color:#9e9e9e;">No</span>'
+      }</td>`+
+      // Installation Date — editable date
+      `<td style="${eTd}"><input type="date" value="${instVal}" data-orig="${instVal}" data-id="${r.id}" data-field="install_date" style="${eIs}color:#1a9458;" ${eFocus} onchange="_supaEditCell(this.dataset.id,this.dataset.field,this.value,this)"></td>`+
+      // Installation Reference — editable text (last column)
+      `<td style="${eTdLast}"><input type="text" value="${instRef}" data-orig="${instRef}" data-id="${r.id}" data-field="install_ref" style="${eIs}color:#1e3a5f;" ${eFocus} onchange="_supaEditCell(this.dataset.id,this.dataset.field,this.value,this)"></td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Populate multi-select checkbox dropdowns from rendered rows
+  const labels={ref:'All IDs',panelref:'All Refs',paneltype:'All Types',zone:'All Zones',floor:'All Floors',col:'All Columns',status:'All Statuses',asm:'All',fab:'All Dates',del:'All Dates',prepinst:'All',inst:'All Dates',instref:'All Refs'};
+  const displayVal={asm:v=>v==='1'?'Yes':'No', prepinst:v=>v==='1'?'Yes':'No', status:v=>(SM[v]||SM.pending).label};
+  const dropStyle='position:absolute;top:calc(100% + 2px);left:0;z-index:300;background:#fff;border:1px solid #d0dbe8;border-radius:6px;min-width:160px;max-height:240px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.13);display:none;';
+  const rowHov='onmouseover="this.style.background=\'#f0f7ff\'" onmouseout="this.style.background=\'transparent\'"';
+  // For floor/col, read the human-readable display value instead of the padded sort key
+  const _filterDsKey={floor:'floordisplay',col:'coldisplay'};
+  _SUPA_COLS.forEach(c=>{
+    const drop=document.getElementById('sfd-'+c);
+    const btn=document.getElementById('sfb-'+c);
+    if(!drop) return;
+    const dsKey=_filterDsKey[c]||c;
+    const seen=new Set();
+    const items=[];
+    [...tbody.querySelectorAll('tr')].forEach(tr=>{
+      const v=tr.dataset[dsKey]||'';
+      if(v&&!seen.has(v)){seen.add(v);items.push(v);}
+    });
+    // Sort floors/cols numerically, others alphabetically
+    if(c==='floor') items.sort((a,b)=>{const n=s=>s==='RDC'?0:parseInt(s.replace(/[^0-9]/g,''))||0;return n(a)-n(b);});
+    else if(c==='col') items.sort((a,b)=>parseInt(a)-parseInt(b));
+    else items.sort();
+    const lbl=labels[c]||'All';
+    let html=
+      // Search input
+      `<div style="padding:6px 8px;border-bottom:1px solid #eef2f8;background:#fff;border-radius:6px 6px 0 0;position:sticky;top:0;z-index:1;">
+        <input type="text" placeholder="Search…" oninput="_supaDropSearch('${c}',this)" onclick="event.stopPropagation()"
+          style="width:100%;box-sizing:border-box;font-size:10px;padding:4px 8px;border:1px solid #d0dbe8;border-radius:4px;outline:none;font-family:inherit;color:#1e3a5f;"
+          onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#d0dbe8'">
+      </div>`+
+      // All checkbox
+      `<label style="display:flex;align-items:center;gap:7px;padding:6px 10px;cursor:pointer;font-size:10px;font-weight:700;color:#224F93;background:#f0f7ff;border-bottom:1px solid #eef2f8;" ${rowHov}><input type="checkbox" id="sfa-${c}" checked onchange="_supaToggleAll('${c}',this)" style="cursor:pointer;accent-color:#224F93;"> All</label>`;
+    items.forEach(v=>{
+      const disp=displayVal[c]?displayVal[c](v):v;
+      html+=`<label data-label="${disp.toLowerCase()}" style="display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;font-size:10px;white-space:nowrap;" ${rowHov}><input type="checkbox" data-item="1" value="${v}" checked onchange="_supaMultiCbChange('${c}')" style="cursor:pointer;accent-color:#224F93;"> ${disp}</label>`;
+    });
+    drop.innerHTML=html;
+    drop.style.cssText=dropStyle;
+    if(btn){btn.dataset.label=lbl;btn.textContent=lbl+' ▾';}
+  });
+
+  document.getElementById('supa-count').textContent=`${ucwRows.length} panels${orphanCount>0?` · ${orphanCount} orphaned`:''}`;
+
+}
+
+function renderSuggestions(){
+  const cont=document.getElementById('page-suggestions');
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">💡</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Suggestions</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Share your ideas or feedback with the project team</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:32px 24px;display:flex;justify-content:center;">
+        <div style="width:100%;max-width:680px;">
+
+          <div id="sug-success" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:6px;">✅</div>
+            <div style="font-size:14px;font-weight:700;color:#2e7d32;">Suggestion envoyée avec succès !</div>
+            <div style="font-size:12px;color:#388e3c;margin-top:4px;">Votre message a été transmis à l'équipe.</div>
+          </div>
+
+          <div id="sug-error" style="display:none;background:#fdecea;border:1px solid #ef9a9a;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:6px;">⚠️</div>
+            <div style="font-size:14px;font-weight:700;color:#c62828;" id="sug-error-msg">Erreur lors de l'envoi.</div>
+          </div>
+
+          <div id="sug-form-wrap" style="background:#fff;border:1px solid #dde3ee;border-radius:12px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <label style="display:block;font-size:12px;font-weight:700;color:#445;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px;">Votre suggestion</label>
+            <textarea id="sug-text" maxlength="3000" placeholder="Décrivez votre idée ou retour ici…"
+              oninput="document.getElementById('sug-count').textContent=(3000-this.value.length)+' caractères restants';document.getElementById('sug-submit').disabled=this.value.trim().length===0;"
+              style="width:100%;min-height:260px;padding:14px 16px;border:1.5px solid #ccd4e0;border-radius:8px;font-size:13px;line-height:1.6;color:#222;resize:vertical;outline:none;box-sizing:border-box;font-family:inherit;transition:border-color 0.2s;"
+              onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#ccd4e0'"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <span id="sug-count" style="font-size:11px;color:#888;">3000 caractères restants</span>
+              <span style="font-size:11px;color:#aaa;">Envoyé à : ${SUGGESTION_TO_EMAIL}</span>
+            </div>
+            <button id="sug-submit" disabled onclick="submitSuggestion()"
+              style="margin-top:20px;width:100%;padding:13px;background:#1976d2;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.04em;transition:background 0.2s;opacity:0.5;"
+              onmouseenter="if(!this.disabled)this.style.background='#1565c0'" onmouseleave="this.style.background='#1976d2'"
+              onfocus="this.style.opacity=this.disabled?'0.5':'1'" >
+              ✉ Envoyer la suggestion
+            </button>
+          </div>
+
+          <div style="margin-top:16px;text-align:center;font-size:11px;color:#aaa;">
+            Les suggestions sont transmises directement par email à l'équipe de projet.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Re-enable submit button style when textarea has content
+  const ta=document.getElementById('sug-text');
+  const btn=document.getElementById('sug-submit');
+  if(ta&&btn){
+    ta.addEventListener('input',()=>{
+      const ok=ta.value.trim().length>0;
+      btn.disabled=!ok;
+      btn.style.opacity=ok?'1':'0.5';
+      btn.style.cursor=ok?'pointer':'default';
+    });
+  }
+}
+
+window.submitSuggestion=async function(){
+  const ta=document.getElementById('sug-text');
+  const btn=document.getElementById('sug-submit');
+  const errDiv=document.getElementById('sug-error');
+  const errMsg=document.getElementById('sug-error-msg');
+  const successDiv=document.getElementById('sug-success');
+  const text=ta.value.trim();
+  if(!text||text.length>3000)return;
+
+  btn.disabled=true;
+  btn.textContent='Envoi en cours…';
+  btn.style.opacity='0.7';
+  errDiv.style.display='none';
+
+  // Get sender name from logged-in user if available
+  const sender=(window.currentUser&&(window.currentUser.full_name||window.currentUser.email))||'Utilisateur';
+
+  try{
+    if(EMAILJS_PUBLIC_KEY&&EMAILJS_SERVICE_ID&&EMAILJS_TEMPLATE_ID){
+      // EmailJS path — fully automatic, no email client needed
+      emailjs.init({publicKey:EMAILJS_PUBLIC_KEY});
+      await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{
+        to_email:SUGGESTION_TO_EMAIL,
+        from_name:sender,
+        message:text,
+        date:new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}),
+      });
+    } else {
+      // Fallback: open email client pre-filled
+      const subject=encodeURIComponent('Suggestion Batimon — '+new Date().toLocaleDateString('fr-FR'));
+      const body=encodeURIComponent('De : '+sender+'\n\n'+text);
+      window.open('mailto:'+SUGGESTION_TO_EMAIL+'?subject='+subject+'&body='+body,'_self');
+    }
+    // Also save to Supabase for record-keeping
+    try{await sb.from('suggestions').insert({sender,message:text,created_at:new Date().toISOString()});}catch(e){}
+    document.getElementById('sug-form-wrap').style.display='none';
+    successDiv.style.display='block';
+  }catch(e){
+    errMsg.textContent='Erreur lors de l\'envoi : '+(e.text||e.message||'Veuillez réessayer.');
+    errDiv.style.display='block';
+    btn.disabled=false;
+    btn.textContent='✉ Envoyer la suggestion';
+    btn.style.opacity='1';
+  }
+};
+
+function renderLaborCurve(){
+  const cont = document.getElementById('page-labor-curve');
+  cont.innerHTML = `<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:12px 24px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">📈</span>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Labor Curve</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Workforce Planning</div>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;">
+        Labor Curve — coming soon
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CASH FLOW — Summary
+// ═══════════════════════════════════════════════════════════
+function buildCFMonthlyArrays(){
+  // CF index mapping: 0=jan-26 … 11=déc-26, 12=jan-27 … 23=déc-27
+  // MC index mapping: 0=aug-25 … 4=dec-25, 5=jan-26 … 16=dec-26
+  const cfKeys=['jan26','feb26','mar26','apr26','may26','jun26','jul26','aug26','sep26','oct26','nov26','dec26',
+    'jan27','feb27','mar27','apr27','may27','jun27','jul27','aug27','sep27','oct27','nov27','dec27'];
+
+  // Cash-In: ref 9 base values + any _cashInOverrides applied
+  const ref9base={feb26:5400000,apr26:904500,jul26:2535143.85,aug26:4349584.33,
+    sep26:2563325.61,oct26:4314644.78,nov26:4723973.91,dec26:5371301.18,
+    jan27:6513886.27,feb27:7084889.60,mar27:5330150.48};
+  const cashin=cfKeys.map(k=>ref9base[k]||0);
+  cfKeys.forEach((k,i)=>{
+    const ov=window._cashInOverrides&&window._cashInOverrides['9__'+k];
+    if(ov&&ov.v!==undefined)cashin[i]=ov.v;
+  });
+
+  // Material Cost: Fournitures TOTALS.months (Apr-26=CF[3] to Mar-27=CF[14])
+  const fourMoHT=[0,1980071.15,0,2797722.83,3045435.75,2471282.11,1679581.93,4307939.65,1667208.26,6682807.71,1701278.84,6522397.37];
+  const material=Array(24).fill(0);
+  fourMoHT.forEach((v,i)=>{material[3+i]=v*1.2;});
+
+  // Employees Cost: Monthly Cost BASE people + monthlyCostOv overrides
+  const mcPeople=[
+    {id:'p1', salary:9000, m:[0.5,0.5,0.5,1,1,1,1,1,0,0,0,0,0,0,0,0,0]},
+    {id:'p2', salary:5500, m:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+    {id:'p3', salary:50000,m:[1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+    {id:'p4', salary:75000,m:[0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0]},
+    {id:'p5', salary:11000,m:[1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0]},
+    {id:'p6', salary:11000,m:[1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0]},
+    {id:'p7', salary:11000,m:[0,0,0,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0]},
+    {id:'p8', salary:11000,m:[1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0]},
+    {id:'p10',salary:10000,m:[0,0,0,0,0.1,0.1,0.1,0.35,0,0,0,0,0,0,0,0,0]},
+    {id:'p11',salary:5000, m:[0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0]},
+    {id:'p12',salary:4000, m:[0,0,0,0,2,2,2,2,0,0,0,0,0,0,0,0,0]},
+    {id:'p13',salary:24000,m:[0,0,0,0,0,0.1,0.1,0.1,0.5,0,0,0,0,0,0,0,0]},
+    {id:'p14',salary:6000, m:[0,0,0,0,0,2,4,4,10,0,0,0,0,0,0,0,0]},
+    {id:'p15',salary:0,    m:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  ];
+  const employees=Array(24).fill(0);
+  let emp2025=0;
+  mcPeople.forEach(p=>{
+    const ov=monthlyCostOv[p.id]||{};
+    const salary=ov.salary!==undefined?ov.salary:p.salary;
+    const m=ov.m||p.m;
+    if(!salary)return;
+    for(let mi=0;mi<5;mi++)emp2025+=(m[mi]||0)*salary;
+    for(let mi=5;mi<=16;mi++)employees[mi-5]+=(m[mi]||0)*salary;
+  });
+
+  const yr2025={cashin:0,employees:emp2025,material:0,other:0,cashflow:-emp2025};
+  return{cashin,material,employees,other:Array(24).fill(0),cashflow:Array(24).fill(0),yr2025};
+}
+
+function renderCashFlow(){
+  const cont=document.getElementById('page-cash-flow');
+  const MONTHS=[
+    'jan-26','fév-26','mar-26','avr-26','mai-26','jui-26','juil-26','août-26','sept-26','oct-26','nov-26','déc-26',
+    'jan-27','fév-27','mar-27','avr-27','mai-27','jui-27','juil-27','août-27','sept-27','oct-27','nov-27','déc-27',
+  ];
+  const ROWS=[
+    {label:'Cash-In',        key:'cashin',    style:'in'},
+    {label:'Employees Cost', key:'employees', style:'out'},
+    {label:'Material Cost',  key:'material',  style:'out'},
+    {label:'Other Costs',    key:'other',     style:'out'},
+    {label:'Cash Flow',      key:'cashflow',  style:'total'},
+  ];
+  const{cashin,material,employees,other,cashflow,yr2025}=buildCFMonthlyArrays();
+  const data={cashin,material,employees,other,cashflow};
+
+  function fmt(n){
+    if(n===0)return'—';
+    const abs=Math.abs(n);
+    const s=abs.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    return n<0?`(${s})`:s;
+  }
+
+  const styleMap={
+    in:   {bg:'#f0f7ff', color:'#1a5fa8', weight:'600', hdr:'#1a5fa8'},
+    out:  {bg:'#fff8f0', color:'#8b3a00', weight:'600', hdr:'#8b3a00'},
+    total:{bg:'#0d2244', color:'#fff',    weight:'700', hdr:'#fff'},
+  };
+
+  const TH='padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;';
+  const TD='padding:5px 10px;font-size:10px;white-space:nowrap;border:1px solid #dee2e6;text-align:right;font-family:var(--mono);';
+
+  // Pre-compute monthly cash flow values for cumulative row
+  const cfMonthly=MONTHS.map((_,i)=>data.cashin[i]-data.employees[i]-data.material[i]-data.other[i]);
+  const cf2025=yr2025.cashin-yr2025.employees-yr2025.material-yr2025.other;
+
+  const bodyHTML=ROWS.map(r=>{
+    const st=styleMap[r.style];
+    const isCF=r.style==='total';
+    const v2025=isCF?cf2025:yr2025[r.key];
+    const pos2025=v2025>=0;
+    const col2025=isCF?(pos2025?'#7fffb0':'#ff8a8a'):st.color;
+    const yr2025cell=`<td style="${TD}background:${isCF?'#0d2244':'#f5f0ff'};color:${col2025};font-weight:${st.weight};border-right:2px solid #8860c8;">${fmt(v2025)}</td>`;
+    const vals=MONTHS.map((_,i)=>{
+      const v=isCF?cfMonthly[i]:data[r.key][i];
+      const positive=v>=0;
+      const cellColor=isCF?(positive?'#7fffb0':'#ff8a8a'):st.color;
+      return`<td style="${TD}background:${isCF?'#0d2244':'inherit'};color:${cellColor};font-weight:${st.weight};">${fmt(v)}</td>`;
+    }).join('');
+    return`<tr>
+      <td style="padding:6px 12px;font-size:10px;font-weight:${st.weight};white-space:nowrap;border:1px solid #dee2e6;background:${isCF?'#0d2244':st.bg};color:${st.color};min-width:140px;">${r.label}</td>
+      ${yr2025cell}${vals}
+    </tr>`;
+  }).join('');
+
+  // Cumulative cash flow row
+  let cumSum=cf2025;
+  const cumVals=MONTHS.map((_,i)=>{
+    cumSum+=cfMonthly[i];
+    const pos=cumSum>=0;
+    return`<td style="${TD}background:#162d55;color:${pos?'#ffe066':'#ff6b6b'};font-weight:700;">${fmt(cumSum)}</td>`;
+  }).join('');
+  const cum2025pos=cf2025>=0;
+  const cumRowHTML=`<tr>
+    <td style="padding:6px 12px;font-size:10px;font-weight:700;white-space:nowrap;border:1px solid #dee2e6;background:#162d55;color:#ffe066;min-width:140px;">Cash Flow Cumulatif</td>
+    <td style="${TD}background:#162d55;color:${cum2025pos?'#ffe066':'#ff6b6b'};font-weight:700;border-right:2px solid #8860c8;">${fmt(cf2025)}</td>
+    ${cumVals}
+  </tr>`;
+
+  // Build cumulative series for chart (starting from 2025 baseline)
+  const chartLabels=['2025',...MONTHS];
+  const chartData=[cf2025];
+  let runSum=cf2025;
+  cfMonthly.forEach(v=>{runSum+=v;chartData.push(runSum);});
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">💰</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Cash Flow — Summary</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · jan-26 → déc-27 · 24 months</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 24px;display:flex;flex-direction:column;gap:20px;">
+        <div style="overflow-x:auto;">
+          <table id="cf-summary-table" style="border-collapse:collapse;min-width:max-content;">
+            <thead style="position:sticky;top:0;z-index:10;">
+              <tr style="background:#0d2244;color:#fff;">
+                <th style="${TH}text-align:left;min-width:140px;">Item</th>
+                <th style="${TH}background:#6a3fa0;border-right:2px solid #8860c8;">2025</th>
+                ${MONTHS.map(m=>`<th style="${TH}">${m}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>${bodyHTML}${cumRowHTML}</tbody>
+          </table>
+        </div>
+        <div id="cf-chart-wrap" style="background:#f0f4f9;border-radius:10px;padding:20px 24px;box-sizing:border-box;border:1px solid #d0dbe8;">
+          <div style="font-size:12px;font-weight:700;color:#1565c0;margin-bottom:14px;letter-spacing:0.06em;text-transform:uppercase;">Cash Flow Cumulatif</div>
+          <canvas id="cf-cum-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  if(window._cfCumChart){window._cfCumChart.destroy();window._cfCumChart=null;}
+
+  // Set chart height (+25% of table height), then init chart inside rAF so dimensions are known
+  requestAnimationFrame(()=>{
+    const tbl=document.getElementById('cf-summary-table');
+    const wrap=document.getElementById('cf-chart-wrap');
+    if(tbl&&wrap){
+      const h=Math.round(tbl.offsetHeight*1.25);
+      wrap.style.height=h+'px';
+      const canvas=document.getElementById('cf-cum-chart');
+      if(canvas) canvas.style.height=(h-54)+'px';
+    }
+    const ctx=document.getElementById('cf-cum-chart');
+    if(!ctx)return;
+    const ptColors=chartData.map(v=>v>=0?'#2196f3':'#f44336');
+    window._cfCumChart=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:chartLabels,
+        datasets:[{
+          label:'Cash Flow Cumulatif (MAD)',
+          data:chartData,
+          borderColor:'#1976d2',
+          borderWidth:2.5,
+          pointBackgroundColor:ptColors,
+          pointBorderColor:ptColors,
+          pointRadius:4,
+          pointHoverRadius:6,
+          fill:{target:'origin',above:'rgba(33,150,243,0.12)',below:'rgba(244,67,54,0.12)'},
+          tension:0.35,
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'#fff',
+            titleColor:'#1565c0',
+            bodyColor:'#333',
+            borderColor:'#90caf9',
+            borderWidth:1,
+            callbacks:{
+              label:c=>{
+                const v=c.raw;
+                const abs=Math.abs(v).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0});
+                return' '+(v<0?`(${abs})`:`${abs}`)+' MAD';
+              }
+            }
+          }
+        },
+        scales:{
+          x:{
+            ticks:{color:'#555',font:{size:9}},
+            grid:{color:'rgba(0,0,0,0.06)'},
+            border:{color:'rgba(0,0,0,0.15)'}
+          },
+          y:{
+            ticks:{
+              color:'#555',font:{size:9},
+              callback:v=>{
+                const abs=Math.abs(v);
+                if(abs>=1000000)return(v<0?'-':'')+Math.round(abs/1000000)+'M';
+                if(abs>=1000)return(v<0?'-':'')+Math.round(abs/1000)+'K';
+                return v;
+              }
+            },
+            grid:{color:'rgba(0,0,0,0.06)'},
+            border:{color:'rgba(0,0,0,0.15)'},
+            afterBuildTicks(ax){ax.ticks.push({value:0});},
+          }
+        }
+      }
+    });
+  }); // end requestAnimationFrame
+}
+
+// ═══════════════════════════════════════════════════════════
+//  OTHER COSTS — Cash Out
+// ═══════════════════════════════════════════════════════════
+function renderOtherCosts(){
+  const cont=document.getElementById('page-other-costs');
+
+  const SECTIONS=[
+    {
+      label:'Autres Coûts Directs',
+      rows:[
+        {item:'Site costs (printer + windows)', prc:0, prm:0, pra:10000,      budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+        {item:'Transportation (container)',      prc:0, prm:0, pra:500,        budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+        {item:'Insurance',                       prc:0, prm:0, pra:69574.99,   budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+        {item:'Export costs (ECA, taxes…)',      prc:0, prm:0, pra:0,          budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+        {item:'Other',                           prc:0, prm:0, pra:0,          budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+        {item:'Contingencies - Unforeseen',      prc:0, prm:0, pra:755013.44,  budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+      ],
+      total:{label:'Total Autres Coûts Directs', prc:0, prm:0, pra:835088.42, budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+    },
+    {
+      label:'Provisions',
+      rows:[
+        {item:'Compte pro-rata',                 prc:951213.43, prm:951213.43, pra:951213.43,   budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:951213.43},
+        {item:'Warranty – Retention',            prc:0,         prm:0,         pra:1350000,     budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+        {item:'Penalties (delay, performance…)', prc:0,         prm:0,         pra:0,           budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+        {item:'Other provisions',                prc:0,         prm:0,         pra:0,           budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:0},
+      ],
+      total:{label:'Total Provisions', prc:951213.43, prm:951213.43, pra:2301213.43, budgetUsed:0, lastMonth:0, thisMon:0, cfNonSolde:0, coutTerminer:951213.43},
+    },
+    {
+      label:'Coûts Indirects',
+      rows:[
+        {item:'Interest cautions définitif',      prc:32400,  prm:32400,  pra:32400,  budgetUsed:13500, lastMonth:10800, thisMon:2700, cfNonSolde:0, coutTerminer:18900},
+        {item:'Interest cautions de l\'avance',   prc:108000, prm:108000, pra:108000, budgetUsed:27000, lastMonth:18000, thisMon:9000, cfNonSolde:0, coutTerminer:81000},
+        {item:'Overhead allocation',              prc:0,      prm:0,      pra:0,      budgetUsed:0,     lastMonth:0,     thisMon:0,    cfNonSolde:0, coutTerminer:0},
+        {item:'Pourcentage Commercial',           prc:0,      prm:0,      pra:0,      budgetUsed:0,     lastMonth:0,     thisMon:0,    cfNonSolde:0, coutTerminer:0},
+        {item:'Other costs',                      prc:0,      prm:0,      pra:0,      budgetUsed:0,     lastMonth:0,     thisMon:0,    cfNonSolde:0, coutTerminer:0},
+      ],
+      total:{label:'Total Coûts Indirects', prc:140400, prm:140400, pra:140400, budgetUsed:40500, lastMonth:28800, thisMon:11700, cfNonSolde:0, coutTerminer:99900},
+    },
+  ];
+  const GRAND={prc:1091613.43, prm:1091613.43, pra:3276701.85, budgetUsed:40500, lastMonth:28800, thisMon:11700, cfNonSolde:0, coutTerminer:1051113.43};
+
+  function fmt(n){if(!n||n===0)return'—';return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  const TD ='padding:5px 10px;border:1px solid #dee2e6;font-size:10px;white-space:nowrap;';
+  const TDR=TD+'text-align:right;font-family:var(--mono);';
+
+  function dataRow(r, i){
+    const bg=i%2===0?'#fff':'#fafcff';
+    const cols=[r.prc,r.prm,r.pra,r.budgetUsed,r.lastMonth,r.thisMon,r.cfNonSolde,r.coutTerminer];
+    return`<tr style="background:${bg};" onmouseover="this.style.background='#eef3fb'" onmouseout="this.style.background='${bg}'">
+      <td style="${TD}padding-left:20px;color:var(--text2);">${r.item}</td>
+      ${cols.map(v=>`<td style="${TDR}">${fmt(v)}</td>`).join('')}
+    </tr>`;
+  }
+
+  function sectionHeader(label){
+    return`<tr style="background:#1a3a6b;color:#fff;">
+      <td colspan="9" style="padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border:1px solid #0a2a5a;">${label}</td>
+    </tr>`;
+  }
+
+  function subtotalRow(t){
+    const cols=[t.prc,t.prm,t.pra,t.budgetUsed,t.lastMonth,t.thisMon,t.cfNonSolde,t.coutTerminer];
+    return`<tr style="background:#e8f0fb;">
+      <td style="${TD}font-weight:700;font-size:10px;color:#1a3a6b;">${t.label}</td>
+      ${cols.map(v=>`<td style="${TDR}font-weight:700;color:#1a3a6b;">${fmt(v)}</td>`).join('')}
+    </tr>`;
+  }
+
+  let bodyHTML='';
+  SECTIONS.forEach(sec=>{
+    bodyHTML+=sectionHeader(sec.label);
+    sec.rows.forEach((r,i)=>{ bodyHTML+=dataRow(r,i); });
+    bodyHTML+=subtotalRow(sec.total);
+  });
+
+  const grandCols=[GRAND.prc,GRAND.prm,GRAND.pra,GRAND.budgetUsed,GRAND.lastMonth,GRAND.thisMon,GRAND.cfNonSolde,GRAND.coutTerminer];
+  const grandHTML=`<tr style="background:#0d2244;color:#fff;font-weight:700;">
+    <td style="${TD}background:#0d2244;color:#fff;font-size:10px;">TOTAL OTHER COSTS</td>
+    ${grandCols.map(v=>`<td style="${TDR}background:#0d2244;color:#fff;">${fmt(v)}</td>`).join('')}
+  </tr>`;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">📋</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Other Costs — Cash Out</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · PRA Total: <b>${fmt(GRAND.pra)} MAD</b> · Budget Utilisé: <b>${fmt(GRAND.budgetUsed)} MAD</b> · Coût pour Terminer: <b>${fmt(GRAND.coutTerminer)} MAD</b></div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 24px;">
+        <table style="border-collapse:collapse;min-width:max-content;width:100%;">
+          <thead style="position:sticky;top:0;z-index:10;">
+            <tr style="background:#0d2244;color:#fff;">
+              <th style="padding:7px 12px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:left;min-width:260px;">Item</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">PRC</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">PRM</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">PRA</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Budget Utilisé<br>Cumulatif (D)</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Budget Mois<br>Dernier (E)</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Budget Ce<br>Mois (F=D−E)</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">CF Non Soldé (G)</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Coût pour<br>Terminer (H)</th>
+            </tr>
+          </thead>
+          <tbody>${bodyHTML}</tbody>
+          <tfoot>${grandHTML}</tfoot>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FOURNITURES — Cash Out
+// ═══════════════════════════════════════════════════════════
+function renderFournitures(){
+  const cont=document.getElementById('page-fournitures');
+  const MONTHS=['Apr-26','May-26','Jun-26','Jul-26','Aug-26','Sep-26','Oct-26','Nov-26','Dec-26','Jan-27','Feb-27','Mar-27'];
+  const ROWS=[
+    {alloc:'MANUTENTION',     prc:2718000,     prm:0,            pra:0,            status:'UB', delta:0,          budgetUsed:0,         cfNonSolde:0,          coutTerminer:0,        months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'AEV',             prc:0,           prm:600000,       pra:607464,       status:'UB', delta:0,          budgetUsed:0,         cfNonSolde:219150.01,  coutTerminer:388313.99,months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'Engineering',     prc:0,           prm:140000,       pra:140000,       status:'UB', delta:0,          budgetUsed:0,         cfNonSolde:140000,     coutTerminer:0,        months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'factory',         prc:0,           prm:0,            pra:0,            status:'OB', delta:-100786.92, budgetUsed:75550.27,  cfNonSolde:0,          coutTerminer:25236.65, months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'Prototype',       prc:0,           prm:0,            pra:0,            status:'OB', delta:-58204.84,  budgetUsed:88175.76,  cfNonSolde:0,          coutTerminer:-29970.92,months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'General Cost',    prc:0,           prm:0,            pra:0,            status:'OB', delta:-133790,    budgetUsed:118000,    cfNonSolde:0,          coutTerminer:15790,    months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'Consumables',     prc:0,           prm:0,            pra:0,            status:'OB', delta:-218989.33, budgetUsed:51983.12,  cfNonSolde:0,          coutTerminer:167006.21,months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'Alu System',      prc:31580746.44, prm:15305479.44,  pra:15305479.44,  status:'UB', delta:0,          budgetUsed:2319594.84,cfNonSolde:11947747.12,coutTerminer:1038137.48,months:[0,1530547.94,0,0,1530547.94,0,0,1836657.53,0,3826369.86,0,4261761.32]},
+    {alloc:'Non System',      prc:0,           prm:4917651.62,   pra:4917651.62,   status:'UB', delta:0,          budgetUsed:509311.94, cfNonSolde:32709.80,   coutTerminer:4375629.88,months:[0,196706.06,0,1475295.49,0,737647.74,0,737647.74,0,737647.74,0,523394.90]},
+    {alloc:'Glass',           prc:0,           prm:7624646.58,   pra:7624646.58,   status:'UB', delta:0,          budgetUsed:93891.53,  cfNonSolde:361753.27,  coutTerminer:7169001.78,months:[0,0,0,304985.86,914957.59,914957.59,914957.59,914957.59,914957.59,914957.59,914957.59,821066.06]},
+    {alloc:'Alu Sheet',       prc:0,           prm:3738802.06,   pra:3738802.06,   status:'OB', delta:-17494.47,  budgetUsed:311673.55, cfNonSolde:3444622.98, coutTerminer:0,        months:[0,0,0,411268.23,411268.23,411268.23,411268.23,411268.23,411268.23,411268.23,411268.23,136982.70]},
+    {alloc:'GI sheet',        prc:0,           prm:1405376.45,   pra:1405376.45,   status:'UB', delta:0,          budgetUsed:17656,     cfNonSolde:1303462.20, coutTerminer:84258.25, months:[0,0,0,154591.41,154591.41,154591.41,154591.41,154591.41,154591.41,154591.41,154591.41,150989.17]},
+    {alloc:'Bolts and Screws',prc:0,           prm:340705.83,    pra:340705.83,    status:'OB', delta:-130548.91, budgetUsed:262005.12, cfNonSolde:209249.62,  coutTerminer:0,        months:[0,0,0,0,34070.58,0,0,0,0,0,34070.58,10559.54]},
+    {alloc:'Rockwool',        prc:0,           prm:1685447.63,   pra:1685447.63,   status:'UB', delta:0,          budgetUsed:188873.97, cfNonSolde:499057.63,  coutTerminer:997516.03,months:[0,252817.14,0,252817.14,0,252817.14,0,252817.14,0,252817.14,0,232487.94]},
+    {alloc:'Silicone',        prc:0,           prm:501710.32,    pra:501710.32,    status:'OB', delta:-175604.08, budgetUsed:636490.68, cfNonSolde:40823.72,   coutTerminer:0,        months:[0,0,0,0,0,0,0,0,0,0,0,0]},
+    {alloc:'Windows',         prc:0,           prm:311064.60,    pra:311064.60,    status:'UB', delta:0,          budgetUsed:0,         cfNonSolde:0,          coutTerminer:311064.60,months:[0,0,0,0,0,0,0,77766.15,77766.15,77766.15,77766.15,0]},
+    {alloc:'Doors',           prc:0,           prm:185589.20,    pra:185589.20,    status:'UB', delta:0,          budgetUsed:0,         cfNonSolde:0,          coutTerminer:185589.20,months:[0,0,0,0,0,0,0,46397.30,46397.30,46397.30,46397.30,0]},
+    {alloc:'Coping',          prc:0,           prm:248910.34,    pra:248910.34,    status:'UB', delta:0,          budgetUsed:0,         cfNonSolde:0,          coutTerminer:248910.34,months:[0,0,0,0,0,0,0,62227.59,62227.59,62227.59,62227.59,0]},
+    {alloc:'ACP',             prc:0,           prm:795058.80,    pra:795058.80,    status:'UB', delta:0,          budgetUsed:0,         cfNonSolde:0,          coutTerminer:795058.80,months:[0,0,0,198764.70,0,0,198764.70,0,0,198764.70,0,198764.70]},
+  ];
+  const TOTALS={prc:34298746.44,prm:37800442.87,pra:37807906.87,delta:-835418.55,budgetUsed:4673206.78,cfNonSolde:17839426.34,coutTerminer:15295273.75,
+    months:[0,1980071.15,0,2797722.83,3045435.75,2471282.11,1679581.93,4307939.65,1667208.26,6682807.71,1701278.84,6522397.37]};
+
+  function fmt(n){if(!n||n===0)return'—';return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function fmtPos(n){if(!n||n===0)return'—';return n.toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0});}
+
+  const TD='padding:5px 10px;border:1px solid #dee2e6;font-size:10px;white-space:nowrap;';
+  const TDR=TD+'text-align:right;font-family:var(--mono);';
+  const TDC=TD+'text-align:center;';
+
+  const rowsHTML=ROWS.map((r,i)=>{
+    const isOB=r.status==='OB';
+    const bg=i%2===0?'#fff':'#fafcff';
+    const statusBg=isOB?'#fff3cd':'#d1e7dd';
+    const statusCol=isOB?'#856404':'#0a5c36';
+    const deltaTxt=isOB&&r.delta?`<span style="color:#842029;font-weight:700;">${fmt(r.delta)}</span>`:'';
+    return`<tr style="background:${bg};" onmouseover="this.style.background='#eef3fb'" onmouseout="this.style.background='${bg}'">
+      <td style="${TD}font-weight:600;">${r.alloc}</td>
+      <td style="${TDR}">${r.prc?fmtPos(r.prc):'—'}</td>
+      <td style="${TDR}">${r.prm?fmtPos(r.prm):'—'}</td>
+      <td style="${TDR}">${r.pra?fmtPos(r.pra):'—'}</td>
+      <td style="${TDC}"><span style="padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:${statusBg};color:${statusCol};">${r.status}</span></td>
+      <td style="${TDR}${isOB?'color:#842029;font-weight:700;':''}">${isOB&&r.delta?fmt(r.delta):'—'}</td>
+      <td style="${TDR}">${r.budgetUsed?fmt(r.budgetUsed):'—'}</td>
+      <td style="${TDR}">${r.cfNonSolde?fmt(r.cfNonSolde):'—'}</td>
+      <td style="${TDR}">${r.coutTerminer?fmt(r.coutTerminer):'—'}</td>
+      ${r.months.map(v=>`<td style="${TDR}background:${v?'#f0f7ff':'inherit'};${v?'color:#1a5fa8;font-weight:600;':''}">${v?fmt(v):'—'}</td>`).join('')}
+    </tr>`;
+  }).join('');
+
+  const totalHTML=`<tr style="background:#0d2244;color:#fff;font-weight:700;">
+    <td style="${TD}background:#0d2244;color:#fff;">Total HT</td>
+    <td style="${TDR}background:#0d2244;color:#fff;">${fmtPos(TOTALS.prc)}</td>
+    <td style="${TDR}background:#0d2244;color:#fff;">${fmtPos(TOTALS.prm)}</td>
+    <td style="${TDR}background:#0d2244;color:#fff;">${fmtPos(TOTALS.pra)}</td>
+    <td style="${TDC}background:#0d2244;"></td>
+    <td style="${TDR}background:#0d2244;color:#ffd98a;">${fmt(TOTALS.delta)}</td>
+    <td style="${TDR}background:#0d2244;color:#fff;">${fmt(TOTALS.budgetUsed)}</td>
+    <td style="${TDR}background:#0d2244;color:#fff;">${fmt(TOTALS.cfNonSolde)}</td>
+    <td style="${TDR}background:#0d2244;color:#fff;">${fmt(TOTALS.coutTerminer)}</td>
+    ${TOTALS.months.map(v=>`<td style="${TDR}background:#0d2244;color:${v?'#a8d4ff':'#556'};">${v?fmt(v):'—'}</td>`).join('')}
+  </tr>
+  <tr style="background:#1a3a6b;color:#fff;font-weight:700;">
+    <td style="${TD}background:#1a3a6b;color:#fff;">Total TTC</td>
+    <td style="${TDR}background:#1a3a6b;color:#fff;">${fmtPos(TOTALS.prc*1.2)}</td>
+    <td style="${TDR}background:#1a3a6b;color:#fff;">${fmtPos(TOTALS.prm*1.2)}</td>
+    <td style="${TDR}background:#1a3a6b;color:#fff;">${fmtPos(TOTALS.pra*1.2)}</td>
+    <td style="${TDC}background:#1a3a6b;"></td>
+    <td style="${TDR}background:#1a3a6b;color:#ffd98a;">${fmt(TOTALS.delta*1.2)}</td>
+    <td style="${TDR}background:#1a3a6b;color:#fff;">${fmt(TOTALS.budgetUsed*1.2)}</td>
+    <td style="${TDR}background:#1a3a6b;color:#fff;">${fmt(TOTALS.cfNonSolde*1.2)}</td>
+    <td style="${TDR}background:#1a3a6b;color:#fff;">${fmt(TOTALS.coutTerminer*1.2)}</td>
+    ${TOTALS.months.map(v=>`<td style="${TDR}background:#1a3a6b;color:${v?'#a8d4ff':'#556'};">${v?fmt(v*1.2):'—'}</td>`).join('')}
+  </tr>`;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">🛒</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Material Cost</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · Budget Marché total: <b>${fmtPos(TOTALS.prm)} MAD</b> · Budget Utilisé: <b>${fmt(TOTALS.budgetUsed)} MAD</b></div>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 24px;">
+        <table style="border-collapse:collapse;min-width:max-content;" id="four-table">
+          <thead style="position:sticky;top:0;z-index:10;">
+            <tr style="background:#0d2244;color:#fff;">
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:left;min-width:130px;">Allocation</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">PRC</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">PRM</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">PRA</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:center;">Status</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;background:#3a1a1a;">Budget<br>Variance</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Budget Utilisé<br>(BR Cumulatif)</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">CF Non Soldé</th>
+              <th rowspan="2" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Coût pour<br>Terminer</th>
+              <th colspan="${MONTHS.length}" style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:1px solid #0a1a36;text-align:center;background:#1a3a6b;">Forecast Mensuel (MAD)</th>
+            </tr>
+            <tr style="background:#1a3a6b;color:#c8dcf5;">
+              ${MONTHS.map(m=>`<th style="padding:5px 10px;font-size:9px;font-weight:700;white-space:nowrap;border:1px solid #0a2a5a;text-align:right;">${m}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>${rowsHTML}</tbody>
+          <tfoot>${totalHTML}</tfoot>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCashIn(){
+  const cont = document.getElementById('page-cash-in');
+
+  const MONTHS = [
+    {key:'dec25',label:'Dec-25'},{key:'jan26',label:'Jan-26'},{key:'feb26',label:'Feb-26'},
+    {key:'mar26',label:'Mar-26'},{key:'apr26',label:'Apr-26'},{key:'may26',label:'May-26'},
+    {key:'jun26',label:'Jun-26'},{key:'jul26',label:'Jul-26'},{key:'aug26',label:'Aug-26'},
+    {key:'sep26',label:'Sep-26'},{key:'oct26',label:'Oct-26'},{key:'nov26',label:'Nov-26'},
+    {key:'dec26',label:'Dec-26'},{key:'jan27',label:'Jan-27'},{key:'feb27',label:'Feb-27'},
+    {key:'mar27',label:'Mar-27'},{key:'apr27',label:'Apr-27'},{key:'may27',label:'May-27'},
+    {key:'jun27',label:'Jun-27'},{key:'jul27',label:'Jul-27'},{key:'aug27',label:'Aug-27'},
+    {key:'sep27',label:'Sep-27'},{key:'oct27',label:'Oct-27'},{key:'nov27',label:'Nov-27'},
+    {key:'dec27',label:'Dec-27'},
+  ];
+
+  // Row definitions: ref, desc, total, per-month {p=%, v=MAD}, retention_recovery, style
+  const ROWS = [
+    { ref:'4.01', desc:'Etages Courants',           total:35506806.37, style:'item',
+      m:{dec25:{p:5,v:1775340.32},apr26:{p:8,v:2840544.51},may26:{p:13,v:4615884.83},jun26:{p:6.5,v:2307942.41},jul26:{p:13,v:4615884.83},aug26:{p:13,v:4615884.83},sep26:{p:13,v:4615884.83},oct26:{p:13,v:4615884.83},nov26:{p:13,v:4615884.83},dec26:{p:2.5,v:887670.16}}},
+    { ref:'4.02', desc:'Shift',                     total:2557157.53,  style:'item',
+      m:{dec25:{p:2.946,v:75325.68},may26:{p:2.054,v:52532.20},oct26:{p:47.5,v:1214649.83},nov26:{p:47.5,v:1214649.83}}},
+    { ref:'4.03', desc:'Terrasses - Bardage Composite', total:3632091.35, style:'item',
+      m:{may26:{p:12,v:435850.96},jun26:{p:13,v:472171.88},jul26:{p:13,v:472171.88},aug26:{p:13,v:472171.88},sep26:{p:13,v:472171.88},oct26:{p:12,v:435850.96},nov26:{p:12,v:435850.96},dec26:{p:12,v:435850.96}}},
+    { ref:'4.04', desc:'Terrasses - Lames Persiennes',  total:558581.26,  style:'item',
+      m:{may26:{p:12,v:67029.75},jun26:{p:13,v:72615.56},jul26:{p:13,v:72615.56},aug26:{p:13,v:72615.56},sep26:{p:13,v:72615.56},oct26:{p:12,v:67029.75},nov26:{p:12,v:67029.75},dec26:{p:12,v:67029.75}}},
+    { ref:'4.05', desc:'Faille',                    total:1248260.19,  style:'item',
+      m:{may26:{p:5,v:62413.01},jul26:{p:15,v:187239.03},aug26:{p:40,v:499304.08},sep26:{p:40,v:499304.08}}},
+    { ref:'4.06', desc:'Noyau',                     total:1301931.92,  style:'item',
+      m:{jun26:{p:5,v:65096.60},aug26:{p:15,v:195289.79},sep26:{p:20,v:260386.38},oct26:{p:20,v:260386.38},nov26:{p:20,v:260386.38},dec26:{p:20,v:260386.38}}},
+    { ref:'4.07', desc:'Faux Plafond',              total:331594.50,   style:'item',
+      m:{apr26:{p:5,v:16579.73},may26:{p:47.5,v:157507.39},jun26:{p:47.5,v:157507.39}}},
+    { ref:'4.08', desc:'RDC Commerce',              total:2528581.53,  style:'item',
+      m:{apr26:{p:5,v:126429.08},oct26:{p:47.5,v:1201076.23},nov26:{p:47.5,v:1201076.23}}},
+    { ref:'4.09', desc:'RDC Lobby',                 total:3174081.58,  style:'item',
+      m:{apr26:{p:5,v:158704.08},dec26:{p:95,v:3015377.50}}},
+    { ref:'4.10', desc:'Coiffe R+02',               total:587310.12,   style:'item',
+      m:{jun26:{p:5,v:29365.51},dec26:{p:95,v:557944.61}}},
+    { ref:'4.11', desc:'Coiffe R+25',               total:776054.65,   style:'item',
+      m:{jun26:{p:5,v:38802.73},sep26:{p:95,v:737251.92}}},
+    { ref:'4.12', desc:'Coiffe R+34',               total:673720.22,   style:'item',
+      m:{jun26:{p:5,v:33686.01},dec26:{p:95,v:640034.21}}},
+    { ref:'4',    desc:'Totale avant la remise HT',  total:52876171.22, style:'total',
+      m:{dec25:{v:1850665.996},apr26:{v:3142257.39},may26:{v:5391218.14},jun26:{v:3177188.09},jul26:{v:5347911.30},aug26:{v:5855266.13},sep26:{v:6657614.64},oct26:{v:7794877.98},nov26:{v:7794877.98},dec26:{v:5864293.58}}},
+    { ref:'5.1',  desc:'Remise 1 (10%)',            total:5287617.12,  style:'deduct',
+      m:{dec25:{v:185066.60},apr26:{v:314225.74},may26:{v:539121.81},jun26:{v:317718.81},jul26:{v:534791.13},aug26:{v:585526.61},sep26:{v:665761.46},oct26:{v:779487.80},nov26:{v:779487.80},dec26:{v:586429.36}}},
+    { ref:'5.2',  desc:'Remise 2',                  total:1903542.16,  style:'deduct',
+      m:{dec25:{v:66623.98},apr26:{v:113121.27},may26:{v:194083.85},jun26:{v:114378.77},jul26:{v:192524.81},aug26:{v:210789.58},sep26:{v:239674.13},oct26:{v:280615.61},nov26:{v:280615.61},dec26:{v:211114.57}}},
+    { ref:'5.3',  desc:'Remise 3',                  total:685011.93,   style:'deduct',
+      m:{dec25:{v:23975.42},apr26:{v:40708.01},may26:{v:69843.35},jun26:{v:41160.54},jul26:{v:69282.31},aug26:{v:75855.10},sep26:{v:86249.54},oct26:{v:100982.81},nov26:{v:100982.81},dec26:{v:75972.05}}},
+    { ref:'5',    desc:'Facturation après la remise HT', total:45000000, style:'fact',
+      m:{dec25:{p:3.5,v:1575000},apr26:{p:5.94,v:2674202.37},may26:{p:10.20,v:4588169.12},jun26:{p:6.01,v:2703929.97},jul26:{p:10.11,v:4551313.05},aug26:{p:11.07,v:4983094.84},sep26:{p:12.59,v:5665929.51},oct26:{p:14.74,v:6633791.76},nov26:{p:14.74,v:6633791.76},dec26:{p:11.09,v:4990777.60}}},
+    { ref:'6',    desc:'Facturation Cumulative',    total:45000000,    style:'cum',
+      m:{dec25:{p:3.5,v:1575000},jan26:{p:3.5,v:1575000},feb26:{p:3.5,v:1575000},mar26:{p:3.5,v:1575000},apr26:{p:9.44,v:4249202.38},may26:{p:19.64,v:8837371.50},jun26:{p:25.65,v:11541301.47},jul26:{p:35.76,v:16092614.52},aug26:{p:46.83,v:21075709.36},sep26:{p:59.43,v:26741638.87},oct26:{p:74.17,v:33375430.63},nov26:{p:88.91,v:40009222.40},dec26:{p:100,v:45000000}}},
+    { ref:'7.1',  desc:'Retenue de Garantie 7%',   total:3150000,     style:'ret',
+      m:{dec25:{v:157500},apr26:{v:267420.24},may26:{v:458816.91},jun26:{v:270393.00},jul26:{v:455131.31},aug26:{v:498309.48},sep26:{v:566592.95},oct26:{v:475836.11},feb27:{v:-1350000},apr27:{v:-1350000},jun27:{v:-1350000},aug27:{v:-1350000},oct27:{v:-1350000},dec27:{v:-1350000}}, retention_recovery:-3150000},
+    { ref:'7.2',  desc:'Amortissement Avance 10%', total:4500000,     style:'ret',
+      m:{dec25:{v:157500},apr26:{v:267420.24},may26:{v:458816.91},jun26:{v:270393.00},jul26:{v:455131.31},aug26:{v:498309.48},sep26:{v:566592.95},oct26:{v:663379.18},nov26:{v:663379.18},dec26:{v:499077.76}}},
+    { ref:'7.3',  desc:'Retenue Prorata 1%',       total:449999.99,   style:'ret',
+      m:{dec25:{v:15750},apr26:{v:26742.02},may26:{v:45881.69},jun26:{v:27039.30},jul26:{v:45513.13},aug26:{v:49830.95},sep26:{v:56659.30},oct26:{v:66337.92},nov26:{v:66337.92},dec26:{v:49907.78}}},
+    { ref:'7.4',  desc:'Retenue TRC 0.09%',        total:40500,       style:'ret',
+      m:{dec25:{v:40500}}},
+    { ref:'7.5',  desc:'Retenue Prorata 1% Marché',total:450000,      style:'ret',
+      m:{dec25:{v:450000}}},
+    { ref:'7',    desc:'Montant Collecté HT',        total:44059500,    style:'collht',
+      m:{dec25:{v:753750},feb26:{v:4500000},apr26:{v:2112619.87},may26:{v:3624653.61},jun26:{v:2136104.67},jul26:{v:3595537.31},aug26:{v:3936644.92},sep26:{v:4476084.31},oct26:{v:5428238.56},nov26:{v:5904074.67},dec26:{v:4441792.07}}, retention_recovery:3150000},
+    { ref:'8',    desc:'Montant Collecté TTC',       total:52871400,    style:'collttc',
+      m:{dec25:{v:904500},feb26:{v:5400000},apr26:{v:2535143.85},may26:{v:4349584.33},jun26:{v:2563325.61},jul26:{v:4314644.78},aug26:{v:4723973.91},sep26:{v:5371301.18},oct26:{v:6513886.27},nov26:{v:7084889.60},dec26:{v:5330150.48}}, retention_recovery:3780000},
+    { ref:'9',    desc:'Collection Théorique',     total:52871400,    style:'theor',
+      m:{feb26:{v:5400000},apr26:{v:904500},jul26:{v:2535143.85},aug26:{v:4349584.33},sep26:{v:2563325.61},oct26:{v:4314644.78},nov26:{v:4723973.91},dec26:{v:5371301.18},jan27:{v:6513886.27},feb27:{v:7084889.60},mar27:{v:5330150.48}}},
+    { ref:'10',   desc:'Collection Actuelle',      total:5400000,     style:'actual',
+      m:{feb26:{v:5400000}}},
+  ];
+
+  // Row styles
+  const STYLE = {
+    item:   {bg:'#f8fbff', fg:'#1a2a40', bold:false},
+    total:  {bg:'#1a3a6b', fg:'#fff',    bold:true},
+    deduct: {bg:'#fff8ee', fg:'#7a4400', bold:false},
+    fact:   {bg:'#1a7a3a', fg:'#fff',    bold:true},
+    cum:    {bg:'#0a5c70', fg:'#fff',    bold:true},
+    ret:    {bg:'#fef2f2', fg:'#7f1d1d', bold:false},
+    collht: {bg:'#e8f5e9', fg:'#1b5e20', bold:true},
+    collttc:{bg:'#1a7a3a', fg:'#fff',    bold:true},
+    theor:  {bg:'#e3f2fd', fg:'#0d47a1', bold:true},
+    actual: {bg:'#fffde7', fg:'#7a5400', bold:true},
+  };
+
+  const fmtV = v => v==null||v===0?'—':(Math.round(v)).toLocaleString('fr-MA');
+  const safeId = ref => ref.replace(/\./g,'-');
+
+  // Get effective p/v for a row+month, applying overrides
+  function getCell(r, moKey){
+    const ov = window._cashInOverrides[r.ref+'__'+moKey];
+    if(ov) return ov;
+    return r.m[moKey] || {p:0, v:0};
+  }
+
+  let showPct = window._cashInShowPct || false;
+  window._cashInCollapsed = window._cashInCollapsed || {};
+
+  function buildTable(){
+    const monthCols = MONTHS.map(mo=>`<th colspan="${showPct?2:1}" style="min-width:${showPct?120:80}px;padding:5px 6px;text-align:center;border:1px solid #dde3ec;background:#1a3a6b;color:#fff;font-size:10px;white-space:nowrap;">${mo.label}</th>`).join('');
+    const subCols = MONTHS.map(()=>showPct
+      ?`<th style="width:52px;padding:3px 4px;text-align:center;border:1px solid #dde3ec;background:#2a4a7b;color:#c8d8f0;font-size:9px;">%</th><th style="min-width:80px;padding:3px 4px;text-align:right;border:1px solid #dde3ec;background:#2a4a7b;color:#c8d8f0;font-size:9px;">MAD</th>`
+      :`<th style="min-width:80px;padding:3px 4px;text-align:right;border:1px solid #dde3ec;background:#2a4a7b;color:#c8d8f0;font-size:9px;">MAD</th>`
+    ).join('');
+
+    const dataRows = ROWS.map(r=>{
+      const st = STYLE[r.style]||STYLE.item;
+      const sid = safeId(r.ref);
+      // Rows where % makes sense (have p values in original data)
+      const hasPct = ['item','fact','cum'].includes(r.style);
+
+      const isActual = r.ref === '10';
+
+      // Collapsible groups
+      const grp = r.style==='item' ? 'g4' : r.style==='deduct' ? 'g5' : r.style==='ret' ? 'g7' : null;
+      const trHidden = grp && window._cashInCollapsed[grp] ? 'display:none;' : '';
+      const trClass  = grp ? `ci-group-${grp}` : '';
+      const COL = window._cashInCollapsed;
+      let togBtn = '';
+      if(r.ref==='4')   togBtn=`<span id="ci-tog-g4" onclick="window.cashInToggleGroup('g4')" style="cursor:pointer;margin-right:5px;font-size:11px;display:inline-block;width:10px;user-select:none;">${COL.g4?'▸':'▾'}</span>`;
+      if(r.ref==='5')   togBtn=`<span id="ci-tog-g5" onclick="window.cashInToggleGroup('g5')" style="cursor:pointer;margin-right:5px;font-size:11px;display:inline-block;width:10px;user-select:none;">${COL.g5?'▸':'▾'}</span>`;
+      if(r.ref==='7')   togBtn=`<span id="ci-tog-g7" onclick="window.cashInToggleGroup('g7')" style="cursor:pointer;margin-right:5px;font-size:11px;display:inline-block;width:10px;user-select:none;">${COL.g7?'▸':'▾'}</span>`;
+
+      const cells = MONTHS.map(mo=>{
+        const {p, v} = getCell(r, mo.key);
+        const isNeg = v < 0;
+        const negStyle = isNeg ? 'color:#c02020;' : '';
+        const vTxt = v ? fmtV(v) : '—';
+        const valId = `ci-v-${sid}-${mo.key}`;
+
+        // Ref 9: directly editable MAD cells (always, regardless of showPct)
+        if(isActual){
+          const editCell = `<td id="${valId}" contenteditable="true"
+              style="padding:3px 8px;text-align:right;border:1px solid #e8ecf0;font-size:9.5px;min-width:80px;outline:none;cursor:text;background:rgba(255,255,200,0.18);${negStyle}"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+              onblur="window.cashInApplyActual('${mo.key}',this)"
+              onfocus="this.style.background='rgba(255,220,80,0.28)';document.execCommand('selectAll',false,null)"
+              onmouseout="if(document.activeElement!==this)this.style.background='rgba(255,255,200,0.18)'"
+            >${vTxt}</td>`;
+          return showPct
+            ? `<td style="padding:2px 4px;text-align:center;border:1px solid #e8ecf0;font-size:9.5px;color:#aaa;">—</td>${editCell}`
+            : editCell;
+        }
+
+        if(showPct){
+          const pTxt = p ? p+'' : '';
+          const pId = `ci-p-${sid}-${mo.key}`;
+          const pCell = hasPct
+            ? `<td id="${pId}" contenteditable="true"
+                style="padding:2px 4px;text-align:center;border:1px solid #e8ecf0;font-size:9.5px;min-width:48px;outline:none;cursor:text;background:rgba(255,255,200,0.18);${negStyle}"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                onblur="window.cashInApplyPct('${r.ref}','${mo.key}',this.textContent.trim(),${r.total})"
+                onfocus="this.style.background='rgba(255,220,80,0.28)';document.execCommand('selectAll',false,null)"
+                onmouseout="if(document.activeElement!==this)this.style.background='rgba(255,255,200,0.18)'"
+              >${pTxt}</td>`
+            : `<td style="padding:2px 4px;text-align:center;border:1px solid #e8ecf0;font-size:9.5px;${negStyle}">—</td>`;
+          return `${pCell}<td id="${valId}" style="padding:3px 8px;text-align:right;border:1px solid #e8ecf0;font-size:9.5px;${negStyle}">${vTxt}</td>`;
+        } else {
+          return `<td id="${valId}" style="padding:3px 8px;text-align:right;border:1px solid #e8ecf0;font-size:9.5px;${negStyle}">${vTxt}</td>`;
+        }
+      }).join('');
+
+      const retCell = r.retention_recovery!=null
+        ? `<td style="padding:3px 8px;text-align:right;border:1px solid #e8ecf0;font-size:9.5px;font-weight:600;">${fmtV(r.retention_recovery)}</td>`
+        : `<td style="border:1px solid #e8ecf0;text-align:center;color:#aaa;">—</td>`;
+
+      const refNum = parseFloat(r.ref);
+      const showCheck = !isNaN(refNum) && refNum <= 5;
+      const monthSum = showCheck ? MONTHS.reduce((s,mo)=>s+(getCell(r,mo.key).v||0),0) : 0;
+      const diff = showCheck ? Math.round(r.total - monthSum - (r.retention_recovery||0)) : 0;
+      const isCorrect = diff === 0;
+      const checkId = `ci-check-${r.ref.replace(/\./g,'-')}`;
+      const checkCell = showCheck
+        ? `<td id="${checkId}" style="padding:3px 8px;text-align:center;border:1px solid #e8ecf0;font-size:9px;font-weight:700;white-space:nowrap;background:${isCorrect?'#d1e7dd':'#f8d7da'};color:${isCorrect?'#0a5c36':'#842029'};">${isCorrect?'✔':`✘ ${fmtV(diff)}`}</td>`
+        : `<td style="border:1px solid #e8ecf0;text-align:center;color:#aaa;">—</td>`;
+
+      const topBdr = ['total','fact','collttc','theor','actual'].includes(r.style) ? 'border-top:2px solid rgba(0,0,0,0.12);' : '';
+      return `<tr class="${trClass}" style="${trHidden}">
+        <td style="position:sticky;left:0;z-index:2;background:${st.bg};padding:4px 8px;font-size:10px;font-weight:${st.bold?700:600};color:${st.fg};border:1px solid #dde3ec;white-space:nowrap;${topBdr}">${r.ref}</td>
+        <td style="position:sticky;left:42px;z-index:2;background:${st.bg};padding:4px 10px;font-size:10px;font-weight:${st.bold?700:400};color:${st.fg};border:1px solid #dde3ec;white-space:nowrap;min-width:230px;max-width:230px;${topBdr}">${togBtn}${r.desc}</td>
+        <td style="position:sticky;left:272px;z-index:2;background:${st.bg};padding:4px 10px;font-size:10px;font-weight:${st.bold?700:600};color:${st.fg};border:1px solid #dde3ec;text-align:right;white-space:nowrap;${topBdr}">${fmtV(r.total)}</td>
+        ${cells}
+        ${retCell}
+        ${checkCell}
+      </tr>`;
+    }).join('');
+
+    return `<table style="border-collapse:collapse;font-family:inherit;">
+      <thead>
+        <tr>
+          <th rowspan="2" style="position:sticky;left:0;z-index:4;min-width:42px;padding:5px 8px;text-align:left;border:1px solid #dde3ec;background:#0d2340;color:#fff;font-size:10px;">Ref</th>
+          <th rowspan="2" style="position:sticky;left:42px;z-index:4;min-width:230px;padding:5px 10px;text-align:left;border:1px solid #dde3ec;background:#0d2340;color:#fff;font-size:10px;">Description</th>
+          <th rowspan="2" style="position:sticky;left:272px;z-index:4;min-width:110px;padding:5px 10px;text-align:right;border:1px solid #dde3ec;background:#0d2340;color:#fff;font-size:10px;white-space:nowrap;">Montant [MAD]</th>
+          ${monthCols}
+          <th rowspan="2" style="min-width:90px;padding:5px 8px;text-align:center;border:1px solid #dde3ec;background:#0d2340;color:#fff;font-size:9px;white-space:nowrap;">Retention<br>Recovery</th>
+          <th rowspan="2" style="min-width:110px;padding:5px 8px;text-align:center;border:1px solid #dde3ec;background:#0d2340;color:#fff;font-size:9px;white-space:nowrap;">Check</th>
+        </tr>
+        <tr>${subCols}</tr>
+      </thead>
+      <tbody>${dataRows}</tbody>
+    </table>`;
+  }
+
+  // Full cascade recalculation: refs 4, 5.x, 5, 6, 7.x, 7.6, 7, 8
+  window.cashInRecalc = function(){
+    const OV = window._cashInOverrides;
+    const ITEM_REFS = ['4.01','4.02','4.03','4.04','4.05','4.06','4.07','4.08','4.09','4.10','4.11','4.12'];
+    const GRAND      = 52876171.22;
+    const R51_RATE   = 5287617.12 / GRAND;
+    const R52_RATE   = 1903542.16 / GRAND;
+    const R53_RATE   = 685011.93  / GRAND;
+    const CONTRACT   = 45000000;
+    const CAP_71     = CONTRACT * 0.07;  // 3,150,000 — retenue garantie cap
+    const CAP_72     = CONTRACT * 0.10;  // 4,500,000 — avance amortissement cap
+    const ADVANCE_HT = 4500000;          // Mar-26 advance HT
+    const VAT        = 1.20;
+
+    function getEffV(ref, moKey){
+      const ov = OV[ref+'__'+moKey];
+      if(ov) return ov.v || 0;
+      const row = ROWS.find(r=>r.ref===ref);
+      return row?.m[moKey]?.v || 0;
+    }
+    function setV(ref, moKey, v){
+      const el = document.getElementById('ci-v-'+ref.replace(/\./g,'-')+'-'+moKey);
+      if(!el) return;
+      el.textContent = v ? fmtV(v) : '—';
+      el.style.color = v < 0 ? '#c02020' : '';
+    }
+    function setP(ref, moKey, p){
+      const el = document.getElementById('ci-p-'+ref.replace(/\./g,'-')+'-'+moKey);
+      if(el && document.activeElement !== el)
+        el.textContent = p ? parseFloat(p.toFixed(4))+'' : '';
+    }
+
+    const computedByRef = {}; // ref -> {moKey -> value}
+    function storeComputed(ref, moKey, v){ (computedByRef[ref]=computedByRef[ref]||{})[moKey]=v; }
+
+    let cumFact = 0, cum71 = 0, cum72 = 0;
+    let prev71 = null; // tracks previous month's 7.1 value (null = not yet reached Oct-26)
+    // Oct-26 is index 10 in MONTHS (dec25=0 … sep26=9, oct26=10)
+    const OCT26_IDX = 10;
+    const collTTC_byIdx = {}; // index → TTC value, used to build ref 8
+
+    MONTHS.forEach((mo, idx)=>{
+      const moKey = mo.key;
+
+      // ── Refs 4, 5.x, 5, 6 ──────────────────────────────────────
+      const total4 = ITEM_REFS.reduce((s,ref)=> s + getEffV(ref,moKey), 0);
+      const r51 = total4 * R51_RATE;
+      const r52 = total4 * R52_RATE;
+      const r53 = total4 * R53_RATE;
+      const fact = total4 - r51 - r52 - r53;
+      cumFact += fact;
+
+      setV('4',   moKey, total4); storeComputed('4',   moKey, total4);
+      setV('5.1', moKey, r51);   storeComputed('5.1', moKey, r51);
+      setV('5.2', moKey, r52);   storeComputed('5.2', moKey, r52);
+      setV('5.3', moKey, r53);   storeComputed('5.3', moKey, r53);
+      setV('5',   moKey, fact);  storeComputed('5',   moKey, fact);
+      setV('6',   moKey, cumFact);
+      setP('5',   moKey, fact   ? fact/CONTRACT*100   : 0);
+      setP('6',   moKey, cumFact? cumFact/CONTRACT*100 : 0);
+
+      // ── Refs 7.1, 7.2, 7.3 ─────────────────────────────────────
+      // 7.1 Retenue garantie: 10% of facturation, cumulative cap 7%
+      // From Oct-26 onwards: if previous month was 0, stay 0 (cap fully applied)
+      let r71;
+      if(idx >= OCT26_IDX && prev71 === 0){
+        r71 = 0; // once it hits zero, stays zero
+      } else {
+        r71 = Math.min(fact * 0.10, Math.max(0, CAP_71 - cum71));
+      }
+      prev71 = (idx >= OCT26_IDX - 1) ? r71 : null; // start tracking from Sep-26 so Oct-26 can check it
+      cum71 += r71;
+      // 7.2 Amortissement avance: 10% of facturation, cap 10%
+      const r72 = Math.min(fact * 0.10, Math.max(0, CAP_72 - cum72));
+      cum72 += r72;
+      // 7.3 Prorata 1%
+      const r73 = fact * 0.01;
+      // 7.4 & 7.5 fixed (Dec-25 only) — don't overwrite
+      const r74 = moKey==='dec25' ? 40500   : 0;
+      const r75 = moKey==='dec25' ? 450000  : 0;
+
+      setV('7.1', moKey, r71);
+      setV('7.2', moKey, r72);
+      setV('7.3', moKey, r73);
+
+      // ── Ref 7 (Montant Collecté HT) ─────────────────────────────
+      // Advance HT 4,500,000 appears in Feb-26; Mar-26 has no advance
+      const origV7 = ROWS.find(r=>r.ref==='7')?.m[moKey]?.v || 0;
+      let collHT;
+      if(fact === 0 && moKey !== 'feb26'){
+        // Keep fixed value (retention releases in 2027)
+        collHT = origV7;
+      } else {
+        const advHT = moKey==='feb26' ? ADVANCE_HT : 0;
+        collHT = advHT + fact - r71 - r72 - r73 - r74 - r75;
+      }
+      setV('7', moKey, collHT);
+
+      // ── Ref 8 (Montant Collecté TTC) ────────────────────────────
+      const origV8 = ROWS.find(r=>r.ref==='8')?.m[moKey]?.v || 0;
+      let collTTC;
+      if(fact === 0 && moKey !== 'feb26'){
+        collTTC = origV8; // fixed (retention releases)
+      } else {
+        collTTC = collHT * VAT;
+      }
+      setV('8', moKey, collTTC);
+
+      // Store TTC by index for ref 8 shift
+      collTTC_byIdx[idx] = collTTC;
+    });
+
+    // ── Ref 9 (Collection Théorique) ─────────────────────────────
+    // Shift rules:
+    //   dec25 (idx 0) → apr26 (idx 4)   [+4 months]
+    //   feb26 (idx 2, advance) → stays at feb26 (idx 2)  [+0 months]
+    //   all others → idx + 3
+    const ref8 = {};
+    MONTHS.forEach((mo, idx)=>{
+      const val = collTTC_byIdx[idx];
+      if(!val) return;
+      let toIdx;
+      if(idx === 0)      toIdx = 4;       // dec25 → apr26
+      else if(idx === 2) toIdx = 2;       // feb26 advance → stays feb26
+      else               toIdx = idx + 3; // normal +3 months
+      if(toIdx < MONTHS.length){
+        ref8[toIdx] = (ref8[toIdx] || 0) + val;
+      }
+    });
+
+    MONTHS.forEach((mo, idx)=>{
+      setV('9', mo.key, ref8[idx] || 0);
+    });
+
+    // Update check cells live
+    ROWS.forEach(r=>{
+      const refNum = parseFloat(r.ref);
+      if(isNaN(refNum) || refNum > 5) return;
+      const el = document.getElementById('ci-check-'+r.ref.replace(/\./g,'-'));
+      if(!el) return;
+      const monthSum = MONTHS.reduce((s,mo)=>{
+        const val = (computedByRef[r.ref]?.[mo.key]) ?? getEffV(r.ref, mo.key) ?? 0;
+        return s + val;
+      },0);
+      const diff = Math.round(r.total - monthSum - (r.retention_recovery||0));
+      const ok = diff === 0;
+      el.style.background = ok ? '#d1e7dd' : '#f8d7da';
+      el.style.color = ok ? '#0a5c36' : '#842029';
+      el.textContent = ok ? '✔' : `✘ ${fmtV(diff)}`;
+    });
+  };
+
+  // Global: called when a % cell is committed
+  window.cashInApplyPct = function(ref, moKey, rawText, total){
+    // Parse — strip % sign, allow comma decimal
+    const num = parseFloat(rawText.replace('%','').replace(',','.'));
+    if(isNaN(num)) return; // ignore garbage
+    const p = num;
+    const v = Math.round((p / 100) * total);
+    // Store override
+    window._cashInOverrides[ref+'__'+moKey] = {p, v};
+    // Update the edited cell immediately
+    const sid = ref.replace(/\./g,'-');
+    const valCell = document.getElementById('ci-v-'+sid+'-'+moKey);
+    if(valCell){
+      valCell.textContent = v ? fmtV(v) : '—';
+      valCell.style.color = v < 0 ? '#c02020' : '';
+      valCell.style.background = '#d4f7e4';
+      setTimeout(()=>{ if(valCell) valCell.style.background = ''; }, 800);
+    }
+    // Restore % display text
+    const pctCell = document.getElementById('ci-p-'+sid+'-'+moKey);
+    if(pctCell && document.activeElement !== pctCell) pctCell.textContent = p+'';
+    // Cascade: update Total, Remises, Facturation, Cumulative
+    window.cashInRecalc();
+  };
+
+  // Global: direct MAD edit for ref 10 (Collection Actuelle)
+  window.cashInApplyActual = function(moKey, cell){
+    // Parse value — strip thousands separators and spaces
+    const raw = cell.textContent.trim().replace(/\s/g,'').replace(/[^\d.,-]/g,'').replace(',','.');
+    const num = parseFloat(raw);
+    const v = isNaN(num) ? 0 : Math.round(num);
+    // Store override
+    window._cashInOverrides['10__'+moKey] = {p:0, v};
+    // Update display
+    cell.textContent = v ? fmtV(v) : '—';
+    cell.style.color = v < 0 ? '#c02020' : '';
+    cell.style.background = '#d4f7e4';
+    setTimeout(()=>{ if(cell) cell.style.background = 'rgba(255,255,200,0.18)'; }, 800);
+  };
+
+  function render(){
+    cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+      <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:12px 24px 10px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:22px;">💰</span>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:700;color:var(--text);">Cash-In</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower — Revenue &amp; Collection Schedule
+              <span style="margin-left:10px;opacity:0.7;">· Edit any % cell to recalculate the MAD amount</span>
+            </div>
+          </div>
+          <button id="ci-pct-btn" onclick="window._cashInShowPct=!window._cashInShowPct;window._cashInRender();"
+            style="padding:5px 14px;font-size:11px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;">
+            ${showPct ? 'Hide %' : 'Show %'}
+          </button>
+          <button onclick="window.cashInPrint()"
+            style="padding:5px 14px;font-size:11px;border-radius:6px;border:1px solid #1a3a6b;background:#1a3a6b;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            🖨 Print / PDF
+          </button>
+        </div>
+        <div style="flex:1;overflow:auto;padding:16px 20px 8px;">
+          <div id="cash-in-table-wrap">${buildTable()}</div>
+          <div style="padding:8px 0 4px;display:flex;flex-wrap:wrap;gap:4px;">
+            ${[['item','Work Package'],['total','Total Brut'],['deduct','Remise'],['fact','Facturation'],['cum','Fact. Cumulative'],['ret','Retenue'],['collttc','Collection TTC'],['theor','Théorique'],['actual','Actuelle']].map(([s,l])=>{
+              const st=STYLE[s];
+              return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:var(--text2);padding:2px 7px;border-radius:10px;background:${st.bg};color:${st.fg};border:1px solid rgba(0,0,0,0.08);">${l}</span>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  window._cashInShowPct = showPct;
+  window._cashInRender = function(){
+    showPct = window._cashInShowPct;
+    const wrap = document.getElementById('cash-in-table-wrap');
+    if(wrap){ const st=wrap.parentElement.scrollTop; wrap.innerHTML=buildTable(); wrap.parentElement.scrollTop=st; }
+    const btn = document.getElementById('ci-pct-btn');
+    if(btn) btn.textContent = showPct ? 'Hide %' : 'Show %';
+    window.cashInRecalc();
+  };
+
+  window.cashInToggleGroup = function(grp){
+    window._cashInCollapsed[grp] = !window._cashInCollapsed[grp];
+    const collapsed = window._cashInCollapsed[grp];
+    document.querySelectorAll('.ci-group-'+grp).forEach(tr => { tr.style.display = collapsed ? 'none' : ''; });
+    const tog = document.getElementById('ci-tog-'+grp);
+    if(tog) tog.textContent = collapsed ? '▸' : '▾';
+  };
+
+  window.cashInPrint = function(){
+    const style = document.getElementById('ci-print-style') || document.createElement('style');
+    style.id = 'ci-print-style';
+    style.textContent = `
+      @media print {
+        @page { size: A3 landscape; margin: 10mm; }
+        body > *:not(#app):not([id]) { display:none!important; }
+        .fpw > *:first-child { display:none!important; }
+        .fpm { overflow:visible!important; display:block!important; }
+        .fpm > div:first-child { display:none!important; }
+        #cash-in-table-wrap { overflow:visible!important; }
+        #cash-in-table-wrap > div { padding:0!important; }
+        table { font-size:7.5px!important; border-collapse:collapse!important; }
+        td, th { padding:2px 4px!important; white-space:nowrap; }
+        td[style*="position:sticky"], th[style*="position:sticky"] { position:static!important; }
+        .ci-tog { display:none!important; }
+        .ci-group-g4, .ci-group-g5, .ci-group-g7 { display:table-row!important; }
+        button { display:none!important; }
+        .fpm > div:last-child > div:last-child { display:none!important; }
+      }
+    `;
+    if(!document.getElementById('ci-print-style')) document.head.appendChild(style);
+    window.print();
+  };
+
+  render();
+  window.cashInRecalc();
+}
+
+async function renderOFLog(skipLoad=false){
+  if(!skipLoad){
+    await loadOFLogQtyOverrides();
+    await loadOFLogCustomGroups();
+  }
+  const cont=document.getElementById('page-of-log');
+
+  // ── Master data (from Excel: Fabrication status) ──────────────
+  const OF_GROUPS=[
+    {of:'OF26-100',ref:'STC-GB-01',type:'Starter Brackets',
+     details:[{item:'GB-01',loc:'West Wing (R+03)',qty:78,exec:78}]},
+    {of:'OF26-101',ref:'STC-GB-02',type:'Starter Brackets',
+     details:[{item:'GB-01',loc:'East Wing (R+02)',qty:46,exec:0}]},
+    {of:'OF26-102',ref:'STC-GB-03',type:'Starter Brackets',
+     details:[{item:'Total',loc:'East Wing (RDC)',qty:0,exec:0}]},
+    {of:'OF26-103',ref:'STC-SP-01',type:'Starter Profiles',
+     details:[
+       {item:'SP-301',loc:'West Wing (R+03)',qty:1,exec:1},
+       {item:'SP-302',loc:'West Wing (R+03)',qty:5,exec:5},
+       {item:'SP-303',loc:'West Wing (R+03)',qty:1,exec:1},
+       {item:'SP-304',loc:'West Wing (R+03)',qty:1,exec:1},
+       {item:'SP-305',loc:'West Wing (R+03)',qty:1,exec:1},
+       {item:'SP-306',loc:'West Wing (R+03)',qty:1,exec:1},
+       {item:'SP-307',loc:'West Wing (R+03)',qty:1,exec:1},
+       {item:'US-01', loc:'West Wing (R+03)',qty:8,exec:0},
+       {item:'US-02', loc:'West Wing (R+03)',qty:2,exec:0},
+       {item:'US-03', loc:'West Wing (R+03)',qty:2,exec:0},
+     ]},
+    {of:'OF26-104',ref:'STC-SP-02',type:'Starter Profiles',
+     details:[
+       {item:'SP-201',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'SP-202',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'SP-203',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'SP-204',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'SP-205',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'SP-206',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'SP-207',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'US-01', loc:'East Wing (R+02)',qty:2,exec:0},
+       {item:'US-02', loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'US-03', loc:'East Wing (R+02)',qty:1,exec:0},
+     ]},
+    {of:'OF26-105',ref:'STC-SP-03',type:'Starter Profiles',
+     details:[{item:'Total',loc:'East Wing (RDC)',qty:0,exec:0}]},
+    {of:'OF26-106',ref:'STC-R300-01',type:'Starter Panels',
+     details:[
+       {item:'R-301',loc:'West Wing (R+03)',qty:11,exec:0},
+       {item:'R-302',loc:'West Wing (R+03)',qty:9,exec:0},
+       {item:'R-303',loc:'West Wing (R+03)',qty:9,exec:0},
+       {item:'R-304',loc:'West Wing (R+03)',qty:1,exec:0},
+       {item:'R-305',loc:'West Wing (R+03)',qty:1,exec:0},
+       {item:'R-306',loc:'West Wing (R+03)',qty:2,exec:0},
+       {item:'C-301',loc:'West Wing (R+03)',qty:1,exec:0},
+       {item:'C-302',loc:'West Wing (R+03)',qty:1,exec:0},
+       {item:'D-303',loc:'West Wing (R+03)',qty:1,exec:0},
+       {item:'G-304',loc:'West Wing (R+03)',qty:1,exec:0},
+     ]},
+    {of:'OF26-107',ref:'STC-R200-01',type:'Starter Panels',
+     details:[
+       {item:'R-201',loc:'East Wing (R+02)',qty:4,exec:0},
+       {item:'R-202',loc:'East Wing (R+02)',qty:4,exec:0},
+       {item:'R-203',loc:'East Wing (R+02)',qty:4,exec:0},
+       {item:'R-204',loc:'East Wing (R+02)',qty:2,exec:0},
+       {item:'R-207',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'R-208',loc:'East Wing (R+02)',qty:3,exec:0},
+       {item:'R-209',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'R-210',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'C-201',loc:'East Wing (R+02)',qty:1,exec:0},
+       {item:'D-202',loc:'East Wing (R+02)',qty:1,exec:0},
+     ]},
+    {of:'OF26-108',ref:'STC-R000-01',type:'Starter Panels',
+     details:[
+       {item:'R-079',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-080',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-082',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-083',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-084',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-085',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-086',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-087',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-088',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-089',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-090',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-091',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'R-092',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'C-001',loc:'East Wing (RDC)',qty:1,exec:0},
+       {item:'C-101',loc:'East Wing (RDC)',qty:1,exec:0},
+     ]},
+    {of:'OF25-XXX',ref:'STC-TB-01',type:'Typical Brackets',
+     details:[
+       {item:'TB-01',loc:'(RDC to R+17)',qty:972, exec:700},
+       {item:'TB-02',loc:'(RDC to R+17)',qty:250, exec:190},
+       {item:'TB-03',loc:'(RDC to R+17)',qty:63,  exec:3},
+       {item:'TB-04',loc:'(RDC to R+17)',qty:63,  exec:3},
+       {item:'SB-01',loc:'(RDC to R+17)',qty:972, exec:0},
+       {item:'SB-02',loc:'(RDC to R+17)',qty:250, exec:0},
+       {item:'SB-03',loc:'(RDC to R+17)',qty:63,  exec:0},
+       {item:'SB-04',loc:'(RDC to R+17)',qty:63,  exec:0},
+       {item:'SW-01',loc:'(RDC to R+17)',qty:1944,exec:2956},
+       {item:'SW-02',loc:'(RDC to R+17)',qty:752, exec:740},
+     ]},
+    {of:'OF26-109',ref:'STC-TP-01',type:'Typical Panels',
+     details:[
+       {item:'C01',  loc:'Corner Panel — RDC to R+04',qty:1,exec:0},
+       {item:'C02',  loc:'Corner Panel — RDC to R+04',qty:1,exec:0},
+       {item:'C03',  loc:'Corner Panel — RDC to R+04',qty:1,exec:0},
+       {item:'C04',  loc:'Corner Panel — RDC to R+04',qty:2,exec:0},
+       {item:'C07',  loc:'Corner Panel — RDC to R+04',qty:2,exec:0},
+       {item:'C08',  loc:'Corner Panel — RDC to R+04',qty:1,exec:0},
+       {item:'C09',  loc:'Corner Panel — RDC to R+04',qty:1,exec:0},
+       {item:'C10',  loc:'Corner Panel — RDC to R+04',qty:1,exec:0},
+       {item:'T01',  loc:'Typical Panel — RDC to R+04',qty:25,exec:0},
+       {item:'T02',  loc:'Typical Panel — RDC to R+04',qty:30,exec:0},
+       {item:'T03',  loc:'Typical Panel — RDC to R+04',qty:28,exec:0},
+       {item:'T04',  loc:'Typical Panel — RDC to R+04',qty:19,exec:0},
+       {item:'T05',  loc:'Typical Panel — RDC to R+04',qty:19,exec:0},
+       {item:'T06',  loc:'Typical Panel — RDC to R+04',qty:16,exec:1},
+       {item:'T07',  loc:'Typical Panel — RDC to R+04',qty:6, exec:0},
+       {item:'T08',  loc:'Typical Panel — RDC to R+04',qty:1, exec:0},
+       {item:'T09',  loc:'Typical Panel — RDC to R+04',qty:9, exec:0},
+       {item:'T10',  loc:'Typical Panel — RDC to R+04',qty:4, exec:0},
+       {item:'T11',  loc:'Typical Panel — RDC to R+04',qty:2, exec:0},
+       {item:'T12',  loc:'Typical Panel — RDC to R+04',qty:9, exec:0},
+       {item:'D03',  loc:'Right Panel — R+00 to R+04',qty:2,exec:0},
+       {item:'D06',  loc:'Right Panel — R+00 to R+04',qty:1,exec:0},
+       {item:'D07',  loc:'Right Panel — R+00 to R+04',qty:1,exec:0},
+       {item:'D10',  loc:'Right Panel — R+00 to R+04',qty:1,exec:0},
+       {item:'G03',  loc:'Left Panel — R+00 to R+04',qty:2,exec:0},
+       {item:'G04',  loc:'Left Panel — R+00 to R+04',qty:1,exec:0},
+       {item:'G05',  loc:'Left Panel — R+00 to R+04',qty:1,exec:0},
+       {item:'G06',  loc:'Left Panel — R+00 to R+04',qty:2,exec:0},
+       {item:'M06',  loc:'Middle Panel — R+00 to R+04',qty:5,exec:0},
+       {item:'M10',  loc:'Middle Panel — R+00 to R+04',qty:3,exec:0},
+       {item:'M12',  loc:'Middle Panel — R+00 to R+04',qty:3,exec:0},
+       {item:'DOOR 1',loc:'Door Panel — R+00 to R+04',qty:1,exec:0},
+       {item:'DOOR 2',loc:'Door Panel — R+00 to R+04',qty:1,exec:0},
+       {item:'DOOR 3',loc:'Door Panel — R+00 to R+04',qty:1,exec:0},
+     ]},
+  ];
+
+  // Merge base + custom groups then apply overrides
+  const ALL_GROUPS=[...OF_GROUPS,...ofLogCustomGroups.map(g=>({...g,isCustom:true}))];
+
+  const groups=ALL_GROUPS.map(g=>{
+    const details=g.details.map(d=>{
+      const key=`${g.of}__${d.item}`;
+      const execVal=ofLogQtyOverrides[key]!==undefined?ofLogQtyOverrides[key]:d.exec;
+      return{...d,exec:execVal,key};
+    });
+    const sumQty=details.reduce((s,d)=>s+d.qty,0);
+    const sumExec=details.reduce((s,d)=>s+d.exec,0);
+    return{...g,details,sumQty,sumExec};
+  });
+
+  // Progress bar helper
+  function pBar(exec,qty){
+    const pct=qty>0?Math.min(100,Math.round(exec/qty*100)):0;
+    const col=pct>=100?'#1a9458':pct>=50?'#1a5fa8':'#a07800';
+    return`<div style="display:flex;align-items:center;gap:6px;">
+      <div style="flex:1;height:6px;background:#e8edf4;border-radius:3px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${col};border-radius:3px;transition:width 0.3s;"></div>
+      </div>
+      <span style="font-size:10px;font-weight:700;color:${col};min-width:32px;text-align:right;">${pct}%</span>
+    </div>`;
+  }
+
+  // Build table rows HTML
+  let tableHTML='';
+  groups.forEach(g=>{
+    const gPct=g.sumQty>0?Math.min(100,Math.round(g.sumExec/g.sumQty*100)):0;
+    const gCol=gPct>=100?'#1a9458':gPct>=50?'#1a5fa8':'#a07800';
+    // Summary row
+    tableHTML+=`<tr class="of-grp" data-of="${g.of}">
+      <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;white-space:nowrap;">${g.of}${g.isCustom?'<span style="color:#7fffb0;font-size:8px;margin-left:4px;">●</span>':''}</td>
+      <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;white-space:nowrap;">${g.ref}</td>
+      <td style="padding:6px 10px;font-size:10px;font-weight:700;border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;">${g.type}</td>
+      <td style="padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:0.06em;border:1px solid #c8d8e8;background:#243f6e;color:#aac0e0;text-transform:uppercase;">SUMMARY</td>
+      <td style="padding:6px 10px;font-size:10px;font-weight:700;border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;">Total</td>
+      <td style="padding:6px 10px;font-size:10px;border:1px solid #c8d8e8;background:#1a3a6b;color:#aac0e0;">${g.details.length===1?g.details[0].loc:'—'}</td>
+      <td style="padding:6px 10px;font-size:10px;font-weight:700;text-align:right;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;">${g.sumQty}</td>
+      <td style="padding:6px 10px;font-size:10px;font-weight:700;text-align:right;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:${gCol==='#1a9458'?'#7fffb0':gCol==='#1a5fa8'?'#a8d4ff':'#ffd98a'};">${g.sumExec}</td>
+      <td style="padding:6px 12px;border:1px solid #c8d8e8;background:#1a3a6b;min-width:140px;">${pBar(g.sumExec,g.sumQty)}</td>
+      <td style="padding:6px 10px;text-align:center;border:1px solid #c8d8e8;background:#243f6e;cursor:pointer;" onclick="window.ofToggleGroup('${g.of}')" title="Expand/Collapse details">
+        <span id="of-toggle-${g.of}" style="font-size:11px;color:#aac0e0;">▼</span>
+      </td>
+    </tr>`;
+    // Detail rows
+    g.details.forEach(d=>{
+      const dPct=d.qty>0?Math.min(100,Math.round(d.exec/d.qty*100)):0;
+      const dCol=dPct>=100?'#1a9458':dPct>=50?'#1a5fa8':'#a07800';
+      tableHTML+=`<tr class="of-detail of-detail-${g.of}" style="display:none;">
+        <td style="padding:4px 10px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;color:#8099b0;background:#f5f8fd;"></td>
+        <td style="padding:4px 10px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;color:#8099b0;background:#f5f8fd;"></td>
+        <td style="padding:4px 10px;font-size:10px;border:1px solid #dee2e6;color:#8099b0;background:#f5f8fd;"></td>
+        <td style="padding:4px 10px;font-size:9px;letter-spacing:0.05em;border:1px solid #dee2e6;color:#1a7a3a;background:#f0fdf4;font-weight:600;">Detail</td>
+        <td style="padding:4px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #dee2e6;background:#fff;">${d.item}</td>
+        <td style="padding:4px 10px;font-size:10px;border:1px solid #dee2e6;background:#fff;max-width:260px;">${d.loc}</td>
+        <td style="padding:4px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #dee2e6;background:#fff;">${d.qty}</td>
+        <td id="of-exec-cell-${d.key}" onclick="window.ofEditExec('${d.key}',${d.exec})" title="Click to edit"
+            style="padding:4px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #dee2e6;background:${d.exec>0?'#f0faf4':'#fff'};color:${dCol};font-weight:700;cursor:pointer;user-select:none;">
+          ${d.exec}&nbsp;<span style="font-size:8px;opacity:0.5;">✎</span>
+        </td>
+        <td style="padding:4px 12px;border:1px solid #dee2e6;background:#fff;min-width:140px;">${pBar(d.exec,d.qty)}</td>
+        <td style="border:1px solid #dee2e6;background:#f5f8fd;"></td>
+      </tr>`;
+    });
+  });
+
+  // Grand total
+  const grandQty=groups.reduce((s,g)=>s+g.sumQty,0);
+  const grandExec=groups.reduce((s,g)=>s+g.sumExec,0);
+  const grandPct=grandQty>0?Math.min(100,Math.round(grandExec/grandQty*100)):0;
+
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:22px;">🔧</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">OF Logs — Fabrication Orders</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · ${groups.length} orders · ${grandExec} / ${grandQty} items executed · <span style="font-weight:700;color:#1a5fa8;">${grandPct}%</span> overall${ofLogCustomGroups.length>0?` <span style="color:#1a9458;">(+${ofLogCustomGroups.length} added)</span>`:''}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+          <input id="of-search" type="text" placeholder="Search OF#, type, item…" oninput="window.ofFilter()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:11px;width:240px;outline:none;">
+          <select id="of-type-filter" onchange="window.ofFilter()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;">
+            <option value="all">All Types</option>
+            <option value="Starter Brackets">Starter Brackets</option>
+            <option value="Starter Profiles">Starter Profiles</option>
+            <option value="Starter Panels">Starter Panels</option>
+            <option value="Typical Brackets">Typical Brackets</option>
+            <option value="Typical Panels">Typical Panels</option>
+          </select>
+          <button onclick="window.ofExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
+          <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
+          <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','Shift Tower','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
+          <button onclick="window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;padding:16px 24px;">
+        <table style="border-collapse:collapse;min-width:max-content;width:100%;" id="of-table">
+          <thead>
+            <tr style="position:sticky;top:0;z-index:10;background:#0d2244;color:#fff;">
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">OF Number</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Reference</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Type</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Row</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Item Ref</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Location</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Qty Total</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Qty Executed</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;min-width:160px;">Progress</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;"></th>
+            </tr>
+          </thead>
+          <tbody id="of-tbody">${tableHTML}</tbody>
+          <tfoot>
+            <tr style="background:#0d2244;color:#fff;font-weight:700;">
+              <td colspan="6" style="padding:7px 10px;font-size:10px;border:1px solid #0a1a36;text-align:right;letter-spacing:0.05em;">GRAND TOTAL</td>
+              <td style="padding:7px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0a1a36;">${grandQty}</td>
+              <td style="padding:7px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0a1a36;">${grandExec}</td>
+              <td style="padding:7px 10px;border:1px solid #0a1a36;min-width:160px;">${pBar(grandExec,grandQty)}</td>
+              <td style="border:1px solid #0a1a36;"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+window.ofToggleGroup=function(ofNum){
+  const rows=document.querySelectorAll(`.of-detail-${ofNum}`);
+  const icon=document.getElementById(`of-toggle-${ofNum}`);
+  const isOpen=rows.length>0&&rows[0].style.display!=='none';
+  rows.forEach(r=>r.style.display=isOpen?'none':'');
+  if(icon) icon.textContent=isOpen?'▼':'▲';
+};
+
+window.ofExpandAll=function(){
+  // Only expand groups that are currently visible (respects active filter)
+  document.querySelectorAll('#of-tbody tr.of-grp').forEach(tr=>{
+    if(tr.style.display==='none') return;
+    const ofNum=tr.getAttribute('data-of');
+    document.querySelectorAll(`.of-detail-${ofNum}`).forEach(r=>r.style.display='');
+    const icon=document.getElementById(`of-toggle-${ofNum}`);
+    if(icon) icon.textContent='▲';
+  });
+};
+
+window.ofFilter=function(){
+  const q=(document.getElementById('of-search').value||'').toLowerCase();
+  const typeF=document.getElementById('of-type-filter').value;
+  document.querySelectorAll('#of-tbody tr.of-grp').forEach(tr=>{
+    const txt=tr.textContent.toLowerCase();
+    const matchQ=!q||txt.includes(q);
+    const matchT=typeF==='all'||txt.includes(typeF.toLowerCase());
+    const show=matchQ&&matchT;
+    tr.style.display=show?'':'none';
+    const ofNum=tr.getAttribute('data-of');
+    document.querySelectorAll(`.of-detail-${ofNum}`).forEach(dr=>dr.style.display=show?'none':'none');
+  });
+};
+
+window.ofEditExec=function(key,currentVal){
+  const cell=document.getElementById(`of-exec-cell-${key}`);
+  if(!cell) return;
+  const input=document.createElement('input');
+  input.type='number';
+  input.min='0';
+  input.value=currentVal;
+  input.style.cssText='width:70px;padding:2px 6px;font-size:11px;font-family:var(--mono);border:2px solid #1a5fa8;border-radius:4px;outline:none;text-align:right;';
+  cell.innerHTML='';
+  cell.appendChild(input);
+  input.focus();
+  input.select();
+  const commit=async()=>{
+    const newVal=parseInt(input.value)||0;
+    ofLogQtyOverrides[key]=newVal;
+    const pane=document.querySelector('#page-of-log .fpm');
+    const st=pane?pane.scrollTop:0;
+    await renderOFLog(true);
+    const p=document.querySelector('#page-of-log .fpm');
+    if(p)p.scrollTop=st;
+    saveOFLogQtyOverrides();
+  };
+  input.addEventListener('blur',commit);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){input.removeEventListener('blur',commit);renderOFLog(true);}});
+};
+
+// ── ADD NEW OF MODAL ───────────────────────────────────────────
+window.openAddOFModal=function(){
+  const existing=document.getElementById('add-of-modal');
+  if(existing) existing.remove();
+
+  const modal=document.createElement('div');
+  modal.id='add-of-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10002;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:var(--surface);border-radius:14px;width:680px;max-width:calc(100vw - 32px);padding:28px;box-shadow:0 20px 60px rgba(34,79,147,0.2);max-height:calc(100vh - 60px);overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">➕ Add Fabrication Order</div>
+        <button onclick="document.getElementById('add-of-modal').remove()" style="width:28px;height:28px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.15);border-radius:6px;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+
+      <!-- OF Header -->
+      <div style="background:#f0f4fa;border-radius:8px;padding:14px;margin-bottom:18px;">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Order Info</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">OF Number</label>
+            <input id="aof-of" placeholder="OF26-110" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Reference</label>
+            <input id="aof-ref" placeholder="STC-XX-01" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Type</label>
+            <input id="aof-type" placeholder="Starter Brackets…" list="aof-type-list" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+            <datalist id="aof-type-list">
+              <option value="Starter Brackets"><option value="Starter Profiles"><option value="Starter Panels">
+              <option value="Typical Brackets"><option value="Typical Panels">
+            </datalist>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail rows -->
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Detail Rows</div>
+      <div id="aof-details-wrap">
+        <!-- rows injected by JS -->
+      </div>
+      <button onclick="window.aofAddDetailRow()" style="margin-top:8px;padding:6px 14px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">＋ Add Detail Row</button>
+
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button onclick="document.getElementById('add-of-modal').remove()" style="flex:1;padding:10px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="window.saveNewOF()" style="flex:2;padding:10px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Save Fabrication Order</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  // Add first detail row automatically
+  window.aofAddDetailRow();
+};
+
+window._aofRowCount=0;
+window.aofAddDetailRow=function(){
+  window._aofRowCount=(window._aofRowCount||0)+1;
+  const id=window._aofRowCount;
+  const wrap=document.getElementById('aof-details-wrap');
+  if(!wrap) return;
+  const row=document.createElement('div');
+  row.id=`aof-drow-${id}`;
+  row.style.cssText='display:grid;grid-template-columns:1fr 2fr 80px 80px 28px;gap:8px;align-items:end;margin-bottom:8px;';
+  row.innerHTML=`
+    <div>
+      ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Item Ref</label>':''}
+      <input placeholder="TB-01" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;font-family:var(--mono);" data-field="item">
+    </div>
+    <div>
+      ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Location</label>':''}
+      <input placeholder="West Wing (R+03)" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;" data-field="loc">
+    </div>
+    <div>
+      ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Qty Total</label>':''}
+      <input type="number" min="0" placeholder="0" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;text-align:right;" data-field="qty">
+    </div>
+    <div>
+      ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Qty Exec</label>':''}
+      <input type="number" min="0" placeholder="0" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;text-align:right;" data-field="exec">
+    </div>
+    <div style="padding-bottom:1px;">
+      ${id===1?'<div style="height:18px;"></div>':''}
+      <button onclick="document.getElementById('aof-drow-${id}').remove()" style="width:28px;height:28px;background:#fee;border:1px solid #fcc;border-radius:6px;cursor:pointer;font-size:13px;color:#c02020;">✕</button>
+    </div>`;
+  wrap.appendChild(row);
+};
+
+window.saveNewOF=async function(){
+  const ofNum=document.getElementById('aof-of').value.trim();
+  const ref=document.getElementById('aof-ref').value.trim();
+  const type=document.getElementById('aof-type').value.trim();
+
+  if(!ofNum){toast('OF Number is required');return;}
+  if(!ref){toast('Reference is required');return;}
+  if(!type){toast('Type is required');return;}
+
+  // Collect detail rows
+  const details=[];
+  document.querySelectorAll('#aof-details-wrap [id^="aof-drow-"]').forEach(row=>{
+    const item=row.querySelector('[data-field="item"]').value.trim();
+    const loc=row.querySelector('[data-field="loc"]').value.trim();
+    const qty=parseInt(row.querySelector('[data-field="qty"]').value)||0;
+    const exec=parseInt(row.querySelector('[data-field="exec"]').value)||0;
+    if(item) details.push({item,loc,qty,exec});
+  });
+
+  if(details.length===0){toast('Add at least one detail row');return;}
+
+  ofLogCustomGroups.push({of:ofNum,ref,type,details});
+  document.getElementById('add-of-modal').remove();
+  window._aofRowCount=0;
+  toast('Fabrication Order added ✓');
+  await renderOFLog(true);
+  saveOFLogCustomGroups();
+};
+
+window.setPOCutoff=function(val){
+  window._poCutoffVal=val;
+  // Preserve scroll position of the content pane
+  const pane=document.querySelector('#page-po-log .fpm');
+  const st=pane?pane.scrollTop:0;
+  renderPOLog().then(()=>{
+    const p=document.querySelector('#page-po-log .fpm');
+    if(p)p.scrollTop=st;
+  });
+};
+
+window.poFilter=function(){
+  const q=(document.getElementById('po-search').value||'').toLowerCase();
+  const st=document.getElementById('po-status').value;
+  document.querySelectorAll('#po-tbody tr').forEach(tr=>{
+    const txt=tr.textContent.toLowerCase();
+    const matchQ=!q||txt.includes(q);
+    const matchS=st==='all'||txt.includes(st);
+    tr.style.display=(matchQ&&matchS)?'':'none';
+  });
+};
+
+(async()=>{await load();updateTabs();router();startRealtimeSync();})();
+
+let _lastSyncTime=Date.now();
+
+function startRealtimeSync(){
+  setInterval(async()=>{
+    if(document.hidden) return;
+    try{
+      const PAGE=1000;let from=0;let changed=false;
+      while(true){
+        const {data,error}=await sb.from('panels').select('id,status,notes,assigned,panel_ref,panel_type,fab_date,install_date,install_ref,delivery_date,updated_at').range(from,from+PAGE-1);
+        if(error||!data||data.length===0) break;
+        data.forEach(row=>{
+          const cur=panels[row.id];
+          const newStatus=row.status||'pending';
+          if(!cur||cur.status!==newStatus||cur.notes!==(row.notes||'')||cur.assigned!==(row.assigned||'')){
+            panels[row.id]={...(cur||{}),status:newStatus,notes:row.notes||'',assigned:row.assigned||'',ref:row.panel_ref||cur?.ref||'',type:row.panel_type||cur?.type||'',fabDate:row.fab_date||'',installDate:row.install_date||'',installRef:row.install_ref||'',deliveryDate:row.delivery_date||''};
+            changed=true;
+          }
+        });
+        if(data.length<PAGE) break;
+        from+=PAGE;
+      }
+      if(changed){lsS('bm_full_panels',JSON.stringify(panels));_reRenderCurrentPage();}
+    }catch(e){}
+  },30000);
+}
+
+function _reRenderCurrentPage(){
+  if(!curPage)return;
+  const monitoringPages=['dashboard','BM-dashboard','BM-NF','BM-SF','BM-EF','BM-WF'];
+  if(monitoringPages.includes(curPage)){goPage(curPage);return;}
+  const z=ZONES.find(z=>z.id===curPage);
+  if(z){goPage(curPage);}
+}
+
+// ── BATIDOC INLINE PAGE ───────────────────────────────────────
+let _batidocPage = 'deliverables';
+let _batidocLoaded = false;
+
+function openBatidoc(page, el){
+  _batidocPage = page || 'deliverables';
+  goPage('batidoc');
+}
+
+async function openBatidocPage(){
+  // Render batimon's sidebar
+  const sw = document.getElementById('batidoc-sidebar-wrap');
+  if(sw) sw.innerHTML = efSidebarHTML();
+
+  const frame = document.getElementById('batidoc-frame');
+  if(!_batidocLoaded){
+    _batidocLoaded = true;
+    const {data:{session}} = await sb.auth.getSession();
+    if(!session) return;
+    const payload = btoa(JSON.stringify({
+      at: session.access_token,
+      rt: session.refresh_token,
+      page: _batidocPage,
+      projects: sbProfile?.projects || null
+    }));
+    const batidocBase = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://batidoc.netlify.app';
+    frame.src = batidocBase + '#bd=' + payload;
+  } else {
+    // Already loaded — just switch page
+    frame.contentWindow.postMessage({type:'batidoc-navigate', page: _batidocPage}, '*');
+  }
+}
+
+// ── MOBILE APP (phone_only role) ──────────────────────────────────
+window._mobTab='brackets';
+window._mobFacade='BM-NF';
+window._mobFilter='all';
+
+async function renderMobileApp(prof){
+  document.getElementById('auth-screen').style.display='none';
+  const mob=document.getElementById('mobile-screen');
+  mob.style.display='flex';
+  mob.innerHTML=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#f0f4f9;">
+    <div style="width:40px;height:40px;border:4px solid #224F93;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <div style="font-size:14px;color:#8099b0;font-family:'Barlow',sans-serif;font-weight:600;">Loading data…</div>
+  </div>`;
+  await load();
+  window._mobProf=prof;
+  _buildMobileShell(prof);
+  _refreshMobileContent();
+}
+
+function _buildMobileShell(prof){
+  const mob=document.getElementById('mobile-screen');
+  const name=prof?.full_name||prof?.username||'';
+  mob.innerHTML=`
+    <div style="background:#224F93;color:#fff;flex-shrink:0;padding-top:env(safe-area-inset-top,0px);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;">
+        <div style="font-size:16px;font-weight:700;letter-spacing:0.05em;">BATIMON</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:11px;opacity:0.75;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+          <button onclick="mobileLogout()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Logout</button>
+        </div>
+      </div>
+    </div>
+    <div id="mob-facade-bar" style="background:#fff;border-bottom:1px solid #e0e8f0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div id="mob-filter-bar" style="background:#f7f9fc;border-bottom:1px solid #e0e8f0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 12px;"></div>
+    <div id="mob-content" style="flex:1;min-height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;background:#f7f9fc;"></div>
+    <div style="background:#fff;border-top:2px solid #e0e8f0;display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);">
+      <button id="mob-btn-brackets" onclick="mobileSetTab('brackets')" style="flex:1;padding:10px 0 8px;border:none;border-top:3px solid #224F93;background:transparent;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;color:#224F93;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Brackets
+      </button>
+      <button id="mob-btn-ucw" onclick="mobileSetTab('ucw')" style="flex:1;padding:10px 0 8px;border:none;border-top:3px solid transparent;background:transparent;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8099b0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>UCW
+      </button>
+    </div>`;
+}
+
+window.mobileLogout=async function(){
+  await sb.auth.signOut();
+  document.getElementById('mobile-screen').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+};
+
+window.mobileSetTab=function(tab){
+  window._mobTab=tab;
+  window._mobFacade=tab==='brackets'?'BM-NF':'NF';
+  window._mobFilter='all';
+  const isB=tab==='brackets';
+  document.getElementById('mob-btn-brackets').style.color=isB?'#224F93':'#8099b0';
+  document.getElementById('mob-btn-brackets').style.borderTopColor=isB?'#224F93':'transparent';
+  document.getElementById('mob-btn-ucw').style.color=!isB?'#224F93':'#8099b0';
+  document.getElementById('mob-btn-ucw').style.borderTopColor=!isB?'#224F93':'transparent';
+  _refreshMobileContent();
+};
+
+window.mobileSetFacade=function(f){
+  window._mobFacade=f;
+  window._mobFilter='all';
+  _refreshMobileContent();
+};
+
+window.mobileSetFilter=function(f){
+  window._mobFilter=f;
+  _renderMobileFilterBar();
+  if(window._mobTab==='brackets') _renderMobileBMGrid();
+  else _renderMobileUCWGrid();
+};
+
+function _refreshMobileContent(){
+  _renderMobileFacadeBar();
+  const isOverview=window._mobFacade==='overview';
+  const filterBar=document.getElementById('mob-filter-bar');
+  if(filterBar) filterBar.style.display=isOverview?'none':'';
+  if(isOverview){_renderMobileOverview();return;}
+  _renderMobileFilterBar();
+  if(window._mobTab==='brackets') _renderMobileBMGrid();
+  else _renderMobileUCWGrid();
+}
+
+function _renderMobileOverview(){
+  const cont=document.getElementById('mob-content');
+  if(!cont) return;
+  const isB=window._mobTab==='brackets';
+  const ss=[
+    {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
+    {key:'delivered',    label:'Delivered',      color:'#a07800', cumulLabel:'T. delivered'},
+    {key:'fabricated',   label:'Fabricated',     color:'#1a5fa8', cumulLabel:'T. fabricated'},
+    {key:'cutting',      label:'CL issued',      color:'#C98BCA', cumulLabel:'T. CL issued'},
+    {key:'cip',          label:'CL in Prog',     color:'#A349A4', cumulLabel:'T. CL in Prog'},
+    {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
+    {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
+  ];
+  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const zones=isB
+    ?[{id:'BM-NF',name:'North Facade',color:'#2d65bd'},{id:'BM-SF',name:'South Facade',color:'#1a9458'},{id:'BM-EF',name:'East Facade',color:'#a07800'},{id:'BM-WF',name:'West Facade',color:'#6d35d9'}]
+    :[{id:'NF',name:'North Facade',color:'#2d65bd'},{id:'SF',name:'South Facade',color:'#1a9458'},{id:'EF',name:'East Facade',color:'#a07800'},{id:'WF',name:'West Facade',color:'#6d35d9'}];
+  // Global counts
+  const gc=isB?bmGC():gC();
+  const gcActiveTotal=(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
+  // Global status cards (2-col grid)
+  const globalCards=ss.map(s=>{
+    const n=gc[s.key]||0;
+    const idx=pipeline.indexOf(s.key);
+    const cumul=idx>0?pipeline.slice(0,idx+1).reduce((a,k)=>a+(gc[k]||0),0):n;
+    const pct=gcActiveTotal?(cumul/gcActiveTotal*100):0;
+    const hasCumul=s.cumulLabel&&idx>0;
+    return`<div style="background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 1px 4px rgba(34,79,147,0.07);border:1px solid #e0e8f4;">
+      <div style="font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${s.color};margin-bottom:4px;">${s.label}</div>
+      <div style="display:flex;align-items:baseline;gap:5px;">
+        <span style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${n}</span>
+        ${hasCumul?`<span style="font-size:14px;font-weight:700;font-family:monospace;color:#8099b0;">(${cumul})</span>`:''}
+      </div>
+      ${hasCumul?`<div style="font-size:8px;color:#8099b0;margin-top:2px;white-space:nowrap;">${s.cumulLabel} · ${pct.toFixed(1)}%</div>`:''}
+    </div>`;
+  }).join('');
+  const totalCard=`<div style="background:linear-gradient(135deg,#1a3a6e 0%,#224F93 100%);border-radius:10px;padding:10px 12px;box-shadow:0 1px 6px rgba(34,79,147,0.14);">
+    <div style="font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:4px;">Total</div>
+    <span style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',monospace;color:#fff;line-height:1;">${gcActiveTotal}</span>
+    <div style="height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin-top:6px;overflow:hidden;">
+      <div style="width:100%;height:100%;background:rgba(255,255,255,0.7);border-radius:2px;"></div>
+    </div>
+    <div style="font-size:8px;color:rgba(255,255,255,0.6);margin-top:3px;text-align:right;">100%</div>
+  </div>`;
+  // Per-facade cards
+  const facadeCards=zones.map(z=>{
+    const c=isB?bmZC(z.id):zC(z.id);
+    const activeTotal=(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal>0?Math.round((c.installed||0)/activeTotal*100):0;
+    const breakdown=ss.map(s=>{
+      const n=c[s.key]||0;
+      const idx=pipeline.indexOf(s.key);
+      const cumul=idx>0?pipeline.slice(0,idx+1).reduce((a,k)=>a+(c[k]||0),0):n;
+      const hasCumul=s.cumulLabel&&idx>0;
+      const barPct=activeTotal?(n/activeTotal*100):0;
+      const cumulPct=activeTotal?(cumul/activeTotal*100):0;
+      return`<div style="padding:5px 0;border-bottom:1px solid #f0f4f8;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};">${s.label}</span>
+          ${hasCumul?`<span style="font-size:8px;font-weight:600;color:#8099b0;">${s.cumulLabel}</span>`:''}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+          <div style="display:flex;align-items:baseline;gap:5px;">
+            <span style="font-size:18px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${n}</span>
+            ${hasCumul?`<span style="font-size:12px;font-weight:700;font-family:monospace;color:#8099b0;">(${cumul})</span>`:''}
+          </div>
+          <div style="text-align:right;">
+            <span style="font-size:10px;font-family:monospace;color:#8099b0;">${barPct.toFixed(1)}%</span>
+            ${hasCumul?`<span style="font-size:10px;font-family:monospace;color:#b0bcc8;margin-left:4px;">(${cumulPct.toFixed(1)}%)</span>`:''}
+          </div>
+        </div>
+        <div style="height:4px;background:#f0f4f8;border-radius:2px;overflow:hidden;">
+          <div style="width:${barPct}%;height:100%;background:${s.color};border-radius:2px;"></div>
+        </div>
+      </div>`;
+    }).join('');
+    return`<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(34,79,147,0.08);border:1px solid #e0e8f4;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:10px;height:10px;border-radius:3px;background:${z.color};flex-shrink:0;"></div>
+          <span style="font-size:14px;font-weight:700;color:#1a2a3a;">${z.name}</span>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:${z.color};background:${z.color}18;padding:2px 10px;border-radius:20px;">${activeTotal} panels</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <span style="font-size:9px;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;">Installation</span>
+        <span style="font-size:11px;font-weight:700;font-family:monospace;color:${z.color};">${pct}%</span>
+      </div>
+      <div style="height:6px;background:#e8f0fa;border-radius:4px;overflow:hidden;margin-bottom:10px;">
+        <div style="width:${pct}%;height:100%;background:${z.color};border-radius:4px;transition:width 0.4s;"></div>
+      </div>
+      <div style="border-top:2px solid ${z.color}30;padding-top:4px;">
+        ${activeTotal===0?`<span style="font-size:11px;color:#b0bcc8;font-style:italic;">No data yet</span>`:breakdown}
+      </div>
+    </div>`;
+  }).join('');
+  cont.innerHTML=`<div style="padding:14px 14px 24px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Project Summary</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">${globalCards}${totalCard}</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Facades</div>
+    ${facadeCards}
+  </div>`;
+}
+
+function _renderMobileFacadeBar(){
+  const bar=document.getElementById('mob-facade-bar');
+  if(!bar) return;
+  const isB=window._mobTab==='brackets';
+  const facades=[
+    {id:'overview',label:'Overview',color:'#224F93'},
+    ...(isB
+      ?[{id:'BM-NF',label:'North',color:'#2d65bd'},{id:'BM-SF',label:'South',color:'#1a9458'},{id:'BM-EF',label:'East',color:'#a07800'},{id:'BM-WF',label:'West',color:'#6d35d9'}]
+      :[{id:'NF',label:'North',color:'#2d65bd'},{id:'SF',label:'South',color:'#1a9458'},{id:'EF',label:'East',color:'#a07800'},{id:'WF',label:'West',color:'#6d35d9'}])
+  ];
+  bar.innerHTML=`<div style="display:flex;padding:0 8px;">`+facades.map(f=>{
+    const active=window._mobFacade===f.id;
+    return`<button onclick="mobileSetFacade('${f.id}')" style="padding:10px 20px;border:none;border-bottom:3px solid ${active?f.color:'transparent'};background:transparent;font-family:'Barlow',sans-serif;font-size:13px;font-weight:${active?700:500};color:${active?f.color:'#8099b0'};cursor:pointer;white-space:nowrap;flex-shrink:0;">${f.label}</button>`;
+  }).join('')+`</div>`;
+}
+
+function _renderMobileFilterBar(){
+  const bar=document.getElementById('mob-filter-bar');
+  if(!bar) return;
+  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stTxt={installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
+  const items=[{k:'all',l:'All'},{k:'installed',l:'Installed'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}];
+  bar.innerHTML=`<div style="display:flex;gap:6px;">`+items.map(f=>{
+    const active=window._mobFilter===f.k;
+    const bg=active?(f.k==='all'?'#224F93':stBg[f.k]):'#fff';
+    const col=active?(f.k==='all'?'#fff':stTxt[f.k]):'#4a6080';
+    const brd=active?(f.k==='all'?'#224F93':stBg[f.k]):'#d0dae8';
+    return`<button onclick="mobileSetFilter('${f.k}')" style="padding:4px 12px;border:1.5px solid ${brd};background:${bg};color:${col};font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;border-radius:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;">${f.l}</button>`;
+  }).join('')+`</div>`;
+}
+
+function _getMobileBMData(zoneId){
+  const mk=(l,r)=>[...l,'|',...r];
+  if(zoneId==='BM-NF'){
+    const cL=['65a','65','64','63','62','61','60','59','58','57','56','55','54'],cR=['41','40','39','38','37','36','35','34','33','32','31'];
+    const LS=['TB-04','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01'];
+    const RS=['TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-03'];
+    const LE=cL.map(()=>''),RE=cR.map(()=>'');
+    return{cols:[...cL,'|',...cR],zid:'NF',rows:[
+      {l:'R+36',d:mk(LE,RS)},{l:'R+35',d:mk(LE,RS)},{l:'R+34',d:mk(LE,RS)},{l:'R+33',d:mk(LE,RS)},{l:'R+32',d:mk(LE,RS)},{l:'R+31',d:mk(LE,RS)},
+      {l:'R+30',d:mk(LE,RS)},{l:'R+29',d:mk(LE,RS)},{l:'R+28',d:mk(LE,RS)},{l:'R+27',d:mk(LE,RS)},{l:'R+26',d:mk(LE,RS)},
+      {l:'R+25',d:mk(LS,RS)},{l:'R+24',d:mk(LS,RS)},{l:'R+23',d:mk(LS,RS)},{l:'R+22',d:mk(LS,RS)},{l:'R+21',d:mk(LS,RS)},{l:'R+20',d:mk(LS,RS)},
+      {l:'R+19',d:mk(LS,RS)},{l:'R+18',d:mk(LS,RS)},{l:'R+17',d:mk(LS,RS)},{l:'R+16',d:mk(LS,RS)},{l:'R+15',d:mk(LS,RS)},{l:'R+14',d:mk(LS,RS)},
+      {l:'R+13',d:mk(LS,RS)},{l:'R+12',d:mk(LS,RS)},{l:'R+11',d:mk(LS,RS)},{l:'R+10',d:mk(LS,RS)},{l:'R+9',d:mk(LS,RS)},{l:'R+8',d:mk(LS,RS)},
+      {l:'R+7',d:mk(LS,RS)},{l:'R+6',d:mk(LS,RS)},{l:'R+5',d:mk(LS,RS)},{l:'R+4',d:mk(LS,RS)},{l:'R+3',d:mk(LS,RS)},
+      {l:'R+2',d:mk(cL.map(()=>'TB-01'),cR.map(()=>'GB-01'))},{l:'R+1',d:mk(cL.map(()=>'GB-01'),RE)},{l:'RDC',d:mk(LE,RE)},
+    ]};
+  }
+  if(zoneId==='BM-SF'){
+    const cL=['15a','15','14','13','12','11','10','9','8','7','6','5','4'],cR=['93','92','91','90','89','88','87','86','85','84','83','82','81'];
+    const LS=['TB-03','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01'];
+    const RS=['TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-04'];
+    const LE=cL.map(()=>''),RE=cR.map(()=>'');
+    return{cols:[...cL,'|',...cR],zid:'SF',rows:[
+      {l:'R+36',d:mk(LS,RE)},{l:'R+35',d:mk(LS,RE)},{l:'R+34',d:mk(LS,RE)},{l:'R+33',d:mk(LS,RE)},{l:'R+32',d:mk(LS,RE)},{l:'R+31',d:mk(LS,RE)},
+      {l:'R+30',d:mk(LS,RE)},{l:'R+29',d:mk(LS,RE)},{l:'R+28',d:mk(LS,RE)},{l:'R+27',d:mk(LS,RE)},{l:'R+26',d:mk(LS,RE)},
+      {l:'R+25',d:mk(LS,RS)},{l:'R+24',d:mk(LS,RS)},{l:'R+23',d:mk(LS,RS)},{l:'R+22',d:mk(LS,RS)},{l:'R+21',d:mk(LS,RS)},{l:'R+20',d:mk(LS,RS)},
+      {l:'R+19',d:mk(LS,RS)},{l:'R+18',d:mk(LS,RS)},{l:'R+17',d:mk(LS,RS)},{l:'R+16',d:mk(LS,RS)},{l:'R+15',d:mk(LS,RS)},{l:'R+14',d:mk(LS,RS)},
+      {l:'R+13',d:mk(LS,RS)},{l:'R+12',d:mk(LS,RS)},{l:'R+11',d:mk(LS,RS)},{l:'R+10',d:mk(LS,RS)},{l:'R+9',d:mk(LS,RS)},{l:'R+8',d:mk(LS,RS)},
+      {l:'R+7',d:mk(LS,RS)},{l:'R+6',d:mk(LS,RS)},{l:'R+5',d:mk(LS,RS)},{l:'R+4',d:mk(LS,RS)},{l:'R+3',d:mk(LS,RS)},
+      {l:'R+2',d:mk(['TB-03','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01'],RS)},
+      {l:'R+1',d:mk(LE,RS)},{l:'RDC',d:mk(LE,cR.map(()=>'GB-01'))},
+    ]};
+  }
+  if(zoneId==='BM-EF'){
+    const cols=['81a','81','80','79','78','77','76','75','74','73','72','71','70','69','68','67','66','65C'];
+    const STD=['TB-04','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-03'];
+    const EM=cols.map(()=>'');
+    return{cols,zid:'EF',rows:[
+      {l:'R+36',d:EM},{l:'R+35',d:EM},{l:'R+34',d:EM},{l:'R+33',d:EM},{l:'R+32',d:EM},{l:'R+31',d:EM},
+      {l:'R+30',d:EM},{l:'R+29',d:EM},{l:'R+28',d:EM},{l:'R+27',d:EM},{l:'R+26',d:EM},
+      {l:'R+25',d:STD},{l:'R+24',d:STD},{l:'R+23',d:STD},{l:'R+22',d:STD},{l:'R+21',d:STD},{l:'R+20',d:STD},
+      {l:'R+19',d:STD},{l:'R+18',d:STD},{l:'R+17',d:STD},{l:'R+16',d:STD},{l:'R+15',d:STD},{l:'R+14',d:STD},
+      {l:'R+13',d:STD},{l:'R+12',d:STD},{l:'R+11',d:STD},{l:'R+10',d:STD},{l:'R+09',d:STD},{l:'R+08',d:STD},
+      {l:'R+07',d:STD},{l:'R+06',d:STD},{l:'R+05',d:STD},{l:'R+04',d:STD},{l:'R+03',d:STD},{l:'R+02',d:STD},
+      {l:'R+01',d:['TB-04','TB-02','TB-02','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01','GB-01']},
+      {l:'RDC', d:['GB-01','GB-01','GB-01','','','','','','','','','','','','','','','']},
+    ]};
+  }
+  // WF
+  const cols=['31-a','31','30','29','28','27','26','25','24','23','22','21','20','19','18','17','16','15'];
+  const STD=['TB-04','TB-02','TB-02','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-01','TB-02','TB-02','TB-03'];
+  const EM=cols.map(()=>'');
+  return{cols,zid:'WF',rows:[
+    {l:'R+34',d:STD},{l:'R+33',d:STD},{l:'R+32',d:STD},{l:'R+31',d:STD},{l:'R+30',d:STD},{l:'R+29',d:STD},
+    {l:'R+28',d:STD},{l:'R+27',d:STD},{l:'R+26',d:STD},{l:'R+25',d:STD},{l:'R+24',d:STD},{l:'R+23',d:STD},
+    {l:'R+22',d:STD},{l:'R+21',d:STD},{l:'R+20',d:STD},{l:'R+19',d:STD},{l:'R+18',d:STD},{l:'R+17',d:STD},
+    {l:'R+16',d:STD},{l:'R+15',d:STD},{l:'R+14',d:STD},{l:'R+13',d:STD},{l:'R+12',d:STD},{l:'R+11',d:STD},
+    {l:'R+10',d:STD},{l:'R+9',d:STD},{l:'R+8',d:STD},{l:'R+7',d:STD},{l:'R+6',d:STD},{l:'R+5',d:STD},
+    {l:'R+4',d:STD},{l:'R+3',d:STD},{l:'R+2',d:cols.map(()=>'GB-01')},{l:'R+1',d:EM},{l:'RDC',d:EM},
+  ]};
+}
+
+// ── Pinch-zoom + pan for mobile monitoring grids ─────────────────
+function _attachMobilePinchZoom(container){
+  // Cancel any previous gesture listeners attached to this element
+  if(container._pinchAbort) container._pinchAbort.abort();
+  const ac=new AbortController();
+  container._pinchAbort=ac;
+  const sig=ac.signal;
+
+  let scale=1,tx=0,ty=0;
+  let lastScale=1;
+  let startDist=0;
+  let pinchCX=0,pinchCY=0,pinchMX=0,pinchMY=0;
+  let isPinching=false;
+  let panStartX=0,panStartY=0;
+  let lastTapTime=0;
+  let initialScale=1;
+
+  function target(){ return container.querySelector('#mob-pinch-target'); }
+
+  function apply(){
+    const el=target();
+    if(el) el.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  }
+
+  function clamp(){
+    const el=target(); if(!el) return;
+    const cw=container.clientWidth, ch=container.clientHeight;
+    const ew=el.offsetWidth*scale, eh=el.offsetHeight*scale;
+    tx = ew>cw ? Math.min(0,Math.max(tx,cw-ew)) : Math.max(0,(cw-ew)/2);
+    ty = eh>ch ? Math.min(0,Math.max(ty,ch-eh)) : 0;
+  }
+
+  function dist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+
+  // Auto-fit to container width after first layout paint
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const el=target(); if(!el) return;
+    const cw=container.clientWidth;
+    const ew=el.offsetWidth;
+    if(ew>cw) scale=Math.max((cw-8)/ew, 0.12);
+    initialScale=scale; tx=0; ty=0;
+    clamp(); apply();
+  }));
+
+  container.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){
+      isPinching=true;
+      startDist=dist(e.touches);
+      lastScale=scale;
+      const r=container.getBoundingClientRect();
+      pinchMX=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
+      pinchMY=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
+      // Content-space point under the pinch midpoint (must stay fixed)
+      pinchCX=(pinchMX-tx)/scale;
+      pinchCY=(pinchMY-ty)/scale;
+      e.preventDefault();
+    } else if(e.touches.length===1){
+      panStartX=e.touches[0].clientX-tx;
+      panStartY=e.touches[0].clientY-ty;
+    }
+  },{passive:false,signal:sig});
+
+  container.addEventListener('touchmove', e=>{
+    if(e.touches.length===2&&isPinching){
+      scale=Math.min(Math.max(lastScale*dist(e.touches)/startDist, 0.12),5);
+      // Keep pinch midpoint fixed in content space
+      tx=pinchMX-pinchCX*scale;
+      ty=pinchMY-pinchCY*scale;
+      clamp(); apply();
+      e.preventDefault();
+    } else if(e.touches.length===1&&!isPinching){
+      tx=e.touches[0].clientX-panStartX;
+      ty=e.touches[0].clientY-panStartY;
+      clamp(); apply();
+      e.preventDefault();
+    }
+  },{passive:false,signal:sig});
+
+  container.addEventListener('touchend', e=>{
+    if(e.touches.length<2) isPinching=false;
+    if(e.touches.length===0){
+      // Double-tap resets zoom
+      const now=Date.now();
+      if(now-lastTapTime<300){ scale=initialScale; tx=0; ty=0; clamp(); apply(); }
+      lastTapTime=now;
+      // Snap back if zoomed out below initial
+      if(scale<initialScale*0.85){ scale=initialScale; tx=0; ty=0; clamp(); apply(); }
+    }
+  },{signal:sig});
+}
+
+function _renderMobileBMGrid(){
+  const cont=document.getElementById('mob-content');
+  if(!cont) return;
+  const {cols,rows,zid}=_getMobileBMData(window._mobFacade);
+  const filter=window._mobFilter;
+  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBd={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stTx={installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
+  const cw=36,ch=20,lw=36;
+
+  // Count totals for legend
+  const cnt={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  rows.forEach(r=>r.d.forEach((bt,ci)=>{
+    if(!bt||bt==='|'||bt==='x') return;
+    const id=`BM-${zid}-${r.l.replace('+','')}-${cols[ci]}`;
+    const s=(panels[id]||{}).status||'pending';
+    cnt[s]=(cnt[s]||0)+1; cnt.total++;
+  }));
+
+  const hdr=`<div style="display:flex;align-items:center;border-bottom:2px solid #cdd6e0;padding-bottom:2px;margin-bottom:2px;">
+    <div style="width:${lw}px;flex-shrink:0;"></div>
+    ${cols.map(c=>c==='|'?`<div style="width:10px;flex-shrink:0;"></div>`:`<div style="width:${cw}px;flex-shrink:0;text-align:center;font-size:7px;font-weight:700;color:#8099b0;">${c}</div>`).join('')}
+  </div>`;
+
+  const bdy=rows.map(r=>{
+    const isEmpty=r.d.filter(v=>v!=='|').every(v=>!v);
+    const cells=r.d.map((bt,ci)=>{
+      if(bt==='|') return`<div style="width:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:${ch}px;background:#cdd6e0;"></div></div>`;
+      if(!bt||bt==='x') return`<div style="width:${cw}px;height:${ch}px;flex-shrink:0;background:#f0f4f9;border:1px solid #e8eef5;"></div>`;
+      const id=`BM-${zid}-${r.l.replace('+','')}-${cols[ci]}`;
+      const s=(panels[id]||{}).status||'pending';
+      const dim=filter!=='all'&&s!==filter;
+      return`<div style="width:${cw}px;height:${ch}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;background:${stBg[s]};color:${stTx[s]};border:1px solid ${stBd[s]};opacity:${dim?0.12:1};" title="${bt} · ${s}">${bt}</div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;margin-bottom:1px;">
+      <div style="width:${lw}px;flex-shrink:0;font-size:8px;font-weight:700;color:${isEmpty?'#cdd6e0':'#4a6080'};text-align:right;padding-right:4px;">${r.l}</div>${cells}
+    </div>`;
+  }).join('');
+
+  const legend=`<div style="margin:16px 12px 24px;background:#fff;border:1px solid #e0e8f0;border-radius:10px;padding:14px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8099b0;margin-bottom:10px;">Legend · ${cnt.total} brackets</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      ${[['installed','Installed'],['delivered','Delivered'],['fabricated','Fabricated'],['cutting','CL issued'],['cip','CL in Progress'],['cl_not_issued','CL not issued'],['defect','Defect']].map(([k,l])=>`
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div style="width:13px;height:13px;border-radius:2px;flex-shrink:0;background:${stBg[k]};border:1.5px solid ${stBd[k]};"></div>
+        <span style="font-size:11px;color:#4a6080;flex:1;">${l}</span>
+        <span style="font-size:11px;font-weight:700;color:#1a2a3a;font-family:'DM Mono',monospace;">${cnt[k]||0}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  cont.style.overflow='hidden';
+  cont.style.position='relative';
+  cont.style.touchAction='none';
+  cont.innerHTML=`<div id="mob-pinch-target" style="display:inline-block;padding:10px;transform-origin:0 0;will-change:transform;">
+    ${hdr}${bdy}${legend}
+  </div>`;
+  _attachMobilePinchZoom(cont);
+}
+
+function _renderMobileUCWGrid(){
+  const cont=document.getElementById('mob-content');
+  if(!cont) return;
+  const zid=window._mobFacade;
+  const zone=ZONES.find(z=>z.id===zid);
+  if(!zone){cont.innerHTML='<div style="padding:20px;color:#8099b0;font-size:12px;text-align:center;">Zone not found</div>';return;}
+
+  // Sync filter so buildComplexTable picks it up
+  fFilters[zid]=window._mobFilter||'all';
+
+  cont.style.overflow='hidden';
+  cont.style.position='relative';
+  cont.style.touchAction='none';
+  cont.innerHTML=`<div id="mob-pinch-target" style="display:inline-block;transform-origin:0 0;will-change:transform;padding:8px 8px 32px;${(zid==='WF'||zid==='SF'||zid==='NF')?'--ch:150px;':''}">
+    <table class="wft" id="tbl-${zid}"></table>
+    <div id="legend-wrap-${zid}"></div>
+  </div>`;
+
+  // Build the exact same table as the desktop
+  buildComplexTable(zone);
+  _attachMobilePinchZoom(cont);
+}

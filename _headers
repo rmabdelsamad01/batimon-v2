@@ -1,0 +1,27 @@
+# Security & caching headers for Cloudflare Pages
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+# Never cache the main entry points — always serve fresh
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/app.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+# Cache static assets for 1 year (they have version query strings)
+/styles.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/logo.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/icon.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/manifest.json
+  Cache-Control: public, max-age=86400

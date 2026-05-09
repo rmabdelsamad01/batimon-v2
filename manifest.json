@@ -1,0 +1,20 @@
+{
+  "name": "Batimon – Monitoring Sheet",
+  "short_name": "Batimon",
+  "description": "Facade panel monitoring and fabrication tracking for Shift Tower",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f0f4f9",
+  "theme_color": "#224F93",
+  "icons": [
+    {
+      "src": "Logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "lang": "fr"
+}

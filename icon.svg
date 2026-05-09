@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#224F93"/>
+  <!-- Letter B -->
+  <rect x="148" y="112" width="52" height="288" rx="8" fill="white"/>
+  <!-- Top bowl -->
+  <path d="M200 112 h80 a72 72 0 0 1 0 144 h-80 z" fill="white"/>
+  <path d="M200 148 h74 a36 36 0 0 1 0 72 h-74 z" fill="#224F93"/>
+  <!-- Bottom bowl -->
+  <path d="M200 256 h88 a88 88 0 0 1 0 144 h-88 z" fill="white"/>
+  <path d="M200 294 h82 a50 50 0 0 1 0 68 h-82 z" fill="#224F93"/>
+</svg>
