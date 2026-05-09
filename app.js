@@ -9250,6 +9250,8 @@ async function _supaEditCell(panelId, field, value, el){
 // ══════════════════════════════════════════════════════════════
 let _demoData={legend:[],panels:{}};
 let _demoActiveZone='overview';
+let _demoMultiMode=false;
+let _demoSelected=new Set();
 
 function _demoGate(){
   const modal=document.getElementById('demo-gate-modal');
@@ -9259,6 +9261,8 @@ function _demoGate(){
 function _demoStartNew(){
   cm('demo-gate-modal');
   _demoData={legend:[],panels:{}};
+  _demoMultiMode=false;
+  _demoSelected.clear();
   _demoOpen();
 }
 
@@ -9287,6 +9291,8 @@ function _demoOpen(){
 }
 
 function _demoExit(){
+  _demoMultiMode=false;
+  _demoSelected.clear();
   cm('demo-modal');
   _demoPanelPickerClose();
 }
@@ -9445,6 +9451,8 @@ function _demoInlineEditLabel(lid,span){
 
 function _demoSwitchZone(zoneId){
   _demoActiveZone=zoneId;
+  _demoSelected.clear();
+  _demoUpdateMultiBar();
   ['overview','NF','EF','SF','WF'].forEach(z=>{
     const btn=document.getElementById('demo-tab-'+z);
     if(btn){
@@ -9510,6 +9518,18 @@ function _demoRenderGrid(){
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
   });
 
+  // Apply selection highlights
+  table.querySelectorAll('.wfc[data-pid]').forEach(cell=>{
+    if(_demoSelected.has(cell.dataset.pid)){
+      cell.style.outline='3px solid #fff';
+      cell.style.outlineOffset='-3px';
+      cell.style.boxShadow='inset 0 0 0 3px #a855f7';
+    }
+  });
+
+  // Rename table so it doesn't conflict with real monitoring page tables
+  table.id='demo-tbl-'+zone.id;
+
   // Move into demo area (restores normal positioning)
   document.body.removeChild(wrap);
   wrap.style.position='';
@@ -9547,9 +9567,83 @@ function _demoRenderOverview(area){
     </div>`;
 }
 
+function _demoToggleMultiMode(){
+  _demoMultiMode=!_demoMultiMode;
+  _demoSelected.clear();
+  const btn=document.getElementById('demo-multi-btn');
+  if(btn){
+    btn.style.background=_demoMultiMode?'#a855f7':'transparent';
+    btn.style.color=_demoMultiMode?'#fff':'#a855f7';
+    btn.textContent=_demoMultiMode?'✓ Selecting…':'☐ Multi-select';
+  }
+  _demoUpdateMultiBar();
+  _demoRenderGrid();
+}
+
+function _demoUpdateMultiBar(){
+  const bar=document.getElementById('demo-multi-bar');
+  const countEl=document.getElementById('demo-multi-count');
+  const colorsEl=document.getElementById('demo-multi-colors');
+  if(!bar) return;
+  if(!_demoMultiMode||_demoSelected.size===0){bar.style.display='none';return;}
+  bar.style.display='flex';
+  if(countEl) countEl.textContent=`${_demoSelected.size} panel${_demoSelected.size>1?'s':''} selected —`;
+  if(colorsEl) colorsEl.innerHTML=
+    (!_demoData.legend.length
+      ?'<span style="font-size:11px;color:rgba(255,255,255,0.5);font-style:italic;">Add legend items first</span>'
+      :_demoData.legend.map(item=>`
+        <div onclick="_demoMultiAssign('${item.id}')" title="Assign: ${item.label}"
+          style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;background:${item.color};cursor:pointer;transition:transform 0.1s;"
+          onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
+          <span style="font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.4);">${item.label}</span>
+        </div>`).join('')
+    )+
+    `<div onclick="_demoMultiAssign(null)" title="Clear colour"
+      style="display:flex;align-items:center;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);cursor:pointer;"
+      onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+      <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.75);">✕ Clear colour</span>
+    </div>`;
+}
+
+function _demoMultiAssign(legendId){
+  _demoSelected.forEach(pid=>{
+    if(legendId) _demoData.panels[pid]=legendId;
+    else delete _demoData.panels[pid];
+  });
+  _demoSelected.clear();
+  _demoUpdateMultiBar();
+  _demoRenderLegend();
+  _demoRenderGrid();
+}
+
+function _demoClearSelection(){
+  _demoSelected.clear();
+  _demoUpdateMultiBar();
+  document.querySelectorAll('#demo-tbl-'+_demoActiveZone+' .wfc[data-pid]').forEach(cell=>{
+    cell.style.outline='none';
+    cell.style.boxShadow='';
+  });
+}
+
 function _demoHandlePanelClick(e,panelId){
+  // ── Multi-select mode ──────────────────────────────────────────
+  if(_demoMultiMode){
+    if(_demoSelected.has(panelId)) _demoSelected.delete(panelId);
+    else _demoSelected.add(panelId);
+    // Update just this cell visually — no full re-render needed
+    const cell=document.querySelector('#demo-tbl-'+_demoActiveZone+' .wfc[data-pid="'+panelId+'"]');
+    if(cell){
+      const sel=_demoSelected.has(panelId);
+      cell.style.outline=sel?'3px solid #fff':'none';
+      cell.style.outlineOffset=sel?'-3px':'';
+      cell.style.boxShadow=sel?'inset 0 0 0 3px #a855f7':'';
+    }
+    _demoUpdateMultiBar();
+    return;
+  }
+  // ── Single-panel picker ────────────────────────────────────────
   if(!_demoData.legend.length){
-    alert('Please add at least one legend item first.\nUse the "+ Add Item" button on the left.');
+    alert('Please add at least one legend item first.\nUse the "+ Add" button on the left.');
     return;
   }
   const picker=document.getElementById('demo-picker');
