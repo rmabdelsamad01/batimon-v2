@@ -9316,10 +9316,7 @@ function _demoSave(){
 }
 
 function _demoPrintPDF(){
-  if(_demoActiveZone==='overview'){
-    alert('Please switch to a facade tab (North, East, South, or West) to print.');
-    return;
-  }
+  if(_demoActiveZone==='overview') return _demoPrintOverview();
   const zone=ZONES.find(z=>z.id===_demoActiveZone);
   if(!zone) return;
 
@@ -9454,6 +9451,86 @@ function _demoPrintPDF(){
     document.body.removeChild(layer);
     document.head.removeChild(printStyle);
   });
+}
+
+function _demoPrintOverview(){
+  const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+  const totalZonePanels=ZONES.reduce((s,z)=>s+z.floors.length*z.colNums.length,0);
+  const totalColored=Object.keys(_demoData.panels).length;
+
+  // Build print layer
+  const layer=document.createElement('div');
+  layer.id='_demo_print_layer';
+  layer.style.cssText='position:fixed;inset:0;background:#fff;z-index:999999;padding:20px 24px;box-sizing:border-box;font-family:var(--font);display:flex;flex-direction:column;';
+
+  // Header
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:20px;flex-shrink:0;';
+  hdr.innerHTML=`<div>
+    <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — Overview</div>
+    <div style="font-size:10px;color:#a855f7;margin-top:2px;">Planning view · Demo mode · ${totalColored} of ${totalZonePanels} panels coloured</div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
+    <div style="font-size:10px;color:#8099b0;">BatiGlobe</div>
+  </div>`;
+  layer.appendChild(hdr);
+
+  // Legend items with progress bars
+  const content=document.createElement('div');
+  content.style.cssText='flex:1;display:flex;flex-direction:column;gap:0;';
+
+  if(!_demoData.legend.length){
+    content.innerHTML='<div style="font-size:12px;color:#8099b0;text-align:center;padding:40px;background:#f8fafd;border-radius:8px;">No legend items defined.</div>';
+  } else {
+    _demoData.legend.forEach(item=>{
+      const count=_demoCountPanels(item.id);
+      const pct=totalZonePanels?Math.round(count/totalZonePanels*100):0;
+      const row=document.createElement('div');
+      row.style.cssText='padding:12px 0;border-bottom:1px solid #f0f4f9;';
+      row.innerHTML=`
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:18px;height:18px;border-radius:4px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
+            <span style="font-size:13px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <span style="font-size:12px;color:#8099b0;">${count} panels</span>
+            <span style="font-size:13px;font-weight:700;color:#224F93;min-width:38px;text-align:right;">${pct}%</span>
+          </div>
+        </div>
+        <div style="height:10px;background:#e8f0fb;border-radius:5px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${item.color};border-radius:5px;"></div>
+        </div>`;
+      content.appendChild(row);
+    });
+
+    // Total row
+    const totalRow=document.createElement('div');
+    totalRow.style.cssText='padding:14px 0 0;display:flex;justify-content:space-between;align-items:center;';
+    totalRow.innerHTML=`<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8099b0;">Total coloured</span>
+      <span style="font-size:13px;font-weight:700;color:#224F93;">${totalColored} / ${totalZonePanels} panels &nbsp;·&nbsp; ${totalZonePanels?Math.round(totalColored/totalZonePanels*100):0}%</span>`;
+    content.appendChild(totalRow);
+  }
+
+  layer.appendChild(content);
+  document.body.appendChild(layer);
+
+  // @media print CSS
+  const printStyle=document.createElement('style');
+  printStyle.id='_demo_print_css';
+  printStyle.textContent=`
+    @page{size:A4 portrait;margin:10mm 8mm;}
+    @media print{
+      body>*:not(#_demo_print_layer){display:none!important;}
+      #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    }`;
+  document.head.appendChild(printStyle);
+
+  window.print();
+  document.body.removeChild(layer);
+  document.head.removeChild(printStyle);
 }
 
 // ── 20 most-used planning colours ────────────────────────────────
