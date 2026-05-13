@@ -7,28 +7,25 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1117; }
-
     #viewer-container { position: absolute; inset: 0; }
 
-    /* ── Loading overlay ── */
     #overlay {
       position: fixed; inset: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 14px; background: #0d1117; z-index: 100;
-      font-family: 'Barlow', system-ui, sans-serif; color: #e6edf3;
-      transition: opacity 0.4s;
+      font-family: system-ui, sans-serif; color: #e6edf3;
+      transition: opacity 0.5s;
     }
     #overlay.hide { opacity: 0; pointer-events: none; }
 
-    .prog-bar { width: 220px; height: 3px; background: #30363d; border-radius: 2px; overflow: hidden; }
-    .prog-fill { height: 100%; background: #0ea5e9; border-radius: 2px; transition: width 0.35s ease; }
+    .prog-bar { width: 240px; height: 3px; background: #21262d; border-radius: 2px; overflow: hidden; }
+    .prog-fill { height: 100%; background: #0ea5e9; border-radius: 2px; transition: width 0.3s ease; }
 
     #err-msg {
-      display: none; color: #ff7b72; font-size: 12px; line-height: 1.6;
-      text-align: center; max-width: 340px; white-space: pre-line;
+      display: none; color: #ff7b72; font-size: 12px; line-height: 1.8;
+      text-align: center; max-width: 360px; white-space: pre-line;
     }
 
-    /* ── Controls hint ── */
     #hint {
       position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
       background: rgba(13,17,23,0.75); backdrop-filter: blur(6px);
@@ -37,19 +34,18 @@
       opacity: 0; transition: opacity 0.6s;
     }
     #hint.show { opacity: 1; }
-
-    /* ── Axes helper label ── */
     canvas { display: block; }
   </style>
 
-  <!-- Import map: resolve bare "three" specifier for all sub-imports -->
+  <!-- web-ifc loaded as classic script → global WebIFC (no ES module / WASM mismatch) -->
+  <script src="https://cdn.jsdelivr.net/npm/web-ifc@0.0.46/web-ifc-api.js"></script>
+
+  <!-- Three.js + OrbitControls via ES module importmap -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.js",
-      "three/examples/jsm/controls/OrbitControls.js": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/controls/OrbitControls.js",
-      "three/examples/jsm/loaders/IFCLoader.js": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/loaders/IFCLoader.js",
-      "web-ifc": "https://cdn.jsdelivr.net/npm/web-ifc@0.0.46/web-ifc-api.js"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
     }
   }
   </script>
@@ -60,8 +56,8 @@
 
 <div id="overlay">
   <div style="font-size:44px;line-height:1;">🧊</div>
-  <div id="status-text" style="font-size:13px;color:#8b949e;">Initializing 3D engine…</div>
-  <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+  <div id="status-text" style="font-size:13px;color:#8b949e;">Initialising…</div>
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
   <div id="err-msg"></div>
 </div>
 
@@ -69,7 +65,7 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ── helpers ── */
 const overlay    = document.getElementById('overlay');
@@ -82,153 +78,168 @@ function setStatus(msg, pct) {
   statusText.textContent = msg;
   if (pct !== undefined) progFill.style.width = pct + '%';
 }
-
 function showError(msg) {
   statusText.style.display = 'none';
   progFill.parentElement.style.display = 'none';
   errMsg.textContent = msg;
   errMsg.style.display = 'block';
 }
-
 function hideOverlay() {
   overlay.classList.add('hide');
   hint.classList.add('show');
-  setTimeout(() => {
-    hint.style.transition = 'opacity 2s';
-    hint.style.opacity = '0';
-  }, 5000);
+  setTimeout(() => { hint.style.transition = 'opacity 2s'; hint.style.opacity = '0'; }, 5000);
 }
 
-/* ── Parse URL param ── */
-const params = new URLSearchParams(location.search);
-const ifcUrl = params.get('url');
+/* ── URL param ── */
+const ifcUrl = new URLSearchParams(location.search).get('url');
+if (!ifcUrl) { showError('No IFC URL provided.\nUpload or paste a URL from the main app.'); throw new Error('No URL'); }
 
-if (!ifcUrl) {
-  showError('No IFC file URL provided.\nUpload a model from the main app.');
-  throw new Error('No URL');
-}
-
-setStatus('Setting up scene…', 15);
-
-/* ── Scene ── */
+/* ── Three.js scene ── */
 const container = document.getElementById('viewer-container');
-
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0d1117);
 
-const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.01, 10000);
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.01, 50000);
 camera.position.set(40, 25, 40);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
-/* ── Lights ── */
-const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambient);
-
-const sun = new THREE.DirectionalLight(0xffd6a5, 1.0);
+const sun = new THREE.DirectionalLight(0xffd6a5, 1.1);
 sun.position.set(80, 160, 80);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 1;
-sun.shadow.camera.far  = 600;
-sun.shadow.camera.left = sun.shadow.camera.bottom = -150;
-sun.shadow.camera.right = sun.shadow.camera.top  =  150;
 scene.add(sun);
-
-const fill = new THREE.DirectionalLight(0x6699cc, 0.3);
+const fill = new THREE.DirectionalLight(0x6699cc, 0.35);
 fill.position.set(-80, 40, -80);
 scene.add(fill);
 
-/* ── Grid ── */
-const grid = new THREE.GridHelper(400, 60, 0x1e2a38, 0x1a222e);
+const grid = new THREE.GridHelper(1000, 80, 0x1e2a38, 0x1a222e);
 scene.add(grid);
 
-/* ── Controls ── */
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping   = true;
-controls.dampingFactor   = 0.06;
-controls.screenSpacePanning = false;
-controls.minDistance     = 0.5;
-controls.maxDistance     = 2000;
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 0.1;
+controls.maxDistance = 10000;
 
-/* ── Render loop ── */
-let rafId;
-function animate() {
-  rafId = requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
-}
-animate();
+(function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
 
-/* ── Resize ── */
 window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
 
-/* ── Load IFC ── */
-async function loadModel(url) {
-  setStatus('Loading IFC parser…', 35);
+/* ── IFC loading via web-ifc directly (no IFCLoader) ── */
+async function loadIFC(url) {
+  // 1 — init web-ifc WASM (same version as the script tag above)
+  setStatus('Initialising WASM parser…', 10);
+  const ifcApi = new WebIFC.IfcAPI();
+  ifcApi.SetWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.46/');
+  await ifcApi.Init();
 
-  let IFCLoader;
+  // 2 — fetch the IFC file
+  setStatus('Fetching IFC file…', 25);
+  let buffer;
   try {
-    const mod = await import('three/examples/jsm/loaders/IFCLoader.js');
-    IFCLoader = mod.IFCLoader;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const total = parseInt(resp.headers.get('Content-Length') || '0');
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let loaded = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      loaded += value.length;
+      if (total) setStatus(`Downloading… ${Math.round(loaded/total*100)}%`, 25 + loaded/total*30);
+    }
+    buffer = new Uint8Array(loaded);
+    let offset = 0;
+    for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.length; }
   } catch (e) {
-    showError('Could not load IFCLoader from CDN.\n' + e.message);
-    return null;
+    showError('Failed to fetch IFC file.\n\n' + e.message);
+    return;
   }
 
-  const loader = new IFCLoader();
+  // 3 — parse IFC
+  setStatus('Parsing IFC model…', 58);
+  const modelID = ifcApi.OpenModel(buffer, { COORDINATE_TO_ORIGIN: true, USE_FAST_BOOLS: true });
 
-  // WASM must come from the exact same build as the JS API above (web-ifc@0.0.46)
-  await loader.ifcManager.setWasmPath(
-    'https://unpkg.com/web-ifc@0.0.46/'
-  );
+  // 4 — extract geometry
+  setStatus('Building geometry…', 65);
+  const flatMeshes = ifcApi.LoadAllGeometry(modelID);
+  const total = flatMeshes.size();
+  const materials = new Map();
 
-  setStatus('Fetching IFC model…', 55);
+  for (let i = 0; i < total; i++) {
+    if (i % 200 === 0) {
+      setStatus(`Building geometry… ${Math.round(i/total*100)}%`, 65 + i/total*30);
+      await new Promise(r => setTimeout(r, 0)); // yield to browser
+    }
 
-  let model;
-  try {
-    model = await loader.loadAsync(url, (progress) => {
-      if (progress.total) {
-        const pct = 55 + (progress.loaded / progress.total) * 35;
-        setStatus(`Loading model… ${Math.round(pct)}%`, pct);
+    const flatMesh = flatMeshes.get(i);
+    const geoms = flatMesh.geometries;
+
+    for (let j = 0; j < geoms.size(); j++) {
+      const placed = geoms.get(j);
+      const geomData = ifcApi.GetGeometry(modelID, placed.geometryExpressID);
+
+      const vertsRaw = ifcApi.GetVertexArray(geomData.GetVertexData(), geomData.GetVertexDataSize());
+      const idxRaw   = ifcApi.GetIndexArray(geomData.GetIndexData(),   geomData.GetIndexDataSize());
+
+      // Separate interleaved [x,y,z,nx,ny,nz] data
+      const vertCount = vertsRaw.length / 6;
+      const positions = new Float32Array(vertCount * 3);
+      const normals   = new Float32Array(vertCount * 3);
+      for (let k = 0; k < vertCount; k++) {
+        positions[k*3]   = vertsRaw[k*6];
+        positions[k*3+1] = vertsRaw[k*6+1];
+        positions[k*3+2] = vertsRaw[k*6+2];
+        normals[k*3]     = vertsRaw[k*6+3];
+        normals[k*3+1]   = vertsRaw[k*6+4];
+        normals[k*3+2]   = vertsRaw[k*6+5];
       }
-    });
-  } catch (e) {
-    showError(
-      'Failed to load IFC model.\n\n' +
-      e.message + '\n\n' +
-      'Tip: Make sure the Supabase bucket "bim-models" is public\n' +
-      '(Supabase → Storage → bim-models → Policies → Allow public read).'
-    );
-    return null;
+
+      const bufGeom = new THREE.BufferGeometry();
+      bufGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      bufGeom.setAttribute('normal',   new THREE.BufferAttribute(normals,   3));
+      bufGeom.setIndex(new THREE.BufferAttribute(new Uint32Array(idxRaw), 1));
+
+      // Colour + transparency
+      const c = placed.color;
+      const key = `${Math.round(c.x*255)}_${Math.round(c.y*255)}_${Math.round(c.z*255)}_${Math.round(c.w*100)}`;
+      if (!materials.has(key)) {
+        materials.set(key, new THREE.MeshLambertMaterial({
+          color: new THREE.Color(c.x, c.y, c.z),
+          transparent: c.w < 0.99,
+          opacity: c.w,
+          side: THREE.DoubleSide,
+        }));
+      }
+
+      const mesh = new THREE.Mesh(bufGeom, materials.get(key));
+      const mat4 = new THREE.Matrix4().fromArray(placed.flatTransformation);
+      mesh.applyMatrix4(mat4);
+      scene.add(mesh);
+
+      geomData.delete(); // free WASM memory
+    }
   }
 
-  return model;
-}
+  ifcApi.CloseModel(modelID);
 
-async function initModel(url) {
-  const model = await loadModel(url);
-  if (!model) return;
-
-  scene.add(model);
-
-  // Fit camera to model bounding box
-  const box     = new THREE.Box3().setFromObject(model);
-  const center  = box.getCenter(new THREE.Vector3());
-  const size    = box.getSize(new THREE.Vector3());
-  const maxDim  = Math.max(size.x, size.y, size.z);
-  const fovRad  = camera.fov * (Math.PI / 180);
-  const dist    = Math.abs(maxDim / Math.sin(fovRad / 2)) * 0.65;
-
+  // 5 — fit camera
+  setStatus('Finalising…', 98);
+  const box    = new THREE.Box3().setFromObject(scene);
+  const center = box.getCenter(new THREE.Vector3());
+  const size   = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const dist   = maxDim * 1.2;
   camera.position.set(center.x + dist, center.y + dist * 0.5, center.z + dist);
   controls.target.copy(center);
   grid.position.y = box.min.y;
@@ -237,29 +248,17 @@ async function initModel(url) {
   hideOverlay();
 }
 
-initModel(ifcUrl);
+loadIFC(ifcUrl).catch(e => showError('Unexpected error:\n' + e.message));
 
-/* ── Handle reload from parent frame ── */
-window.addEventListener('message', async ({ data }) => {
+/* ── reload from parent frame ── */
+window.addEventListener('message', ({ data }) => {
   if (data?.type !== 'load-ifc' || !data.url) return;
-  cancelAnimationFrame(rafId);
-
-  // Remove old model meshes (keep lights + grid)
-  const toRemove = [];
-  scene.traverse(obj => {
-    if (obj !== scene && obj !== ambient && obj !== sun && obj !== fill && obj !== grid) {
-      toRemove.push(obj);
-    }
-  });
-  toRemove.filter(o => !o.parent || o.parent === scene).forEach(o => scene.remove(o));
-
+  scene.children.filter(o => o.isMesh).forEach(o => scene.remove(o));
   overlay.classList.remove('hide');
   statusText.style.display = '';
   progFill.parentElement.style.display = '';
   errMsg.style.display = 'none';
-
-  animate();
-  initModel(data.url);
+  loadIFC(data.url);
 });
 </script>
 </body>
