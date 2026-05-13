@@ -12479,101 +12479,104 @@ function renderAAAPage(){
   const el=document.getElementById('page-aaa');
   if(!el)return;
 
-  const CELL=6; // px per grid cell
+  const CELL=8;   // px per panel cell
+  const GAP=1;    // px joint between panels
+  const JOINT='#07111e'; // joint/gap colour
+
   const SC={
-    installed:'#1a9458',delivered:'#a07800',fabricated:'#1a5fa8',
-    cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FF6666',
-    defect:'#c02020',pending:'#253347'
+    installed:'#1a9458',delivered:'#c49000',fabricated:'#1a5fa8',
+    cutting:'#b97fc9',cip:'#8e3da0',cl_not_issued:'#e05555',
+    defect:'#c02020',pending:'#1e3050'
   };
 
-  // Dimensions in pixels
-  const sfCols=SF_COLS.length, nfCols=NF_COLS.length;
-  const efCols=EF_COLS.length, wfCols=WF_COLS.length;
-  const floorCount=SF_FLOORS.length; // 39
+  // Actual rendered pixel size of each face (grid + joints)
+  function faceW(n){return n*CELL+(n-1)*GAP;}
+  const sfW=faceW(SF_COLS.length); // 35→314
+  const nfW=faceW(NF_COLS.length); // 33→296
+  const efW=faceW(EF_COLS.length); // 17→152
+  const wfW=faceW(WF_COLS.length); // 18→161
+  const fH =faceW(SF_FLOORS.length);// 39→350
 
-  const W=Math.max(sfCols,nfCols)*CELL; // 35*6=210 — S/N face width for box
-  const D=Math.max(efCols,wfCols)*CELL; // 18*6=108 — E/W face width for box
-  const H=floorCount*CELL;              // 39*6=234
+  // Box half-extents for translateZ positioning
+  const W=Math.max(sfW,nfW); // 314 — half used for E/W faces
+  const D=Math.max(efW,wfW); // 161 — half used for N/S faces
 
-  // Render one facade as a flat CSS grid of coloured cells
-  function faceHTML(zid,cols,floors,types){
-    let out='';
+  // ── Build a face grid ───────────────────────────────────────
+  function faceGrid(zid,cols,floors,types){
+    let cells='';
     floors.forEach(fl=>{
       cols.forEach((col,ci)=>{
         const type=(types[fl]||[])[ci]||'';
-        let bg;
-        if(!type){
-          bg='transparent';
-        }else{
-          const id=`${zid}-${fl}-C${col}`;
-          const status=(panels[id]||{}).status||'pending';
-          bg=SC[status]||SC.pending;
-        }
-        out+=`<div style="width:${CELL}px;height:${CELL}px;background:${bg};"></div>`;
+        const bg=type
+          ? (SC[(panels[`${zid}-${fl}-C${col}`]||{}).status||'pending']||SC.pending)
+          : JOINT;
+        cells+=`<div style="background:${bg};"></div>`;
       });
     });
-    const fw=cols.length*CELL;
-    return`<div style="display:grid;grid-template-columns:repeat(${cols.length},${CELL}px);width:${fw}px;height:${H}px;flex-shrink:0;">${out}</div>`;
+    const w=faceW(cols.length), h=faceW(floors.length);
+    return`<div style="display:grid;grid-template-columns:repeat(${cols.length},${CELL}px);grid-auto-rows:${CELL}px;gap:${GAP}px;background:${JOINT};width:${w}px;height:${h}px;">${cells}</div>`;
   }
 
-  // Face position helper — faces are children of a zero-size origin div
-  function faceDiv(id,transform,w,h,borderColor,content){
-    return`<div id="${id}" style="position:absolute;width:${w}px;height:${h}px;left:${-w/2}px;top:${-h/2}px;transform:${transform};backface-visibility:hidden;overflow:hidden;box-sizing:border-box;border:1px solid ${borderColor};">${content}</div>`;
+  // ── Face wrapper with lighting overlay + label ───────────────
+  // shade: 0=full light, 1=full dark
+  function face(id,transform,w,h,shade,label,labelColor,content){
+    const overlay=shade>0?`<div style="position:absolute;inset:0;background:rgba(0,0,0,${shade});pointer-events:none;"></div>`:'';
+    const lbl=`<div style="position:absolute;bottom:0;left:0;right:0;padding:4px 0;text-align:center;font-size:9px;font-weight:800;letter-spacing:0.18em;color:${labelColor};background:rgba(0,0,0,0.55);pointer-events:none;text-transform:uppercase;">${label}</div>`;
+    return`<div id="${id}" style="position:absolute;width:${w}px;height:${h}px;left:${-w/2}px;top:${-h/2}px;transform:${transform};backface-visibility:hidden;overflow:hidden;outline:1px solid rgba(255,255,255,0.12);">${content}${overlay}${lbl}</div>`;
   }
 
-  // Build face grids
-  const sfGrid=faceHTML('SF',SF_COLS,SF_FLOORS,SF_TYPES);
-  const nfGrid=faceHTML('NF',NF_COLS,NF_FLOORS,NF_TYPES);
-  const efGrid=faceHTML('EF',EF_COLS,EF_FLOORS,EF_TYPES);
-  const wfGrid=faceHTML('WF',WF_COLS,WF_FLOORS,WF_TYPES);
+  // Pre-render grids
+  const sfGrid=faceGrid('SF',SF_COLS,SF_FLOORS,SF_TYPES);
+  const nfGrid=faceGrid('NF',NF_COLS,NF_FLOORS,NF_TYPES);
+  const efGrid=faceGrid('EF',EF_COLS,EF_FLOORS,EF_TYPES);
+  const wfGrid=faceGrid('WF',WF_COLS,WF_FLOORS,WF_TYPES);
 
-  // Face label overlay (top-right corner of each face)
-  function faceLabel(txt,color){
-    return`<div style="position:absolute;top:3px;right:4px;font-size:9px;font-weight:700;color:${color};letter-spacing:0.08em;pointer-events:none;z-index:1;">${txt}</div>`;
-  }
-
-  // Legend
+  // ── Legend ───────────────────────────────────────────────────
   const LEGEND=[
-    {key:'installed',  label:'Installed',     color:'#1a9458'},
-    {key:'delivered',  label:'Delivered',      color:'#a07800'},
-    {key:'fabricated', label:'Fabricated',     color:'#1a5fa8'},
-    {key:'cutting',    label:'CL Issued',      color:'#C98BCA'},
-    {key:'cip',        label:'CL in Progress', color:'#A349A4'},
-    {key:'cl_not_issued',label:'CL Not Issued',color:'#FF6666'},
-    {key:'defect',     label:'Defect',         color:'#c02020'},
-    {key:'pending',    label:'Pending',        color:'#253347'},
+    {label:'Installed',    color:'#1a9458'},
+    {label:'Delivered',    color:'#c49000'},
+    {label:'Fabricated',   color:'#1a5fa8'},
+    {label:'CL Issued',    color:'#b97fc9'},
+    {label:'CL in Prog.',  color:'#8e3da0'},
+    {label:'CL Not Issued',color:'#e05555'},
+    {label:'Defect',       color:'#c02020'},
+    {label:'Pending',      color:'#1e3050'},
   ];
   const legendHTML=LEGEND.map(l=>`
-    <div style="display:flex;align-items:center;gap:5px;">
-      <div style="width:10px;height:10px;border-radius:2px;background:${l.color};border:1px solid rgba(255,255,255,0.15);flex-shrink:0;"></div>
+    <div style="display:flex;align-items:center;gap:4px;">
+      <div style="width:11px;height:11px;border-radius:2px;background:${l.color};border:1px solid rgba(255,255,255,0.18);flex-shrink:0;"></div>
       <span style="font-size:10px;color:var(--text2);white-space:nowrap;">${l.label}</span>
     </div>`).join('');
 
+  // ── Roof (top cap) ───────────────────────────────────────────
+  const roofW=W, roofD=D;
+  const roof=`<div style="position:absolute;width:${roofW}px;height:${roofD}px;left:${-roofW/2}px;top:${-roofD/2}px;transform:rotateX(90deg) translateZ(${fH/2}px);backface-visibility:hidden;background:linear-gradient(135deg,#1e2f45 0%,#111c2a 100%);outline:1px solid rgba(255,255,255,0.1);"></div>`;
+
+  // ── Ground shadow plane ──────────────────────────────────────
+  const groundW=roofW*2.4, groundD=roofD*2.4;
+  const ground=`<div style="position:absolute;width:${groundW}px;height:${groundD}px;left:${-groundW/2}px;top:${-groundD/2}px;transform:rotateX(90deg) translateZ(${-fH/2}px);backface-visibility:hidden;background:radial-gradient(ellipse at center,rgba(14,101,169,0.13) 0%,transparent 70%);"></div>`;
+
   el.innerHTML=`<div class="fpw" style="flex-direction:column;">
-    <!-- Toolbar -->
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;">
-      <span style="font-size:15px;line-height:1;">⭐</span>
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:6px 14px;">
+      <span style="font-size:14px;line-height:1;">⭐</span>
       <span style="font-size:13px;font-weight:700;color:var(--text);">3D Facade Overview</span>
-      <div style="flex:1;"></div>
+      <div style="flex:1;min-width:8px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${legendHTML}</div>
+      <button onclick="renderAAAPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
-    <!-- 3D Viewport -->
-    <div id="aaa-vp" style="flex:1;min-height:0;overflow:hidden;background:#0e1520;position:relative;cursor:grab;user-select:none;">
-      <!-- Perspective wrapper — centred in viewport -->
-      <div id="aaa-scene" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:1100px;perspective-origin:50% 50%;">
-        <!-- Zero-size origin — all faces are absolute children -->
-        <div id="aaa-bld" style="position:relative;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-20deg) rotateY(35deg);">
-          ${faceDiv('aaa-south',`translateZ(${D/2}px)`,nfCols*CELL,H,'#3b82f655',faceLabel('NORTH','#3b82f6')+nfGrid)}
-          ${faceDiv('aaa-north',`rotateY(180deg) translateZ(${D/2}px)`,sfCols*CELL,H,'#22c55e55',faceLabel('SOUTH','#22c55e')+sfGrid)}
-          ${faceDiv('aaa-east', `rotateY(-90deg) translateZ(${W/2}px)`,efCols*CELL,H,'#f59e0b55',faceLabel('EAST','#f59e0b')+efGrid)}
-          ${faceDiv('aaa-west', `rotateY(90deg) translateZ(${W/2}px)`, wfCols*CELL,H,'#a855f755',faceLabel('WEST','#a855f7')+wfGrid)}
-          <!-- Roof cap -->
-          <div style="position:absolute;width:${W}px;height:${D}px;left:${-W/2}px;top:${-D/2}px;transform:rotateX(90deg) translateZ(${H/2}px);backface-visibility:hidden;background:rgba(30,42,60,0.7);border:1px solid rgba(255,255,255,0.08);"></div>
+    <div id="aaa-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#0d1f35 0%,#060d18 100%);position:relative;cursor:grab;user-select:none;">
+      <div id="aaa-scene" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:1400px;perspective-origin:50% 48%;">
+        <div id="aaa-bld" style="position:relative;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-22deg) rotateY(30deg);">
+          ${face('aaa-front',  `translateZ(${D/2}px)`,            nfW, fH, 0,    'North','#60a5fa', nfGrid)}
+          ${face('aaa-back',   `rotateY(180deg) translateZ(${D/2}px)`, sfW, fH, 0.18, 'South','#4ade80', `<div style="transform:rotate(180deg);width:${sfW}px;height:${fH}px;">${sfGrid}</div>`)}
+          ${face('aaa-east',   `rotateY(-90deg) translateZ(${W/2}px)`, efW, fH, 0.28, 'East', '#fbbf24', efGrid)}
+          ${face('aaa-west',   `rotateY(90deg)  translateZ(${W/2}px)`, wfW, fH, 0.42, 'West', '#c084fc', wfGrid)}
+          ${roof}
+          ${ground}
         </div>
       </div>
-      <!-- Hint -->
-      <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);color:#8b949e;font-size:11px;padding:4px 14px;border-radius:20px;pointer-events:none;white-space:nowrap;">
-        🖱 Drag to rotate &nbsp;·&nbsp; Scroll to zoom
+      <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;letter-spacing:0.03em;">
+        🖱 Drag to orbit &nbsp;·&nbsp; Scroll to zoom
       </div>
     </div>
   </div>`;
@@ -12581,51 +12584,48 @@ function renderAAAPage(){
   // ── Interaction ──────────────────────────────────────────────
   const bld=document.getElementById('aaa-bld');
   const vp =document.getElementById('aaa-vp');
-  let rotX=-20,rotY=35,zoom=1;
+  let rotX=-22,rotY=30,zoom=1;
   let dragging=false,lastX=0,lastY=0;
 
   function applyT(){
     bld.style.transform=`scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   }
 
-  // Mouse
   vp.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;vp.style.cursor='grabbing';e.preventDefault();});
-  window.addEventListener('mouseup',()=>{dragging=false;vp.style.cursor='grab';});
+  window.addEventListener('mouseup',()=>{dragging=false;if(vp.isConnected)vp.style.cursor='grab';});
   window.addEventListener('mousemove',e=>{
     if(!dragging)return;
-    rotY+=(e.clientX-lastX)*0.45;
-    rotX-=(e.clientY-lastY)*0.45;
+    rotY+=(e.clientX-lastX)*0.4;
+    rotX-=(e.clientY-lastY)*0.4;
     rotX=Math.max(-88,Math.min(88,rotX));
     lastX=e.clientX;lastY=e.clientY;
     applyT();
   });
 
-  // Scroll zoom
   vp.addEventListener('wheel',e=>{
     e.preventDefault();
-    zoom*=e.deltaY<0?1.09:0.92;
-    zoom=Math.max(0.15,Math.min(6,zoom));
+    zoom*=e.deltaY<0?1.08:0.93;
+    zoom=Math.max(0.1,Math.min(7,zoom));
     applyT();
   },{passive:false});
 
-  // Touch
   let lastPinch=0;
   vp.addEventListener('touchstart',e=>{
     e.preventDefault();
     if(e.touches.length===1){lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;}
-    if(e.touches.length===2){lastPinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+    if(e.touches.length===2)lastPinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
   },{passive:false});
   vp.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(e.touches.length===1){
-      rotY+=(e.touches[0].clientX-lastX)*0.45;
-      rotX-=(e.touches[0].clientY-lastY)*0.45;
+      rotY+=(e.touches[0].clientX-lastX)*0.4;
+      rotX-=(e.touches[0].clientY-lastY)*0.4;
       rotX=Math.max(-88,Math.min(88,rotX));
       lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;
       applyT();
     }else if(e.touches.length===2){
       const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      if(lastPinch){zoom*=d/lastPinch;zoom=Math.max(0.15,Math.min(6,zoom));applyT();}
+      if(lastPinch){zoom*=d/lastPinch;zoom=Math.max(0.1,Math.min(7,zoom));applyT();}
       lastPinch=d;
     }
   },{passive:false});
