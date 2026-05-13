@@ -9323,32 +9323,37 @@ function _demoPrintPDF(){
   const zone=ZONES.find(z=>z.id===_demoActiveZone);
   if(!zone) return;
 
-  // Inline background-color on all st-p cells so the clone is self-contained
+  // Inline background on pending cells so clone is colour-complete without CSS classes
   const tbl=document.getElementById('demo-tbl-'+zone.id);
   if(tbl){
-    tbl.querySelectorAll('.wfc.st-p').forEach(cell=>{
-      if(!cell.style.backgroundColor) cell.style.setProperty('background-color','#E8F0FB','important');
+    tbl.querySelectorAll('.wfc').forEach(cell=>{
+      if(!cell.style.backgroundColor){
+        // pending = light blue; anything else already has an inline colour from Pass 2
+        cell.style.setProperty('background-color','#E8F0FB','important');
+      }
+    });
+    // Header / label cells: white background
+    tbl.querySelectorAll('.thc,.thh,.tdf').forEach(cell=>{
+      if(!cell.style.backgroundColor) cell.style.backgroundColor='#ffffff';
     });
   }
 
-  // Clone the rendered grid
+  // Clone the rendered grid area
   const gridArea=document.getElementById('demo-grid-area');
   if(!gridArea) return;
   const clone=gridArea.cloneNode(true);
-  // Remove interactivity from clone
   clone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
   clone.querySelectorAll('[data-door-id]').forEach(el=>el.style.cursor='default');
-  clone.querySelectorAll('.wfc').forEach(el=>{el.style.cursor='default';el.onclick=null;});
+  clone.querySelectorAll('.wfc,.wfc-empty').forEach(el=>{el.style.cursor='default';});
 
-  // Collect all same-origin CSS from the page
-  let styles='';
-  Array.from(document.styleSheets).forEach(ss=>{
-    try{styles+=Array.from(ss.cssRules||[]).map(r=>r.cssText).join('\n');}catch(e){}
-  });
+  // Get absolute URL of the app stylesheet so the print window can load it directly
+  const cssLink=document.querySelector('link[href*="styles.css"]');
+  const cssHref=cssLink?cssLink.href:'';
 
   const ZONE_NAMES={NF:'North Facade',EF:'East Facade',SF:'South Facade',WF:'West Facade'};
   const zoneName=ZONE_NAMES[zone.id]||zone.name;
   const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+  const totalColored=Object.keys(_demoData.panels).length;
 
   const legendHTML=_demoData.legend.length
     ?_demoData.legend.map(item=>{
@@ -9359,9 +9364,7 @@ function _demoPrintPDF(){
           <span style="font-size:11px;font-weight:700;color:#224F93;">${count}</span>
         </div>`;
       }).join('')
-    :'<div style="font-size:11px;color:#8099b0;padding:8px 0;">No legend items</div>';
-
-  const totalColored=Object.keys(_demoData.panels).length;
+    :'<div style="font-size:11px;color:#8099b0;padding:8px 0;">No items</div>';
 
   const win=window.open('','_blank');
   if(!win){alert('Please allow pop-ups to print.');return;}
@@ -9370,28 +9373,34 @@ function _demoPrintPDF(){
 <head>
 <meta charset="UTF-8">
 <title>BatiMon Demo — ${zoneName}</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+${cssHref?`<link rel="stylesheet" href="${cssHref}">` : ''}
 <style>
-${styles}
 *{box-sizing:border-box;}
+/* Light-mode variables in case stylesheet dark-mode detection overrides them */
+:root{--surface:#fff;--surface2:#f4f8fd;--text:#1a2a3a;--text2:#4a6080;--text3:#8099b0;--border2:rgba(34,79,147,0.13);--blue:#224F93;--mono:'DM Mono',monospace;--font:'Barlow',Arial,sans-serif;}
 @page{size:A3 landscape;margin:10mm 8mm;}
-body{margin:0;padding:14px 16px;background:#fff;font-family:'Barlow',Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.ph{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:14px;}
+body{margin:0;padding:14px 16px;background:#fff;font-family:'Barlow',Arial,sans-serif;
+     -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.ph{display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:14px;}
 .pb{display:flex;gap:14px;align-items:flex-start;}
-.pg{flex:1;min-width:0;overflow:hidden;}
+.pg{flex:1;min-width:0;overflow:visible;}
 .pl{width:160px;flex-shrink:0;border:1px solid #e0e8f0;border-radius:8px;padding:10px 10px 4px;}
 .wf-wrap{transform-origin:top left;display:inline-block;}
+/* Suppress hover/selection effects in print */
+.wfc:hover{transform:none!important;box-shadow:none!important;}
+.wfc.sel,.wfc.sel-multi{box-shadow:none!important;outline:none!important;transform:none!important;}
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   body{padding:0;}
-  .no-print{display:none!important;}
 }
 </style>
 </head>
 <body>
 <div class="ph">
   <div>
-    <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo &mdash; ${zoneName}</div>
+    <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — ${zoneName}</div>
     <div style="font-size:10px;color:#a855f7;margin-top:2px;">Planning view &middot; Demo mode &middot; ${totalColored} panels coloured</div>
   </div>
   <div style="text-align:right;">
@@ -9412,7 +9421,9 @@ window.addEventListener('load',function(){
   var pgw=document.getElementById('pgw');
   var wrap=pgw&&pgw.querySelector('.wf-wrap');
   if(wrap){
-    var maxW=pgw.clientWidth||900;
+    // Remove any leftover scroll-overflow from the demo container
+    pgw.style.overflow='visible';
+    var maxW=pgw.getBoundingClientRect().width||900;
     var natW=wrap.scrollWidth;
     if(natW>0&&natW>maxW){
       var s=maxW/natW;
@@ -9421,7 +9432,7 @@ window.addEventListener('load',function(){
       pgw.style.height=(wrap.scrollHeight*s)+'px';
     }
   }
-  setTimeout(function(){window.print();},700);
+  setTimeout(function(){window.print();},900);
 });
 <\/script>
 </body>
