@@ -629,6 +629,7 @@ function _renderPage(id){
   else if(id==='suggestions')renderSuggestions();
   else if(id==='labor-curve')renderLaborCurve();
   else if(id==='planning')renderPlanning();
+  else if(id==='3d')render3DPage();
   else if(id==='batidoc')openBatidocPage();
   else{const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
 }
@@ -12325,4 +12326,146 @@ function _renderMobileUCWGrid(){
   // Build the exact same table as the desktop
   buildComplexTable(zone);
   _attachMobilePinchZoom(cont);
+}
+
+// ══════════════════════════════════════════════════════════════
+// 3D BIM VIEWER PAGE
+// Uses Three.js + IFCLoader (CDN) + Supabase Storage
+// Bucket: bim-models  /  path: ifc/building.ifc
+// ══════════════════════════════════════════════════════════════
+const _3D_BUCKET = 'bim-models';
+const _3D_PATH   = 'ifc/building.ifc';
+const _3D_IFC_URL = `${SUPABASE_URL}/storage/v1/object/public/${_3D_BUCKET}/${_3D_PATH}`;
+
+async function render3DPage(){
+  const el=document.getElementById('page-3d');
+  if(!el)return;
+
+  // Use .fpw wrapper (same pattern as all other pages) + column direction for vertical layout
+  el.innerHTML=`<div class="fpw" style="flex-direction:column;">
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:16px;line-height:1;">🧊</span>
+      <span style="font-size:14px;font-weight:700;color:var(--text);flex:1;">3D BIM Viewer</span>
+      <span id="_3d-model-info" style="font-size:11px;color:var(--text3);"></span>
+      <button onclick="_3dUploadIFC()" style="padding:6px 14px;background:#0ea5e9;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">
+        ⬆ Upload IFC
+      </button>
+      <input type="file" id="_3d-file-input" accept=".ifc,.ifczip" style="display:none" onchange="_3dHandleFileSelect(this)">
+    </div>
+    <!-- Content area -->
+    <div id="_3d-area" style="flex:1;min-height:0;overflow:hidden;position:relative;background:var(--surface2);">
+      <!-- Status overlay -->
+      <div id="_3d-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+        <div style="font-size:52px;line-height:1;">🧊</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);">3D BIM Viewer</div>
+        <div id="_3d-status" style="font-size:13px;color:var(--text2);text-align:center;max-width:320px;line-height:1.7;"></div>
+        <div id="_3d-prog-wrap" style="display:none;width:220px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+          <div id="_3d-prog" style="height:100%;background:#0ea5e9;border-radius:2px;width:0%;transition:width 0.3s;"></div>
+        </div>
+        <button id="_3d-upload-cta" onclick="_3dUploadIFC()" style="display:none;padding:10px 22px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
+          ⬆ Upload your IFC model
+        </button>
+        <div id="_3d-hint" style="font-size:11px;color:var(--text3);text-align:center;max-width:300px;line-height:1.6;"></div>
+      </div>
+      <!-- Viewer iframe (hidden until model loads) -->
+      <iframe id="_3d-iframe" src="" style="width:100%;height:100%;border:none;display:none;"></iframe>
+    </div>
+  </div>`;
+
+  _3dSetStatus('Checking for model...');
+
+  // Check if a model exists at the predictable Supabase Storage URL
+  try{
+    const resp=await fetch(_3D_IFC_URL,{method:'HEAD'});
+    if(resp.ok){
+      _3dSetStatus('Loading 3D viewer...',0,true);
+      _3dShowViewer(_3D_IFC_URL);
+    }else{
+      _3dShowEmpty();
+    }
+  }catch(e){
+    _3dShowEmpty();
+  }
+}
+
+function _3dSetStatus(msg,pct,showProg){
+  const s=document.getElementById('_3d-status');
+  const pw=document.getElementById('_3d-prog-wrap');
+  const p=document.getElementById('_3d-prog');
+  if(s)s.textContent=msg;
+  if(pw)pw.style.display=showProg?'block':'none';
+  if(p&&pct!==undefined)p.style.width=pct+'%';
+}
+
+function _3dShowEmpty(){
+  _3dSetStatus('No 3D model uploaded yet.');
+  const btn=document.getElementById('_3d-upload-cta');
+  if(btn)btn.style.display='block';
+  const hint=document.getElementById('_3d-hint');
+  if(hint)hint.textContent='Upload an IFC file exported from Revit or any BIM software.\nThe model will be permanently stored and visible to everyone.';
+}
+
+function _3dShowViewer(url){
+  const overlay=document.getElementById('_3d-overlay');
+  const iframe=document.getElementById('_3d-iframe');
+  if(!iframe)return;
+
+  // viewer3d.html lives in the same directory as index.html — use a relative URL
+  iframe.src='viewer3d.html?url='+encodeURIComponent(url);
+  iframe.style.display='block';
+  if(overlay)overlay.style.display='none';
+}
+
+function _3dUploadIFC(){
+  const input=document.getElementById('_3d-file-input');
+  if(input)input.click();
+}
+
+async function _3dHandleFileSelect(input){
+  const file=input.files[0];
+  if(!file)return;
+  input.value='';
+
+  // Show overlay with progress
+  const overlay=document.getElementById('_3d-overlay');
+  const iframe=document.getElementById('_3d-iframe');
+  const ctaBtn=document.getElementById('_3d-upload-cta');
+  if(overlay)overlay.style.display='flex';
+  if(iframe)iframe.style.display='none';
+  if(ctaBtn)ctaBtn.style.display='none';
+  _3dSetStatus(`Uploading ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)...`,5,true);
+
+  try{
+    // Ensure the bucket exists (create it as public if not)
+    const{data:buckets}=await sb.storage.listBuckets();
+    const bucketExists=buckets&&buckets.some(b=>b.name===_3D_BUCKET);
+    if(!bucketExists){
+      await sb.storage.createBucket(_3D_BUCKET,{public:true});
+    }
+
+    // Upload to Supabase Storage (upsert — replaces existing)
+    const{data,error}=await sb.storage
+      .from(_3D_BUCKET)
+      .upload(_3D_PATH,file,{
+        cacheControl:'3600',
+        upsert:true,
+        contentType:'application/x-step'
+      });
+    if(error)throw error;
+
+    _3dSetStatus('Upload complete! Launching viewer...',100,true);
+
+    // Small delay then show viewer with cache-busting param
+    setTimeout(()=>_3dShowViewer(_3D_IFC_URL+'?v='+Date.now()),800);
+
+    // Update model info chip
+    const info=document.getElementById('_3d-model-info');
+    if(info)info.textContent=`${file.name} · ${(file.size/1024/1024).toFixed(1)} MB`;
+
+  }catch(e){
+    _3dSetStatus('❌ Upload failed: '+(e.message||String(e))+'\n\nMake sure the Supabase bucket "bim-models" exists and is public.',undefined,false);
+    const ctaBtn=document.getElementById('_3d-upload-cta');
+    if(ctaBtn)ctaBtn.style.display='block';
+  }
 }
