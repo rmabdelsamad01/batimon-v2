@@ -9315,18 +9315,25 @@ function _demoSave(){
   document.body.removeChild(a);
 }
 
-function _demoImportFromMonitoring(){
-  // Guard: panels object must have data
-  if(!Object.keys(panels||{}).length){
-    alert('Monitoring data is not loaded yet.\nPlease wait a moment for the page to finish loading, then try again.');
+async function _demoImportFromMonitoring(){
+  // Query Supabase directly for current installed/delivered panels
+  // (avoids stale localStorage data that may linger in the in-memory panels object)
+  const btn=document.querySelector('[onclick="_demoImportFromMonitoring()"]');
+  const origText=btn?btn.innerHTML:'';
+  if(btn) btn.innerHTML='<span style="opacity:0.6;font-size:11px;">Loading…</span>';
+
+  const {data,error}=await sb.from('panels').select('id,status').in('status',['installed','delivered']);
+  if(btn) btn.innerHTML=origText;
+
+  if(error||!data){
+    alert('Could not load monitoring data from server.\n'+(error?.message||''));
     return;
   }
 
-  // Use allPanelIds() — same source as the monitoring sheet counters —
-  // so only real facade panel IDs are included (not test/extra Supabase records)
-  const ids=allPanelIds();
-  const installedIds=ids.filter(id=>(panels[id]||{}).status==='installed');
-  const deliveredIds=ids.filter(id=>(panels[id]||{}).status==='delivered');
+  // Filter to only valid facade panel IDs (allPanelIds excludes structural spacers, test entries, brackets)
+  const validIds=new Set(allPanelIds());
+  const installedIds=data.filter(r=>r.status==='installed'&&validIds.has(r.id)).map(r=>r.id);
+  const deliveredIds=data.filter(r=>r.status==='delivered'&&validIds.has(r.id)).map(r=>r.id);
 
   if(!installedIds.length&&!deliveredIds.length){
     alert('No installed or delivered panels found in the monitoring data.');
