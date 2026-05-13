@@ -37,15 +37,13 @@
     canvas { display: block; }
   </style>
 
-  <!-- web-ifc loaded as classic script → global WebIFC (no ES module / WASM mismatch) -->
-  <script src="https://cdn.jsdelivr.net/npm/web-ifc@0.0.46/web-ifc-api.js"></script>
-
-  <!-- Three.js + OrbitControls via ES module importmap -->
+  <!-- All via importmap — web-ifc JS + WASM both from unpkg so versions match exactly -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      "three":          "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/":  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "web-ifc":        "https://unpkg.com/web-ifc@0.0.46/web-ifc-api.js"
     }
   }
   </script>
@@ -66,6 +64,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { IfcAPI } from 'web-ifc';
 
 /* ── helpers ── */
 const overlay    = document.getElementById('overlay');
@@ -137,8 +136,8 @@ window.addEventListener('resize', () => {
 async function loadIFC(url) {
   // 1 — init web-ifc WASM (same version as the script tag above)
   setStatus('Initialising WASM parser…', 10);
-  const ifcApi = new WebIFC.IfcAPI();
-  ifcApi.SetWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.46/');
+  const ifcApi = new IfcAPI();
+  ifcApi.SetWasmPath('https://unpkg.com/web-ifc@0.0.46/');
   await ifcApi.Init();
 
   // 2 — fetch the IFC file
