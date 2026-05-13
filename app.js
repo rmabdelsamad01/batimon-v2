@@ -2595,6 +2595,7 @@ function efSidebarHTML(){
     {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
     {id:'3d', label:'3D View', icon:'🧊', color:'#0ea5e9', subs:[]},
+    {id:'aaa', label:'AAA', icon:'⭐', color:'#6366f1', subs:[]},
     {id:'sitepictures', label:'Site Pictures', icon:'📸', color:'#f97316', subs:[]},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
