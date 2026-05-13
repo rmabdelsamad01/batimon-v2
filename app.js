@@ -9363,48 +9363,54 @@ function _demoPrintPDF(){
   </div>`;
   layer.appendChild(hdr);
 
-  // Body row: grid + legend
+  // Body: grid on top (full width), legend as compact horizontal row below
   const body=document.createElement('div');
-  body.style.cssText='display:flex;gap:14px;align-items:flex-start;flex:1;overflow:hidden;';
+  body.style.cssText='display:flex;flex-direction:column;gap:12px;flex:1;overflow:hidden;';
 
-  // Grid column
+  // Grid — full width
   const pgw=document.createElement('div');
   pgw.id='_demo_pgw';
-  pgw.style.cssText='flex:1;min-width:0;overflow:visible;';
+  pgw.style.cssText='width:100%;overflow:visible;flex-shrink:0;';
   pgw.appendChild(gridClone);
 
-  // Legend column
+  // Legend — horizontal pill row below the grid
   const leg=document.createElement('div');
-  leg.style.cssText='width:160px;flex-shrink:0;border:1px solid #e0e8f0;border-radius:8px;padding:10px 10px 4px;';
-  leg.innerHTML=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8099b0;margin-bottom:8px;">Legend</div>`;
+  leg.style.cssText='flex-shrink:0;border-top:1px solid #e0e8f0;padding-top:10px;';
+  const legTitle=document.createElement('div');
+  legTitle.style.cssText='font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8099b0;margin-bottom:6px;';
+  legTitle.textContent='Legend';
+  leg.appendChild(legTitle);
+  const legRow=document.createElement('div');
+  legRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
   if(_demoData.legend.length){
     _demoData.legend.forEach(item=>{
       const count=_demoCountPanels(item.id);
-      const row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f4f9;';
-      row.innerHTML=`<div style="width:16px;height:16px;border-radius:3px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.12);"></div>
-        <span style="font-size:11px;font-weight:600;color:#1e3a5f;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.label}</span>
-        <span style="font-size:11px;font-weight:700;color:#224F93;">${count}</span>`;
-      leg.appendChild(row);
+      const pill=document.createElement('div');
+      pill.style.cssText='display:flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;';
+      pill.innerHTML=`<div style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
+        <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+        <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>`;
+      legRow.appendChild(pill);
     });
   } else {
-    leg.innerHTML+='<div style="font-size:11px;color:#8099b0;padding:8px 0;">No items</div>';
+    legRow.innerHTML='<span style="font-size:10px;color:#8099b0;">No legend items</span>';
   }
-  const legTotal=document.createElement('div');
-  legTotal.style.cssText='margin-top:10px;padding-top:8px;border-top:1.5px solid #e0e8f0;font-size:10px;color:#8099b0;text-align:center;';
+  const legTotal=document.createElement('span');
+  legTotal.style.cssText='font-size:10px;color:#8099b0;margin-left:auto;';
   legTotal.textContent=totalColored+' panels coloured';
-  leg.appendChild(legTotal);
+  legRow.appendChild(legTotal);
+  leg.appendChild(legRow);
 
   body.appendChild(pgw);
   body.appendChild(leg);
   layer.appendChild(body);
   document.body.appendChild(layer);
 
-  // 4. @media print CSS: hide everything except our layer
+  // 4. @media print CSS: hide everything except our layer, A4 portrait
   const printStyle=document.createElement('style');
   printStyle.id='_demo_print_css';
   printStyle.textContent=`
-    @page{size:A3 landscape;margin:10mm 8mm;}
+    @page{size:A4 portrait;margin:10mm 8mm;}
     @media print{
       body>*:not(#_demo_print_layer){display:none!important;}
       #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
@@ -9414,14 +9420,14 @@ function _demoPrintPDF(){
     }`;
   document.head.appendChild(printStyle);
 
-  // 5. Scale grid to fit available width
+  // 5. Scale grid to fill the full portrait width
   requestAnimationFrame(()=>{
     const wrap=pgw.querySelector('.wf-wrap');
     if(wrap){
-      const maxW=pgw.getBoundingClientRect().width||900;
+      const maxW=layer.getBoundingClientRect().width-48||600; // layer padding 24px each side
       const natW=wrap.scrollWidth;
-      if(natW>0&&natW>maxW){
-        const s=maxW/natW;
+      if(natW>0){
+        const s=maxW/natW; // always scale to fill width, even if smaller
         wrap.style.transform='scale('+s+')';
         wrap.style.transformOrigin='top left';
         pgw.style.height=(wrap.scrollHeight*s)+'px';
