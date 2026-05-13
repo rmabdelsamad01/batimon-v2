@@ -12353,6 +12353,7 @@ async function render3DPage(){
       <div style="flex:1;"></div>
       <button onclick="_3dUploadIFC()" style="padding:6px 13px;background:#0ea5e9;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">⬆ Upload IFC</button>
       <button onclick="_3dToggleUrlBar()" style="padding:6px 13px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">🔗 Paste URL</button>
+      <button onclick="_3dClearSaved()" title="Remove saved model and reset" style="padding:6px 10px;background:var(--surface2);color:var(--text3);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;">✕</button>
       <input type="file" id="_3d-file-input" accept=".ifc,.ifczip" style="display:none" onchange="_3dHandleFileSelect(this)">
     </div>
     <!-- URL bar (hidden by default) -->
@@ -12385,7 +12386,15 @@ async function render3DPage(){
 
   _3dSetStatus('Checking for model...');
 
-  // Check if a model exists at the predictable Supabase Storage URL
+  // 1 — restore a previously pasted URL from localStorage
+  const savedUrl=localStorage.getItem('_3d_ifc_url');
+  if(savedUrl){
+    _3dSetStatus('Loading saved model…',0,true);
+    _3dShowViewer(savedUrl);
+    return;
+  }
+
+  // 2 — check if a file was uploaded to Supabase Storage
   try{
     const resp=await fetch(_3D_IFC_URL,{method:'HEAD'});
     if(resp.ok){
@@ -12438,10 +12447,18 @@ function _3dLoadFromUrl(){
   const gdMatch=url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
   if(gdMatch) url=`https://drive.google.com/uc?export=download&id=${gdMatch[1]}`;
 
+  // Persist so it auto-loads next session
+  localStorage.setItem('_3d_ifc_url',url);
+
   const bar=document.getElementById('_3d-url-bar');
   if(bar)bar.style.display='none';
   _3dSetStatus('Loading viewer…',0,true);
   _3dShowViewer(url);
+}
+
+function _3dClearSaved(){
+  localStorage.removeItem('_3d_ifc_url');
+  render3DPage();
 }
 
 function _3dShowViewer(url){
