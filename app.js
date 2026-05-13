@@ -9315,6 +9315,120 @@ function _demoSave(){
   document.body.removeChild(a);
 }
 
+function _demoPrintPDF(){
+  if(_demoActiveZone==='overview'){
+    alert('Please switch to a facade tab (North, East, South, or West) to print.');
+    return;
+  }
+  const zone=ZONES.find(z=>z.id===_demoActiveZone);
+  if(!zone) return;
+
+  // Inline background-color on all st-p cells so the clone is self-contained
+  const tbl=document.getElementById('demo-tbl-'+zone.id);
+  if(tbl){
+    tbl.querySelectorAll('.wfc.st-p').forEach(cell=>{
+      if(!cell.style.backgroundColor) cell.style.setProperty('background-color','#E8F0FB','important');
+    });
+  }
+
+  // Clone the rendered grid
+  const gridArea=document.getElementById('demo-grid-area');
+  if(!gridArea) return;
+  const clone=gridArea.cloneNode(true);
+  // Remove interactivity from clone
+  clone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+  clone.querySelectorAll('[data-door-id]').forEach(el=>el.style.cursor='default');
+  clone.querySelectorAll('.wfc').forEach(el=>{el.style.cursor='default';el.onclick=null;});
+
+  // Collect all same-origin CSS from the page
+  let styles='';
+  Array.from(document.styleSheets).forEach(ss=>{
+    try{styles+=Array.from(ss.cssRules||[]).map(r=>r.cssText).join('\n');}catch(e){}
+  });
+
+  const ZONE_NAMES={NF:'North Facade',EF:'East Facade',SF:'South Facade',WF:'West Facade'};
+  const zoneName=ZONE_NAMES[zone.id]||zone.name;
+  const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+
+  const legendHTML=_demoData.legend.length
+    ?_demoData.legend.map(item=>{
+        const count=_demoCountPanels(item.id);
+        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f4f9;">
+          <div style="width:16px;height:16px;border-radius:3px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.12);"></div>
+          <span style="font-size:11px;font-weight:600;color:#1e3a5f;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.label}</span>
+          <span style="font-size:11px;font-weight:700;color:#224F93;">${count}</span>
+        </div>`;
+      }).join('')
+    :'<div style="font-size:11px;color:#8099b0;padding:8px 0;">No legend items</div>';
+
+  const totalColored=Object.keys(_demoData.panels).length;
+
+  const win=window.open('','_blank');
+  if(!win){alert('Please allow pop-ups to print.');return;}
+  win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>BatiMon Demo — ${zoneName}</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+${styles}
+*{box-sizing:border-box;}
+@page{size:A3 landscape;margin:10mm 8mm;}
+body{margin:0;padding:14px 16px;background:#fff;font-family:'Barlow',Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.ph{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:14px;}
+.pb{display:flex;gap:14px;align-items:flex-start;}
+.pg{flex:1;min-width:0;overflow:hidden;}
+.pl{width:160px;flex-shrink:0;border:1px solid #e0e8f0;border-radius:8px;padding:10px 10px 4px;}
+.wf-wrap{transform-origin:top left;display:inline-block;}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  body{padding:0;}
+  .no-print{display:none!important;}
+}
+</style>
+</head>
+<body>
+<div class="ph">
+  <div>
+    <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo &mdash; ${zoneName}</div>
+    <div style="font-size:10px;color:#a855f7;margin-top:2px;">Planning view &middot; Demo mode &middot; ${totalColored} panels coloured</div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
+    <div style="font-size:10px;color:#8099b0;margin-top:1px;">BatiGlobe</div>
+  </div>
+</div>
+<div class="pb">
+  <div class="pg" id="pgw">${clone.innerHTML}</div>
+  <div class="pl">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8099b0;margin-bottom:8px;">Legend</div>
+    ${legendHTML}
+    <div style="margin-top:10px;padding-top:8px;border-top:1.5px solid #e0e8f0;font-size:10px;color:#8099b0;text-align:center;">${totalColored} panels coloured</div>
+  </div>
+</div>
+<script>
+window.addEventListener('load',function(){
+  var pgw=document.getElementById('pgw');
+  var wrap=pgw&&pgw.querySelector('.wf-wrap');
+  if(wrap){
+    var maxW=pgw.clientWidth||900;
+    var natW=wrap.scrollWidth;
+    if(natW>0&&natW>maxW){
+      var s=maxW/natW;
+      wrap.style.transform='scale('+s+')';
+      wrap.style.transformOrigin='top left';
+      pgw.style.height=(wrap.scrollHeight*s)+'px';
+    }
+  }
+  setTimeout(function(){window.print();},700);
+});
+<\/script>
+</body>
+</html>`);
+  win.document.close();
+}
+
 // ── 20 most-used planning colours ────────────────────────────────
 const DEMO_COLORS=[
   '#E53935','#E91E63','#FF5722','#FF9800','#FFC107',
