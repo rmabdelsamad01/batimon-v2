@@ -2593,6 +2593,7 @@ function efSidebarHTML(){
     {id:'suggestions', label:'Suggestions', icon:'💡', color:'#f59e0b', subs:[]},
     {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
+    {id:'3d', label:'3D', icon:'🧊', color:'#0ea5e9', subs:[]},
     {id:'sitepictures', label:'Site Pictures', icon:'📸', color:'#f97316', subs:[]},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
@@ -2603,7 +2604,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
              onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
              onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
-             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='sitepictures'?`onclick=""`:''}
+             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='sitepictures'?`onclick=""`:''}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
