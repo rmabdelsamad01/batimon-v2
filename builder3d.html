@@ -10,15 +10,15 @@
 
     /* ── Toolbar ── */
     #toolbar {
-      position: fixed; top: 0; left: 0; right: 0; height: 50px;
+      position: absolute; top: 0; left: 0; right: 0; height: 50px;
       background: #161b22; border-bottom: 1px solid #30363d;
       display: flex; align-items: center; gap: 3px; padding: 0 10px;
-      z-index: 100; overflow-x: auto;
+      z-index: 100; overflow-x: auto; overflow-y: hidden;
     }
     #toolbar::-webkit-scrollbar { height: 0; }
 
-    .sep { width: 1px; height: 28px; background: #30363d; margin: 0 5px; flex-shrink: 0; }
-    .grp-label { font-size: 10px; color: #8b949e; white-space: nowrap; flex-shrink: 0; margin-right: 1px; }
+    .sep { width: 1px; height: 26px; background: #30363d; margin: 0 5px; flex-shrink: 0; }
+    .grp { font-size: 10px; color: #8b949e; white-space: nowrap; flex-shrink: 0; }
 
     .tb-btn {
       display: flex; align-items: center; gap: 4px;
@@ -26,101 +26,121 @@
       border: 1px solid #30363d; background: #21262d;
       color: #e6edf3; font-size: 11.5px; font-weight: 500;
       cursor: pointer; white-space: nowrap; flex-shrink: 0;
-      transition: background .13s, border-color .13s;
-      line-height: 1;
+      transition: background .12s, border-color .12s; line-height: 1;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     .tb-btn:hover { background: #30363d; border-color: #8b949e; }
     .tb-btn.active { background: #0ea5e918; border-color: #0ea5e9; color: #38bdf8; }
     .tb-btn.del:hover { background: #ff7b7215; border-color: #ff7b72; color: #ff7b72; }
-    .tb-btn .ico { font-size: 13px; line-height: 1; }
 
-    /* color swatch */
+    /* colour swatch */
     #col-wrap {
       display: flex; align-items: center; gap: 5px;
       padding: 4px 8px; border-radius: 6px;
       border: 1px solid #30363d; background: #21262d;
       cursor: pointer; flex-shrink: 0;
     }
-    #col-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #8b949e; flex-shrink: 0; }
-    #col-input  { opacity: 0; width: 0; height: 0; position: absolute; pointer-events: none; }
+    #col-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #555; }
+    #col-input  { opacity: 0; width: 0; height: 0; position: absolute; }
 
-    /* ── Viewport ── */
-    #viewport {
-      position: fixed; top: 50px; left: 0; right: 0; bottom: 0;
+    /* ── Canvas fills below toolbar ── */
+    #canvas-wrap {
+      position: absolute; top: 50px; left: 0; right: 0; bottom: 0;
     }
-    canvas { display: block; }
 
     /* ── Properties panel ── */
     #props {
-      position: fixed; right: 0; top: 50px; bottom: 0; width: 195px;
-      background: #161b22; border-left: 1px solid #30363d;
-      display: flex; flex-direction: column; z-index: 50;
+      position: absolute; right: 0; top: 0; bottom: 0; width: 188px;
+      background: #161b22cc; backdrop-filter: blur(6px);
+      border-left: 1px solid #30363d;
+      display: flex; flex-direction: column;
       padding: 12px 10px; color: #e6edf3; font-size: 12px;
       overflow-y: auto;
       transform: translateX(100%);
       transition: transform .22s cubic-bezier(.4,0,.2,1);
+      z-index: 50;
     }
     #props.show { transform: translateX(0); }
-    .p-title { font-size: 12px; font-weight: 700; color: #e6edf3; margin-bottom: 4px; }
-    .p-name  { font-size: 10px; color: #8b949e; margin-bottom: 10px; word-break: break-all; }
-    .p-group { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 5px; }
-    .p-row   { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
-    .p-axis  { font-size: 10px; font-weight: 700; width: 12px; flex-shrink: 0; }
-    .p-inp {
+    .p-head { font-size: 12px; font-weight: 700; color: #e6edf3; margin-bottom: 3px; }
+    .p-sub  { font-size: 10px; color: #8b949e; margin-bottom: 10px; word-break: break-all; }
+    .p-lbl  { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 4px; }
+    .p-row  { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+    .p-ax   { font-size: 10px; font-weight: 700; width: 12px; flex-shrink: 0; }
+    .p-inp  {
       flex: 1; padding: 3px 6px; border: 1px solid #30363d;
       border-radius: 4px; background: #21262d; color: #e6edf3;
       font-size: 11px; font-family: monospace; text-align: right; min-width: 0;
     }
     .p-inp:focus { outline: none; border-color: #0ea5e9; }
-    #p-color {
-      width: 100%; height: 28px; border: 1px solid #30363d; border-radius: 5px;
-      background: transparent; cursor: pointer; margin-top: 2px;
-    }
-    .p-row-full { margin-bottom: 3px; }
-    #p-del-btn {
-      margin-top: 14px; width: 100%; padding: 7px; border-radius: 6px;
-      border: 1px solid #ff7b7240; background: #ff7b7210; color: #ff7b72;
+    #p-color { width: 100%; height: 28px; border: 1px solid #30363d; border-radius: 5px; background: transparent; cursor: pointer; margin-top: 2px; }
+    .p-btn {
+      margin-top: 8px; width: 100%; padding: 7px; border-radius: 6px;
       font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: system-ui, -apple-system, sans-serif;
     }
-    #p-del-btn:hover { background: #ff7b7225; border-color: #ff7b72; }
-    #p-dup-btn {
-      margin-top: 6px; width: 100%; padding: 7px; border-radius: 6px;
-      border: 1px solid #30363d; background: #21262d; color: #e6edf3;
-      font-size: 12px; font-weight: 600; cursor: pointer;
-    }
-    #p-dup-btn:hover { background: #30363d; }
+    #p-dup { border: 1px solid #30363d; background: #21262d; color: #e6edf3; }
+    #p-dup:hover { background: #30363d; }
+    #p-del { border: 1px solid #ff7b7240; background: #ff7b7210; color: #ff7b72; margin-top: 5px; }
+    #p-del:hover { background: #ff7b7225; border-color: #ff7b72; }
 
-    /* ── Status / hints ── */
-    #statusbar {
-      position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-      background: rgba(13,17,23,.82); backdrop-filter: blur(8px);
-      color: #8b949e; font-size: 11px;
-      padding: 5px 16px; border-radius: 20px;
-      pointer-events: none; z-index: 200; white-space: nowrap;
+    /* ── Toast ── */
+    #toast {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      background: rgba(14,165,233,.15); border: 1px solid #0ea5e960;
+      color: #38bdf8; font-size: 11px; padding: 5px 16px; border-radius: 20px;
+      pointer-events: none; opacity: 0; transition: opacity .3s; white-space: nowrap; z-index: 200;
     }
-    #sel-badge {
-      position: fixed; bottom: 10px; left: 12px;
-      background: rgba(13,17,23,.82); backdrop-filter: blur(8px);
+    #toast.show { opacity: 1; }
+
+    /* ── Selection badge ── */
+    #badge {
+      position: absolute; bottom: 14px; left: 12px;
+      background: rgba(13,17,23,.82); backdrop-filter: blur(6px);
       color: #e6edf3; font-size: 11px;
       padding: 5px 12px; border-radius: 6px; z-index: 200;
       pointer-events: none; display: none;
     }
-    #sel-badge.show { display: block; }
+    #badge.show { display: block; }
 
-    /* ── Keyboard shortcut card ── */
-    #kbcard {
-      position: fixed; bottom: 10px; right: 10px;
-      background: rgba(13,17,23,.82); backdrop-filter: blur(8px);
+    /* ── Keyboard hint ── */
+    #kbhint {
+      position: absolute; bottom: 14px; right: 12px;
+      background: rgba(13,17,23,.82); backdrop-filter: blur(6px);
       border: 1px solid #30363d; border-radius: 8px;
-      padding: 8px 12px; font-size: 10px; color: #8b949e;
+      padding: 7px 11px; font-size: 10px; color: #8b949e;
       line-height: 1.9; z-index: 200; pointer-events: none;
     }
-    #kbcard.hidden { display: none; }
     kbd {
-      display: inline-block; background: #21262d;
-      border: 1px solid #30363d; border-radius: 3px;
-      padding: 0 4px; font-family: monospace; font-size: 10px; color: #e6edf3;
+      display: inline-block; background: #21262d; border: 1px solid #30363d;
+      border-radius: 3px; padding: 0 4px; font-family: monospace; font-size: 10px; color: #e6edf3;
     }
+
+    /* ── Save dropdown ── */
+    .save-wrap { position: relative; flex-shrink: 0; }
+    #save-menu {
+      display: none; position: absolute; top: calc(100% + 6px); right: 0;
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      box-shadow: 0 8px 24px #00000066; z-index: 500; min-width: 190px; overflow: hidden;
+    }
+    #save-menu.open { display: block; }
+    .sm-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; cursor: pointer; font-size: 12px; color: #e6edf3;
+      transition: background .1s;
+    }
+    .sm-item:hover { background: #21262d; }
+    .sm-item .sm-ico { font-size: 16px; line-height: 1; }
+    .sm-item .sm-desc { font-size: 10px; color: #8b949e; margin-top: 1px; }
+    .sm-sep { height: 1px; background: #30363d; margin: 3px 0; }
+
+    /* ── Error overlay ── */
+    #err {
+      display: none; position: absolute; inset: 0;
+      background: #0d1117; color: #ff7b72; font-size: 13px;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 20px; line-height: 1.8; z-index: 300; flex-direction: column; gap: 8px;
+    }
+    #err.show { display: flex; }
   </style>
 
   <script type="importmap">
@@ -136,166 +156,227 @@
 
 <!-- ══ TOOLBAR ══════════════════════════════════════════════════════════════ -->
 <div id="toolbar">
-
-  <span class="grp-label">Add:</span>
-  <button class="tb-btn" onclick="addShape('box')"      title="Cube"><span class="ico">⬜</span>Cube</button>
-  <button class="tb-btn" onclick="addShape('sphere')"   title="Sphere"><span class="ico">⚪</span>Sphere</button>
-  <button class="tb-btn" onclick="addShape('cylinder')" title="Cylinder"><span class="ico">🔵</span>Cylinder</button>
-  <button class="tb-btn" onclick="addShape('cone')"     title="Cone"><span class="ico">🔺</span>Cone</button>
-  <button class="tb-btn" onclick="addShape('pyramid')"  title="Pyramid (4 sides)"><span class="ico">🔷</span>Pyramid</button>
-  <button class="tb-btn" onclick="addShape('torus')"    title="Torus / Ring"><span class="ico">⭕</span>Torus</button>
-  <button class="tb-btn" onclick="addShape('plane')"    title="Flat plane"><span class="ico">▬</span>Plane</button>
-
-  <div class="sep"></div>
-
-  <span class="grp-label">Mode:</span>
-  <button id="btn-move"   class="tb-btn active" onclick="setMode('translate')" title="Move (G)"><span class="ico">↔</span>Move</button>
-  <button id="btn-rotate" class="tb-btn"         onclick="setMode('rotate')"   title="Rotate (R)"><span class="ico">↻</span>Rotate</button>
-  <button id="btn-scale"  class="tb-btn"         onclick="setMode('scale')"    title="Scale (S)"><span class="ico">⤢</span>Scale</button>
+  <span class="grp">Add shape:</span>
+  <button class="tb-btn" onclick="addShape('box')"      >⬜ Cube</button>
+  <button class="tb-btn" onclick="addShape('sphere')"   >⚪ Sphere</button>
+  <button class="tb-btn" onclick="addShape('cylinder')" >🔵 Cylinder</button>
+  <button class="tb-btn" onclick="addShape('cone')"     >🔺 Cone</button>
+  <button class="tb-btn" onclick="addShape('pyramid')"  >🔷 Pyramid</button>
+  <button class="tb-btn" onclick="addShape('torus')"    >⭕ Torus</button>
+  <button class="tb-btn" onclick="addShape('plane')"    >▬ Plane</button>
 
   <div class="sep"></div>
+  <span class="grp">Transform:</span>
+  <button id="btn-move"   class="tb-btn active" onclick="setMode('translate')">↔ Move</button>
+  <button id="btn-rotate" class="tb-btn"         onclick="setMode('rotate')">↻ Rotate</button>
+  <button id="btn-scale"  class="tb-btn"         onclick="setMode('scale')">⤢ Scale</button>
 
-  <div id="col-wrap" onclick="document.getElementById('col-input').click()" title="Pick colour">
+  <div class="sep"></div>
+  <div id="col-wrap" onclick="document.getElementById('col-input').click()" title="Colour">
     <div id="col-swatch" style="background:#0ea5e9;"></div>
     <span style="font-size:11px;color:#8b949e;">Colour</span>
     <input type="color" id="col-input" value="#0ea5e9" oninput="onColorChange(this.value)">
   </div>
 
   <div class="sep"></div>
+  <button class="tb-btn" onclick="copySelected()"      >⎘ Copy</button>
+  <button class="tb-btn" onclick="pasteClipboard()"    >⎗ Paste</button>
+  <button class="tb-btn" onclick="duplicateSelected()" >⧉ Dup</button>
+  <button class="tb-btn del" onclick="deleteSelected()">🗑 Delete</button>
 
-  <button class="tb-btn" onclick="copySelected()"      title="Copy (Ctrl+C)"><span class="ico">⎘</span>Copy</button>
-  <button class="tb-btn" onclick="pasteClipboard()"    title="Paste (Ctrl+V)"><span class="ico">⎗</span>Paste</button>
-  <button class="tb-btn" onclick="duplicateSelected()" title="Duplicate (Ctrl+D)"><span class="ico">⧉</span>Dup</button>
-  <button class="tb-btn del" onclick="deleteSelected()"title="Delete selected (Del)"><span class="ico">🗑</span>Delete</button>
+  <div class="sep"></div>
+  <button class="tb-btn" onclick="resetCamera()">🎥 Reset view</button>
+  <button class="tb-btn" onclick="toggleGrid()" >⊞ Grid</button>
+  <button class="tb-btn del" onclick="clearAll()">🧹 Clear all</button>
 
   <div class="sep"></div>
 
-  <button class="tb-btn" onclick="resetCamera()" title="Reset camera (Space)"><span class="ico">🎥</span>Reset</button>
-  <button class="tb-btn" onclick="toggleGrid()"  title="Toggle grid"><span class="ico">⊞</span>Grid</button>
-  <button class="tb-btn del" onclick="clearAll()"title="Clear all objects"><span class="ico">🧹</span>Clear all</button>
+  <!-- Save dropdown -->
+  <div class="save-wrap">
+    <button class="tb-btn" id="save-btn"
+            onclick="toggleSaveMenu()"
+            style="background:#1a3a22;border-color:#238636;color:#3fb950;font-weight:700;">
+      💾 Save ▾
+    </button>
+    <div id="save-menu">
+      <div class="sm-item" onclick="saveScreenshot();closeSaveMenu()">
+        <span class="sm-ico">📸</span>
+        <div>
+          <div>Screenshot</div>
+          <div class="sm-desc">Save current view as PNG image</div>
+        </div>
+      </div>
+      <div class="sm-item" onclick="saveScene();closeSaveMenu()">
+        <span class="sm-ico">💾</span>
+        <div>
+          <div>Save Scene</div>
+          <div class="sm-desc">Save all shapes as .json (reload later)</div>
+        </div>
+      </div>
+      <div class="sm-item" onclick="exportGLB();closeSaveMenu()">
+        <span class="sm-ico">📦</span>
+        <div>
+          <div>Export 3D (.glb)</div>
+          <div class="sm-desc">Open in Blender, AutoCAD, Sketchup…</div>
+        </div>
+      </div>
+      <div class="sm-sep"></div>
+      <div class="sm-item" onclick="loadScene();closeSaveMenu()">
+        <span class="sm-ico">📂</span>
+        <div>
+          <div>Load Scene</div>
+          <div class="sm-desc">Open a previously saved .json file</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden inputs -->
+  <input type="file" id="load-input" accept=".json" style="display:none" onchange="onLoadFile(this)">
 </div>
 
-<!-- ══ VIEWPORT ═════════════════════════════════════════════════════════════ -->
-<div id="viewport"></div>
+<!-- ══ CANVAS ═══════════════════════════════════════════════════════════════ -->
+<div id="canvas-wrap"></div>
 
-<!-- ══ PROPERTIES PANEL ══════════════════════════════════════════════════════ -->
+<!-- ══ PROPERTIES ══════════════════════════════════════════════════════════ -->
 <div id="props">
-  <div class="p-title">Properties</div>
-  <div class="p-name" id="p-name"></div>
+  <div class="p-head">Properties</div>
+  <div class="p-sub" id="p-name"></div>
 
-  <div class="p-group">Position</div>
-  <div class="p-row"><span class="p-axis" style="color:#f87171;">X</span><input class="p-inp" id="px" type="number" step="0.1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-axis" style="color:#4ade80;">Y</span><input class="p-inp" id="py" type="number" step="0.1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-axis" style="color:#60a5fa;">Z</span><input class="p-inp" id="pz" type="number" step="0.1" oninput="applyProps()"></div>
+  <div class="p-lbl">Position</div>
+  <div class="p-row"><span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="px" type="number" step="0.1" oninput="applyProps()"></div>
+  <div class="p-row"><span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="py" type="number" step="0.1" oninput="applyProps()"></div>
+  <div class="p-row"><span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="pz" type="number" step="0.1" oninput="applyProps()"></div>
 
-  <div class="p-group">Rotation (°)</div>
-  <div class="p-row"><span class="p-axis" style="color:#f87171;">X</span><input class="p-inp" id="rx" type="number" step="1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-axis" style="color:#4ade80;">Y</span><input class="p-inp" id="ry" type="number" step="1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-axis" style="color:#60a5fa;">Z</span><input class="p-inp" id="rz" type="number" step="1" oninput="applyProps()"></div>
+  <div class="p-lbl">Rotation (°)</div>
+  <div class="p-row"><span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="rx" type="number" step="1" oninput="applyProps()"></div>
+  <div class="p-row"><span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="ry" type="number" step="1" oninput="applyProps()"></div>
+  <div class="p-row"><span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="rz" type="number" step="1" oninput="applyProps()"></div>
 
-  <div class="p-group">Scale</div>
-  <div class="p-row"><span class="p-axis" style="color:#f87171;">X</span><input class="p-inp" id="sx" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-axis" style="color:#4ade80;">Y</span><input class="p-inp" id="sy" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-axis" style="color:#60a5fa;">Z</span><input class="p-inp" id="sz" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
+  <div class="p-lbl">Scale</div>
+  <div class="p-row"><span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="sx" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
+  <div class="p-row"><span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="sy" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
+  <div class="p-row"><span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="sz" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
 
-  <div class="p-group">Colour</div>
-  <div class="p-row-full"><input type="color" id="p-color" oninput="onColorChange(this.value)"></div>
+  <div class="p-lbl">Colour</div>
+  <input type="color" id="p-color" oninput="onColorChange(this.value)">
 
-  <button id="p-dup-btn" onclick="duplicateSelected()">⧉ Duplicate</button>
-  <button id="p-del-btn" onclick="deleteSelected()">🗑 Delete</button>
+  <button class="p-btn" id="p-dup" onclick="duplicateSelected()">⧉ Duplicate</button>
+  <button class="p-btn" id="p-del" onclick="deleteSelected()">🗑 Delete</button>
 </div>
 
-<!-- ══ OVERLAYS ══════════════════════════════════════════════════════════════ -->
-<div id="statusbar">🖱 Drag to orbit · Scroll to zoom · Middle-drag to pan · Click object to select</div>
-<div id="sel-badge"></div>
-
-<div id="kbcard">
+<!-- ══ OVERLAYS ════════════════════════════════════════════════════════════ -->
+<div id="toast">Shape added ✓</div>
+<div id="badge"></div>
+<div id="kbhint">
   <div><kbd>G</kbd> Move &nbsp;<kbd>R</kbd> Rotate &nbsp;<kbd>S</kbd> Scale</div>
   <div><kbd>Del</kbd> Delete &nbsp;<kbd>Esc</kbd> Deselect</div>
-  <div><kbd>Ctrl+D</kbd> Duplicate &nbsp;<kbd>Ctrl+C/V</kbd> Copy/Paste</div>
+  <div><kbd>Ctrl+D</kbd> Duplicate &nbsp;<kbd>Ctrl+C</kbd>/<kbd>V</kbd> Copy/Paste</div>
   <div><kbd>Space</kbd> Reset camera</div>
 </div>
+<div id="err">
+  <div style="font-size:32px;">⚠️</div>
+  <div id="err-msg"></div>
+  <div style="font-size:11px;color:#8b949e;">Check the browser console for details (F12)</div>
+</div>
 
-<!-- ══ THREE.JS ══════════════════════════════════════════════════════════════ -->
+<!-- ══ THREE.JS ════════════════════════════════════════════════════════════ -->
 <script type="module">
 import * as THREE from 'three';
-import { OrbitControls }    from 'three/addons/controls/OrbitControls.js';
+import { OrbitControls }     from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { GLTFExporter }      from 'three/addons/exporters/GLTFExporter.js';
 
-/* ── renderer / scene ──────────────────────────────────────────────────────── */
-const container = document.getElementById('viewport');
+/* ── bootstrap ─────────────────────────────────────────────────────────── */
+function fatal(msg) {
+  const el = document.getElementById('err');
+  document.getElementById('err-msg').textContent = msg;
+  el.classList.add('show');
+}
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+/* ── renderer ──────────────────────────────────────────────────────────── */
+const wrap = document.getElementById('canvas-wrap');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-container.appendChild(renderer.domElement);
+wrap.appendChild(renderer.domElement);
 
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+/* ── scene ─────────────────────────────────────────────────────────────── */
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0d1117);
-scene.fog         = new THREE.Fog(0x0d1117, 60, 200);
 
-/* ── camera ─────────────────────────────────────────────────────────────────── */
-const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.01, 5000);
-camera.position.set(8, 6, 8);
+/* ── camera ────────────────────────────────────────────────────────────── */
+const camera = new THREE.PerspectiveCamera(55, 1, 0.01, 5000);
+camera.position.set(7, 5, 7);
+camera.lookAt(0, 0, 0);
 
-/* ── lights ─────────────────────────────────────────────────────────────────── */
+/* first resize after DOM is ready */
+resize();
+window.addEventListener('resize', resize);
+
+/* ── lights ────────────────────────────────────────────────────────────── */
 scene.add(new THREE.AmbientLight(0xffffff, 0.55));
 
 const sun = new THREE.DirectionalLight(0xffd6a5, 1.3);
-sun.position.set(12, 22, 10);
+sun.position.set(10, 20, 10);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.near   = 0.5;
 sun.shadow.camera.far    = 200;
-sun.shadow.camera.left   = -30;
-sun.shadow.camera.right  =  30;
-sun.shadow.camera.top    =  30;
-sun.shadow.camera.bottom = -30;
+sun.shadow.camera.left   = sun.shadow.camera.bottom = -30;
+sun.shadow.camera.right  = sun.shadow.camera.top    =  30;
 scene.add(sun);
+scene.add(Object.assign(new THREE.DirectionalLight(0x6699cc, 0.4), { position: new THREE.Vector3(-10, 5, -10) }));
+scene.add(new THREE.HemisphereLight(0x223355, 0x111a11, 0.3));
 
-scene.add(Object.assign(new THREE.DirectionalLight(0x6699cc, 0.45), { position: new THREE.Vector3(-10, 6, -10) }));
-scene.add(Object.assign(new THREE.HemisphereLight(0x223355, 0x113322, 0.3)));
-
-/* ── grid & ground ─────────────────────────────────────────────────────────── */
+/* ── grid & shadow ground ──────────────────────────────────────────────── */
 let grid = new THREE.GridHelper(60, 60, 0x1e2a38, 0x1a222e);
 scene.add(grid);
 let gridOn = true;
 
-// Shadow-receiving ground
-const ground = new THREE.Mesh(
+const gnd = new THREE.Mesh(
   new THREE.PlaneGeometry(300, 300),
   new THREE.ShadowMaterial({ opacity: 0.25 })
 );
-ground.rotation.x   = -Math.PI / 2;
-ground.receiveShadow = true;
-ground.userData.isGround = true;
-scene.add(ground);
+gnd.rotation.x   = -Math.PI / 2;
+gnd.receiveShadow = true;
+gnd.userData.isGround = true;
+scene.add(gnd);
 
-/* ── orbit controls ─────────────────────────────────────────────────────────── */
+/* ── orbit controls ────────────────────────────────────────────────────── */
 const orbit = new OrbitControls(camera, renderer.domElement);
 orbit.enableDamping = true;
 orbit.dampingFactor = 0.06;
 orbit.minDistance   = 0.3;
 orbit.maxDistance   = 800;
+orbit.target.set(0, 0, 0);
+orbit.update();
 
-/* ── transform controls ─────────────────────────────────────────────────────── */
+/* ── transform controls ────────────────────────────────────────────────── */
 const tc = new TransformControls(camera, renderer.domElement);
 tc.setMode('translate');
 tc.addEventListener('dragging-changed', e => { orbit.enabled = !e.value; });
 tc.addEventListener('objectChange', syncProps);
 scene.add(tc);
 
-/* ── state ────────────────────────────────────────────────────────────────── */
-let selected     = null;
-let clipboard    = null;
-let objects      = [];     // all user meshes
-let shapeCount   = 0;
-let currentColor = '#0ea5e9';
+/* ── state ─────────────────────────────────────────────────────────────── */
+let selected   = null;
+let clipboard  = null;
+let objects    = [];
+let count      = 0;
+let activeColor = '#0ea5e9';
 
-/* ── geometry factories ─────────────────────────────────────────────────────── */
-const GEOMETRIES = {
+/* ── geometry factories ────────────────────────────────────────────────── */
+const GEO = {
   box:      () => new THREE.BoxGeometry(1, 1, 1),
   sphere:   () => new THREE.SphereGeometry(0.6, 32, 24),
   cylinder: () => new THREE.CylinderGeometry(0.5, 0.5, 1.5, 32),
@@ -304,53 +385,80 @@ const GEOMETRIES = {
   torus:    () => new THREE.TorusGeometry(0.6, 0.22, 16, 60),
   plane:    () => new THREE.PlaneGeometry(2, 2),
 };
-const LABELS = { box:'Cube', sphere:'Sphere', cylinder:'Cylinder', cone:'Cone', pyramid:'Pyramid', torus:'Torus', plane:'Plane' };
+const LABEL = { box:'Cube', sphere:'Sphere', cylinder:'Cylinder', cone:'Cone', pyramid:'Pyramid', torus:'Torus', plane:'Plane' };
 
-/* ── add shape ──────────────────────────────────────────────────────────────── */
+/* ── addShape ──────────────────────────────────────────────────────────── */
 window.addShape = function(type) {
-  const geo = GEOMETRIES[type]();
-  const mat = new THREE.MeshStandardMaterial({
-    color:     new THREE.Color(currentColor),
-    roughness: 0.55,
-    metalness: 0.1,
-  });
+  try {
+    const geo = GEO[type]();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(activeColor),
+      roughness: 0.55,
+      metalness: 0.1,
+    });
 
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow    = true;
-  mesh.receiveShadow = true;
-  mesh.userData.type  = type;
-  mesh.userData.label = `${LABELS[type]} ${++shapeCount}`;
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow    = true;
+    mesh.receiveShadow = true;
+    mesh.userData.type  = type;
+    mesh.userData.label = `${LABEL[type]} ${++count}`;
 
-  if (type === 'plane') {
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.y = 0.01;
-  } else {
-    // sit flush on ground
-    const bbox = new THREE.Box3().setFromObject(mesh);
-    mesh.position.y = -bbox.min.y;
+    /* place on the ground, in front of camera */
+    if (type === 'plane') {
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.y  = 0.01;
+    } else {
+      const bb = new THREE.Box3().setFromObject(mesh);
+      mesh.position.y = -bb.min.y;        // flush with y=0
+    }
+
+    /* place at origin with small random scatter so shapes don't pile up */
+    mesh.position.x = (Math.random() - 0.5) * 3;
+    mesh.position.z = (Math.random() - 0.5) * 3;
+
+    scene.add(mesh);
+    objects.push(mesh);
+
+    /* fit camera to see the new object */
+    fitCamera();
+    selectObject(mesh);
+    toast(`${LABEL[type]} added`);
+  } catch(e) {
+    fatal('Failed to add shape: ' + e.message);
+    console.error(e);
   }
-
-  // scatter on ground so objects don't overlap
-  mesh.position.x = (Math.random() - 0.5) * 5;
-  mesh.position.z = (Math.random() - 0.5) * 5;
-
-  scene.add(mesh);
-  objects.push(mesh);
-  selectObject(mesh);
 };
 
-/* ── selection ──────────────────────────────────────────────────────────────── */
-const SEL_EMI = new THREE.Color(0x0a3355);
+/* ── fit camera around all objects ────────────────────────────────────── */
+function fitCamera() {
+  if (objects.length === 0) return;
+  const box = new THREE.Box3();
+  objects.forEach(o => box.expandByObject(o));
+  const size   = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z, 1);
+  const dist   = maxDim * 2.2;
+  camera.position.set(center.x + dist * 0.7, center.y + dist * 0.5, center.z + dist * 0.7);
+  orbit.target.copy(center);
+  orbit.update();
+}
+
+/* ── selection ─────────────────────────────────────────────────────────── */
+const SEL_EMI = new THREE.Color(0x0a3a6a);
 
 function selectObject(obj) {
   deselect();
   if (!obj) return;
   selected = obj;
-  // Store original emissive
   obj.userData._emi = obj.material.emissive.clone();
   obj.material.emissive.copy(SEL_EMI);
   tc.attach(obj);
-  openProps(obj);
+  document.getElementById('props').classList.add('show');
+  document.getElementById('p-name').textContent = obj.userData.label || '';
+  const badge = document.getElementById('badge');
+  badge.textContent = '✦ ' + (obj.userData.label || 'Object');
+  badge.classList.add('show');
+  syncProps();
 }
 
 function deselect() {
@@ -359,54 +467,47 @@ function deselect() {
   tc.detach();
   selected = null;
   document.getElementById('props').classList.remove('show');
-  document.getElementById('sel-badge').classList.remove('show');
+  document.getElementById('badge').classList.remove('show');
 }
 
-/* ── raycaster ──────────────────────────────────────────────────────────────── */
-const raycaster = new THREE.Raycaster();
-const mouse2    = new THREE.Vector2();
-let   _mdPos    = null;
+/* ── raycaster ─────────────────────────────────────────────────────────── */
+const ray  = new THREE.Raycaster();
+const mp   = new THREE.Vector2();
+let   _md  = null;
 
 renderer.domElement.addEventListener('pointerdown', e => {
-  if (e.button === 0) _mdPos = { x: e.clientX, y: e.clientY };
+  if (e.button === 0) _md = { x: e.clientX, y: e.clientY };
 });
-
 renderer.domElement.addEventListener('pointerup', e => {
-  if (e.button !== 0 || !_mdPos) return;
-  if (Math.hypot(e.clientX - _mdPos.x, e.clientY - _mdPos.y) > 6) return; // drag, skip
-
+  if (e.button !== 0 || !_md) return;
+  if (Math.hypot(e.clientX - _md.x, e.clientY - _md.y) > 6) return;
   const rect = renderer.domElement.getBoundingClientRect();
-  mouse2.x = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
-  mouse2.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
-  raycaster.setFromCamera(mouse2, camera);
-
-  const hits = raycaster.intersectObjects(objects, false);
+  mp.x = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+  mp.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+  ray.setFromCamera(mp, camera);
+  const hits = ray.intersectObjects(objects, false);
   if (hits.length) selectObject(hits[0].object);
   else             deselect();
 });
 
-/* ── mode switch ────────────────────────────────────────────────────────────── */
+/* ── transform mode ────────────────────────────────────────────────────── */
 window.setMode = function(m) {
   tc.setMode(m);
-  ['translate','rotate','scale'].forEach(mode => {
-    const map = { translate:'move', rotate:'rotate', scale:'scale' };
-    document.getElementById(`btn-${map[mode]}`).classList.toggle('active', mode === m);
-  });
+  document.getElementById('btn-move').classList.toggle('active',   m === 'translate');
+  document.getElementById('btn-rotate').classList.toggle('active', m === 'rotate');
+  document.getElementById('btn-scale').classList.toggle('active',  m === 'scale');
 };
 
-/* ── colour ─────────────────────────────────────────────────────────────────── */
+/* ── colour ────────────────────────────────────────────────────────────── */
 window.onColorChange = function(hex) {
-  currentColor = hex;
+  activeColor = hex;
   document.getElementById('col-swatch').style.background = hex;
   document.getElementById('col-input').value = hex;
   document.getElementById('p-color').value   = hex;
-  if (selected) {
-    selected.material.color.set(hex);
-    // keep emissive offset intact after color change
-  }
+  if (selected) selected.material.color.set(hex);
 };
 
-/* ── actions ────────────────────────────────────────────────────────────────── */
+/* ── actions ───────────────────────────────────────────────────────────── */
 window.deleteSelected = function() {
   if (!selected) return;
   tc.detach();
@@ -416,11 +517,11 @@ window.deleteSelected = function() {
   selected.material.dispose();
   selected = null;
   document.getElementById('props').classList.remove('show');
-  document.getElementById('sel-badge').classList.remove('show');
+  document.getElementById('badge').classList.remove('show');
 };
 
 window.copySelected = function() {
-  if (selected) clipboard = selected;
+  if (selected) { clipboard = selected; toast('Copied'); }
 };
 
 window.pasteClipboard = function() {
@@ -433,6 +534,7 @@ window.pasteClipboard = function() {
   scene.add(m);
   objects.push(m);
   selectObject(m);
+  toast('Pasted');
 };
 
 window.duplicateSelected = function() {
@@ -441,13 +543,11 @@ window.duplicateSelected = function() {
   pasteClipboard();
 };
 
-window.toggleGrid = function() {
-  gridOn = !gridOn;
-  grid.visible = gridOn;
-};
+window.toggleGrid = function() { gridOn = !gridOn; grid.visible = gridOn; };
 
 window.resetCamera = function() {
-  camera.position.set(8, 6, 8);
+  if (objects.length > 0) { fitCamera(); return; }
+  camera.position.set(7, 5, 7);
   orbit.target.set(0, 0, 0);
   orbit.update();
 };
@@ -458,56 +558,193 @@ window.clearAll = function() {
   deselect();
   objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
   objects = [];
-  shapeCount = 0;
+  count   = 0;
 };
 
-/* ── properties panel ───────────────────────────────────────────────────────── */
-function openProps(obj) {
-  document.getElementById('props').classList.add('show');
-  document.getElementById('p-name').textContent = obj.userData.label || '';
-  const badge = document.getElementById('sel-badge');
-  badge.textContent = `✦ ${obj.userData.label || 'Object'}`;
-  badge.classList.add('show');
-  syncProps();
-}
-
+/* ── properties ────────────────────────────────────────────────────────── */
 function syncProps() {
   if (!selected) return;
   const p = selected.position, r = selected.rotation, s = selected.scale;
   const d = v => Math.round(THREE.MathUtils.radToDeg(v) * 10) / 10;
   const f = v => Math.round(v * 1000) / 1000;
-  document.getElementById('px').value = f(p.x);
-  document.getElementById('py').value = f(p.y);
-  document.getElementById('pz').value = f(p.z);
-  document.getElementById('rx').value = d(r.x);
-  document.getElementById('ry').value = d(r.y);
-  document.getElementById('rz').value = d(r.z);
-  document.getElementById('sx').value = f(s.x);
-  document.getElementById('sy').value = f(s.y);
-  document.getElementById('sz').value = f(s.z);
+  setValue('px', f(p.x)); setValue('py', f(p.y)); setValue('pz', f(p.z));
+  setValue('rx', d(r.x)); setValue('ry', d(r.y)); setValue('rz', d(r.z));
+  setValue('sx', f(s.x)); setValue('sy', f(s.y)); setValue('sz', f(s.z));
   document.getElementById('p-color').value = '#' + selected.material.color.getHexString();
+}
+
+function setValue(id, v) {
+  const el = document.getElementById(id);
+  if (el !== document.activeElement) el.value = v;
 }
 
 window.applyProps = function() {
   if (!selected) return;
-  const v = id => parseFloat(document.getElementById(id).value) || 0;
-  const r = d  => THREE.MathUtils.degToRad(d);
+  const v  = id => parseFloat(document.getElementById(id).value) || 0;
+  const rd = d  => THREE.MathUtils.degToRad(d);
   selected.position.set(v('px'), v('py'), v('pz'));
-  selected.rotation.set(r(v('rx')), r(v('ry')), r(v('rz')));
+  selected.rotation.set(rd(v('rx')), rd(v('ry')), rd(v('rz')));
   selected.scale.set(Math.max(.01, v('sx')), Math.max(.01, v('sy')), Math.max(.01, v('sz')));
 };
 
-/* ── keyboard shortcuts ─────────────────────────────────────────────────────── */
+/* ── save menu toggle ──────────────────────────────────────────────────── */
+window.toggleSaveMenu = function() {
+  document.getElementById('save-menu').classList.toggle('open');
+};
+window.closeSaveMenu = function() {
+  document.getElementById('save-menu').classList.remove('open');
+};
+// close if clicked outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.save-wrap')) closeSaveMenu();
+});
+
+/* ── screenshot (PNG) ──────────────────────────────────────────────────── */
+window.saveScreenshot = function() {
+  renderer.render(scene, camera);   // ensure fresh frame
+  renderer.domElement.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `batimon-sketch-${datestamp()}.png`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Screenshot saved');
+  }, 'image/png');
+};
+
+/* ── save scene (JSON) ─────────────────────────────────────────────────── */
+window.saveScene = function() {
+  if (objects.length === 0) { toast('Nothing to save!'); return; }
+  const data = {
+    version: 1,
+    saved: new Date().toISOString(),
+    objects: objects.map(o => ({
+      type:     o.userData.type,
+      label:    o.userData.label,
+      position: o.position.toArray(),
+      rotation: [o.rotation.x, o.rotation.y, o.rotation.z],
+      scale:    o.scale.toArray(),
+      color:    '#' + o.material.color.getHexString(),
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `batimon-sketch-${datestamp()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`Scene saved (${objects.length} objects)`);
+};
+
+/* ── load scene (JSON) ─────────────────────────────────────────────────── */
+window.loadScene = function() {
+  document.getElementById('load-input').click();
+};
+
+window.onLoadFile = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';     // reset so same file can be re-selected
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.objects || !Array.isArray(data.objects)) throw new Error('Invalid scene file');
+
+      // Clear current scene
+      deselect();
+      objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
+      objects = [];
+      count   = 0;
+
+      data.objects.forEach(od => {
+        if (!GEO[od.type]) return;
+        const geo = GEO[od.type]();
+        const mat = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(od.color || '#0ea5e9'),
+          roughness: 0.55, metalness: 0.1,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.castShadow    = true;
+        mesh.receiveShadow = true;
+        mesh.userData.type  = od.type;
+        mesh.userData.label = od.label || `${od.type} ${++count}`;
+        count = Math.max(count, parseInt(od.label?.match(/\d+$/)?.[0] || 0));
+
+        if (od.position) mesh.position.fromArray(od.position);
+        if (od.rotation) mesh.rotation.set(...od.rotation);
+        if (od.scale)    mesh.scale.fromArray(od.scale);
+
+        scene.add(mesh);
+        objects.push(mesh);
+      });
+
+      fitCamera();
+      toast(`Loaded ${objects.length} objects`);
+    } catch(err) {
+      toast('Failed to load file');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+};
+
+/* ── export GLB (3D file) ──────────────────────────────────────────────── */
+window.exportGLB = function() {
+  if (objects.length === 0) { toast('Nothing to export!'); return; }
+
+  // Build a clean export scene (without transform gizmo, ground, grid)
+  const exportScene = new THREE.Scene();
+  objects.forEach(o => {
+    const clone = o.clone();
+    clone.material = o.material.clone();
+    clone.userData = {};
+    exportScene.add(clone);
+  });
+
+  const exporter = new GLTFExporter();
+  exporter.parse(
+    exportScene,
+    gltf => {
+      const blob = new Blob([gltf], { type: 'application/octet-stream' });
+      const a = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = `batimon-sketch-${datestamp()}.glb`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast('Exported as .glb');
+    },
+    err => { console.error(err); toast('Export failed'); },
+    { binary: true }
+  );
+};
+
+/* ── date helper ───────────────────────────────────────────────────────── */
+function datestamp() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* ── toast ─────────────────────────────────────────────────────────────── */
+let _toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg + ' ✓';
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+/* ── keyboard ──────────────────────────────────────────────────────────── */
 window.addEventListener('keydown', e => {
   if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
-  switch (e.key) {
-    case 'g': case 'G': setMode('translate'); break;
-    case 'r': case 'R': setMode('rotate');    break;
-    case 's': case 'S': setMode('scale');     break;
-    case 'Delete': case 'Backspace': deleteSelected(); break;
-    case 'Escape': deselect(); break;
-    case ' ': e.preventDefault(); resetCamera(); break;
-  }
+  if (e.key === 'g' || e.key === 'G') setMode('translate');
+  if (e.key === 'r' || e.key === 'R') setMode('rotate');
+  if (e.key === 's' || e.key === 'S') setMode('scale');
+  if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
+  if (e.key === 'Escape') deselect();
+  if (e.key === ' ') { e.preventDefault(); resetCamera(); }
   if (e.ctrlKey || e.metaKey) {
     if (e.key === 'c') { e.preventDefault(); copySelected(); }
     if (e.key === 'v') { e.preventDefault(); pasteClipboard(); }
@@ -515,19 +752,11 @@ window.addEventListener('keydown', e => {
   }
 });
 
-/* ── resize ─────────────────────────────────────────────────────────────────── */
-window.addEventListener('resize', () => {
-  const w = container.clientWidth, h = container.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
-});
-
-/* ── render loop ────────────────────────────────────────────────────────────── */
+/* ── render loop ───────────────────────────────────────────────────────── */
 (function loop() {
   requestAnimationFrame(loop);
   orbit.update();
-  if (selected) syncProps();   // live-sync while dragging
+  if (selected) syncProps();
   renderer.render(scene, camera);
 })();
 </script>
