@@ -630,6 +630,7 @@ function _renderPage(id){
   else if(id==='labor-curve')renderLaborCurve();
   else if(id==='planning')renderPlanning();
   else if(id==='3d')render3DPage();
+  else if(id==='aaa')renderAAAPage();
   else if(id==='batidoc')openBatidocPage();
   else{const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
 }
@@ -2606,7 +2607,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
              onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
              onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
-             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='sitepictures'?`onclick=""`:''}
+             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:''}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
@@ -12469,4 +12470,163 @@ async function _3dHandleFileSelect(input){
     const ctaBtn=document.getElementById('_3d-upload-cta');
     if(ctaBtn)ctaBtn.style.display='block';
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// AAA — 3D Facade Box Overview
+// ══════════════════════════════════════════════════════════════
+function renderAAAPage(){
+  const el=document.getElementById('page-aaa');
+  if(!el)return;
+
+  const CELL=6; // px per grid cell
+  const SC={
+    installed:'#1a9458',delivered:'#a07800',fabricated:'#1a5fa8',
+    cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FF6666',
+    defect:'#c02020',pending:'#253347'
+  };
+
+  // Dimensions in pixels
+  const sfCols=SF_COLS.length, nfCols=NF_COLS.length;
+  const efCols=EF_COLS.length, wfCols=WF_COLS.length;
+  const floorCount=SF_FLOORS.length; // 39
+
+  const W=Math.max(sfCols,nfCols)*CELL; // 35*6=210 — S/N face width for box
+  const D=Math.max(efCols,wfCols)*CELL; // 18*6=108 — E/W face width for box
+  const H=floorCount*CELL;              // 39*6=234
+
+  // Render one facade as a flat CSS grid of coloured cells
+  function faceHTML(zid,cols,floors,types){
+    let out='';
+    floors.forEach(fl=>{
+      cols.forEach((col,ci)=>{
+        const type=(types[fl]||[])[ci]||'';
+        let bg;
+        if(!type){
+          bg='transparent';
+        }else{
+          const id=`${zid}-${fl}-C${col}`;
+          const status=(panels[id]||{}).status||'pending';
+          bg=SC[status]||SC.pending;
+        }
+        out+=`<div style="width:${CELL}px;height:${CELL}px;background:${bg};"></div>`;
+      });
+    });
+    const fw=cols.length*CELL;
+    return`<div style="display:grid;grid-template-columns:repeat(${cols.length},${CELL}px);width:${fw}px;height:${H}px;flex-shrink:0;">${out}</div>`;
+  }
+
+  // Face position helper — faces are children of a zero-size origin div
+  function faceDiv(id,transform,w,h,borderColor,content){
+    return`<div id="${id}" style="position:absolute;width:${w}px;height:${h}px;left:${-w/2}px;top:${-h/2}px;transform:${transform};backface-visibility:hidden;overflow:hidden;box-sizing:border-box;border:1px solid ${borderColor};">${content}</div>`;
+  }
+
+  // Build face grids
+  const sfGrid=faceHTML('SF',SF_COLS,SF_FLOORS,SF_TYPES);
+  const nfGrid=faceHTML('NF',NF_COLS,NF_FLOORS,NF_TYPES);
+  const efGrid=faceHTML('EF',EF_COLS,EF_FLOORS,EF_TYPES);
+  const wfGrid=faceHTML('WF',WF_COLS,WF_FLOORS,WF_TYPES);
+
+  // Face label overlay (top-right corner of each face)
+  function faceLabel(txt,color){
+    return`<div style="position:absolute;top:3px;right:4px;font-size:9px;font-weight:700;color:${color};letter-spacing:0.08em;pointer-events:none;z-index:1;">${txt}</div>`;
+  }
+
+  // Legend
+  const LEGEND=[
+    {key:'installed',  label:'Installed',     color:'#1a9458'},
+    {key:'delivered',  label:'Delivered',      color:'#a07800'},
+    {key:'fabricated', label:'Fabricated',     color:'#1a5fa8'},
+    {key:'cutting',    label:'CL Issued',      color:'#C98BCA'},
+    {key:'cip',        label:'CL in Progress', color:'#A349A4'},
+    {key:'cl_not_issued',label:'CL Not Issued',color:'#FF6666'},
+    {key:'defect',     label:'Defect',         color:'#c02020'},
+    {key:'pending',    label:'Pending',        color:'#253347'},
+  ];
+  const legendHTML=LEGEND.map(l=>`
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div style="width:10px;height:10px;border-radius:2px;background:${l.color};border:1px solid rgba(255,255,255,0.15);flex-shrink:0;"></div>
+      <span style="font-size:10px;color:var(--text2);white-space:nowrap;">${l.label}</span>
+    </div>`).join('');
+
+  el.innerHTML=`<div class="fpw" style="flex-direction:column;">
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;">
+      <span style="font-size:15px;line-height:1;">⭐</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);">3D Facade Overview</span>
+      <div style="flex:1;"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${legendHTML}</div>
+    </div>
+    <!-- 3D Viewport -->
+    <div id="aaa-vp" style="flex:1;min-height:0;overflow:hidden;background:#0e1520;position:relative;cursor:grab;user-select:none;">
+      <!-- Perspective wrapper — centred in viewport -->
+      <div id="aaa-scene" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:1100px;perspective-origin:50% 50%;">
+        <!-- Zero-size origin — all faces are absolute children -->
+        <div id="aaa-bld" style="position:relative;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-20deg) rotateY(35deg);">
+          ${faceDiv('aaa-south',`translateZ(${D/2}px)`,sfCols*CELL,H,'#22c55e55',faceLabel('SOUTH','#22c55e')+sfGrid)}
+          ${faceDiv('aaa-north',`rotateY(180deg) translateZ(${D/2}px)`,nfCols*CELL,H,'#3b82f655',faceLabel('NORTH','#3b82f6')+nfGrid)}
+          ${faceDiv('aaa-east', `rotateY(-90deg) translateZ(${W/2}px)`,efCols*CELL,H,'#f59e0b55',faceLabel('EAST','#f59e0b')+efGrid)}
+          ${faceDiv('aaa-west', `rotateY(90deg) translateZ(${W/2}px)`, wfCols*CELL,H,'#a855f755',faceLabel('WEST','#a855f7')+wfGrid)}
+          <!-- Roof cap -->
+          <div style="position:absolute;width:${W}px;height:${D}px;left:${-W/2}px;top:${-D/2}px;transform:rotateX(90deg) translateZ(${H/2}px);backface-visibility:hidden;background:rgba(30,42,60,0.7);border:1px solid rgba(255,255,255,0.08);"></div>
+        </div>
+      </div>
+      <!-- Hint -->
+      <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);color:#8b949e;font-size:11px;padding:4px 14px;border-radius:20px;pointer-events:none;white-space:nowrap;">
+        🖱 Drag to rotate &nbsp;·&nbsp; Scroll to zoom
+      </div>
+    </div>
+  </div>`;
+
+  // ── Interaction ──────────────────────────────────────────────
+  const bld=document.getElementById('aaa-bld');
+  const vp =document.getElementById('aaa-vp');
+  let rotX=-20,rotY=35,zoom=1;
+  let dragging=false,lastX=0,lastY=0;
+
+  function applyT(){
+    bld.style.transform=`scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  }
+
+  // Mouse
+  vp.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;vp.style.cursor='grabbing';e.preventDefault();});
+  window.addEventListener('mouseup',()=>{dragging=false;vp.style.cursor='grab';});
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    rotY+=(e.clientX-lastX)*0.45;
+    rotX-=(e.clientY-lastY)*0.45;
+    rotX=Math.max(-88,Math.min(88,rotX));
+    lastX=e.clientX;lastY=e.clientY;
+    applyT();
+  });
+
+  // Scroll zoom
+  vp.addEventListener('wheel',e=>{
+    e.preventDefault();
+    zoom*=e.deltaY<0?1.09:0.92;
+    zoom=Math.max(0.15,Math.min(6,zoom));
+    applyT();
+  },{passive:false});
+
+  // Touch
+  let lastPinch=0;
+  vp.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;}
+    if(e.touches.length===2){lastPinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+  },{passive:false});
+  vp.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      rotY+=(e.touches[0].clientX-lastX)*0.45;
+      rotX-=(e.touches[0].clientY-lastY)*0.45;
+      rotX=Math.max(-88,Math.min(88,rotX));
+      lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;
+      applyT();
+    }else if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(lastPinch){zoom*=d/lastPinch;zoom=Math.max(0.15,Math.min(6,zoom));applyT();}
+      lastPinch=d;
+    }
+  },{passive:false});
 }
