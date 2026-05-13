@@ -48,7 +48,8 @@
     "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.module.js",
       "three/examples/jsm/controls/OrbitControls.js": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/controls/OrbitControls.js",
-      "three/examples/jsm/loaders/IFCLoader.js": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/loaders/IFCLoader.js"
+      "three/examples/jsm/loaders/IFCLoader.js": "https://cdn.jsdelivr.net/npm/three@0.148.0/examples/jsm/loaders/IFCLoader.js",
+      "web-ifc": "https://cdn.jsdelivr.net/npm/web-ifc@0.0.46/web-ifc-api.js"
     }
   }
   </script>
@@ -186,15 +187,10 @@ async function loadModel(url) {
 
   const loader = new IFCLoader();
 
-  // Point the WASM at the matching web-ifc version on CDN
-  // (Three.js 0.148 ships with web-ifc 0.0.46)
-  try {
-    await loader.ifcManager.setWasmPath(
-      'https://cdn.jsdelivr.net/npm/web-ifc@0.0.46/'
-    );
-  } catch (e) {
-    // Non-fatal — some builds don't need await here
-  }
+  // WASM must come from the exact same build as the JS API above (web-ifc@0.0.46)
+  await loader.ifcManager.setWasmPath(
+    'https://unpkg.com/web-ifc@0.0.46/'
+  );
 
   setStatus('Fetching IFC model…', 55);
 
