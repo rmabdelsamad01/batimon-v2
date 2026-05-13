@@ -9315,6 +9315,58 @@ function _demoSave(){
   document.body.removeChild(a);
 }
 
+function _demoImportFromMonitoring(){
+  // Guard: panels object must have data
+  const ids=Object.keys(panels||{});
+  if(!ids.length){
+    alert('Monitoring data is not loaded yet.\nPlease wait a moment for the page to finish loading, then try again.');
+    return;
+  }
+
+  // Collect installed and delivered panel IDs from the live monitoring data
+  const installedIds=ids.filter(id=>(panels[id]||{}).status==='installed');
+  const deliveredIds=ids.filter(id=>(panels[id]||{}).status==='delivered');
+
+  if(!installedIds.length&&!deliveredIds.length){
+    alert('No installed or delivered panels found in the monitoring data.');
+    return;
+  }
+
+  // Find or create "Installed" legend item (green)
+  const INSTALLED_COLOR='#00FF32';
+  const DELIVERED_COLOR='#FFF000';
+
+  let instItem=_demoData.legend.find(l=>l.label==='Installed');
+  if(!instItem){
+    instItem={id:'l_import_installed',label:'Installed',color:INSTALLED_COLOR};
+    _demoData.legend.unshift(instItem); // add at top
+  }
+
+  let delivItem=_demoData.legend.find(l=>l.label==='Delivered');
+  if(!delivItem){
+    delivItem={id:'l_import_delivered',label:'Delivered',color:DELIVERED_COLOR};
+    // Insert after Installed
+    const instIdx=_demoData.legend.indexOf(instItem);
+    _demoData.legend.splice(instIdx+1,0,delivItem);
+  }
+
+  // Assign panel IDs to legend items (overwrites any previous demo colour for those panels)
+  installedIds.forEach(id=>{ _demoData.panels[id]=instItem.id; });
+  deliveredIds.forEach(id=>{ _demoData.panels[id]=delivItem.id; });
+
+  // Refresh view
+  _demoRenderLegend();
+  _demoRenderGrid();
+
+  const total=installedIds.length+deliveredIds.length;
+  // Brief toast confirmation
+  const toast=document.createElement('div');
+  toast.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1a2a3a;color:#fff;font-size:12px;font-weight:600;padding:9px 20px;border-radius:20px;z-index:99999;pointer-events:none;opacity:1;transition:opacity 0.4s;';
+  toast.textContent='✓ Imported '+installedIds.length+' installed · '+deliveredIds.length+' delivered ('+total+' panels total)';
+  document.body.appendChild(toast);
+  setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>document.body.removeChild(toast),400);},2800);
+}
+
 function _demoPrintPDF(){
   if(_demoActiveZone==='overview') return _demoPrintOverview();
   const zone=ZONES.find(z=>z.id===_demoActiveZone);
