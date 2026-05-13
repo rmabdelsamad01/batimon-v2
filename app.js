@@ -12439,36 +12439,48 @@ async function _3dHandleFileSelect(input){
   _3dSetStatus(`Uploading ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)...`,5,true);
 
   try{
-    // Ensure the bucket exists (create it as public if not)
-    const{data:buckets}=await sb.storage.listBuckets();
-    const bucketExists=buckets&&buckets.some(b=>b.name===_3D_BUCKET);
-    if(!bucketExists){
-      await sb.storage.createBucket(_3D_BUCKET,{public:true});
-    }
+    _3dSetStatus(`Uploading ${file.name}…`,10,true);
 
-    // Upload to Supabase Storage (upsert — replaces existing)
     const{data,error}=await sb.storage
       .from(_3D_BUCKET)
-      .upload(_3D_PATH,file,{
-        cacheControl:'3600',
-        upsert:true,
-        contentType:'application/x-step'
-      });
-    if(error)throw error;
+      .upload(_3D_PATH,file,{cacheControl:'3600',upsert:true,contentType:'application/x-step'});
 
-    _3dSetStatus('Upload complete! Launching viewer...',100,true);
+    if(error){
+      // Bucket missing — show a clear setup guide
+      const isBucketErr=/bucket not found|does not exist/i.test(error.message||'');
+      if(isBucketErr){
+        const s=document.getElementById('_3d-status');
+        if(s) s.innerHTML=`
+          <div style="color:#f87171;font-weight:700;margin-bottom:10px;">❌ Storage bucket not found</div>
+          <div style="text-align:left;line-height:2;font-size:12px;color:var(--text2);">
+            The bucket must be created manually once in Supabase:<br>
+            <b>1.</b> Open your <a href="https://supabase.com/dashboard" target="_blank" style="color:#0ea5e9;">Supabase Dashboard</a><br>
+            <b>2.</b> Go to <b>Storage</b> → <b>New bucket</b><br>
+            <b>3.</b> Name it exactly: <code style="background:#1e293b;padding:1px 5px;border-radius:3px;">bim-models</code><br>
+            <b>4.</b> ✅ Check <b>Public bucket</b><br>
+            <b>5.</b> Click <b>Save</b>, then upload again here.
+          </div>`;
+        const pw=document.getElementById('_3d-prog-wrap');
+        if(pw)pw.style.display='none';
+      }else{
+        throw error;
+      }
+      const ctaBtn=document.getElementById('_3d-upload-cta');
+      if(ctaBtn)ctaBtn.style.display='block';
+      return;
+    }
 
-    // Small delay then show viewer with cache-busting param
+    _3dSetStatus('Upload complete! Launching viewer…',100,true);
     setTimeout(()=>_3dShowViewer(_3D_IFC_URL+'?v='+Date.now()),800);
 
-    // Update model info chip
     const info=document.getElementById('_3d-model-info');
     if(info)info.textContent=`${file.name} · ${(file.size/1024/1024).toFixed(1)} MB`;
 
   }catch(e){
-    _3dSetStatus('❌ Upload failed: '+(e.message||String(e))+'\n\nMake sure the Supabase bucket "bim-models" exists and is public.',undefined,false);
-    const ctaBtn=document.getElementById('_3d-upload-cta');
-    if(ctaBtn)ctaBtn.style.display='block';
+    const s=document.getElementById('_3d-status');
+    if(s) s.innerHTML=`<div style="color:#f87171;font-weight:700;">❌ Upload failed</div><div style="font-size:12px;color:var(--text3);margin-top:6px;">${e.message||String(e)}</div>`;
+    const pw=document.getElementById('_3d-prog-wrap');if(pw)pw.style.display='none';
+    const ctaBtn=document.getElementById('_3d-upload-cta');if(ctaBtn)ctaBtn.style.display='block';
   }
 }
 
