@@ -239,7 +239,9 @@ td[rowspan]{overflow:visible !important;}
 #tbl-WF thead th,#tbl-EF thead th,#tbl-NF thead th,#tbl-SF thead th{position:sticky;top:0;z-index:30;background:var(--surface);}
 #tbl-WF .tdf,#tbl-EF .tdf,#tbl-NF .tdf,#tbl-SF .tdf{position:sticky;left:0;z-index:25;background:#fff;}
 #tbl-WF thead th.thc,#tbl-EF thead th.thc,#tbl-NF thead th.thc,#tbl-SF thead th.thc{left:0;z-index:35;background:var(--surface);}
-/* DEMO FREEZE PANE — same behaviour for demo-tbl-* (table IDs are renamed after buildComplexTable) */
+/* DEMO FREEZE PANE — remove top/left padding so sticky edges sit flush, matching monitoring sheet */
+#demo-grid-area{padding-top:0;padding-left:0;}
+/* same behaviour for demo-tbl-* (table IDs are renamed after buildComplexTable) */
 #demo-tbl-WF thead th,#demo-tbl-EF thead th,#demo-tbl-NF thead th,#demo-tbl-SF thead th{position:sticky;top:0;z-index:30;background:var(--surface);}
 #demo-tbl-WF .tdf,#demo-tbl-EF .tdf,#demo-tbl-NF .tdf,#demo-tbl-SF .tdf{position:sticky;left:0;z-index:25;background:var(--surface);}
 #demo-tbl-WF thead th.thc,#demo-tbl-EF thead th.thc,#demo-tbl-NF thead th.thc,#demo-tbl-SF thead th.thc{left:0;z-index:35;background:var(--surface);}
