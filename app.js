@@ -12346,31 +12346,39 @@ async function render3DPage(){
   // Use .fpw wrapper (same pattern as all other pages) + column direction for vertical layout
   el.innerHTML=`<div class="fpw" style="flex-direction:column;">
     <!-- Toolbar -->
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;">
       <span style="font-size:16px;line-height:1;">🧊</span>
-      <span style="font-size:14px;font-weight:700;color:var(--text);flex:1;">3D BIM Viewer</span>
+      <span style="font-size:14px;font-weight:700;color:var(--text);">3D BIM Viewer</span>
       <span id="_3d-model-info" style="font-size:11px;color:var(--text3);"></span>
-      <button onclick="_3dUploadIFC()" style="padding:6px 14px;background:#0ea5e9;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">
-        ⬆ Upload IFC
-      </button>
+      <div style="flex:1;"></div>
+      <button onclick="_3dUploadIFC()" style="padding:6px 13px;background:#0ea5e9;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">⬆ Upload IFC</button>
+      <button onclick="_3dToggleUrlBar()" style="padding:6px 13px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">🔗 Paste URL</button>
       <input type="file" id="_3d-file-input" accept=".ifc,.ifczip" style="display:none" onchange="_3dHandleFileSelect(this)">
+    </div>
+    <!-- URL bar (hidden by default) -->
+    <div id="_3d-url-bar" style="display:none;align-items:center;gap:8px;padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:11px;color:var(--text3);white-space:nowrap;">IFC URL:</span>
+      <input id="_3d-url-input" type="text" placeholder="https://… direct link to your .ifc file"
+        style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-size:12px;outline:none;"
+        onkeydown="if(event.key==='Enter')_3dLoadFromUrl()">
+      <button onclick="_3dLoadFromUrl()" style="padding:6px 14px;background:#0ea5e9;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">Load</button>
+      <div style="font-size:10px;color:var(--text3);white-space:nowrap;">Works with Dropbox · Drive · any public link</div>
     </div>
     <!-- Content area -->
     <div id="_3d-area" style="flex:1;min-height:0;overflow:hidden;position:relative;background:var(--surface2);">
-      <!-- Status overlay -->
       <div id="_3d-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
         <div style="font-size:52px;line-height:1;">🧊</div>
         <div style="font-size:18px;font-weight:700;color:var(--text);">3D BIM Viewer</div>
-        <div id="_3d-status" style="font-size:13px;color:var(--text2);text-align:center;max-width:320px;line-height:1.7;"></div>
+        <div id="_3d-status" style="font-size:13px;color:var(--text2);text-align:center;max-width:360px;line-height:1.7;"></div>
         <div id="_3d-prog-wrap" style="display:none;width:220px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
           <div id="_3d-prog" style="height:100%;background:#0ea5e9;border-radius:2px;width:0%;transition:width 0.3s;"></div>
         </div>
-        <button id="_3d-upload-cta" onclick="_3dUploadIFC()" style="display:none;padding:10px 22px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
-          ⬆ Upload your IFC model
-        </button>
-        <div id="_3d-hint" style="font-size:11px;color:var(--text3);text-align:center;max-width:300px;line-height:1.6;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+          <button id="_3d-upload-cta" onclick="_3dUploadIFC()" style="display:none;padding:10px 22px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">⬆ Upload IFC</button>
+          <button id="_3d-url-cta" onclick="_3dToggleUrlBar()" style="display:none;padding:10px 22px;background:var(--surface);color:var(--text2);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🔗 Paste a URL instead</button>
+        </div>
+        <div id="_3d-hint" style="font-size:11px;color:var(--text3);text-align:center;max-width:340px;line-height:1.8;"></div>
       </div>
-      <!-- Viewer iframe (hidden until model loads) -->
       <iframe id="_3d-iframe" src="" style="width:100%;height:100%;border:none;display:none;"></iframe>
     </div>
   </div>`;
@@ -12401,11 +12409,39 @@ function _3dSetStatus(msg,pct,showProg){
 }
 
 function _3dShowEmpty(){
-  _3dSetStatus('No 3D model uploaded yet.');
+  _3dSetStatus('No 3D model loaded yet.');
   const btn=document.getElementById('_3d-upload-cta');
   if(btn)btn.style.display='block';
+  const urlBtn=document.getElementById('_3d-url-cta');
+  if(urlBtn)urlBtn.style.display='block';
   const hint=document.getElementById('_3d-hint');
-  if(hint)hint.textContent='Upload an IFC file exported from Revit or any BIM software.\nThe model will be permanently stored and visible to everyone.';
+  if(hint)hint.innerHTML='Upload an IFC file (≤ 50 MB) <b>or</b> paste a direct URL<br>for larger files hosted on Dropbox, Google Drive, etc.';
+}
+
+function _3dToggleUrlBar(){
+  const bar=document.getElementById('_3d-url-bar');
+  if(!bar)return;
+  const visible=bar.style.display==='flex';
+  bar.style.display=visible?'none':'flex';
+  if(!visible)setTimeout(()=>document.getElementById('_3d-url-input')?.focus(),50);
+}
+
+function _3dLoadFromUrl(){
+  const input=document.getElementById('_3d-url-input');
+  if(!input)return;
+  let url=(input.value||'').trim();
+  if(!url)return;
+
+  // Convert Dropbox share links to direct download
+  url=url.replace('www.dropbox.com','dl.dropboxusercontent.com').replace(/[?&]dl=0/,'');
+  // Convert Google Drive share links to direct download
+  const gdMatch=url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(gdMatch) url=`https://drive.google.com/uc?export=download&id=${gdMatch[1]}`;
+
+  const bar=document.getElementById('_3d-url-bar');
+  if(bar)bar.style.display='none';
+  _3dSetStatus('Loading viewer…',0,true);
+  _3dShowViewer(url);
 }
 
 function _3dShowViewer(url){
