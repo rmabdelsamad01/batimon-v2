@@ -9323,121 +9323,116 @@ function _demoPrintPDF(){
   const zone=ZONES.find(z=>z.id===_demoActiveZone);
   if(!zone) return;
 
-  // Inline background on pending cells so clone is colour-complete without CSS classes
+  // 1. Inline background-color on every wfc cell so colours survive without CSS class resolution
   const tbl=document.getElementById('demo-tbl-'+zone.id);
   if(tbl){
     tbl.querySelectorAll('.wfc').forEach(cell=>{
-      if(!cell.style.backgroundColor){
-        // pending = light blue; anything else already has an inline colour from Pass 2
-        cell.style.setProperty('background-color','#E8F0FB','important');
-      }
-    });
-    // Header / label cells: white background
-    tbl.querySelectorAll('.thc,.thh,.tdf').forEach(cell=>{
-      if(!cell.style.backgroundColor) cell.style.backgroundColor='#ffffff';
+      const computed=window.getComputedStyle(cell).backgroundColor;
+      cell.style.setProperty('background-color', computed||'#E8F0FB', 'important');
     });
   }
 
-  // Clone the rendered grid area
+  // 2. Clone the grid area
   const gridArea=document.getElementById('demo-grid-area');
   if(!gridArea) return;
-  const clone=gridArea.cloneNode(true);
-  clone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
-  clone.querySelectorAll('[data-door-id]').forEach(el=>el.style.cursor='default');
-  clone.querySelectorAll('.wfc,.wfc-empty').forEach(el=>{el.style.cursor='default';});
+  const gridClone=gridArea.cloneNode(true);
+  gridClone.style.cssText='overflow:visible;flex:none;padding:0;';
+  gridClone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+  gridClone.querySelectorAll('.wfc,.wfc-empty').forEach(el=>el.style.cursor='default');
 
-  // Get absolute URL of the app stylesheet so the print window can load it directly
-  const cssLink=document.querySelector('link[href*="styles.css"]');
-  const cssHref=cssLink?cssLink.href:'';
-
+  // 3. Build print layer (injected into the live page — no popup needed)
   const ZONE_NAMES={NF:'North Facade',EF:'East Facade',SF:'South Facade',WF:'West Facade'};
   const zoneName=ZONE_NAMES[zone.id]||zone.name;
   const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
   const totalColored=Object.keys(_demoData.panels).length;
 
-  const legendHTML=_demoData.legend.length
-    ?_demoData.legend.map(item=>{
-        const count=_demoCountPanels(item.id);
-        return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f4f9;">
-          <div style="width:16px;height:16px;border-radius:3px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.12);"></div>
-          <span style="font-size:11px;font-weight:600;color:#1e3a5f;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.label}</span>
-          <span style="font-size:11px;font-weight:700;color:#224F93;">${count}</span>
-        </div>`;
-      }).join('')
-    :'<div style="font-size:11px;color:#8099b0;padding:8px 0;">No items</div>';
+  const layer=document.createElement('div');
+  layer.id='_demo_print_layer';
+  layer.style.cssText='position:fixed;inset:0;background:#fff;z-index:999999;padding:20px 24px;box-sizing:border-box;font-family:var(--font);display:flex;flex-direction:column;';
 
-  const win=window.open('','_blank');
-  if(!win){alert('Please allow pop-ups to print.');return;}
-  win.document.write(`<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>BatiMon Demo — ${zoneName}</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-${cssHref?`<link rel="stylesheet" href="${cssHref}">` : ''}
-<style>
-*{box-sizing:border-box;}
-/* Light-mode variables in case stylesheet dark-mode detection overrides them */
-:root{--surface:#fff;--surface2:#f4f8fd;--text:#1a2a3a;--text2:#4a6080;--text3:#8099b0;--border2:rgba(34,79,147,0.13);--blue:#224F93;--mono:'DM Mono',monospace;--font:'Barlow',Arial,sans-serif;}
-@page{size:A3 landscape;margin:10mm 8mm;}
-body{margin:0;padding:14px 16px;background:#fff;font-family:'Barlow',Arial,sans-serif;
-     -webkit-print-color-adjust:exact;print-color-adjust:exact;}
-.ph{display:flex;align-items:center;justify-content:space-between;
-    padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:14px;}
-.pb{display:flex;gap:14px;align-items:flex-start;}
-.pg{flex:1;min-width:0;overflow:visible;}
-.pl{width:160px;flex-shrink:0;border:1px solid #e0e8f0;border-radius:8px;padding:10px 10px 4px;}
-.wf-wrap{transform-origin:top left;display:inline-block;}
-/* Suppress hover/selection effects in print */
-.wfc:hover{transform:none!important;box-shadow:none!important;}
-.wfc.sel,.wfc.sel-multi{box-shadow:none!important;outline:none!important;transform:none!important;}
-@media print{
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  body{padding:0;}
-}
-</style>
-</head>
-<body>
-<div class="ph">
-  <div>
+  // Header
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:14px;flex-shrink:0;';
+  hdr.innerHTML=`<div>
     <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — ${zoneName}</div>
-    <div style="font-size:10px;color:#a855f7;margin-top:2px;">Planning view &middot; Demo mode &middot; ${totalColored} panels coloured</div>
+    <div style="font-size:10px;color:#a855f7;margin-top:2px;">Planning view · Demo mode · ${totalColored} panels coloured</div>
   </div>
   <div style="text-align:right;">
     <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
-    <div style="font-size:10px;color:#8099b0;margin-top:1px;">BatiGlobe</div>
-  </div>
-</div>
-<div class="pb">
-  <div class="pg" id="pgw">${clone.innerHTML}</div>
-  <div class="pl">
-    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8099b0;margin-bottom:8px;">Legend</div>
-    ${legendHTML}
-    <div style="margin-top:10px;padding-top:8px;border-top:1.5px solid #e0e8f0;font-size:10px;color:#8099b0;text-align:center;">${totalColored} panels coloured</div>
-  </div>
-</div>
-<script>
-window.addEventListener('load',function(){
-  var pgw=document.getElementById('pgw');
-  var wrap=pgw&&pgw.querySelector('.wf-wrap');
-  if(wrap){
-    // Remove any leftover scroll-overflow from the demo container
-    pgw.style.overflow='visible';
-    var maxW=pgw.getBoundingClientRect().width||900;
-    var natW=wrap.scrollWidth;
-    if(natW>0&&natW>maxW){
-      var s=maxW/natW;
-      wrap.style.transform='scale('+s+')';
-      wrap.style.transformOrigin='top left';
-      pgw.style.height=(wrap.scrollHeight*s)+'px';
-    }
+    <div style="font-size:10px;color:#8099b0;">BatiGlobe</div>
+  </div>`;
+  layer.appendChild(hdr);
+
+  // Body row: grid + legend
+  const body=document.createElement('div');
+  body.style.cssText='display:flex;gap:14px;align-items:flex-start;flex:1;overflow:hidden;';
+
+  // Grid column
+  const pgw=document.createElement('div');
+  pgw.id='_demo_pgw';
+  pgw.style.cssText='flex:1;min-width:0;overflow:visible;';
+  pgw.appendChild(gridClone);
+
+  // Legend column
+  const leg=document.createElement('div');
+  leg.style.cssText='width:160px;flex-shrink:0;border:1px solid #e0e8f0;border-radius:8px;padding:10px 10px 4px;';
+  leg.innerHTML=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8099b0;margin-bottom:8px;">Legend</div>`;
+  if(_demoData.legend.length){
+    _demoData.legend.forEach(item=>{
+      const count=_demoCountPanels(item.id);
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f4f9;';
+      row.innerHTML=`<div style="width:16px;height:16px;border-radius:3px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.12);"></div>
+        <span style="font-size:11px;font-weight:600;color:#1e3a5f;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.label}</span>
+        <span style="font-size:11px;font-weight:700;color:#224F93;">${count}</span>`;
+      leg.appendChild(row);
+    });
+  } else {
+    leg.innerHTML+='<div style="font-size:11px;color:#8099b0;padding:8px 0;">No items</div>';
   }
-  setTimeout(function(){window.print();},900);
-});
-<\/script>
-</body>
-</html>`);
-  win.document.close();
+  const legTotal=document.createElement('div');
+  legTotal.style.cssText='margin-top:10px;padding-top:8px;border-top:1.5px solid #e0e8f0;font-size:10px;color:#8099b0;text-align:center;';
+  legTotal.textContent=totalColored+' panels coloured';
+  leg.appendChild(legTotal);
+
+  body.appendChild(pgw);
+  body.appendChild(leg);
+  layer.appendChild(body);
+  document.body.appendChild(layer);
+
+  // 4. @media print CSS: hide everything except our layer
+  const printStyle=document.createElement('style');
+  printStyle.id='_demo_print_css';
+  printStyle.textContent=`
+    @page{size:A3 landscape;margin:10mm 8mm;}
+    @media print{
+      body>*:not(#_demo_print_layer){display:none!important;}
+      #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+      .wfc:hover{transform:none!important;box-shadow:none!important;}
+      .wfc.sel,.wfc.sel-multi{box-shadow:none!important;outline:none!important;transform:none!important;}
+    }`;
+  document.head.appendChild(printStyle);
+
+  // 5. Scale grid to fit available width
+  requestAnimationFrame(()=>{
+    const wrap=pgw.querySelector('.wf-wrap');
+    if(wrap){
+      const maxW=pgw.getBoundingClientRect().width||900;
+      const natW=wrap.scrollWidth;
+      if(natW>0&&natW>maxW){
+        const s=maxW/natW;
+        wrap.style.transform='scale('+s+')';
+        wrap.style.transformOrigin='top left';
+        pgw.style.height=(wrap.scrollHeight*s)+'px';
+      }
+    }
+
+    // 6. Print then clean up
+    window.print();
+    document.body.removeChild(layer);
+    document.head.removeChild(printStyle);
+  });
 }
 
 // ── 20 most-used planning colours ────────────────────────────────
