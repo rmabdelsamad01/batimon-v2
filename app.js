@@ -9317,13 +9317,14 @@ function _demoSave(){
 
 function _demoImportFromMonitoring(){
   // Guard: panels object must have data
-  const ids=Object.keys(panels||{});
-  if(!ids.length){
+  if(!Object.keys(panels||{}).length){
     alert('Monitoring data is not loaded yet.\nPlease wait a moment for the page to finish loading, then try again.');
     return;
   }
 
-  // Collect installed and delivered panel IDs from the live monitoring data
+  // Use allPanelIds() — same source as the monitoring sheet counters —
+  // so only real facade panel IDs are included (not test/extra Supabase records)
+  const ids=allPanelIds();
   const installedIds=ids.filter(id=>(panels[id]||{}).status==='installed');
   const deliveredIds=ids.filter(id=>(panels[id]||{}).status==='delivered');
 
