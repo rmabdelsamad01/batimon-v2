@@ -12597,7 +12597,7 @@ function renderAAAPage(){
       <div id="aaa-scene" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:1400px;perspective-origin:50% 48%;">
         <div id="aaa-bld" style="position:relative;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-22deg) rotateY(30deg);">
           ${face('aaa-front', `translateZ(${D/2}px)`,                  nfW, 0,    'North','#60a5fa', nfGrid)}
-          ${face('aaa-back',  `rotateY(180deg) translateZ(${D/2}px)`,  sfW, 0.18, 'South','#4ade80', `<div style="transform:rotateZ(180deg);width:${sfW}px;height:${fH}px;">${sfGrid}</div>`)}
+          ${face('aaa-back',  `rotateY(180deg) translateZ(${D/2}px)`,  sfW, 0.18, 'South','#4ade80', `<div style="transform:scaleY(-1);width:${sfW}px;height:${fH}px;">${sfGrid}</div>`)}
           ${face('aaa-east',  `rotateY(-90deg) translateZ(${W/2}px)`,  efW, 0.28, 'East', '#fbbf24', efGrid)}
           ${face('aaa-west',  `rotateY(90deg)  translateZ(${W/2}px)`,  wfW, 0.42, 'West', '#c084fc', wfGrid)}
           ${roof}${ground}
