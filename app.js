@@ -5591,7 +5591,7 @@ function buildComplexTable(zone){
         const doorMeta=SM[doorStatus]||SM.pending;
         const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
         const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
-        td.innerHTML=`<div style="width:50px;height:175px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('EF-R+02-C'+${col},'R+02',${col},'','Door',ZONES.find(z=>z.id==='EF'))">
+        td.innerHTML=`<div data-door-id="${doorId}" style="width:50px;height:175px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('EF-R+02-C'+${col},'R+02',${col},'','Door',ZONES.find(z=>z.id==='EF'))">
             <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
             <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">${col===74?'Door 3':'Door 2'}</span></div>
             <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
@@ -5634,7 +5634,7 @@ function buildComplexTable(zone){
           const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
           const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH=150+25; // R+19 (150px) + R+18T (25px)
-          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('SF-R+19-C90','R+19',90,'','Door',ZONES.find(z=>z.id==='SF'))">
+          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('SF-R+19-C90','R+19',90,'','Door',ZONES.find(z=>z.id==='SF'))">
             <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
             <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">${pRef||'Door 4'}</span></div>
             <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
@@ -5697,7 +5697,7 @@ function buildComplexTable(zone){
           const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
           const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH = 150 + 25; // R+02 (150px) + R+01 (25px)
-          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('NF-R+02-C59','R+02',59,'','DOOR',ZONES.find(z=>z.id==='NF'))">
+          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('NF-R+02-C59','R+02',59,'','DOOR',ZONES.find(z=>z.id==='NF'))">
             <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
             <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">Door 1</span></div>
             <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
@@ -5764,7 +5764,7 @@ function buildComplexTable(zone){
           const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH = 150+25; // R+19 (150px) + R+18T (25px)
           td.style.padding='0';
-          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" onclick="openComplexModal('WF-R+19-C${col}','R+19',${col},'','Door',ZONES.find(z=>z.id==='WF'))">
+          td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('WF-R+19-C${col}','R+19',${col},'','Door',ZONES.find(z=>z.id==='WF'))">
             <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
             <div style="height:25px;flex-shrink:0;background:${doorBg};border-bottom:1px solid rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:inherit;">${doorName}</span></div>
             <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:4px;">
@@ -9534,16 +9534,19 @@ function _demoRenderGrid(){
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
   });
 
-  // Pass 3: door cells (plain divs with HTML onclick, no wfc class) — reset to pending
-  table.querySelectorAll('[onclick*="openComplexModal"]').forEach(door=>{
-    door.style.setProperty('background','#E8F0FB','important');
-    // Also reset child divs that echo the doorBg colour
+  // Pass 3: door cells (plain divs with data-door-id) — apply demo legend color + redirect click
+  table.querySelectorAll('[data-door-id]').forEach(door=>{
+    const doorId=door.dataset.doorId;
+    const legendId=_demoData.panels[doorId]||null;
+    const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
+    const bg=legendItem?legendItem.color:'#E8F0FB';
+    door.style.setProperty('background',bg,'important');
     door.querySelectorAll('[style*="background"]').forEach(ch=>{
-      ch.style.setProperty('background','#E8F0FB','important');
+      ch.style.setProperty('background',bg,'important');
     });
-    door.onclick=null;
     door.removeAttribute('onclick');
-    door.style.cursor='default';
+    door.style.cursor='pointer';
+    door.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,doorId);};
   });
 
   // Restore any still-selected panels (e.g. after legend re-render)
