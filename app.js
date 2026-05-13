@@ -12564,7 +12564,7 @@ function renderAAAPage(){
         <!-- Zero-size origin — all faces are absolute children -->
         <div id="aaa-bld" style="position:relative;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-20deg) rotateY(35deg);">
           ${faceDiv('aaa-south',`translateZ(${D/2}px)`,sfCols*CELL,H,'#22c55e55',faceLabel('SOUTH','#22c55e')+sfGrid)}
-          ${faceDiv('aaa-north',`rotateY(180deg) translateZ(${D/2}px)`,nfCols*CELL,H,'#3b82f655',faceLabel('NORTH','#3b82f6')+nfGrid)}
+          ${faceDiv('aaa-north',`rotateY(180deg) translateZ(${D/2}px)`,sfCols*CELL,H,'#22c55e55',faceLabel('SOUTH','#22c55e')+sfGrid)}
           ${faceDiv('aaa-east', `rotateY(-90deg) translateZ(${W/2}px)`,efCols*CELL,H,'#f59e0b55',faceLabel('EAST','#f59e0b')+efGrid)}
           ${faceDiv('aaa-west', `rotateY(90deg) translateZ(${W/2}px)`, wfCols*CELL,H,'#a855f755',faceLabel('WEST','#a855f7')+wfGrid)}
           <!-- Roof cap -->
