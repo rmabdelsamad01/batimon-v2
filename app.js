@@ -631,6 +631,7 @@ function _renderPage(id){
   else if(id==='planning')renderPlanning();
   else if(id==='3d')render3DPage();
   else if(id==='aaa')renderAAAPage();
+  else if(id==='builder')renderBuilderPage();
   else if(id==='batidoc')openBatidocPage();
   else{const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
 }
@@ -2596,6 +2597,7 @@ function efSidebarHTML(){
     {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
     {id:'3d', label:'3D View', icon:'🧊', color:'#0ea5e9', subs:[]},
+    {id:'builder', label:'3D Builder', icon:'🏗', color:'#f59e0b', subs:[]},
     {id:'aaa', label:'AAA', icon:'⭐', color:'#6366f1', subs:[]},
     {id:'sitepictures', label:'Site Pictures', icon:'📸', color:'#f97316', subs:[]},
   ];
@@ -2607,7 +2609,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
              onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
              onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
-             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:''}
+             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:''}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
@@ -12535,6 +12537,24 @@ async function _3dHandleFileSelect(input){
     const pw=document.getElementById('_3d-prog-wrap');if(pw)pw.style.display='none';
     const ctaBtn=document.getElementById('_3d-upload-cta');if(ctaBtn)ctaBtn.style.display='block';
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 3D BUILDER — interactive shape editor
+// ══════════════════════════════════════════════════════════════
+function renderBuilderPage(){
+  const el=document.getElementById('page-builder');
+  if(!el)return;
+  el.innerHTML=`<div class="fpw" style="flex-direction:column;">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:16px;line-height:1;">🏗</span>
+      <span style="font-size:14px;font-weight:700;color:var(--text);">3D Builder</span>
+      <span style="font-size:11px;color:var(--text3);">Create and arrange 3D shapes</span>
+    </div>
+    <div style="flex:1;min-height:0;overflow:hidden;position:relative;">
+      <iframe src="builder3d.html" style="width:100%;height:100%;border:none;display:block;"></iframe>
+    </div>
+  </div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
