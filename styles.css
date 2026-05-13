@@ -239,6 +239,10 @@ td[rowspan]{overflow:visible !important;}
 #tbl-WF thead th,#tbl-EF thead th,#tbl-NF thead th,#tbl-SF thead th{position:sticky;top:0;z-index:30;background:var(--surface);}
 #tbl-WF .tdf,#tbl-EF .tdf,#tbl-NF .tdf,#tbl-SF .tdf{position:sticky;left:0;z-index:25;background:#fff;}
 #tbl-WF thead th.thc,#tbl-EF thead th.thc,#tbl-NF thead th.thc,#tbl-SF thead th.thc{left:0;z-index:35;background:var(--surface);}
+/* DEMO FREEZE PANE — same behaviour for demo-tbl-* (table IDs are renamed after buildComplexTable) */
+#demo-tbl-WF thead th,#demo-tbl-EF thead th,#demo-tbl-NF thead th,#demo-tbl-SF thead th{position:sticky;top:0;z-index:30;background:var(--surface);}
+#demo-tbl-WF .tdf,#demo-tbl-EF .tdf,#demo-tbl-NF .tdf,#demo-tbl-SF .tdf{position:sticky;left:0;z-index:25;background:var(--surface);}
+#demo-tbl-WF thead th.thc,#demo-tbl-EF thead th.thc,#demo-tbl-NF thead th.thc,#demo-tbl-SF thead th.thc{left:0;z-index:35;background:var(--surface);}
 
 /* MODALS */
 .mbk{display:none;position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:200;align-items:center;justify-content:center;}
