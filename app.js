@@ -2597,8 +2597,8 @@ function efSidebarHTML(){
     {id:'3d', label:'3D', icon:'🧊', color:'#0ea5e9', subs:[]},
     {id:'sitepictures', label:'Site Pictures', icon:'📸', color:'#f97316', subs:[]},
   ];
-  return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
-    <div class="sbs" style="padding:11px 13px;">
+  return`<aside class="sb" style="width:210px;flex-shrink:0;">
+    <div class="sbs" style="padding:11px 13px;flex:1;overflow-y:auto;">
       ${sections.map(s=>`
       <div style="margin-bottom:5px;">
         <div id="ef-sec-${s.id}"
@@ -2828,6 +2828,14 @@ function efSidebarHTML(){
           }).join('')}
         </div>`:''}
       </div>`).join('')}
+    </div>
+    <!-- 3D View pinned button -->
+    <div style="padding:10px 13px;border-top:1px solid var(--border);flex-shrink:0;">
+      <button onclick="goPage('3d')"
+        style="width:100%;padding:9px 0;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:0.02em;transition:opacity 0.15s;"
+        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        🧊 3D View
+      </button>
     </div>
   </aside>`;
 }
