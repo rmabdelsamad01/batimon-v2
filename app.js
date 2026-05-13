@@ -9420,18 +9420,33 @@ function _demoPrintPDF(){
     }`;
   document.head.appendChild(printStyle);
 
-  // 5. Scale grid to fill the full portrait width
+  // 5. Scale grid to fit exactly within one A4 portrait page
   requestAnimationFrame(()=>{
     const wrap=pgw.querySelector('.wf-wrap');
     if(wrap){
-      const maxW=layer.getBoundingClientRect().width-48||600; // layer padding 24px each side
+      // A4 portrait printable area with 10mm top/bottom, 8mm left/right margins:
+      // 194mm × 277mm — converted to CSS px at 96 dpi (1mm = 96/25.4 px)
+      const MM=96/25.4;
+      const printW=Math.round(194*MM); // ~733 px
+      const printH=Math.round(277*MM); // ~1047 px
+
+      // Measure actual header + legend heights (already in DOM)
+      const hdrH=hdr.offsetHeight+14;  // +14px margin-bottom gap
+      const legH=leg.offsetHeight+12;  // +12px gap above
+      const gridAvailH=printH-hdrH-legH;
+
       const natW=wrap.scrollWidth;
-      if(natW>0){
-        const s=maxW/natW; // always scale to fill width, even if smaller
-        wrap.style.transform='scale('+s+')';
-        wrap.style.transformOrigin='top left';
-        pgw.style.height=(wrap.scrollHeight*s)+'px';
-      }
+      const natH=wrap.scrollHeight;
+      const scaleW=printW/natW;
+      const scaleH=gridAvailH/natH;
+      const s=Math.min(scaleW, scaleH); // fit both dimensions
+
+      wrap.style.transform='scale('+s+')';
+      wrap.style.transformOrigin='top left';
+      // Set pgw to the exact visual size of the scaled grid so layout knows its bounds
+      pgw.style.width=Math.round(natW*s)+'px';
+      pgw.style.height=Math.round(natH*s)+'px';
+      pgw.style.overflow='hidden';
     }
 
     // 6. Print then clean up
