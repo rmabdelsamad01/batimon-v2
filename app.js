@@ -3304,8 +3304,11 @@ async function _qcSaveChecklist(typeId, label){
         if(z && z.simple) renderSimpleGrid(z);
         else { const t=document.getElementById('tbl-'+curPage); if(t){t.innerHTML='';buildComplexTable(z);} }
       }
-      // Close the panel modal
-      cm('pm');
+      // Re-open the status box so user lands back on it after the checklist closes
+      setTimeout(()=>{
+        const openFn = window['openBm'+curPage.replace('BM-','')+'Modal'] || window['openBmNFModal'];
+        if(typeof openFn === 'function') openFn(panelId, document.getElementById('m-ttl')?.textContent || panelId);
+      }, 1450);
     }
 
     setTimeout(()=>{
