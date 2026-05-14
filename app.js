@@ -10232,12 +10232,12 @@ async function openSupabasePanel(){
     const items=[];
     [...tbody.querySelectorAll('tr')].forEach(tr=>{
       const v=tr.dataset[dsKey]||'';
-      if(v&&!seen.has(v)){seen.add(v);items.push(v);}
+      if(!seen.has(v)){seen.add(v);items.push(v);}
     });
-    // Sort floors/cols numerically, others alphabetically
-    if(c==='floor') items.sort((a,b)=>{const n=s=>s==='RDC'?0:parseInt(s.replace(/[^0-9]/g,''))||0;return n(a)-n(b);});
-    else if(c==='col') items.sort((a,b)=>parseInt(a)-parseInt(b));
-    else items.sort();
+    // Sort floors/cols numerically, others alphabetically; blank always last
+    if(c==='floor') items.sort((a,b)=>{if(!a)return 1;if(!b)return -1;const n=s=>s==='RDC'?0:parseInt(s.replace(/[^0-9]/g,''))||0;return n(a)-n(b);});
+    else if(c==='col') items.sort((a,b)=>{if(!a)return 1;if(!b)return -1;return parseInt(a)-parseInt(b);});
+    else items.sort((a,b)=>{if(!a)return 1;if(!b)return -1;return a.localeCompare(b);});
     const lbl=labels[c]||'All';
     let html=
       // Search input
@@ -10249,8 +10249,9 @@ async function openSupabasePanel(){
       // All checkbox
       `<label style="display:flex;align-items:center;gap:7px;padding:6px 10px;cursor:pointer;font-size:10px;font-weight:700;color:#224F93;background:#f0f7ff;border-bottom:1px solid #eef2f8;" ${rowHov}><input type="checkbox" id="sfa-${c}" checked onchange="_supaToggleAll('${c}',this)" style="cursor:pointer;accent-color:#224F93;"> All</label>`;
     items.forEach(v=>{
-      const disp=displayVal[c]?displayVal[c](v):v;
-      html+=`<label data-label="${disp.toLowerCase()}" style="display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;font-size:10px;white-space:nowrap;" ${rowHov}><input type="checkbox" data-item="1" value="${v}" checked onchange="_supaMultiCbChange('${c}')" style="cursor:pointer;accent-color:#224F93;"> ${disp}</label>`;
+      const disp=v===''?'(Blank)':(displayVal[c]?displayVal[c](v):v);
+      const searchLabel=v===''?'(blank)':disp.toLowerCase();
+      html+=`<label data-label="${searchLabel}" style="display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;font-size:10px;white-space:nowrap;${v===''?'font-style:italic;color:#888;':''}" ${rowHov}><input type="checkbox" data-item="1" value="${v}" checked onchange="_supaMultiCbChange('${c}')" style="cursor:pointer;accent-color:#224F93;"> ${disp}</label>`;
     });
     drop.innerHTML=html;
     drop.style.cssText=dropStyle;
