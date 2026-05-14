@@ -9153,9 +9153,17 @@ function _supaDropSearch(col, input){
   const q=(input.value||'').toLowerCase().trim();
   const drop=document.getElementById('sfd-'+col);
   if(!drop) return;
+  let anyMatch=false;
   drop.querySelectorAll('label[data-label]').forEach(lbl=>{
-    lbl.style.display=(!q||lbl.dataset.label.includes(q))?'':'none';
+    const match=!q||lbl.dataset.label.includes(q);
+    lbl.style.display=match?'':'none';
+    const cb=lbl.querySelector('input[data-item]');
+    if(cb){cb.checked=match;if(match)anyMatch=true;}
   });
+  // Sync the All checkbox
+  const allCb=document.getElementById('sfa-'+col);
+  if(allCb) allCb.checked=!q&&anyMatch;
+  _supaFilter();
 }
 
 function _supaToggleMulti(col){
