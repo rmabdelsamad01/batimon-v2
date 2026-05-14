@@ -9153,16 +9153,11 @@ function _supaDropSearch(col, input){
   const q=(input.value||'').toLowerCase().trim();
   const drop=document.getElementById('sfd-'+col);
   if(!drop) return;
-  let anyMatch=false;
+  // Only show/hide labels — never touch checkbox state so multi-select is preserved
   drop.querySelectorAll('label[data-label]').forEach(lbl=>{
-    const match=!q||lbl.dataset.label.includes(q);
-    lbl.style.display=match?'':'none';
-    const cb=lbl.querySelector('input[data-item]');
-    if(cb){cb.checked=match;if(match)anyMatch=true;}
+    lbl.style.display=(!q||lbl.dataset.label.includes(q))?'':'none';
   });
-  // Sync the All checkbox
-  const allCb=document.getElementById('sfa-'+col);
-  if(allCb) allCb.checked=!q&&anyMatch;
+  // Re-apply the table filter so the search text also narrows the rows immediately
   _supaFilter();
 }
 
@@ -9195,11 +9190,15 @@ function _supaMultiCbChange(col){
 
 function _supaFilter(){
   const filters={};
+  const searches={};
   _SUPA_COLS.forEach(c=>{
     const drop=document.getElementById('sfd-'+c);
-    if(!drop){filters[c]=null;return;}
+    if(!drop){filters[c]=null;searches[c]='';return;}
+    // Capture search text for this column
+    const si=drop.querySelector('input[type=text]');
+    searches[c]=(si?si.value:'').toLowerCase().trim();
     const allCb=document.getElementById('sfa-'+c);
-    if(allCb&&allCb.checked){filters[c]=null;return;}
+    if(allCb&&allCb.checked&&!searches[c]){filters[c]=null;return;}
     const vals=[...drop.querySelectorAll('input[data-item]')].filter(cb=>cb.checked).map(cb=>cb.value);
     filters[c]=vals.length?vals:null;
   });
@@ -9208,7 +9207,14 @@ function _supaFilter(){
   const _fDsKey={floor:'floordisplay',col:'coldisplay'};
   let visible=0,total=0;
   [...tbody.querySelectorAll('tr')].forEach(tr=>{
-    const show=_SUPA_COLS.every(c=>!filters[c]||filters[c].includes(tr.dataset[_fDsKey[c]||c]||''));
+    const show=_SUPA_COLS.every(c=>{
+      const cellVal=tr.dataset[_fDsKey[c]||c]||'';
+      // Must pass checkbox filter
+      if(filters[c]&&!filters[c].includes(cellVal)) return false;
+      // Must also pass the search text (if any)
+      if(searches[c]&&!cellVal.toLowerCase().includes(searches[c])) return false;
+      return true;
+    });
     tr.style.display=show?'':'none';
     if(show)visible++;
     total++;
