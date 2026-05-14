@@ -632,6 +632,7 @@ function _renderPage(id){
   else if(id==='3d')render3DPage();
   else if(id==='aaa')renderAAAPage();
   else if(id==='builder')renderBuilderPage();
+  else if(id==='agenda')renderAgendaPage();
   else if(id==='batidoc')openBatidocPage();
   else{const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
 }
@@ -2600,6 +2601,7 @@ function efSidebarHTML(){
     {id:'builder', label:'3D Builder', icon:'🏗', color:'#f59e0b', subs:[]},
     {id:'aaa', label:'AAA', icon:'⭐', color:'#6366f1', subs:[]},
     {id:'sitepictures', label:'Site Pictures', icon:'📸', color:'#f97316', subs:[]},
+    {id:'agenda', label:'Agenda', icon:'📅', color:'#10b981', subs:[]},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
@@ -2609,7 +2611,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
              onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
              onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
-             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:''}
+             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:''}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
@@ -12569,6 +12571,18 @@ function renderBuilderPage(){
     <div style="flex:1;min-height:0;overflow:hidden;position:relative;">
       <iframe src="builder3d.html" style="width:100%;height:100%;border:none;display:block;"></iframe>
     </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// AGENDA
+// ══════════════════════════════════════════════════════════════
+function renderAgendaPage(){
+  const el=document.getElementById('page-agenda');
+  if(!el)return;
+  el.innerHTML=`<div class="fpw" style="flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);font-size:13px;">
+    <span style="font-size:40px;">📅</span>
+    <span style="font-weight:600;">Agenda — coming soon</span>
   </div>`;
 }
 
