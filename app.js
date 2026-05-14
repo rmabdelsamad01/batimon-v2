@@ -12575,15 +12575,161 @@ function renderBuilderPage(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// AGENDA
+// AGENDA — monthly calendar with tasks
 // ══════════════════════════════════════════════════════════════
 function renderAgendaPage(){
   const el=document.getElementById('page-agenda');
   if(!el)return;
-  el.innerHTML=`<div class="fpw" style="flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text3);font-size:13px;">
-    <span style="font-size:40px;">📅</span>
-    <span style="font-weight:600;">Agenda — coming soon</span>
-  </div>`;
+  const now=new Date();
+  if(!window._ag) window._ag={y:now.getFullYear(),m:now.getMonth()};
+  window._ag.tasks=JSON.parse(localStorage.getItem('batimon_agenda')||'{}');
+
+  const bs='border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;';
+  el.innerHTML=
+    '<div style="display:flex;flex-direction:column;height:100%;background:var(--bg);position:relative;overflow:hidden;">'+
+      // ── top bar ──
+      '<div style="display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">'+
+        '<button onclick="_agNav(-1)" style="'+bs+'padding:3px 11px;font-size:15px;">&#8249;</button>'+
+        '<span id="ag-title" style="font-size:14px;font-weight:700;color:var(--text);min-width:160px;text-align:center;"></span>'+
+        '<button onclick="_agNav(1)"  style="'+bs+'padding:3px 11px;font-size:15px;">&#8250;</button>'+
+        '<button onclick="_agToday()" style="'+bs+'padding:4px 12px;margin-left:4px;">Today</button>'+
+      '</div>'+
+      // ── day-of-week header ──
+      '<div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">'+
+        ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>
+          '<div style="text-align:center;padding:5px 0;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;">'+d+'</div>'
+        ).join('')+
+      '</div>'+
+      // ── calendar grid ──
+      '<div id="ag-cal" style="flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(7,1fr);align-content:start;"></div>'+
+      // ── add-task modal ──
+      '<div id="ag-modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)document.getElementById(\'ag-modal\').style.display=\'none\'">'+
+        '<div style="background:var(--surface);border-radius:12px;padding:22px;width:310px;box-shadow:0 8px 32px rgba(0,0,0,0.28);" onclick="event.stopPropagation()">'+
+          '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">📅 Add Task</div>'+
+          '<div id="ag-modal-date" style="font-size:10px;color:var(--text3);margin-bottom:14px;"></div>'+
+          '<input id="ag-task-date" type="hidden">'+
+          '<div style="margin-bottom:10px;">'+
+            '<label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Task</label>'+
+            '<input id="ag-task-txt" placeholder="Task description…" style="width:100%;box-sizing:border-box;padding:7px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_agSaveTask()">'+
+          '</div>'+
+          '<div style="margin-bottom:18px;">'+
+            '<label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Assign to</label>'+
+            '<input id="ag-task-who" placeholder="Name…" style="width:100%;box-sizing:border-box;padding:7px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_agSaveTask()">'+
+          '</div>'+
+          '<div style="display:flex;gap:8px;justify-content:flex-end;">'+
+            '<button onclick="document.getElementById(\'ag-modal\').style.display=\'none\'" style="'+bs+'padding:6px 14px;">Cancel</button>'+
+            '<button onclick="_agSaveTask()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 18px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Add</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+
+  _agDraw();
+}
+
+function _agNav(dir){
+  const a=window._ag; a.m+=dir;
+  if(a.m<0){a.m=11;a.y--;} if(a.m>11){a.m=0;a.y++;}
+  _agDraw();
+}
+function _agToday(){const n=new Date();window._ag.y=n.getFullYear();window._ag.m=n.getMonth();_agDraw();}
+
+function _agDraw(){
+  const {y,m,tasks}=window._ag;
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const titleEl=document.getElementById('ag-title');
+  const cal=document.getElementById('ag-cal');
+  if(!titleEl||!cal) return;
+  titleEl.textContent=MONTHS[m]+' '+y;
+
+  const n=new Date();
+  const todayStr=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+  const firstDow=new Date(y,m,1).getDay(); // 0=Sun
+  const startOffset=(firstDow+6)%7;        // convert to Mon=0
+  const daysInMonth=new Date(y,m+1,0).getDate();
+
+  let html='';
+  // blank leading cells
+  for(let i=0;i<startOffset;i++)
+    html+='<div style="min-height:110px;border:1px solid var(--border);background:var(--bg);opacity:0.25;"></div>';
+
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isToday=ds===todayStr;
+    const dayTasks=tasks[ds]||[];
+    const taskRows=dayTasks.map(t=>{
+      const doneStyle=t.done?'text-decoration:line-through;color:#94a3b8;':'color:var(--text);';
+      return '<div style="display:flex;align-items:flex-start;gap:4px;padding:2px 0;border-bottom:1px solid var(--border);">'+
+        '<button onclick="_agToggle(\''+ds+'\',\''+t.id+'\')" title="'+(t.done?'Mark undone':'Mark done')+'" '+
+          'style="flex-shrink:0;width:13px;height:13px;border-radius:50%;border:1.5px solid '+(t.done?'#10b981':'#94a3b8')+';background:'+(t.done?'#10b981':'transparent')+';cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;margin-top:2px;">'+
+          (t.done?'<span style="color:#fff;font-size:8px;line-height:1;">&#10003;</span>':'')+
+        '</button>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:10px;'+doneStyle+'line-height:1.35;word-break:break-word;">'+_agEsc(t.text)+'</div>'+
+          (t.who?'<div style="font-size:9px;color:#10b981;font-weight:600;margin-top:1px;">'+_agEsc(t.who)+'</div>':'')+
+        '</div>'+
+        '<button onclick="_agDelete(\''+ds+'\',\''+t.id+'\')" title="Remove" '+
+          'style="flex-shrink:0;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px;line-height:1;padding:0;">&#215;</button>'+
+      '</div>';
+    }).join('');
+
+    html+=
+      '<div style="min-height:110px;border:1px solid var(--border);background:'+(isToday?'rgba(16,185,129,0.06)':'var(--surface)')+';padding:5px;display:flex;flex-direction:column;">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'+
+          '<span style="font-size:11px;font-weight:'+(isToday?'700':'500')+';'+(isToday?
+            'background:#10b981;color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;':
+            'color:var(--text2);')+'">'+ d +'</span>'+
+          '<button onclick="_agOpen(\''+ds+'\')" title="Add task" style="background:none;border:none;color:#10b981;cursor:pointer;font-size:17px;line-height:1;padding:0 2px;">+</button>'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;gap:2px;flex:1;">'+taskRows+'</div>'+
+      '</div>';
+  }
+
+  // trailing blank cells
+  const total=startOffset+daysInMonth;
+  const rem=total%7;
+  if(rem>0) for(let i=0;i<7-rem;i++)
+    html+='<div style="min-height:110px;border:1px solid var(--border);background:var(--bg);opacity:0.25;"></div>';
+
+  cal.innerHTML=html;
+}
+
+function _agEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function _agOpen(ds){
+  document.getElementById('ag-task-date').value=ds;
+  document.getElementById('ag-task-txt').value='';
+  document.getElementById('ag-task-who').value='';
+  const parts=ds.split('-');
+  const label=new Date(+parts[0],+parts[1]-1,+parts[2]).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('ag-modal-date').textContent=label;
+  const modal=document.getElementById('ag-modal');
+  modal.style.display='flex';
+  setTimeout(()=>document.getElementById('ag-task-txt').focus(),60);
+}
+
+function _agSaveTask(){
+  const txt=document.getElementById('ag-task-txt').value.trim();
+  if(!txt) return;
+  const ds=document.getElementById('ag-task-date').value;
+  const who=document.getElementById('ag-task-who').value.trim();
+  const ag=window._ag;
+  if(!ag.tasks[ds]) ag.tasks[ds]=[];
+  ag.tasks[ds].push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),text:txt,who,done:false});
+  localStorage.setItem('batimon_agenda',JSON.stringify(ag.tasks));
+  document.getElementById('ag-modal').style.display='none';
+  _agDraw();
+}
+
+function _agToggle(ds,id){
+  const ag=window._ag;
+  const t=(ag.tasks[ds]||[]).find(t=>t.id===id);
+  if(t){t.done=!t.done;localStorage.setItem('batimon_agenda',JSON.stringify(ag.tasks));_agDraw();}
+}
+
+function _agDelete(ds,id){
+  const ag=window._ag;
+  if(ag.tasks[ds]){ag.tasks[ds]=ag.tasks[ds].filter(t=>t.id!==id);localStorage.setItem('batimon_agenda',JSON.stringify(ag.tasks));_agDraw();}
 }
 
 // ══════════════════════════════════════════════════════════════
