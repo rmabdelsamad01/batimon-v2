@@ -9336,10 +9336,13 @@ async function _demoImportFromMonitoring(){
     return;
   }
 
-  // Use all IDs directly from Supabase — do not filter through allPanelIds()
-  // (allPanelIds() excludes some structural floors/cols that may still have real installed panels)
-  const installedIds=data.filter(r=>r.status==='installed').map(r=>r.id);
-  const deliveredIds=data.filter(r=>r.status==='delivered').map(r=>r.id);
+  // Keep only real facade panel IDs: must start with a zone prefix (NF/SF/EF/WF)
+  // and match the floor-column pattern.  This excludes bracket rows, test entries,
+  // and structural spacers (which have numeric or non-zone IDs) while still including
+  // panels on hidden floors that allPanelIds() would strip out.
+  const FACADE_RE=/^(NF|SF|EF|WF)-R\+?\d+[A-Z]*-C.+$/;
+  const installedIds=data.filter(r=>r.status==='installed'&&FACADE_RE.test(r.id)).map(r=>r.id);
+  const deliveredIds=data.filter(r=>r.status==='delivered'&&FACADE_RE.test(r.id)).map(r=>r.id);
 
   if(!installedIds.length&&!deliveredIds.length){
     alert('No installed or delivered panels found in the monitoring data.');
