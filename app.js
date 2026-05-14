@@ -9322,27 +9322,21 @@ function _demoSave(){
 }
 
 async function _demoImportFromMonitoring(){
-  // Query Supabase directly for current installed/delivered panels
-  // (avoids stale localStorage data that may linger in the in-memory panels object)
+  // Use the in-memory panels object (loaded from Supabase at startup via load())
+  // and filter through allPanelIds() — exactly the same logic as gC() and the
+  // monitoring dashboard counts.  This guarantees the demo import shows the same
+  // numbers as the real monitoring view without any ID-format mismatch issues.
   const btn=document.querySelector('[onclick="_demoImportFromMonitoring()"]');
   const origText=btn?btn.innerHTML:'';
   if(btn) btn.innerHTML='<span style="opacity:0.6;font-size:11px;">Loading…</span>';
 
-  const {data,error}=await sb.from('panels').select('id,status').in('status',['installed','delivered']);
+  // Small async yield so the "Loading…" text actually renders
+  await new Promise(r=>setTimeout(r,30));
   if(btn) btn.innerHTML=origText;
 
-  if(error||!data){
-    alert('Could not load monitoring data from server.\n'+(error?.message||''));
-    return;
-  }
-
-  // Keep only real facade panel IDs: must start with a zone prefix (NF/SF/EF/WF)
-  // and match the floor-column pattern.  This excludes bracket rows, test entries,
-  // and structural spacers (which have numeric or non-zone IDs) while still including
-  // panels on hidden floors that allPanelIds() would strip out.
-  const FACADE_RE=/^(NF|SF|EF|WF)-R\+?\d+[A-Z]*-C.+$/;
-  const installedIds=data.filter(r=>r.status==='installed'&&FACADE_RE.test(r.id)).map(r=>r.id);
-  const deliveredIds=data.filter(r=>r.status==='delivered'&&FACADE_RE.test(r.id)).map(r=>r.id);
+  const validIds=allPanelIds();
+  const installedIds=validIds.filter(id=>(panels[id]||{}).status==='installed');
+  const deliveredIds=validIds.filter(id=>(panels[id]||{}).status==='delivered');
 
   if(!installedIds.length&&!deliveredIds.length){
     alert('No installed or delivered panels found in the monitoring data.');
