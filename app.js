@@ -12581,7 +12581,7 @@ function renderAgendaPage(){
   const el=document.getElementById('page-agenda');
   if(!el)return;
   const now=new Date();
-  if(!window._ag) window._ag={y:now.getFullYear(),m:now.getMonth(),tasks:{}};
+  if(!window._ag) window._ag={y:now.getFullYear(),m:now.getMonth(),tasks:{},employees:[]};
 
   const bs='border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;';
   el.innerHTML=
@@ -12591,6 +12591,8 @@ function renderAgendaPage(){
         '<span id="ag-title" style="font-size:14px;font-weight:700;color:var(--text);min-width:160px;text-align:center;"></span>'+
         '<button onclick="_agNav(1)"  style="'+bs+'padding:3px 11px;font-size:15px;">&#8250;</button>'+
         '<button onclick="_agToday()" style="'+bs+'padding:4px 12px;margin-left:4px;">Today</button>'+
+        '<span style="flex:1;"></span>'+
+        '<button onclick="_agOpenTeam()" style="'+bs+'padding:4px 12px;display:flex;align-items:center;gap:5px;">&#128101; Team</button>'+
         '<span id="ag-loading" style="font-size:11px;color:var(--text3);margin-left:8px;display:none;">Loading…</span>'+
       '</div>'+
       '<div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">'+
@@ -12599,10 +12601,12 @@ function renderAgendaPage(){
         ).join('')+
       '</div>'+
       '<div id="ag-cal" style="flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(7,1fr);align-content:start;"></div>'+
+      // ── task add/edit modal ──
       '<div id="ag-modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)document.getElementById(\'ag-modal\').style.display=\'none\'">'+
         '<div style="background:var(--surface);border-radius:12px;padding:22px;width:310px;box-shadow:0 8px 32px rgba(0,0,0,0.28);" onclick="event.stopPropagation()">'+
-          '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">📅 Add Task</div>'+
+          '<div id="ag-modal-title" style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">&#128197; Add Task</div>'+
           '<div id="ag-modal-date" style="font-size:10px;color:var(--text3);margin-bottom:14px;"></div>'+
+          '<input id="ag-task-id"   type="hidden">'+
           '<input id="ag-task-date" type="hidden">'+
           '<div style="margin-bottom:10px;">'+
             '<label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Task</label>'+
@@ -12610,12 +12614,20 @@ function renderAgendaPage(){
           '</div>'+
           '<div style="margin-bottom:18px;">'+
             '<label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px;">Assign to</label>'+
-            '<input id="ag-task-who" placeholder="Name…" style="width:100%;box-sizing:border-box;padding:7px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_agSaveTask()">'+
+            '<select id="ag-task-who" style="width:100%;box-sizing:border-box;padding:7px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;">'+
+              '<option value="">&#8212; Unassigned &#8212;</option>'+
+            '</select>'+
           '</div>'+
           '<div style="display:flex;gap:8px;justify-content:flex-end;">'+
             '<button onclick="document.getElementById(\'ag-modal\').style.display=\'none\'" style="'+bs+'padding:6px 14px;">Cancel</button>'+
-            '<button onclick="_agSaveTask()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 18px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Add</button>'+
+            '<button onclick="_agSaveTask()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 18px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Save</button>'+
           '</div>'+
+        '</div>'+
+      '</div>'+
+      // ── team modal ──
+      '<div id="ag-team-modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)document.getElementById(\'ag-team-modal\').style.display=\'none\'">'+
+        '<div style="background:var(--surface);border-radius:12px;width:360px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.28);overflow:hidden;" onclick="event.stopPropagation()">'+
+          '<div id="ag-team-content" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;"></div>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -12627,18 +12639,23 @@ async function _agLoad(){
   const loadEl=document.getElementById('ag-loading');
   if(loadEl) loadEl.style.display='inline';
   try{
-    const {data,error}=await sb.from('agenda_tasks').select('*').order('created_at',{ascending:true});
-    if(error) throw error;
-    // Rebuild tasks map keyed by date
+    const [{data:tData,error:tErr},{data:eData,error:eErr}]=await Promise.all([
+      sb.from('agenda_tasks').select('*').order('created_at',{ascending:true}),
+      sb.from('agenda_employees').select('*').order('name',{ascending:true})
+    ]);
+    if(tErr) throw tErr;
+    if(eErr) throw eErr;
     const tasks={};
-    (data||[]).forEach(r=>{
+    (tData||[]).forEach(r=>{
       if(!tasks[r.date]) tasks[r.date]=[];
       tasks[r.date].push({id:r.id,text:r.text,who:r.who||'',done:r.done});
     });
     window._ag.tasks=tasks;
+    window._ag.employees=(eData||[]).map(r=>({id:r.id,name:r.name}));
   }catch(e){
     console.error('Agenda load error:',e);
-    window._ag.tasks={};
+    if(!window._ag.tasks) window._ag.tasks={};
+    if(!window._ag.employees) window._ag.employees=[];
   }
   if(loadEl) loadEl.style.display='none';
   _agDraw();
@@ -12682,8 +12699,10 @@ function _agDraw(){
         '</button>'+
         '<div style="flex:1;min-width:0;">'+
           '<div style="font-size:10px;'+doneStyle+'line-height:1.35;word-break:break-word;">'+_agEsc(t.text)+'</div>'+
-          (t.who?'<div style="font-size:9px;color:#10b981;font-weight:600;margin-top:1px;">'+_agEsc(t.who)+'</div>':'')+
+          (t.who?'<button onclick="_agShowEmployee(\''+t.who.replace(/'/g,"\\'")+'\')" style="font-size:9px;color:#10b981;font-weight:600;margin-top:1px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-decoration:underline;text-underline-offset:2px;">'+_agEsc(t.who)+'</button>':'')+
         '</div>'+
+        '<button onclick="_agOpenEdit(\''+t.id+'\')" title="Edit" '+
+          'style="flex-shrink:0;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:10px;line-height:1;padding:0 1px;" onmouseover="this.style.color=\'#224F93\'" onmouseout="this.style.color=\'#94a3b8\'">&#9998;</button>'+
         '<button onclick="_agDelete(\''+t.id+'\')" title="Remove" '+
           'style="flex-shrink:0;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:12px;line-height:1;padding:0;">&#215;</button>'+
       '</div>';
@@ -12711,45 +12730,90 @@ function _agDraw(){
 
 function _agEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+// ── populate the assign select ───────────────────────────────
+function _agPopulateSelect(selectedWho){
+  const sel=document.getElementById('ag-task-who');
+  if(!sel) return;
+  const emps=window._ag.employees||[];
+  let opts='<option value="">&#8212; Unassigned &#8212;</option>';
+  emps.forEach(e=>{
+    opts+='<option value="'+_agEsc(e.name)+'"'+(e.name===selectedWho?' selected':'')+'>'+_agEsc(e.name)+'</option>';
+  });
+  if(selectedWho&&!emps.find(e=>e.name===selectedWho))
+    opts+='<option value="'+_agEsc(selectedWho)+'" selected>'+_agEsc(selectedWho)+' (removed)</option>';
+  sel.innerHTML=opts;
+}
+
+// ── open modal for adding ─────────────────────────────────────
 function _agOpen(ds){
+  document.getElementById('ag-task-id').value='';
   document.getElementById('ag-task-date').value=ds;
   document.getElementById('ag-task-txt').value='';
-  document.getElementById('ag-task-who').value='';
+  _agPopulateSelect('');
   const parts=ds.split('-');
   const label=new Date(+parts[0],+parts[1]-1,+parts[2]).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('ag-modal-title').textContent='📅 Add Task';
   document.getElementById('ag-modal-date').textContent=label;
-  const modal=document.getElementById('ag-modal');
-  modal.style.display='flex';
+  document.getElementById('ag-modal').style.display='flex';
   setTimeout(()=>document.getElementById('ag-task-txt').focus(),60);
 }
 
+// ── open modal for editing ────────────────────────────────────
+function _agOpenEdit(taskId){
+  const ag=window._ag;
+  let task=null,taskDate=null;
+  for(const ds in ag.tasks){const t=ag.tasks[ds].find(t=>t.id===taskId);if(t){task=t;taskDate=ds;break;}}
+  if(!task) return;
+  document.getElementById('ag-task-id').value=taskId;
+  document.getElementById('ag-task-date').value=taskDate;
+  document.getElementById('ag-task-txt').value=task.text;
+  _agPopulateSelect(task.who);
+  const parts=taskDate.split('-');
+  const label=new Date(+parts[0],+parts[1]-1,+parts[2]).toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('ag-modal-title').textContent='✏️ Edit Task';
+  document.getElementById('ag-modal-date').textContent=label;
+  document.getElementById('ag-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('ag-task-txt').focus(),60);
+}
+
+// ── save task (add or edit) ───────────────────────────────────
 async function _agSaveTask(){
   const txt=document.getElementById('ag-task-txt').value.trim();
   if(!txt) return;
+  const existingId=document.getElementById('ag-task-id').value;
   const ds=document.getElementById('ag-task-date').value;
-  const who=document.getElementById('ag-task-who').value.trim();
-  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const who=document.getElementById('ag-task-who').value;
   document.getElementById('ag-modal').style.display='none';
-  // Optimistic update
   const ag=window._ag;
-  if(!ag.tasks[ds]) ag.tasks[ds]=[];
-  ag.tasks[ds].push({id,text:txt,who,done:false});
-  _agDraw();
-  try{
-    const {error}=await sb.from('agenda_tasks').insert({id,date:ds,text:txt,who,done:false});
-    if(error) throw error;
-  }catch(e){
-    console.error('Agenda save error:',e);
-    // Rollback optimistic update
-    ag.tasks[ds]=ag.tasks[ds].filter(t=>t.id!==id);
+
+  if(existingId){
+    // Edit mode — optimistic
+    for(const d in ag.tasks){const t=ag.tasks[d].find(t=>t.id===existingId);if(t){t.text=txt;t.who=who;break;}}
     _agDraw();
-    alert('Failed to save task. Please try again.');
+    try{
+      const {error}=await sb.from('agenda_tasks').update({text:txt,who}).eq('id',existingId);
+      if(error) throw error;
+    }catch(e){console.error('Edit task error:',e);await _agLoad();alert('Failed to update task.');}
+  } else {
+    // Add mode — optimistic
+    const id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+    if(!ag.tasks[ds]) ag.tasks[ds]=[];
+    ag.tasks[ds].push({id,text:txt,who,done:false});
+    _agDraw();
+    try{
+      const {error}=await sb.from('agenda_tasks').insert({id,date:ds,text:txt,who,done:false});
+      if(error) throw error;
+    }catch(e){
+      console.error('Agenda save error:',e);
+      ag.tasks[ds]=ag.tasks[ds].filter(t=>t.id!==id);
+      _agDraw();
+      alert('Failed to save task. Please try again.');
+    }
   }
 }
 
-async function _agToggle(id, currentDone){
+async function _agToggle(id,currentDone){
   const newDone=!currentDone;
-  // Optimistic update
   const ag=window._ag;
   for(const ds in ag.tasks){const t=ag.tasks[ds].find(t=>t.id===id);if(t){t.done=newDone;break;}}
   _agDraw();
@@ -12758,18 +12822,17 @@ async function _agToggle(id, currentDone){
     if(error) throw error;
   }catch(e){
     console.error('Agenda toggle error:',e);
-    // Rollback
     for(const ds in ag.tasks){const t=ag.tasks[ds].find(t=>t.id===id);if(t){t.done=currentDone;break;}}
     _agDraw();
   }
 }
 
 async function _agDelete(id){
-  // Optimistic update
   const ag=window._ag;
+  let removed=null,removedDate=null;
   for(const ds in ag.tasks){
     const idx=ag.tasks[ds].findIndex(t=>t.id===id);
-    if(idx>-1){ag.tasks[ds].splice(idx,1);break;}
+    if(idx>-1){removed=ag.tasks[ds][idx];removedDate=ds;ag.tasks[ds].splice(idx,1);break;}
   }
   _agDraw();
   try{
@@ -12777,7 +12840,135 @@ async function _agDelete(id){
     if(error) throw error;
   }catch(e){
     console.error('Agenda delete error:',e);
-    await _agLoad(); // Full reload on failure
+    if(removed&&removedDate){if(!ag.tasks[removedDate])ag.tasks[removedDate]=[];ag.tasks[removedDate].push(removed);}
+    _agDraw();
+  }
+}
+
+// ── team modal ────────────────────────────────────────────────
+function _agOpenTeam(){
+  _agRenderTeamList();
+  document.getElementById('ag-team-modal').style.display='flex';
+}
+
+function _agRenderTeamList(){
+  const emps=window._ag.employees||[];
+  const ag=window._ag;
+  const bs='border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;padding:5px 12px;';
+  let html=
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">'+
+      '<span style="font-size:13px;font-weight:700;color:var(--text);">&#128101; Team</span>'+
+      '<button onclick="document.getElementById(\'ag-team-modal\').style.display=\'none\'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;">&#215;</button>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">'+
+      '<input id="ag-emp-name" placeholder="Employee name…" style="flex:1;padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_agAddEmployee()">'+
+      '<button onclick="_agAddEmployee()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Add</button>'+
+    '</div>';
+
+  if(emps.length===0){
+    html+='<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">No employees added yet</div>';
+  } else {
+    emps.forEach(e=>{
+      let total=0,done=0;
+      for(const ds in ag.tasks) ag.tasks[ds].forEach(t=>{if(t.who===e.name){total++;if(t.done)done++;}});
+      html+=
+        '<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">'+
+          '<button onclick="_agShowEmployee(\''+e.name.replace(/'/g,"\\'")+'\')" style="flex:1;text-align:left;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">'+
+            '<div style="font-size:12px;font-weight:600;color:var(--text);">'+_agEsc(e.name)+'</div>'+
+            '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+total+' task'+(total!==1?'s':'')+' &middot; '+done+' done</div>'+
+          '</button>'+
+          '<button onclick="_agDeleteEmployee(\''+e.id+'\')" title="Remove employee" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;" onmouseover="this.style.color=\'#ef4444\'" onmouseout="this.style.color=\'#94a3b8\'">&#215;</button>'+
+        '</div>';
+    });
+  }
+  document.getElementById('ag-team-content').innerHTML=html;
+  setTimeout(()=>{const i=document.getElementById('ag-emp-name');if(i)i.focus();},60);
+}
+
+function _agShowEmployee(name){
+  const ag=window._ag;
+  const allTasks=[];
+  for(const ds in ag.tasks) ag.tasks[ds].forEach(t=>{if(t.who===name)allTasks.push({...t,date:ds});});
+  allTasks.sort((a,b)=>a.date.localeCompare(b.date));
+  const pending=allTasks.filter(t=>!t.done);
+  const done=allTasks.filter(t=>t.done);
+
+  const fmtDate=ds=>{const p=ds.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});};
+
+  let html=
+    '<div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">'+
+      '<button onclick="_agRenderTeamList()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;padding:0 4px 0 0;">&#8592;</button>'+
+      '<span style="font-size:13px;font-weight:700;color:var(--text);flex:1;">'+_agEsc(name)+'</span>'+
+      '<button onclick="document.getElementById(\'ag-team-modal\').style.display=\'none\'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;">&#215;</button>'+
+    '</div>'+
+    '<div style="padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">'+
+      '<span style="font-size:11px;color:var(--text3);">'+pending.length+' pending &nbsp;&middot;&nbsp; '+done.length+' completed</span>'+
+    '</div>';
+
+  if(allTasks.length===0){
+    html+='<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">No tasks assigned to '+_agEsc(name)+'</div>';
+  } else {
+    html+='<div style="flex:1;overflow-y:auto;padding:10px 0;">';
+    if(pending.length>0){
+      html+='<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:4px 16px 6px;">Pending</div>';
+      pending.forEach(t=>{
+        html+='<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);">'+
+          '<div style="width:7px;height:7px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:4px;"></div>'+
+          '<div style="flex:1;font-size:11px;color:var(--text);line-height:1.4;">'+_agEsc(t.text)+'</div>'+
+          '<div style="font-size:10px;color:var(--text3);white-space:nowrap;">'+fmtDate(t.date)+'</div>'+
+        '</div>';
+      });
+    }
+    if(done.length>0){
+      html+='<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:'+(pending.length?'10px':'4px')+' 16px 6px;">Completed</div>';
+      done.forEach(t=>{
+        html+='<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);">'+
+          '<div style="width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0;margin-top:4px;"></div>'+
+          '<div style="flex:1;font-size:11px;color:#94a3b8;text-decoration:line-through;line-height:1.4;">'+_agEsc(t.text)+'</div>'+
+          '<div style="font-size:10px;color:var(--text3);white-space:nowrap;">'+fmtDate(t.date)+'</div>'+
+        '</div>';
+      });
+    }
+    html+='</div>';
+  }
+  document.getElementById('ag-team-content').innerHTML=html;
+}
+
+async function _agAddEmployee(){
+  const input=document.getElementById('ag-emp-name');
+  const name=(input.value||'').trim();
+  if(!name) return;
+  if(window._ag.employees.find(e=>e.name===name)){input.value='';return;}
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  input.value='';
+  window._ag.employees.push({id,name});
+  window._ag.employees.sort((a,b)=>a.name.localeCompare(b.name));
+  _agRenderTeamList();
+  try{
+    const {error}=await sb.from('agenda_employees').insert({id,name});
+    if(error) throw error;
+  }catch(e){
+    console.error('Add employee error:',e);
+    window._ag.employees=window._ag.employees.filter(e=>e.id!==id);
+    _agRenderTeamList();
+    alert('Failed to add employee.');
+  }
+}
+
+async function _agDeleteEmployee(id){
+  const emp=window._ag.employees.find(e=>e.id===id);
+  if(!emp) return;
+  window._ag.employees=window._ag.employees.filter(e=>e.id!==id);
+  _agRenderTeamList();
+  try{
+    const {error}=await sb.from('agenda_employees').delete().eq('id',id);
+    if(error) throw error;
+  }catch(e){
+    console.error('Delete employee error:',e);
+    window._ag.employees.push(emp);
+    window._ag.employees.sort((a,b)=>a.name.localeCompare(b.name));
+    _agRenderTeamList();
+    alert('Failed to delete employee.');
   }
 }
 
