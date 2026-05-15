@@ -633,6 +633,7 @@ function _renderPage(id){
   else if(id==='aaa')renderAAAPage();
   else if(id==='builder')renderBuilderPage();
   else if(id==='agenda')renderAgendaPage();
+  else if(id==='beta')renderBetaPage();
   else if(id==='batidoc')openBatidocPage();
   else{const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
 }
@@ -2593,15 +2594,11 @@ function efSidebarHTML(){
       'OF Logs (Fabrication Orders)',
     ]},
     {id:'cashflow', label:'Cash Flow',  icon:'💰', color:'#00796b', subs:['Cash-In','Cash-Out','Cash-Flow'], subSubs:{'Cash-Out':['Employees Cost','Material Cost','Other Costs']}},
-    {id:'hr', label:'Human Ressources', icon:'👥', color:'#e53935', subs:['Time Sheet','Labor Curve']},
     {id:'suggestions', label:'Suggestions', icon:'💡', color:'#f59e0b', subs:[]},
     {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
-    {id:'3d', label:'3D View', icon:'🧊', color:'#0ea5e9', subs:[]},
-    {id:'builder', label:'3D Builder', icon:'🏗', color:'#f59e0b', subs:[]},
-    {id:'aaa', label:'AAA', icon:'⭐', color:'#6366f1', subs:[]},
-    {id:'sitepictures', label:'Site Pictures', icon:'📸', color:'#f97316', subs:[]},
     {id:'agenda', label:'Agenda', icon:'📅', color:'#10b981', subs:[]},
+    {id:'beta', label:'Beta Version', icon:'🧪', color:'#f43f5e', subs:[]},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
@@ -2611,7 +2608,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
              onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
              onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
-             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:''}
+             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:''}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
@@ -12752,6 +12749,70 @@ function renderBuilderPage(){
       <iframe src="builder3d.html" style="width:100%;height:100%;border:none;display:block;"></iframe>
     </div>
   </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// BETA VERSION
+// ══════════════════════════════════════════════════════════════
+function renderBetaPage(){
+  const el=document.getElementById('page-beta');
+  if(!el)return;
+
+  const features=[
+    {icon:'🧊',label:'3D View',       color:'#0ea5e9',bg:'#e0f2fe',desc:'View the building model in interactive 3D',   action:`goPage('3d')`},
+    {icon:'🏗',label:'3D Builder',    color:'#f59e0b',bg:'#fef3c7',desc:'Build and arrange 3D shapes freely',           action:`goPage('builder')`},
+    {icon:'⭐',label:'AAA',           color:'#6366f1',bg:'#ede9fe',desc:'3D facade box overview across all zones',      action:`goPage('aaa')`},
+    {icon:'📸',label:'Site Pictures', color:'#f97316',bg:'#ffedd5',desc:'Photo gallery from the construction site',     action:`goPage('sitepictures')`},
+  ];
+
+  const cards=features.map(f=>`
+    <div onclick="${f.action}"
+      style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:22px 20px;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:all 0.18s;box-shadow:0 1px 4px rgba(0,0,0,0.05);"
+      onmouseover="this.style.borderColor='${f.color}';this.style.boxShadow='0 4px 18px ${f.color}28';this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)';this.style.transform='translateY(0)'">
+      <div style="width:46px;height:46px;border-radius:12px;background:${f.bg};display:flex;align-items:center;justify-content:center;font-size:22px;">${f.icon}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${f.label}</div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.45;">${f.desc}</div>
+      </div>
+      <div style="margin-top:auto;font-size:11px;font-weight:600;color:${f.color};display:flex;align-items:center;gap:4px;">Open ›</div>
+    </div>`).join('');
+
+  el.innerHTML=`
+    <div style="display:flex;flex-direction:column;height:100%;background:var(--bg);overflow-y:auto;">
+      <!-- Header -->
+      <div style="padding:22px 28px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <span style="font-size:22px;">🧪</span>
+          <span style="font-size:16px;font-weight:700;color:var(--text);">Beta Features</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#fce7eb;color:#f43f5e;letter-spacing:.04em;">BETA</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-left:32px;">Experimental and upcoming features — may change at any time</div>
+      </div>
+      <!-- Grid -->
+      <div style="padding:24px 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+        ${cards}
+        <!-- HR card with sub-options -->
+        <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+          <div style="width:46px;height:46px;border-radius:12px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-size:22px;">👥</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">Human Resources</div>
+            <div style="font-size:11px;color:var(--text3);line-height:1.45;">Time sheets and labor planning</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+            <button onclick="goPage('labor-curve')"
+              style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:11px;font-weight:600;color:#e53935;text-align:left;font-family:inherit;transition:all 0.15s;"
+              onmouseover="this.style.borderColor='#e53935';this.style.background='#fef2f2'"
+              onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fafafa'">📈 Labor Curve</button>
+            <button disabled
+              style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fafafa;font-size:11px;font-weight:600;color:#94a3b8;text-align:left;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;justify-content:space-between;">
+              <span>🗓 Time Sheet</span>
+              <span style="font-size:9px;background:#f1f5f9;padding:1px 6px;border-radius:10px;">Soon</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
