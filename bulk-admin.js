@@ -143,16 +143,38 @@ async function executeDeleteUser(){
   const errEl = document.getElementById('del-err');
   errEl.style.display='none';
   btn.textContent='Deleting…'; btn.disabled=true;
+
+  const targetUser = adminUsers.find(u=>u.id===deleteTargetId);
+  const targetName = targetUser?.full_name || targetUser?.username || '';
+
   try{
+    // 1. Delete agenda tasks assigned to this user
+    if(targetName){
+      await sb.from('agenda_tasks').delete().eq('who', targetName);
+    }
+
+    // 2. Delete any issues reported by this user
+    await sb.from('issues').delete().eq('panel_id', deleteTargetId).then(()=>{}).catch(()=>{});
+
+    // 3. Delete the profile row — this is the critical step.
+    //    Once the profile is gone, afterLogin() will permanently block
+    //    this auth user from entering, even if they still know their password.
     const {error, data} = await sb.from('profiles').delete().eq('id', deleteTargetId).select();
     if(error) throw error;
-    // If RLS silently blocked it, data will be empty
     if(!data || data.length === 0){
       throw new Error('Delete was blocked — please run the SQL below in Supabase to allow admin deletions.');
     }
+
     adminUsers = adminUsers.filter(u=>u.id !== deleteTargetId);
     closeDeleteConfirm();
     renderAdminUsers();
+
+    // Advisory: the Supabase auth user still exists in auth.users.
+    // They are fully locked out of Batimon (no profile = no entry).
+    // To fully erase their credentials, go to:
+    // Supabase Dashboard → Authentication → Users → find them → Delete.
+    console.info(`[Security] Profile deleted for ${targetName}. Auth credentials still exist in Supabase auth.users — remove manually from the Supabase Dashboard if needed.`);
+
   } catch(e){
     btn.textContent='Delete';
     btn.disabled=false;

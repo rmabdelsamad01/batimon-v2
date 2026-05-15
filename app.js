@@ -9397,7 +9397,55 @@ async function _demoImportFromMonitoring(){
   setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>document.body.removeChild(toast),400);},2800);
 }
 
+// ── Print picker ─────────────────────────────────────────────
 function _demoPrintPDF(){
+  const existing=document.getElementById('_demo_print_picker');
+  if(existing){existing.remove();return;}
+  const ZLBL={overview:'Overview',NF:'North',EF:'East',SF:'South',WF:'West'};
+  const cur=ZLBL[_demoActiveZone]||_demoActiveZone;
+  const picker=document.createElement('div');
+  picker.id='_demo_print_picker';
+  picker.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;';
+  picker.onclick=e=>{if(e.target===picker)picker.remove();};
+  picker.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:24px;width:340px;box-shadow:0 12px 40px rgba(0,0,0,0.22);font-family:var(--font);" onclick="event.stopPropagation()">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1e3a5f;">Print PDF</div>
+          <div style="font-size:10px;color:#8099b0;">Choose what to print</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button onclick="document.getElementById('_demo_print_picker').remove();_demoPrintCurrent();"
+          style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e0e8f0;border-radius:10px;background:#f8fafd;cursor:pointer;text-align:left;width:100%;font-family:var(--font);"
+          onmouseover="this.style.borderColor='#224F93';this.style.background='#f0f5ff'"
+          onmouseout="this.style.borderColor='#e0e8f0';this.style.background='#f8fafd'">
+          <div style="width:40px;height:40px;border-radius:8px;background:#e8f0fb;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>
+          <div style="text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">Current Page Only</div>
+            <div style="font-size:10px;color:#8099b0;margin-top:2px;">Print active tab: <strong>${cur}</strong></div>
+          </div>
+        </button>
+        <button onclick="document.getElementById('_demo_print_picker').remove();_demoPrintAll();"
+          style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e0e8f0;border-radius:10px;background:#f8fafd;cursor:pointer;text-align:left;width:100%;font-family:var(--font);"
+          onmouseover="this.style.borderColor='#a855f7';this.style.background='#f9f0ff'"
+          onmouseout="this.style.borderColor='#e0e8f0';this.style.background='#f8fafd'">
+          <div style="width:40px;height:40px;border-radius:8px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📋</div>
+          <div style="text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">All 5 Pages</div>
+            <div style="font-size:10px;color:#8099b0;margin-top:2px;">Overview · North · East · South · West</div>
+          </div>
+        </button>
+      </div>
+      <button onclick="document.getElementById('_demo_print_picker').remove();"
+        style="margin-top:14px;width:100%;padding:8px;border:1px solid #e0e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:11px;color:#8099b0;font-family:var(--font);">Cancel</button>
+    </div>`;
+  document.body.appendChild(picker);
+}
+
+// ── Print current tab only ────────────────────────────────────
+function _demoPrintCurrent(){
   if(_demoActiveZone==='overview') return _demoPrintOverview();
   const zone=ZONES.find(z=>z.id===_demoActiveZone);
   if(!zone) return;
@@ -9613,6 +9661,138 @@ function _demoPrintOverview(){
   window.print();
   document.body.removeChild(layer);
   document.head.removeChild(printStyle);
+}
+
+// ── Print all 5 pages ────────────────────────────────────────
+async function _demoPrintAll(){
+  const originalZone=_demoActiveZone;
+  const ZONES_ORDER=['overview','NF','EF','SF','WF'];
+  const ZONE_NAMES_FULL={overview:'Overview',NF:'North Facade',EF:'East Facade',SF:'South Facade',WF:'West Facade'};
+  const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+  const MM=96/25.4;
+  const printW=Math.round(194*MM); // A4 printable width at 96dpi
+
+  const layer=document.createElement('div');
+  layer.id='_demo_print_layer';
+  layer.style.cssText='position:fixed;inset:0;background:#fff;z-index:999999;font-family:var(--font);overflow:auto;';
+  document.body.appendChild(layer);
+
+  for(let zi=0;zi<ZONES_ORDER.length;zi++){
+    const z=ZONES_ORDER[zi];
+    const isLast=zi===ZONES_ORDER.length-1;
+
+    // Render zone into the live demo-grid-area
+    _demoActiveZone=z;
+    _demoRenderGrid();
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    const gridArea=document.getElementById('demo-grid-area');
+    if(!gridArea) continue;
+
+    // Inline bg colours for zone grids so they survive without live CSS
+    if(z!=='overview'){
+      const tbl=document.getElementById('demo-tbl-'+z);
+      if(tbl){
+        tbl.querySelectorAll('.wfc').forEach(cell=>{
+          const c=window.getComputedStyle(cell).backgroundColor;
+          cell.style.setProperty('background-color',c||'#E8F0FB','important');
+        });
+      }
+    }
+
+    // Clone the rendered grid
+    const gridClone=gridArea.cloneNode(true);
+    gridClone.style.cssText='overflow:visible;flex:none;padding:0;';
+    gridClone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+    gridClone.querySelectorAll('.wfc,.wfc-empty').forEach(el=>el.style.cursor='default');
+
+    // Page wrapper
+    const page=document.createElement('div');
+    page.className='_dpp';
+    page.style.cssText='padding:20px 24px;box-sizing:border-box;display:flex;flex-direction:column;'+(isLast?'':'page-break-after:always;break-after:page;');
+
+    // Page header
+    const totalColored=Object.keys(_demoData.panels).length;
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:14px;flex-shrink:0;';
+    hdr.innerHTML=`<div>
+      <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — ${ZONE_NAMES_FULL[z]}</div>
+      <div style="font-size:10px;color:#a855f7;margin-top:2px;">Planning view · Demo mode · Page ${zi+1} of 5</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
+      <div style="font-size:10px;color:#8099b0;">BatiGlobe</div>
+    </div>`;
+    page.appendChild(hdr);
+
+    // Grid
+    const pgw=document.createElement('div');
+    pgw.style.cssText='overflow:visible;flex-shrink:0;';
+    pgw.appendChild(gridClone);
+    page.appendChild(pgw);
+
+    // Legend (compact pill row)
+    if(_demoData.legend.length){
+      const leg=document.createElement('div');
+      leg.className='_dpp_leg';
+      leg.style.cssText='flex-shrink:0;border-top:1px solid #e0e8f0;padding-top:8px;margin-top:10px;';
+      let lh='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8099b0;margin-bottom:5px;">Legend</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      _demoData.legend.forEach(item=>{
+        const cnt=_demoCountPanels(item.id);
+        lh+=`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;">
+          <div style="width:10px;height:10px;border-radius:2px;background:${item.color};border:1px solid rgba(0,0,0,.1);"></div>
+          <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+          <span style="font-size:10px;font-weight:700;color:#224F93;">${cnt}</span>
+        </div>`;
+      });
+      lh+=`<span style="font-size:10px;color:#8099b0;margin-left:auto;">${totalColored} panels coloured</span></div>`;
+      leg.innerHTML=lh;
+      page.appendChild(leg);
+    }
+
+    layer.appendChild(page);
+
+    // Scale grid to fit A4 page
+    await new Promise(r=>requestAnimationFrame(r));
+    const wrap=pgw.querySelector('.wf-wrap');
+    if(wrap){
+      const printH=Math.round(267*MM);
+      const hdrH=hdr.offsetHeight+14;
+      const legEl=page.querySelector('._dpp_leg');
+      const legH=legEl?legEl.offsetHeight+10:0;
+      const avH=printH-hdrH-legH;
+      const natW=wrap.scrollWidth, natH=wrap.scrollHeight;
+      const s=Math.min(printW/natW, avH/natH);
+      wrap.style.transform='scale('+s+')';
+      wrap.style.transformOrigin='top left';
+      pgw.style.width=Math.round(natW*s)+'px';
+      pgw.style.height=Math.round(natH*s)+'px';
+      pgw.style.overflow='hidden';
+    }
+  }
+
+  // Print CSS
+  const printStyle=document.createElement('style');
+  printStyle.id='_demo_print_css';
+  printStyle.textContent=`
+    @page{size:A4 portrait;margin:10mm 8mm;}
+    @media print{
+      body>*:not(#_demo_print_layer){display:none!important;}
+      #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;}
+      ._dpp{page-break-inside:avoid;}
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+      .wfc:hover{transform:none!important;box-shadow:none!important;}
+    }`;
+  document.head.appendChild(printStyle);
+
+  await new Promise(r=>requestAnimationFrame(r));
+  window.print();
+
+  // Cleanup + restore
+  document.body.removeChild(layer);
+  document.head.removeChild(printStyle);
+  _demoActiveZone=originalZone;
+  _demoRenderGrid();
 }
 
 // ── 20 most-used planning colours ────────────────────────────────

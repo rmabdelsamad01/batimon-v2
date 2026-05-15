@@ -131,22 +131,12 @@ async function afterLogin(user){
   // IMPORTANT: ignoreDuplicates:true ensures we NEVER overwrite an existing profile's role
   // (a failed SELECT returning null must not be treated as "no profile exists")
   if(!prof){
-    const meta=user.user_metadata||{};
-    const {data:newProf}=await sb.from('profiles').upsert({
-      id: user.id,
-      username: meta.username||user.email.split('@')[0],
-      full_name: meta.full_name||'',
-      email: user.email||'',
-      role: 'viewer',
-      updated_at: new Date().toISOString()
-    },{onConflict:'id', ignoreDuplicates:true}).select().single();
-    // If row already existed (conflict was ignored), re-fetch to get real data
-    if(!newProf){
-      const {data:existingProf}=await sb.from('profiles').select('*').eq('id',user.id).single();
-      prof=existingProf;
-    } else {
-      prof=newProf;
-    }
+    // No profile = account was deleted by admin or never fully set up.
+    // Never auto-create — that is the exact hole that lets deleted users back in.
+    await sb.auth.signOut();
+    const err=document.getElementById('login-err');
+    if(err){err.textContent='Your account has been removed. Please contact your administrator.';err.style.display='block';}
+    return;
   }
   sbProfile=prof;
 
