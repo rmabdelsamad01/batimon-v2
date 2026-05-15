@@ -9452,137 +9452,148 @@ function _demoPrintPDF(){
   document.body.appendChild(picker);
 }
 
-// ── Print current view — screenshot approach (A4 landscape) ──────────────────
+// ── Print current view — iframe approach (A4 landscape) ──────────────────────
 function _demoPrintCurrentView(){
   if(_demoActiveZone==='overview') return;
   const gridArea=document.getElementById('demo-grid-area');
   if(!gridArea) return;
-
-  // Lazy-load html2canvas on first use
-  if(typeof html2canvas==='undefined'){
-    const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload=()=>_demoPrintCurrentView();
-    s.onerror=()=>alert('Could not load screenshot library. Check your internet connection.');
-    document.head.appendChild(s);
-    return;
-  }
+  const wrap=gridArea.querySelector('.wf-wrap');
+  if(!wrap) return;
 
   const ZONE_NAMES={NF:'North Facade',EF:'East Facade',SF:'South Facade',WF:'West Facade'};
   const zoneName=ZONE_NAMES[_demoActiveZone]||_demoActiveZone;
   const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
   const totalColored=Object.keys(_demoData.panels).length;
 
-  // Loading overlay
-  const loading=document.createElement('div');
-  loading.id='_demo_cv_loading';
-  loading.style.cssText='position:fixed;inset:0;z-index:1000000;background:rgba(255,255,255,0.88);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:var(--font);';
-  loading.innerHTML=`
-    <div style="width:36px;height:36px;border:3px solid #e0e8f0;border-top-color:#224F93;border-radius:50%;animation:_cv_spin 0.8s linear infinite;"></div>
-    <div style="font-size:13px;font-weight:600;color:#224F93;">Capturing view…</div>`;
-  if(!document.getElementById('_cv_spin_css')){
-    const ss=document.createElement('style');
-    ss.id='_cv_spin_css';
-    ss.textContent='@keyframes _cv_spin{to{transform:rotate(360deg)}}';
-    document.head.appendChild(ss);
+  // ── 1. Inline background colours so they survive without live CSS ─────────
+  wrap.querySelectorAll('.wfc').forEach(cell=>{
+    const bg=window.getComputedStyle(cell).backgroundColor;
+    cell.style.setProperty('background-color',bg||'#E8F0FB','important');
+  });
+  wrap.querySelectorAll('[data-door-id]').forEach(door=>{
+    const bg=window.getComputedStyle(door).backgroundColor;
+    door.style.setProperty('background-color',bg||'#E8F0FB','important');
+  });
+
+  // ── 2. Measure visible region ─────────────────────────────────────────────
+  const PADDING=16;
+  const sL=gridArea.scrollLeft;
+  const sT=gridArea.scrollTop;
+  const viewW=gridArea.clientWidth;
+  const viewH=gridArea.clientHeight;
+
+  // How far into the wrap the visible area starts (natural px)
+  const offX=Math.max(0, sL-PADDING);
+  const offY=Math.max(0, sT-PADDING);
+
+  // ── 3. Collect page CSS ───────────────────────────────────────────────────
+  const allCSS=Array.from(document.styleSheets).flatMap(s=>{
+    try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}
+  }).join('\n');
+
+  const logoSrc=document.querySelector('header img[alt="BATIMON"]')?.src||'';
+
+  // ── 4. Build legend HTML ──────────────────────────────────────────────────
+  let legendHTML='';
+  if(_demoData.legend.length){
+    legendHTML=_demoData.legend.map(item=>{
+      const count=_demoCountPanels(item.id);
+      return `<div style="display:flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;">
+        <div style="width:10px;height:10px;border-radius:2px;background:${item.color};border:1px solid rgba(0,0,0,0.10);flex-shrink:0;"></div>
+        <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+        <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>
+      </div>`;
+    }).join('');
   }
-  document.body.appendChild(loading);
 
-  // ── Capture strategy ───────────────────────────────────────────────────────
-  // html2canvas cannot read the internal scroll position of an overflow:auto
-  // element. Instead we capture the entire demo-modal (which is position:fixed
-  // and fully rendered on screen) and crop to the bounding rect of demo-grid-area.
-  // This gives us exactly what the user sees — including any scrolled position.
-  const demoModal=document.getElementById('demo-modal');
-  const gridRect=gridArea.getBoundingClientRect();
+  // ── 5. Build iframe HTML ──────────────────────────────────────────────────
+  // The wrap sits at (-offX, -offY) inside an overflow:hidden clip div.
+  // window.onload scales the clip (like printEF scales .table-wrap) and
+  // sets an explicit body height so the print engine knows the page size.
+  const wrapHTML=wrap.outerHTML;
 
-  html2canvas(demoModal,{
-    x:      gridRect.left,
-    y:      gridRect.top,
-    width:  gridArea.clientWidth,
-    height: gridArea.clientHeight,
-    scale:  2,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#ffffff',
-    logging: false,
-  }).then(canvas=>{
-    document.body.removeChild(loading);
-    const imgData=canvas.toDataURL('image/png');
-
-    // ── Build print layer ───────────────────────────────────────────────────
-    const layer=document.createElement('div');
-    layer.id='_demo_print_layer';
-    layer.style.cssText='position:fixed;inset:0;background:#fff;z-index:999999;padding:14px 18px;box-sizing:border-box;font-family:var(--font);display:flex;flex-direction:column;';
-
-    // Header
-    const hdr=document.createElement('div');
-    hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:12px;flex-shrink:0;';
-    hdr.innerHTML=`<div>
-      <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — ${zoneName}</div>
-      <div style="font-size:10px;color:#0ea5e9;margin-top:2px;">Current view · Demo mode · ${totalColored} panels coloured</div>
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:A4 landscape;margin:10mm 12mm;}
+    *{box-sizing:border-box;margin:0;padding:0;
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;}
+    html,body{width:100%;background:#fff !important;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{display:flex;align-items:center;justify-content:space-between;
+        padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:12px;}
+    .ph-title{font-size:15px;font-weight:700;color:#224F93;}
+    .ph-sub{font-size:10px;color:#0ea5e9;margin-top:2px;}
+    .ph-date{font-size:11px;font-weight:600;color:#1e3a5f;}
+    .ph-brand{font-size:10px;color:#8099b0;}
+    .clip{overflow:hidden;position:relative;
+          width:${viewW}px;height:${viewH}px;
+          transform-origin:top left;}
+    .wrap-pos{position:absolute;left:${-offX}px;top:${-offY}px;}
+    .leg{border-top:1px solid #e0e8f0;padding-top:8px;margin-top:8px;
+         display:flex;flex-wrap:wrap;gap:8px;}
+    :root{--cw:50px;--ch:150px;--blue:#224F93;
+          --border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);
+          --surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;
+          --mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{
+      html,body{overflow:hidden !important;}
+      .clip{page-break-inside:avoid;break-inside:avoid;}
+    }
+  </style>
+  <script>
+    window.onload=function(){
+      // Mirror printEF(): scale the clip div, then set explicit body height
+      var pw=window.innerWidth;    // iframe width  = 1587
+      var ph=window.innerHeight;   // iframe height = 1122
+      var header=document.querySelector('.ph');
+      var leg=document.querySelector('.leg');
+      var clip=document.querySelector('.clip');
+      var headerH=header ? header.offsetHeight+14 : 0; // +14 for margin-bottom
+      var legH=leg ? leg.offsetHeight+10 : 0;          // +10 for margin-top
+      var availH=ph-headerH-legH;
+      var scaleX=pw/${viewW};
+      var scaleY=availH/${viewH};
+      var scale=Math.min(scaleX, scaleY);
+      if(clip){
+        clip.style.transform='scale('+scale+')';
+        clip.style.transformOrigin='top left';
+        clip.style.width='${viewW}px';
+        clip.style.height='${viewH}px';
+      }
+      document.body.style.height=(headerH+Math.ceil(${viewH}*scale)+legH)+'px';
+      document.body.style.overflow='hidden';
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div>
+      <div class="ph-title">BatiMon Demo &mdash; ${zoneName}</div>
+      <div class="ph-sub">Current view &middot; Demo mode &middot; ${totalColored} panels coloured</div>
     </div>
     <div style="text-align:right;">
-      <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
-      <div style="font-size:10px;color:#8099b0;">BatiGlobe</div>
-    </div>`;
-    layer.appendChild(hdr);
+      <div class="ph-date">${dateStr}</div>
+      <div class="ph-brand">BatiGlobe</div>
+    </div>
+  </div>
+  <div class="clip">
+    <div class="wrap-pos">${wrapHTML}</div>
+  </div>
+  <div class="leg">${legendHTML}</div>
+  </body></html>`;
 
-    // Screenshot image — fills available height
-    const imgWrap=document.createElement('div');
-    imgWrap.style.cssText='flex:1;overflow:hidden;display:flex;align-items:flex-start;';
-    const img=document.createElement('img');
-    img.src=imgData;
-    img.style.cssText='max-width:100%;max-height:100%;object-fit:contain;display:block;';
-    imgWrap.appendChild(img);
-    layer.appendChild(imgWrap);
-
-    // Legend strip
-    const leg=document.createElement('div');
-    leg.style.cssText='flex-shrink:0;border-top:1px solid #e0e8f0;padding-top:8px;margin-top:10px;';
-    const legRow=document.createElement('div');
-    legRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
-    if(_demoData.legend.length){
-      _demoData.legend.forEach(item=>{
-        const count=_demoCountPanels(item.id);
-        const pill=document.createElement('div');
-        pill.style.cssText='display:flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;';
-        pill.innerHTML=`<div style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
-          <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
-          <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>`;
-        legRow.appendChild(pill);
-      });
-    } else {
-      legRow.innerHTML='<span style="font-size:10px;color:#8099b0;">No legend items</span>';
-    }
-    leg.appendChild(legRow);
-    layer.appendChild(leg);
-
-    document.body.appendChild(layer);
-
-    // Print CSS — A4 landscape
-    const printStyle=document.createElement('style');
-    printStyle.id='_demo_print_css';
-    printStyle.textContent=`
-      @page{size:A4 landscape;margin:10mm 12mm;}
-      @media print{
-        body>*:not(#_demo_print_layer){display:none!important;}
-        #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
-        *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-      }`;
-    document.head.appendChild(printStyle);
-
-    requestAnimationFrame(()=>{
-      window.print();
-      document.body.removeChild(layer);
-      const ps=document.getElementById('_demo_print_css');
-      if(ps) document.head.removeChild(ps);
-    });
-  }).catch(err=>{
-    document.body.removeChild(loading);
-    console.error('Current view capture failed:',err);
-    alert('Could not capture the current view. Please try again.');
-  });
+  // ── 6. Open iframe and print ──────────────────────────────────────────────
+  const iframe=document.createElement('iframe');
+  // A4 landscape: 1587×1122 px (297mm×210mm at 96dpi*1.5)
+  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint=()=>document.body.removeChild(iframe);
+  setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();},800);
 }
 
 // ── Print current tab only ────────────────────────────────────
