@@ -9488,10 +9488,17 @@ function _demoPrintCurrentView(){
   }
   document.body.appendChild(loading);
 
-  // Capture exactly the visible viewport of demo-grid-area at 2× resolution
-  html2canvas(gridArea,{
-    x:      gridArea.scrollLeft,
-    y:      gridArea.scrollTop,
+  // ── Capture strategy ───────────────────────────────────────────────────────
+  // html2canvas cannot read the internal scroll position of an overflow:auto
+  // element. Instead we capture the entire demo-modal (which is position:fixed
+  // and fully rendered on screen) and crop to the bounding rect of demo-grid-area.
+  // This gives us exactly what the user sees — including any scrolled position.
+  const demoModal=document.getElementById('demo-modal');
+  const gridRect=gridArea.getBoundingClientRect();
+
+  html2canvas(demoModal,{
+    x:      gridRect.left,
+    y:      gridRect.top,
     width:  gridArea.clientWidth,
     height: gridArea.clientHeight,
     scale:  2,
