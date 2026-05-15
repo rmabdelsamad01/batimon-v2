@@ -9469,25 +9469,27 @@ function _demoPrintCurrentView(){
     if(m) wrapScale=parseFloat(m[1])||1;
   }
 
-  // ── Compute the visible region via bounding rects ─────────────────────────
-  // getBoundingClientRect returns viewport-relative positions, so it already
-  // accounts for scroll, zoom, padding — no guessing needed.
-  const gR=gridArea.getBoundingClientRect();
-  const wR=wrap.getBoundingClientRect();
+  // ── Compute visible region from scroll offsets (reliable for any grid width) ─
+  // getBoundingClientRect() is unreliable for very wide elements (EF/WF have
+  // 80+ columns, pushing the wrap far beyond the viewport boundary).
+  // Using scrollLeft/scrollTop is always accurate.
+  const PADDING=16; // demo-grid-area padding
+  const sL=gridArea.scrollLeft;
+  const sT=gridArea.scrollTop;
 
-  // In rendered (zoomed) pixels: how far from the wrap's origin is the visible left/top
-  const visLeft  =Math.max(0, gR.left - wR.left);
-  const visTop   =Math.max(0, gR.top  - wR.top );
-  const visRight =Math.min(wR.right,  gR.right ) - Math.max(wR.left, gR.left);
-  const visBottom=Math.min(wR.bottom, gR.bottom) - Math.max(wR.top,  gR.top );
-  const visW=Math.max(1, visRight);
-  const visH=Math.max(1, visBottom);
+  // Natural (pre-zoom) coordinates of the top-left corner of the visible region
+  const natViewX=Math.max(0, sL - PADDING) / wrapScale;
+  const natViewY=Math.max(0, sT - PADDING) / wrapScale;
 
-  // Convert to NATURAL (pre-zoom) coordinates
-  const natViewX=visLeft  /wrapScale;
-  const natViewY=visTop   /wrapScale;
-  const natViewW=visW     /wrapScale;
-  const natViewH=visH     /wrapScale;
+  // How many rendered px of padding are still visible (shrinks to 0 once scrolled past)
+  const leftSpace=Math.max(0, PADDING - sL);
+  const topSpace =Math.max(0, PADDING - sT);
+
+  // Natural dimensions of the visible wrap area
+  const wrapNatW=wrap.scrollWidth;
+  const wrapNatH=wrap.scrollHeight;
+  const natViewW=Math.max(1, Math.min((gridArea.clientWidth  - leftSpace) / wrapScale, wrapNatW - natViewX));
+  const natViewH=Math.max(1, Math.min((gridArea.clientHeight - topSpace)  / wrapScale, wrapNatH - natViewY));
 
   // ── Inline background colours ─────────────────────────────────────────────
   wrap.querySelectorAll('.wfc').forEach(cell=>{
