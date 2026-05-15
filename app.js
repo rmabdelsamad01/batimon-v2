@@ -9567,7 +9567,7 @@ function _demoPrintCurrentView(){
     @media print{
       body>*:not(#_demo_print_layer){display:none!important;}
       #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
-      #_demo_cv_clip{overflow:hidden!important;}
+      #_demo_cv_clip{overflow:hidden!important;position:relative!important;display:block!important;}
       *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
       .wfc:hover{transform:none!important;box-shadow:none!important;}
       .wfc.sel,.wfc.sel-multi{box-shadow:none!important;outline:none!important;transform:none!important;}
@@ -9581,6 +9581,15 @@ function _demoPrintCurrentView(){
 
     // Scale so the natural viewport region fills the print clip area
     const printScale=Math.min(clipW/natViewW, clipH/natViewH);
+
+    // CRITICAL: give clip explicit px dimensions so it does NOT collapse to
+    // zero when @media print sets height:auto on the parent flex container.
+    // Without this the absolute-positioned clone gets clipped to nothing.
+    const visRenderW=Math.round(natViewW*printScale);
+    const visRenderH=Math.round(natViewH*printScale);
+    clip.style.width =visRenderW+'px';
+    clip.style.height=visRenderH+'px';
+    clip.style.flex  ='none';
 
     // Offset clone so (natViewX, natViewY) aligns with top-left of clip
     wrapClone.style.left =(-natViewX*printScale)+'px';
