@@ -9452,156 +9452,129 @@ function _demoPrintPDF(){
   document.body.appendChild(picker);
 }
 
-// ── Print current view (zoomed/scrolled viewport) — landscape ────────────────
+// ── Print current view — screenshot approach (A4 landscape) ──────────────────
 function _demoPrintCurrentView(){
   if(_demoActiveZone==='overview') return;
   const gridArea=document.getElementById('demo-grid-area');
   if(!gridArea) return;
-  const wrap=gridArea.querySelector('.wf-wrap');
-  if(!wrap) return;
 
-  // ── Detect current zoom / scale on the wrap ───────────────────────────────
-  let wrapScale=1;
-  const zv=parseFloat(wrap.style.zoom);
-  if(!isNaN(zv)&&zv>0){ wrapScale=zv; }
-  else{
-    const m=(wrap.style.transform||'').match(/scale\(([^)]+)\)/);
-    if(m) wrapScale=parseFloat(m[1])||1;
+  // Lazy-load html2canvas on first use
+  if(typeof html2canvas==='undefined'){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload=()=>_demoPrintCurrentView();
+    s.onerror=()=>alert('Could not load screenshot library. Check your internet connection.');
+    document.head.appendChild(s);
+    return;
   }
 
-  // ── Compute visible region from scroll offsets (reliable for any grid width) ─
-  // getBoundingClientRect() is unreliable for very wide elements (EF/WF have
-  // 80+ columns, pushing the wrap far beyond the viewport boundary).
-  // Using scrollLeft/scrollTop is always accurate.
-  const PADDING=16; // demo-grid-area padding
-  const sL=gridArea.scrollLeft;
-  const sT=gridArea.scrollTop;
-
-  // Natural (pre-zoom) coordinates of the top-left corner of the visible region
-  const natViewX=Math.max(0, sL - PADDING) / wrapScale;
-  const natViewY=Math.max(0, sT - PADDING) / wrapScale;
-
-  // How many rendered px of padding are still visible (shrinks to 0 once scrolled past)
-  const leftSpace=Math.max(0, PADDING - sL);
-  const topSpace =Math.max(0, PADDING - sT);
-
-  // Natural dimensions of the visible wrap area
-  const wrapNatW=wrap.scrollWidth;
-  const wrapNatH=wrap.scrollHeight;
-  const natViewW=Math.max(1, Math.min((gridArea.clientWidth  - leftSpace) / wrapScale, wrapNatW - natViewX));
-  const natViewH=Math.max(1, Math.min((gridArea.clientHeight - topSpace)  / wrapScale, wrapNatH - natViewY));
-
-  // ── Inline background colours ─────────────────────────────────────────────
-  wrap.querySelectorAll('.wfc').forEach(cell=>{
-    const bg=window.getComputedStyle(cell).backgroundColor;
-    cell.style.setProperty('background-color',bg||'#E8F0FB','important');
-  });
-
-  // ── Clone the wrap at natural size (no zoom) ──────────────────────────────
-  const wrapClone=wrap.cloneNode(true);
-  wrapClone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
-  wrapClone.querySelectorAll('.wfc,.wfc-empty').forEach(el=>el.style.cursor='default');
-  wrapClone.style.zoom='';
-  wrapClone.style.transform='';
-  wrapClone.style.position='absolute';
-  wrapClone.style.top='0';
-  wrapClone.style.left='0';
-  wrapClone.style.transformOrigin='top left';
-
-  // ── Build print layer ─────────────────────────────────────────────────────
   const ZONE_NAMES={NF:'North Facade',EF:'East Facade',SF:'South Facade',WF:'West Facade'};
   const zoneName=ZONE_NAMES[_demoActiveZone]||_demoActiveZone;
   const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
   const totalColored=Object.keys(_demoData.panels).length;
 
-  const layer=document.createElement('div');
-  layer.id='_demo_print_layer';
-  layer.style.cssText='position:fixed;inset:0;background:#fff;z-index:999999;padding:14px 18px;box-sizing:border-box;font-family:var(--font);display:flex;flex-direction:column;';
-
-  // Header
-  const hdr=document.createElement('div');
-  hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:12px;flex-shrink:0;';
-  hdr.innerHTML=`<div>
-    <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — ${zoneName}</div>
-    <div style="font-size:10px;color:#0ea5e9;margin-top:2px;">Current view · Demo mode · ${totalColored} panels coloured</div>
-  </div>
-  <div style="text-align:right;">
-    <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
-    <div style="font-size:10px;color:#8099b0;">BatiGlobe</div>
-  </div>`;
-  layer.appendChild(hdr);
-
-  // Clip container (fills remaining space)
-  const clip=document.createElement('div');
-  clip.id='_demo_cv_clip';
-  clip.style.cssText='flex:1;overflow:hidden;position:relative;';
-  clip.appendChild(wrapClone);
-  layer.appendChild(clip);
-
-  // Legend strip at bottom
-  const leg=document.createElement('div');
-  leg.style.cssText='flex-shrink:0;border-top:1px solid #e0e8f0;padding-top:8px;margin-top:10px;';
-  const legRow=document.createElement('div');
-  legRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
-  if(_demoData.legend.length){
-    _demoData.legend.forEach(item=>{
-      const count=_demoCountPanels(item.id);
-      const pill=document.createElement('div');
-      pill.style.cssText='display:flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;';
-      pill.innerHTML=`<div style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
-        <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
-        <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>`;
-      legRow.appendChild(pill);
-    });
-  } else {
-    legRow.innerHTML='<span style="font-size:10px;color:#8099b0;">No legend items</span>';
+  // Loading overlay
+  const loading=document.createElement('div');
+  loading.id='_demo_cv_loading';
+  loading.style.cssText='position:fixed;inset:0;z-index:1000000;background:rgba(255,255,255,0.88);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;font-family:var(--font);';
+  loading.innerHTML=`
+    <div style="width:36px;height:36px;border:3px solid #e0e8f0;border-top-color:#224F93;border-radius:50%;animation:_cv_spin 0.8s linear infinite;"></div>
+    <div style="font-size:13px;font-weight:600;color:#224F93;">Capturing view…</div>`;
+  if(!document.getElementById('_cv_spin_css')){
+    const ss=document.createElement('style');
+    ss.id='_cv_spin_css';
+    ss.textContent='@keyframes _cv_spin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(ss);
   }
-  leg.appendChild(legRow);
-  layer.appendChild(leg);
+  document.body.appendChild(loading);
 
-  document.body.appendChild(layer);
+  // Capture exactly the visible viewport of demo-grid-area at 2× resolution
+  html2canvas(gridArea,{
+    x:      gridArea.scrollLeft,
+    y:      gridArea.scrollTop,
+    width:  gridArea.clientWidth,
+    height: gridArea.clientHeight,
+    scale:  2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+  }).then(canvas=>{
+    document.body.removeChild(loading);
+    const imgData=canvas.toDataURL('image/png');
 
-  // @media print CSS — A4 LANDSCAPE
-  const printStyle=document.createElement('style');
-  printStyle.id='_demo_print_css';
-  printStyle.textContent=`
-    @page{size:A4 landscape;margin:10mm 12mm;}
-    @media print{
-      body>*:not(#_demo_print_layer){display:none!important;}
-      #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
-      #_demo_cv_clip{overflow:hidden!important;position:relative!important;display:block!important;}
-      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-      .wfc:hover{transform:none!important;box-shadow:none!important;}
-      .wfc.sel,.wfc.sel-multi{box-shadow:none!important;outline:none!important;transform:none!important;}
-    }`;
-  document.head.appendChild(printStyle);
+    // ── Build print layer ───────────────────────────────────────────────────
+    const layer=document.createElement('div');
+    layer.id='_demo_print_layer';
+    layer.style.cssText='position:fixed;inset:0;background:#fff;z-index:999999;padding:14px 18px;box-sizing:border-box;font-family:var(--font);display:flex;flex-direction:column;';
 
-  // ── Scale the clone to show exactly the captured viewport region ──────────
-  requestAnimationFrame(()=>{
-    const clipW=clip.clientWidth;
-    const clipH=clip.clientHeight;
+    // Header
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:12px;flex-shrink:0;';
+    hdr.innerHTML=`<div>
+      <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — ${zoneName}</div>
+      <div style="font-size:10px;color:#0ea5e9;margin-top:2px;">Current view · Demo mode · ${totalColored} panels coloured</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
+      <div style="font-size:10px;color:#8099b0;">BatiGlobe</div>
+    </div>`;
+    layer.appendChild(hdr);
 
-    // Scale so the natural viewport region fills the print clip area
-    const printScale=Math.min(clipW/natViewW, clipH/natViewH);
+    // Screenshot image — fills available height
+    const imgWrap=document.createElement('div');
+    imgWrap.style.cssText='flex:1;overflow:hidden;display:flex;align-items:flex-start;';
+    const img=document.createElement('img');
+    img.src=imgData;
+    img.style.cssText='max-width:100%;max-height:100%;object-fit:contain;display:block;';
+    imgWrap.appendChild(img);
+    layer.appendChild(imgWrap);
 
-    // CRITICAL: give clip explicit px dimensions so it does NOT collapse to
-    // zero when @media print sets height:auto on the parent flex container.
-    // Without this the absolute-positioned clone gets clipped to nothing.
-    const visRenderW=Math.round(natViewW*printScale);
-    const visRenderH=Math.round(natViewH*printScale);
-    clip.style.width =visRenderW+'px';
-    clip.style.height=visRenderH+'px';
-    clip.style.flex  ='none';
+    // Legend strip
+    const leg=document.createElement('div');
+    leg.style.cssText='flex-shrink:0;border-top:1px solid #e0e8f0;padding-top:8px;margin-top:10px;';
+    const legRow=document.createElement('div');
+    legRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+    if(_demoData.legend.length){
+      _demoData.legend.forEach(item=>{
+        const count=_demoCountPanels(item.id);
+        const pill=document.createElement('div');
+        pill.style.cssText='display:flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;';
+        pill.innerHTML=`<div style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
+          <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+          <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>`;
+        legRow.appendChild(pill);
+      });
+    } else {
+      legRow.innerHTML='<span style="font-size:10px;color:#8099b0;">No legend items</span>';
+    }
+    leg.appendChild(legRow);
+    layer.appendChild(leg);
 
-    // Offset clone so (natViewX, natViewY) aligns with top-left of clip
-    wrapClone.style.left =(-natViewX*printScale)+'px';
-    wrapClone.style.top  =(-natViewY*printScale)+'px';
-    wrapClone.style.transform=`scale(${printScale})`;
+    document.body.appendChild(layer);
 
-    window.print();
-    document.body.removeChild(layer);
-    const ps=document.getElementById('_demo_print_css');
-    if(ps) document.head.removeChild(ps);
+    // Print CSS — A4 landscape
+    const printStyle=document.createElement('style');
+    printStyle.id='_demo_print_css';
+    printStyle.textContent=`
+      @page{size:A4 landscape;margin:10mm 12mm;}
+      @media print{
+        body>*:not(#_demo_print_layer){display:none!important;}
+        #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
+        *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+      }`;
+    document.head.appendChild(printStyle);
+
+    requestAnimationFrame(()=>{
+      window.print();
+      document.body.removeChild(layer);
+      const ps=document.getElementById('_demo_print_css');
+      if(ps) document.head.removeChild(ps);
+    });
+  }).catch(err=>{
+    document.body.removeChild(loading);
+    console.error('Current view capture failed:',err);
+    alert('Could not capture the current view. Please try again.');
   });
 }
 
