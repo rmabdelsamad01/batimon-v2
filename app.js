@@ -10137,7 +10137,17 @@ function _demoRenderGrid(){
   wrap.style.left='-99999px';
   document.body.appendChild(wrap);
 
+  // Guard against ID collision: if the real monitoring page already has a
+  // table with the same id (e.g. 'tbl-WF'), getElementById inside
+  // buildComplexTable would find THAT one instead of the demo table,
+  // leaving the demo table empty. Temporarily rename the real one.
+  const realTbl=document.getElementById('tbl-'+zone.id);
+  if(realTbl && realTbl!==table) realTbl.id='_real_tbl_'+zone.id;
+
   buildComplexTable(zone); // renders full monitoring table with all types, borders, etc.
+
+  // Restore the real table's id immediately after
+  if(realTbl && realTbl!==table) realTbl.id='tbl-'+zone.id;
 
   // ── Demo overrides ────────────────────────────────────────────────
   const STATUS_CLS=['st-i','st-d','st-f','st-c','st-cn','st-cip','st-x','st-p'];
