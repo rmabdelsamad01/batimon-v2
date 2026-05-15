@@ -12627,7 +12627,7 @@ function renderAgendaPage(){
       // ── team modal ──
       '<div id="ag-team-modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;" onclick="if(event.target===this)document.getElementById(\'ag-team-modal\').style.display=\'none\'">'+
         '<div style="background:var(--surface);border-radius:12px;width:360px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.28);overflow:hidden;" onclick="event.stopPropagation()">'+
-          '<div id="ag-team-content" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;"></div>'+
+          '<div id="ag-team-content" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0;"></div>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -12641,7 +12641,7 @@ async function _agLoad(){
   try{
     const [{data:tData,error:tErr},{data:eData,error:eErr}]=await Promise.all([
       sb.from('agenda_tasks').select('*').order('created_at',{ascending:true}),
-      sb.from('agenda_employees').select('*').order('name',{ascending:true})
+      sb.from('profiles').select('id,full_name,username,role,status').order('full_name',{ascending:true})
     ]);
     if(tErr) throw tErr;
     if(eErr) throw eErr;
@@ -12651,7 +12651,10 @@ async function _agLoad(){
       tasks[r.date].push({id:r.id,text:r.text,who:r.who||'',done:r.done});
     });
     window._ag.tasks=tasks;
-    window._ag.employees=(eData||[]).map(r=>({id:r.id,name:r.name}));
+    // Only include active (non-pending, non-suspended) users
+    window._ag.employees=(eData||[])
+      .filter(r=>r.status!=='pending'&&r.status!=='suspended')
+      .map(r=>({id:r.id,name:r.full_name||r.username||r.id,role:r.role}));
   }catch(e){
     console.error('Agenda load error:',e);
     if(!window._ag.tasks) window._ag.tasks={};
@@ -12854,35 +12857,40 @@ function _agOpenTeam(){
 function _agRenderTeamList(){
   const emps=window._ag.employees||[];
   const ag=window._ag;
-  const bs='border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;padding:5px 12px;';
   let html=
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;">'+
       '<span style="font-size:13px;font-weight:700;color:var(--text);">&#128101; Team</span>'+
       '<button onclick="document.getElementById(\'ag-team-modal\').style.display=\'none\'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;">&#215;</button>'+
-    '</div>'+
-    '<div style="display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">'+
-      '<input id="ag-emp-name" placeholder="Employee name…" style="flex:1;padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:inherit;outline:none;" onkeydown="if(event.key===\'Enter\')_agAddEmployee()">'+
-      '<button onclick="_agAddEmployee()" style="background:#10b981;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600;">Add</button>'+
     '</div>';
 
   if(emps.length===0){
-    html+='<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">No employees added yet</div>';
+    html+='<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">No active users found.</div>';
   } else {
+    html+='<div style="flex:1;overflow-y:auto;">';
     emps.forEach(e=>{
       let total=0,done=0;
       for(const ds in ag.tasks) ag.tasks[ds].forEach(t=>{if(t.who===e.name){total++;if(t.done)done++;}});
+      const roleLabel=e.role&&e.role!=='viewer'?'<span style="font-size:9px;background:#e0e7ff;color:#4338ca;border-radius:3px;padding:1px 5px;font-weight:600;text-transform:uppercase;">'+_agEsc(e.role)+'</span>':'';
       html+=
-        '<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'">'+
-          '<button onclick="_agShowEmployee(\''+e.name.replace(/'/g,"\\'")+'\')" style="flex:1;text-align:left;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;">'+
-            '<div style="font-size:12px;font-weight:600;color:var(--text);">'+_agEsc(e.name)+'</div>'+
-            '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+total+' task'+(total!==1?'s':'')+' &middot; '+done+' done</div>'+
-          '</button>'+
-          '<button onclick="_agDeleteEmployee(\''+e.id+'\')" title="Remove employee" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;" onmouseover="this.style.color=\'#ef4444\'" onmouseout="this.style.color=\'#94a3b8\'">&#215;</button>'+
+        '<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'" onclick="_agShowEmployee(\''+e.name.replace(/'/g,"\\'")+'\')">'+
+          '<div style="width:32px;height:32px;border-radius:50%;background:#224F93;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">'+
+            _agEsc(e.name.charAt(0).toUpperCase())+
+          '</div>'+
+          '<div style="flex:1;min-width:0;">'+
+            '<div style="display:flex;align-items:center;gap:6px;">'+
+              '<span style="font-size:12px;font-weight:600;color:var(--text);">'+_agEsc(e.name)+'</span>'+
+              roleLabel+
+            '</div>'+
+            '<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+
+              (total?total+' task'+(total!==1?'s':'')+' &middot; '+done+' done':'No tasks assigned')+
+            '</div>'+
+          '</div>'+
+          '<span style="color:var(--text3);font-size:14px;">&#8250;</span>'+
         '</div>';
     });
+    html+='</div>';
   }
   document.getElementById('ag-team-content').innerHTML=html;
-  setTimeout(()=>{const i=document.getElementById('ag-emp-name');if(i)i.focus();},60);
 }
 
 function _agShowEmployee(name){
@@ -12934,43 +12942,6 @@ function _agShowEmployee(name){
   document.getElementById('ag-team-content').innerHTML=html;
 }
 
-async function _agAddEmployee(){
-  const input=document.getElementById('ag-emp-name');
-  const name=(input.value||'').trim();
-  if(!name) return;
-  if(window._ag.employees.find(e=>e.name===name)){input.value='';return;}
-  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-  input.value='';
-  window._ag.employees.push({id,name});
-  window._ag.employees.sort((a,b)=>a.name.localeCompare(b.name));
-  _agRenderTeamList();
-  try{
-    const {error}=await sb.from('agenda_employees').insert({id,name});
-    if(error) throw error;
-  }catch(e){
-    console.error('Add employee error:',e);
-    window._ag.employees=window._ag.employees.filter(e=>e.id!==id);
-    _agRenderTeamList();
-    alert('Failed to add employee.');
-  }
-}
-
-async function _agDeleteEmployee(id){
-  const emp=window._ag.employees.find(e=>e.id===id);
-  if(!emp) return;
-  window._ag.employees=window._ag.employees.filter(e=>e.id!==id);
-  _agRenderTeamList();
-  try{
-    const {error}=await sb.from('agenda_employees').delete().eq('id',id);
-    if(error) throw error;
-  }catch(e){
-    console.error('Delete employee error:',e);
-    window._ag.employees.push(emp);
-    window._ag.employees.sort((a,b)=>a.name.localeCompare(b.name));
-    _agRenderTeamList();
-    alert('Failed to delete employee.');
-  }
-}
 
 // ══════════════════════════════════════════════════════════════
 // AAA — 3D Facade Box Overview
