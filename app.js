@@ -9699,40 +9699,35 @@ function _demoPrintCurrent(){
     }`;
   document.head.appendChild(printStyle);
 
-  // 5. Scale grid to fit exactly within one A4 portrait page
-  requestAnimationFrame(()=>{
-    const wrap=pgw.querySelector('.wf-wrap');
-    if(wrap){
-      // A4 portrait printable area with 10mm top/bottom, 8mm left/right margins:
-      // 194mm × 277mm — converted to CSS px at 96 dpi (1mm = 96/25.4 px)
-      const MM=96/25.4;
-      const printW=Math.round(194*MM); // ~733 px
-      const printH=Math.round(277*MM); // ~1047 px
+  // 5. Scale grid — forced synchronous reflow keeps window.print() in the
+  //    user-gesture call stack (rAF breaks the gesture context in some browsers)
+  void layer.offsetHeight; // force layout so measurements are accurate
+  const wrap=pgw.querySelector('.wf-wrap');
+  if(wrap){
+    // A4 portrait printable area: 194mm × 277mm at 96 dpi
+    const MM=96/25.4;
+    const printW=Math.round(194*MM); // ~733 px
+    const printH=Math.round(277*MM); // ~1047 px
+    const hdrH=hdr.offsetHeight+14;
+    const legH=leg.offsetHeight+12;
+    const gridAvailH=printH-hdrH-legH;
+    const natW=wrap.scrollWidth;
+    const natH=wrap.scrollHeight;
+    const s=Math.min(printW/natW, gridAvailH/natH);
+    wrap.style.transform='scale('+s+')';
+    wrap.style.transformOrigin='top left';
+    pgw.style.width=Math.round(natW*s)+'px';
+    pgw.style.height=Math.round(natH*s)+'px';
+    pgw.style.overflow='hidden';
+  }
 
-      // Measure actual header + legend heights (already in DOM)
-      const hdrH=hdr.offsetHeight+14;  // +14px margin-bottom gap
-      const legH=leg.offsetHeight+12;  // +12px gap above
-      const gridAvailH=printH-hdrH-legH;
-
-      const natW=wrap.scrollWidth;
-      const natH=wrap.scrollHeight;
-      const scaleW=printW/natW;
-      const scaleH=gridAvailH/natH;
-      const s=Math.min(scaleW, scaleH); // fit both dimensions
-
-      wrap.style.transform='scale('+s+')';
-      wrap.style.transformOrigin='top left';
-      // Set pgw to the exact visual size of the scaled grid so layout knows its bounds
-      pgw.style.width=Math.round(natW*s)+'px';
-      pgw.style.height=Math.round(natH*s)+'px';
-      pgw.style.overflow='hidden';
-    }
-
-    // 6. Print then clean up
-    window.print();
+  // 6. Cleanup via afterprint — fires after dialog closes regardless of whether
+  //    window.print() is blocking (Chrome) or non-blocking (Firefox/Safari)
+  window.addEventListener('afterprint',()=>{
     document.body.removeChild(layer);
     document.head.removeChild(printStyle);
-  });
+  },{once:true});
+  window.print();
 }
 
 function _demoPrintOverview(){
@@ -9810,9 +9805,11 @@ function _demoPrintOverview(){
     }`;
   document.head.appendChild(printStyle);
 
+  window.addEventListener('afterprint',()=>{
+    document.body.removeChild(layer);
+    document.head.removeChild(printStyle);
+  },{once:true});
   window.print();
-  document.body.removeChild(layer);
-  document.head.removeChild(printStyle);
 }
 
 // ── Print all 5 pages ────────────────────────────────────────
@@ -9938,9 +9935,13 @@ async function _demoPrintAll(){
   document.head.appendChild(printStyle);
 
   await new Promise(r=>requestAnimationFrame(r));
-  window.print();
 
-  // Cleanup + restore
+  // Cleanup via afterprint — works whether window.print() blocks or not,
+  // and also restores the original zone view after the dialog closes
+  await new Promise(r=>{
+    window.addEventListener('afterprint',r,{once:true});
+    window.print();
+  });
   document.body.removeChild(layer);
   document.head.removeChild(printStyle);
   _demoActiveZone=originalZone;
