@@ -818,76 +818,298 @@ function applyNFZoom(){
   if(lbl)lbl.textContent=Math.round(z*100)+'%';
 }
 
-function printEF(){_monPrintFull('EF');}
+function printEF(){
+  const wrap = document.getElementById('wf-wrap-EF');
+  if(!wrap) return;
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
 
-function printWF(){_monPrintFull('WF');}
-
-function printSF(){_monPrintFull('SF');}
-
-function printNF(){_monPrintFull('NF');}
-
-// ── Unified monitoring print picker ──────────────────────────────────────────
-function _monPrintPDF(zid){
-  const existing=document.getElementById('_mon_print_picker');
-  if(existing){existing.remove();return;}
-  const facadeLabel=zid==='EF'?'East':zid==='WF'?'West':zid==='NF'?'North':'South';
-  const picker=document.createElement('div');
-  picker.id='_mon_print_picker';
-  picker.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;';
-  picker.onclick=e=>{if(e.target===picker)picker.remove();};
-  picker.innerHTML=`
-    <div style="background:#fff;border-radius:14px;padding:24px;width:340px;box-shadow:0 12px 40px rgba(0,0,0,0.22);font-family:var(--font);" onclick="event.stopPropagation()">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#1e3a5f;">Print PDF</div>
-          <div style="font-size:10px;color:#8099b0;">Choose what to print</div>
-        </div>
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{
+      width:100%;
+      height:${headerH}px;
+      background:#224F93;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      border-bottom:4px solid #1a3d72;
+      flex-shrink:0;
+    }
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-meta{display:flex;align-items:center;gap:6px;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
+    .table-wrap{transform-origin:top left;}
+    :root{--cw:50px;--ch:100px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{
+      html,body{overflow:hidden !important;}
+      .table-wrap{page-break-inside:avoid;break-inside:avoid;}
+    }
+  </style>
+  <script>
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center">
+      <div class="ph-title">East Facade &mdash; Elevation</div>
+    </div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta">
+        <span class="ph-date">${printDate}</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button onclick="document.getElementById('_mon_print_picker').remove();_monPrintFull('${zid}');"
-          style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e0e8f0;border-radius:10px;background:#f8fafd;cursor:pointer;text-align:left;width:100%;font-family:var(--font);"
-          onmouseover="this.style.borderColor='#224F93';this.style.background='#f0f5ff'"
-          onmouseout="this.style.borderColor='#e0e8f0';this.style.background='#f8fafd'">
-          <div style="width:40px;height:40px;border-radius:8px;background:#e8f0fb;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>
-          <div style="text-align:left;">
-            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">Print what I'm viewing</div>
-            <div style="font-size:10px;color:#8099b0;margin-top:2px;">${facadeLabel} Facade — scaled to 1 page</div>
-          </div>
-        </button>
-        <button onclick="document.getElementById('_mon_print_picker').remove();_monPrintAllFacades();"
-          style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e0e8f0;border-radius:10px;background:#f8fafd;cursor:pointer;text-align:left;width:100%;font-family:var(--font);"
-          onmouseover="this.style.borderColor='#a855f7';this.style.background='#f9f0ff'"
-          onmouseout="this.style.borderColor='#e0e8f0';this.style.background='#f8fafd'">
-          <div style="width:40px;height:40px;border-radius:8px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📋</div>
-          <div style="text-align:left;">
-            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">All facades (4 pages)</div>
-            <div style="font-size:10px;color:#8099b0;margin-top:2px;">North · East · South · West</div>
-          </div>
-        </button>
-      </div>
-      <button onclick="document.getElementById('_mon_print_picker').remove();"
-        style="margin-top:14px;width:100%;padding:8px;border:1px solid #e0e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:11px;color:#8099b0;font-family:var(--font);">Cancel</button>
-    </div>`;
-  document.body.appendChild(picker);
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
 }
 
-// Print a single monitoring facade scaled to fit one landscape page
-function _monPrintFull(zid){
-  const titleMap={EF:'East Facade — Elevation',WF:'West Facade — Elevation',SF:'South Facade — Elevation',NF:'North Facade — Bracket Monitoring'};
-  const chMap={EF:'100px',WF:'150px',SF:'150px',NF:'150px'};
-  const wrap=document.getElementById('wf-wrap-'+zid);
+function printWF(){
+  const wrap = document.getElementById('wf-wrap-WF');
   if(!wrap) return;
-  const origZoom=wrap.style.zoom;
-  wrap.style.zoom=1;
-  const tableW=wrap.scrollWidth;
-  const tableH=wrap.scrollHeight;
-  const allCSS=Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
-  const printDate=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
-  const logoSrc=document.querySelector('header img[alt="BATIMON"]').src;
-  wrap.style.zoom=origZoom;
-  const headerH=60;
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
+
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{
+      width:100%;
+      height:${headerH}px;
+      background:#224F93;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      border-bottom:4px solid #1a3d72;
+      flex-shrink:0;
+    }
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-meta{display:flex;align-items:center;gap:6px;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
+    .table-wrap{transform-origin:top left;}
+    :root{--cw:50px;--ch:150px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{
+      html,body{overflow:hidden !important;}
+      .table-wrap{page-break-inside:avoid;break-inside:avoid;}
+    }
+  </style>
+  <script>
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center">
+      <div class="ph-title">West Facade &mdash; Elevation</div>
+    </div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta">
+        <span class="ph-date">${printDate}</span>
+      </div>
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
+}
+
+function printSF(){
+  const wrap = document.getElementById('wf-wrap-SF');
+  if(!wrap) return;
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
+
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;
+      -webkit-print-color-adjust:exact !important;
+      print-color-adjust:exact !important;
+      color-adjust:exact !important;
+    }
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{
+      width:100%;
+      height:${headerH}px;
+      background:#224F93;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      border-bottom:4px solid #1a3d72;
+      flex-shrink:0;
+    }
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-meta{display:flex;align-items:center;gap:6px;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
+    .table-wrap{transform-origin:top left;}
+    :root{--cw:50px;--ch:150px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    ${allCSS}
+    @media print{
+      html,body{overflow:hidden !important;}
+      .table-wrap{page-break-inside:avoid;break-inside:avoid;}
+    }
+  </style>
+  <script>
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center">
+      <div class="ph-title">South Facade &mdash; Elevation</div>
+    </div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta">
+        <span class="ph-date">${printDate}</span>
+      </div>
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
+}
+
+function printNF(){
+  const wrap = document.getElementById('wf-wrap-NF');
+  if(!wrap) return;
+  const origZoom = wrap.style.zoom;
+  wrap.style.zoom = 1;
+  const tableW = wrap.scrollWidth;
+  const tableH = wrap.scrollHeight;
+  const allCSS = Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoSrc = document.querySelector('header img[alt="BATIMON"]').src;
+  wrap.style.zoom = origZoom;
+  const headerH = 60;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
     @page{size:auto;margin:0;}
     *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
@@ -903,114 +1125,46 @@ function _monPrintFull(zid){
     .ph-meta{display:flex;align-items:center;gap:6px;}
     .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
     .table-wrap{transform-origin:top left;}
-    :root{--cw:50px;--ch:${chMap[zid]};--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
+    :root{--cw:50px;--ch:150px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
     ${allCSS}
     @media print{html,body{overflow:hidden !important;}.table-wrap{page-break-inside:avoid;break-inside:avoid;}}
   </style>
   <script>
-    window.onload=function(){
-      var pw=window.innerWidth,ph=window.innerHeight,availH=ph-${headerH};
-      var scale=Math.min(pw/${tableW},availH/${tableH});
-      var tw=document.querySelector('.table-wrap');
-      tw.style.transform='scale('+scale+')';tw.style.transformOrigin='top left';tw.style.width='${tableW}px';
-      document.body.style.height=(${headerH}+Math.ceil(${tableH}*scale))+'px';
-      document.body.style.overflow='hidden';
-      setTimeout(function(){window.focus();window.print();},800);
+    window.onload = function(){
+      var pageW = window.innerWidth;
+      var pageH = window.innerHeight;
+      var availH = pageH - ${headerH};
+      var scaleX = pageW / ${tableW};
+      var scaleY = availH / ${tableH};
+      var scale = Math.min(scaleX, scaleY);
+      var tw = document.querySelector('.table-wrap');
+      tw.style.transform = 'scale(' + scale + ')';
+      tw.style.transformOrigin = 'top left';
+      tw.style.width = '${tableW}px';
+      document.body.style.height = (${headerH} + Math.ceil(${tableH} * scale)) + 'px';
+      document.body.style.overflow = 'hidden';
+      setTimeout(function(){ window.focus(); window.print(); }, 800);
     };
   <\/script>
   </head><body>
   <div class="ph">
     <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
-    <div class="ph-center"><div class="ph-title">${titleMap[zid]}</div></div>
-    <div class="ph-right"><div class="ph-project">Shift Tower</div><div class="ph-meta"><span class="ph-date">${printDate}</span></div></div>
+    <div class="ph-center"><div class="ph-title">North Facade &mdash; Bracket Monitoring</div></div>
+    <div class="ph-right">
+      <div class="ph-project">Shift Tower</div>
+      <div class="ph-meta"><span class="ph-date">${printDate}</span></div>
+    </div>
   </div>
   <div class="table-wrap">${wrap.outerHTML}</div>
   </body></html>`;
-  const iframe=document.createElement('iframe');
-  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
   document.body.appendChild(iframe);
-  iframe.contentDocument.open();iframe.contentDocument.write(html);iframe.contentDocument.close();
-  iframe.contentWindow.onafterprint=()=>{document.body.removeChild(iframe);};
-  setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();},800);
-}
-
-// Print all 4 facades — one per page in a single print job
-async function _monPrintAllFacades(){
-  const FLIST=['NF','EF','SF','WF'];
-  const titleMap={EF:'East Facade — Elevation',WF:'West Facade — Elevation',SF:'South Facade — Elevation',NF:'North Facade — Bracket Monitoring'};
-  const chMap={EF:'100px',WF:'150px',SF:'150px',NF:'150px'};
-  const allCSS=Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
-  const printDate=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
-  const logoSrc=document.querySelector('header img[alt="BATIMON"]').src;
-  const pages=[];
-  for(const zid of FLIST){
-    const zone=ZONES.find(z=>z.id===zid);
-    if(!zone) continue;
-    // Ensure zone table is built
-    if(!document.getElementById('wf-wrap-'+zid)){
-      renderComplexFP(zone);
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-    }
-    const wrap=document.getElementById('wf-wrap-'+zid);
-    if(!wrap) continue;
-    const origZoom=wrap.style.zoom;
-    wrap.style.zoom=1;
-    const tableW=wrap.scrollWidth,tableH=wrap.scrollHeight;
-    const wrapHTML=wrap.outerHTML;
-    wrap.style.zoom=origZoom;
-    pages.push({zid,tableW,tableH,wrapHTML,ch:chMap[zid],title:titleMap[zid]});
-  }
-  if(!pages.length) return;
-  const headerH=60;
-  const pagesHTML=pages.map((p,i)=>`
-    <div class="fp" style="overflow:hidden;${i<pages.length-1?'page-break-after:always;':''}">
-      <div class="ph">
-        <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
-        <div class="ph-center"><div class="ph-title">${p.title}</div></div>
-        <div class="ph-right"><div class="ph-project">Shift Tower</div><div class="ph-meta"><span class="ph-date">${printDate}</span></div></div>
-      </div>
-      <div class="table-wrap" data-w="${p.tableW}" data-h="${p.tableH}" style="--ch:${p.ch};">${p.wrapHTML}</div>
-    </div>`).join('');
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <style>
-    @page{size:auto;margin:0;}
-    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
-    html,body{width:100%;background:#fff !important;}
-    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
-    .ph{width:100%;height:${headerH}px;background:#224F93;display:flex;align-items:center;justify-content:space-between;padding:0 25px;border-bottom:4px solid #1a3d72;flex-shrink:0;}
-    .ph-left{display:flex;align-items:center;gap:20px;}
-    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
-    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
-    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
-    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
-    .ph-project{font-size:12px;font-weight:700;color:#fff;}
-    .ph-meta{display:flex;align-items:center;gap:6px;}
-    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:'DM Mono',monospace;}
-    .table-wrap{transform-origin:top left;display:inline-block;}
-    :root{--cw:50px;--blue:#224F93;--border:rgba(34,79,147,0.15);--border2:rgba(34,79,147,0.3);--surface:#fff;--surface2:#f4f8fd;--surface3:#e8f0fa;--mono:'DM Mono',monospace;--font:'Barlow',sans-serif;}
-    ${allCSS}
-    @media print{.fp{page-break-after:always !important;}.fp:last-child{page-break-after:auto !important;}}
-  </style>
-  <script>
-    window.onload=function(){
-      var pw=window.innerWidth,ph=window.innerHeight,availH=ph-${headerH};
-      document.querySelectorAll('.table-wrap').forEach(function(tw){
-        var tableW=parseFloat(tw.dataset.w),tableH=parseFloat(tw.dataset.h);
-        var scale=Math.min(pw/tableW,availH/tableH);
-        tw.style.transform='scale('+scale+')';tw.style.transformOrigin='top left';tw.style.width=tableW+'px';
-        tw.parentElement.style.height=(${headerH}+Math.ceil(tableH*scale))+'px';
-        tw.parentElement.style.overflow='hidden';
-      });
-      setTimeout(function(){window.focus();window.print();},1200);
-    };
-  <\/script>
-  </head><body>${pagesHTML}</body></html>`;
-  const iframe=document.createElement('iframe');
-  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
-  document.body.appendChild(iframe);
-  iframe.contentDocument.open();iframe.contentDocument.write(html);iframe.contentDocument.close();
-  iframe.contentWindow.onafterprint=()=>{document.body.removeChild(iframe);};
-  setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();},1200);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint = () => { document.body.removeChild(iframe); };
+  setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 800);
 }
 
 function filterBarHTML(zid,extraBtn=''){
@@ -1025,7 +1179,7 @@ function filterBarHTML(zid,extraBtn=''){
       <button onclick="${zid_zoom}ZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button>
     </div>
     <div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;">
-      <button onclick="_monPrintPDF('${zid}')" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF">
+      <button onclick="${zid==='EF'?'printEF':zid==='WF'?'printWF':zid==='NF'?'printNF':'printSF'}()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         Print / PDF
       </button>
@@ -9246,12 +9400,13 @@ function _demoPrintPDF(){
   if(existing){existing.remove();return;}
   const ZLBL={overview:'Overview',NF:'North',EF:'East',SF:'South',WF:'West'};
   const cur=ZLBL[_demoActiveZone]||_demoActiveZone;
+  const isOverview=_demoActiveZone==='overview';
   const picker=document.createElement('div');
   picker.id='_demo_print_picker';
   picker.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;';
   picker.onclick=e=>{if(e.target===picker)picker.remove();};
   picker.innerHTML=`
-    <div style="background:#fff;border-radius:14px;padding:24px;width:340px;box-shadow:0 12px 40px rgba(0,0,0,0.22);font-family:var(--font);" onclick="event.stopPropagation()">
+    <div style="background:#fff;border-radius:14px;padding:24px;width:360px;box-shadow:0 12px 40px rgba(0,0,0,0.22);font-family:var(--font);" onclick="event.stopPropagation()">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
         <div>
@@ -9260,14 +9415,24 @@ function _demoPrintPDF(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
+        <button onclick="document.getElementById('_demo_print_picker').remove();_demoPrintCurrentView();"
+          style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e0e8f0;border-radius:10px;background:#f8fafd;cursor:pointer;text-align:left;width:100%;font-family:var(--font);${isOverview?'opacity:0.45;pointer-events:none;':''}"
+          onmouseover="this.style.borderColor='#0ea5e9';this.style.background='#f0faff'"
+          onmouseout="this.style.borderColor='#e0e8f0';this.style.background='#f8fafd'">
+          <div style="width:40px;height:40px;border-radius:8px;background:#e0f5ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🔍</div>
+          <div style="text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">Current View</div>
+            <div style="font-size:10px;color:#8099b0;margin-top:2px;">Exactly what's visible on screen · <strong>Landscape</strong>${isOverview?' · (switch to a facade tab)':''}</div>
+          </div>
+        </button>
         <button onclick="document.getElementById('_demo_print_picker').remove();_demoPrintCurrent();"
           style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e0e8f0;border-radius:10px;background:#f8fafd;cursor:pointer;text-align:left;width:100%;font-family:var(--font);"
           onmouseover="this.style.borderColor='#224F93';this.style.background='#f0f5ff'"
           onmouseout="this.style.borderColor='#e0e8f0';this.style.background='#f8fafd'">
           <div style="width:40px;height:40px;border-radius:8px;background:#e8f0fb;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📄</div>
           <div style="text-align:left;">
-            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">Print what I'm viewing</div>
-            <div style="font-size:10px;color:#8099b0;margin-top:2px;">Active tab: <strong>${cur}</strong> — scaled to 1 page</div>
+            <div style="font-size:12px;font-weight:700;color:#1e3a5f;">Current Page Only</div>
+            <div style="font-size:10px;color:#8099b0;margin-top:2px;">Full grid of active tab: <strong>${cur}</strong></div>
           </div>
         </button>
         <button onclick="document.getElementById('_demo_print_picker').remove();_demoPrintAll();"
@@ -9285,6 +9450,148 @@ function _demoPrintPDF(){
         style="margin-top:14px;width:100%;padding:8px;border:1px solid #e0e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:11px;color:#8099b0;font-family:var(--font);">Cancel</button>
     </div>`;
   document.body.appendChild(picker);
+}
+
+// ── Print current view (zoomed/scrolled viewport) — landscape ────────────────
+function _demoPrintCurrentView(){
+  if(_demoActiveZone==='overview') return;
+  const gridArea=document.getElementById('demo-grid-area');
+  if(!gridArea) return;
+  const wrap=gridArea.querySelector('.wf-wrap');
+  if(!wrap) return;
+
+  // ── Detect current zoom / scale on the wrap ───────────────────────────────
+  let wrapScale=1;
+  const zv=parseFloat(wrap.style.zoom);
+  if(!isNaN(zv)&&zv>0){ wrapScale=zv; }
+  else{
+    const m=(wrap.style.transform||'').match(/scale\(([^)]+)\)/);
+    if(m) wrapScale=parseFloat(m[1])||1;
+  }
+
+  // ── Compute the visible region via bounding rects ─────────────────────────
+  // getBoundingClientRect returns viewport-relative positions, so it already
+  // accounts for scroll, zoom, padding — no guessing needed.
+  const gR=gridArea.getBoundingClientRect();
+  const wR=wrap.getBoundingClientRect();
+
+  // In rendered (zoomed) pixels: how far from the wrap's origin is the visible left/top
+  const visLeft  =Math.max(0, gR.left - wR.left);
+  const visTop   =Math.max(0, gR.top  - wR.top );
+  const visRight =Math.min(wR.right,  gR.right ) - Math.max(wR.left, gR.left);
+  const visBottom=Math.min(wR.bottom, gR.bottom) - Math.max(wR.top,  gR.top );
+  const visW=Math.max(1, visRight);
+  const visH=Math.max(1, visBottom);
+
+  // Convert to NATURAL (pre-zoom) coordinates
+  const natViewX=visLeft  /wrapScale;
+  const natViewY=visTop   /wrapScale;
+  const natViewW=visW     /wrapScale;
+  const natViewH=visH     /wrapScale;
+
+  // ── Inline background colours ─────────────────────────────────────────────
+  wrap.querySelectorAll('.wfc').forEach(cell=>{
+    const bg=window.getComputedStyle(cell).backgroundColor;
+    cell.style.setProperty('background-color',bg||'#E8F0FB','important');
+  });
+
+  // ── Clone the wrap at natural size (no zoom) ──────────────────────────────
+  const wrapClone=wrap.cloneNode(true);
+  wrapClone.querySelectorAll('[onclick]').forEach(el=>el.removeAttribute('onclick'));
+  wrapClone.querySelectorAll('.wfc,.wfc-empty').forEach(el=>el.style.cursor='default');
+  wrapClone.style.zoom='';
+  wrapClone.style.transform='';
+  wrapClone.style.position='absolute';
+  wrapClone.style.top='0';
+  wrapClone.style.left='0';
+  wrapClone.style.transformOrigin='top left';
+
+  // ── Build print layer ─────────────────────────────────────────────────────
+  const ZONE_NAMES={NF:'North Facade',EF:'East Facade',SF:'South Facade',WF:'West Facade'};
+  const zoneName=ZONE_NAMES[_demoActiveZone]||_demoActiveZone;
+  const dateStr=new Date().toLocaleDateString('fr-FR',{year:'numeric',month:'long',day:'numeric'});
+  const totalColored=Object.keys(_demoData.panels).length;
+
+  const layer=document.createElement('div');
+  layer.id='_demo_print_layer';
+  layer.style.cssText='position:fixed;inset:0;background:#fff;z-index:999999;padding:14px 18px;box-sizing:border-box;font-family:var(--font);display:flex;flex-direction:column;';
+
+  // Header
+  const hdr=document.createElement('div');
+  hdr.style.cssText='display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:2.5px solid #224F93;margin-bottom:12px;flex-shrink:0;';
+  hdr.innerHTML=`<div>
+    <div style="font-size:15px;font-weight:700;color:#224F93;">BatiMon Demo — ${zoneName}</div>
+    <div style="font-size:10px;color:#0ea5e9;margin-top:2px;">Current view · Demo mode · ${totalColored} panels coloured</div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:11px;font-weight:600;color:#1e3a5f;">${dateStr}</div>
+    <div style="font-size:10px;color:#8099b0;">BatiGlobe</div>
+  </div>`;
+  layer.appendChild(hdr);
+
+  // Clip container (fills remaining space)
+  const clip=document.createElement('div');
+  clip.id='_demo_cv_clip';
+  clip.style.cssText='flex:1;overflow:hidden;position:relative;';
+  clip.appendChild(wrapClone);
+  layer.appendChild(clip);
+
+  // Legend strip at bottom
+  const leg=document.createElement('div');
+  leg.style.cssText='flex-shrink:0;border-top:1px solid #e0e8f0;padding-top:8px;margin-top:10px;';
+  const legRow=document.createElement('div');
+  legRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;align-items:center;';
+  if(_demoData.legend.length){
+    _demoData.legend.forEach(item=>{
+      const count=_demoCountPanels(item.id);
+      const pill=document.createElement('div');
+      pill.style.cssText='display:flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;';
+      pill.innerHTML=`<div style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
+        <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+        <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>`;
+      legRow.appendChild(pill);
+    });
+  } else {
+    legRow.innerHTML='<span style="font-size:10px;color:#8099b0;">No legend items</span>';
+  }
+  leg.appendChild(legRow);
+  layer.appendChild(leg);
+
+  document.body.appendChild(layer);
+
+  // @media print CSS — A4 LANDSCAPE
+  const printStyle=document.createElement('style');
+  printStyle.id='_demo_print_css';
+  printStyle.textContent=`
+    @page{size:A4 landscape;margin:10mm 12mm;}
+    @media print{
+      body>*:not(#_demo_print_layer){display:none!important;}
+      #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;padding:0!important;}
+      #_demo_cv_clip{overflow:hidden!important;}
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+      .wfc:hover{transform:none!important;box-shadow:none!important;}
+      .wfc.sel,.wfc.sel-multi{box-shadow:none!important;outline:none!important;transform:none!important;}
+    }`;
+  document.head.appendChild(printStyle);
+
+  // ── Scale the clone to show exactly the captured viewport region ──────────
+  requestAnimationFrame(()=>{
+    const clipW=clip.clientWidth;
+    const clipH=clip.clientHeight;
+
+    // Scale so the natural viewport region fills the print clip area
+    const printScale=Math.min(clipW/natViewW, clipH/natViewH);
+
+    // Offset clone so (natViewX, natViewY) aligns with top-left of clip
+    wrapClone.style.left =(-natViewX*printScale)+'px';
+    wrapClone.style.top  =(-natViewY*printScale)+'px';
+    wrapClone.style.transform=`scale(${printScale})`;
+
+    window.print();
+    document.body.removeChild(layer);
+    const ps=document.getElementById('_demo_print_css');
+    if(ps) document.head.removeChild(ps);
+  });
 }
 
 // ── Print current tab only ────────────────────────────────────
