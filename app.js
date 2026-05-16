@@ -13570,10 +13570,11 @@ function renderAAAPage(){
   const el=document.getElementById('page-aaa');
   if(!el)return;
 
-  const CELL=11;           // px per panel column (= 1 normal-floor height too)
+  const CELL=7;            // px per panel column width in 3D
   const GAP=1;             // px joint between panels
   const JOINT='#07111e';   // joint / structural-gap colour
-  const BASE_H=150;        // table row height for a normal floor (px)
+  const BASE_H=150;        // actual table row height for a normal floor (px)
+  const BASE_W=50;         // actual table column width (px) — gives 150:50 = 3:1 ratio
 
   // Actual table row heights per special floor (mirrors buildComplexTable)
   const TABLE_ROW_H={
@@ -13583,9 +13584,10 @@ function renderAAAPage(){
   // Floors that carry no UCW panels — rendered as a structural band
   const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B','R+17T']);
 
-  // Scale a table-px height to 3D-px height
+  // Scale a table-px height to 3D-px height, respecting the 150×50 actual ratio
+  // Standard floor: round(150 * 7 / 50) = 21px  (= 3× the 7px column width ✓)
   function rowPx(fl){
-    return Math.max(2,Math.round((TABLE_ROW_H[fl]||BASE_H)*CELL/BASE_H));
+    return Math.max(2,Math.round((TABLE_ROW_H[fl]||BASE_H)*CELL/BASE_W));
   }
 
   // Total 3D height of a floor list
