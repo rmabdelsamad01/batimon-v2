@@ -13639,6 +13639,8 @@ function renderAAAPage(){
     const _2c=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};`;
     const _2cf=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};`;
     const _st=`background-image:${STRIPES};`;
+    const _dt=`background-image:${DOTS};`;
+    const redR=`border-right:2px solid #ED1C24;`;
     // ── Type-pattern map for C, D, E, G, M variants ──────────────────────────
     const _TM={
       // C types
@@ -13662,6 +13664,17 @@ function renderAAAPage(){
       'GM06':_st+redL,
       // M types
       'M06':_st+redL,  'M10':_2c,       'M11':_2c+redL,  'M12':_2cf+redL,
+      // R2xx / C2xx / E202  (R+01 short floor — 25 px in table)
+      'R201':_dt,      'C201':_dt,
+      'R202':_dt+redL, 'E202':_dt+redL+redR,
+      'R203':_st+redL,
+      'R204':_2c,      'R211':_2c,
+      // R3xx / C3xx / G3xx / D3xx  (R+02 floor — 50 px in table; all get redB)
+      'R301':_dt+redB,  'C301':_dt+redB,  'C302':_dt+redB,
+      'R302':_dt+redL+redB,
+      'R303':_st+redL+redB,  'G303':_st+redL+redB,
+      'R304':_2c+redB,       'D304':_2c+redB,
+      'R305':_2c+redL+redB,  'R306':_2cf+redL+redB,
     };
 
     let cells='';
