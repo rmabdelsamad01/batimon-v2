@@ -379,6 +379,8 @@ async function load(){
       if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
     });
   });
+  // Apply SF-15 → WF-15 mirror on page load (after all seeding)
+  _applyWF15Mirror();
 }
 
 function saveData(){
@@ -3835,6 +3837,36 @@ function buildComplexTable(zone){
       }
       // WF: col 15-A deleted for all regular floors (not orange R+18/17 rows)
       if(zone.id==='WF' && col==='15-A' && fl!=='R+18M' && fl!=='R+18MD' && fl!=='R+18B' && fl!=='R+17T'){tr.appendChild(td);return;}
+      // WF col 15: read-only mirror of SF-{floor}-C15 — no onclick, pointer-events:none
+      // (R+01 and RDC already returned early above as empty spacers)
+      if(zone.id==='WF' && col===15){
+        const _sfMirrorP=panels[`SF-${fl}-C15`]||{status:'pending'};
+        const _mirrorMeta=SM[_sfMirrorP.status]||SM.pending;
+        const _mc=document.createElement('div');
+        if(fl==='R+18MD'){
+          // Merges with R+18B below (rowspan=2 = 110px+40px=150px), orange bg
+          td.setAttribute('rowspan','2');
+          td.style.cssText='height:150px;max-height:150px;overflow:hidden;padding:0;vertical-align:top;';
+          _mc.className=`wfc ef-r18md ${_mirrorMeta.cls}`;
+          _mc.style.cssText='height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;pointer-events:none;cursor:default;';
+          td.appendChild(_mc);tr.appendChild(td);return;
+        }
+        if(fl==='R+18B'){tr.appendChild(td);return;} // covered by R+18MD rowspan=2
+        const _orangeMap={'R+18T':['ef-r18t','25px',true],'R+18M':['ef-r18m','50px',true],'R+17T':['ef-r17t','50px',true],'R+17B':['ef-r17b','100px',false]};
+        if(_orangeMap[fl]){
+          const [_cls,_h,_isOrg]=_orangeMap[fl];
+          _mc.className=`wfc ${_cls} ${_mirrorMeta.cls}`;
+          const _orgStyle=_isOrg?'background:#FF8C00;border:1.5px solid #cc6600;':'';
+          _mc.style.cssText=`height:${_h} !important;min-height:${_h};overflow:hidden;display:flex;align-items:center;justify-content:center;${_orgStyle}pointer-events:none;cursor:default;`;
+          td.style.height=_h;td.style.padding='0';
+          td.appendChild(_mc);tr.appendChild(td);return;
+        }
+        // Regular floor — show status color, no interaction
+        _mc.className=`wfc ${_mirrorMeta.cls}`;
+        _mc.title=`WF C15 — mirrors SF-${fl}-C15 (${_mirrorMeta.label})`;
+        _mc.style.cssText='pointer-events:none;cursor:default;';
+        td.appendChild(_mc);tr.appendChild(td);return;
+      }
       // SF: handle 15-A and 15-B cols — empty except orange R+18/17 rows
       if(zone.id==='SF' && (col==='15-A'||col==='15-B') && fl!=='R+18M' && fl!=='R+18MD' && fl!=='R+18B' && fl!=='R+17T'){tr.appendChild(td);return;}
       // Dimming: non-matching panels stay visible at 10% opacity (90% transparent)
@@ -5948,6 +5980,18 @@ async function applyBulkStatus(status){
     };
     _dirtyPanels.add(id);
   });
+  // Mirror any SF-*-C15 bulk updates to WF-*-C15
+  let _sf15bulk=false;
+  multiSelPanels.forEach(id=>{
+    const _m=id.match(/^SF-(.+)-C15$/);
+    if(_m){
+      _sf15bulk=true;
+      const _wfId=`WF-${_m[1]}-C15`;
+      const _sfP=panels[id];
+      panels[_wfId]={...(panels[_wfId]||{}),status:_sfP.status||'pending',fabDate:_sfP.fabDate||'',deliveryDate:_sfP.deliveryDate||'',installDate:_sfP.installDate||'',installRef:_sfP.installRef||'',notes:'',assigned:''};
+      _dirtyPanels.add(_wfId);
+    }
+  });
   saveData();
   closeBulkModal();
   updateTabs();
@@ -5964,6 +6008,33 @@ async function applyBulkStatus(status){
   if(curPage==='BM-SF') renderBMSF();
   if(curPage==='BM-NF') renderBMNF();
 }
+
+// ── SF-15 → WF-15 one-way mirror ─────────────────────────────────────────────
+// Copies status + fab/delivery/install dates from SF-{fl}-C15 to WF-{fl}-C15
+// for every floor in WF.  Skips R+01/RDC where both zones render empty spacers.
+// WF-15 cells are rendered as non-interactive coloured viewers in buildComplexTable.
+function _applyWF15Mirror(){
+  const wfZone=ZONES.find(z=>z.id==='WF');
+  if(!wfZone)return;
+  wfZone.floors.forEach(fl=>{
+    if(fl==='RDC'||fl==='R+01')return;
+    const sfId=`SF-${fl}-C15`;
+    const wfId=`WF-${fl}-C15`;
+    const sfP=panels[sfId];
+    if(!sfP)return;
+    panels[wfId]={
+      ...(panels[wfId]||{}),
+      status:sfP.status||'pending',
+      fabDate:sfP.fabDate||'',
+      deliveryDate:sfP.deliveryDate||'',
+      installDate:sfP.installDate||'',
+      installRef:sfP.installRef||'',
+      notes:'',
+      assigned:''
+    };
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function efPanelRef(fl, col){
   // E-{floor number}-{col number}  e.g. E-24-80
@@ -6141,6 +6212,14 @@ async function savePanel(){
   const deliveryDate = selStat==='delivered' ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
   panels[selPanel]={...panels[selPanel],status:selStat,installDate,installRef,fabDate,deliveryDate};
   _dirtyPanels.add(selPanel);
+  // Mirror SF-{floor}-C15 → WF-{floor}-C15 (one-way, read-only mirror)
+  const _sf15m=selPanel.match(/^SF-(.+)-C15$/);
+  if(_sf15m){
+    const _wfMirrorId=`WF-${_sf15m[1]}-C15`;
+    const _sfMirror=panels[selPanel];
+    panels[_wfMirrorId]={...(panels[_wfMirrorId]||{}),status:_sfMirror.status||'pending',fabDate:_sfMirror.fabDate||'',deliveryDate:_sfMirror.deliveryDate||'',installDate:_sfMirror.installDate||'',installRef:_sfMirror.installRef||'',notes:'',assigned:''};
+    _dirtyPanels.add(_wfMirrorId);
+  }
   saveData();
   // Immediate single-row Supabase save — faster and more reliable than waiting for bulk sync
   (async()=>{
