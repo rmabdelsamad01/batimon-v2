@@ -10473,6 +10473,7 @@ function _demoMultiAssign(legendId){
   _demoSelected.forEach(pid=>{
     if(legendId) _demoData.panels[pid]=legendId;
     else delete _demoData.panels[pid];
+    _demoApplyMirror(pid, legendId||null);
   });
   _demoSelected.clear();
   _demoCloseMultiPicker();
@@ -10540,10 +10541,28 @@ function _demoHandlePanelClick(e,panelId){
   e.stopPropagation();
 }
 
+// Propagate a colour assignment (or clear) from a master panel to its mirror.
+// Covers all four corner-adjustment pairs.
+function _demoApplyMirror(pid, legendId){
+  const _pairs=[
+    [/^SF-(.+)-C15$/,'WF','C15'],
+    [/^NF-(.+)-C31$/,'WF','C31'],
+    [/^NF-(.+)-C65$/,'EF','C65'],
+    [/^SF-(.+)-C81$/,'EF','C81'],
+  ];
+  _pairs.forEach(([re,zone,col])=>{
+    const m=pid.match(re); if(!m) return;
+    const mirrorId=`${zone}-${m[1]}-${col}`;
+    if(legendId) _demoData.panels[mirrorId]=legendId;
+    else delete _demoData.panels[mirrorId];
+  });
+}
+
 function _demoPanelAssign(legendId){
   const pid=document.getElementById('demo-picker')?.dataset.pid;
   if(!pid) return;
   _demoData.panels[pid]=legendId;
+  _demoApplyMirror(pid, legendId);
   _demoPanelPickerClose();
   _demoRenderLegend();
   _demoRenderGrid();
@@ -10553,6 +10572,7 @@ function _demoPanelClear(){
   const pid=document.getElementById('demo-picker')?.dataset.pid;
   if(!pid) return;
   delete _demoData.panels[pid];
+  _demoApplyMirror(pid, null);
   _demoPanelPickerClose();
   _demoRenderLegend();
   _demoRenderGrid();
