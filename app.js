@@ -314,7 +314,7 @@ async function load(){
         const id=`${z.id}-${fl}-C${col}`;
         const ref=(z.refs[fl]||[])[ci]||'';
         const type=(z.types[fl]||[])[ci]||'';
-        if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',ref,type,fabDate:'',installDate:'',deliveryDate:''};
+        if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',ref,type,fabDate:'',installDate:'',deliveryDate:'',_local:true};
         else{if(!panels[id].ref)panels[id].ref=ref;if(!panels[id].type)panels[id].type=type;}
       });
     });
@@ -13686,7 +13686,13 @@ function renderAAAPage(){
         if(isStruct){
           s=`background:${STRUCT_CLR};`;
         }else if(!type){
-          s=`background:${JOINT};`;
+          // Show JOINT only for positions with no real Supabase data (_local=seed-only).
+          // Positions that exist in Supabase (panels loaded from DB) show their status colour.
+          const id=`${zid}-${fl}-C${col}`;
+          const p=panels[id];
+          s = (p && !p._local)
+            ? `background-color:${SC[p.status||'pending']||SC.pending};`
+            : `background:${JOINT};`;
         }else{
           const id=`${zid}-${fl}-C${col}`;
           const sb=SC[(panels[id]||{}).status||'pending']||SC.pending;
