@@ -13633,6 +13633,36 @@ function renderAAAPage(){
     const redL=`border-left:2px solid #ED1C24;`;
     const redB=`border-bottom:1px solid #ED1C24;`;
 
+    // ── Shorthand pattern strings ─────────────────────────────────────────────
+    const _sp=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);`;
+    const _2c=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};`;
+    const _2cf=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};`;
+    const _st=`background-image:${STRIPES};`;
+    // ── Type-pattern map for C, D, E, G, M variants ──────────────────────────
+    const _TM={
+      // C types
+      'C01':_sp,       'C02':_sp+redB,  'C03':_sp,       'C04':_sp+redB,
+      'C05':_sp,       'C06':_sp+redB,  'C07':_sp,       'C08':_sp+redB,
+      'C09':_sp,       'C10':_sp+redB,
+      'C101':_st,      'C102':_st+redL,
+      'C1902':_sp,
+      // D types
+      'D01':_sp,       'D02':_sp+redB,  'D03':_sp+redL,  'D04':_sp+redL+redB,
+      'D05':_st+redL,  'D06':_st+redL+redB, 'DM06':_st+redL,
+      'D07':_2c,       'D08':_2c+redL,  'D09':_2cf+redL, 'D10':_2c+redB,
+      'D11':_2c+redL+redB, 'D12':_2cf+redL+redB,
+      // E types
+      'E01':_sp,       'E02':_sp+redB,  'E03':_sp+redL,  'E04':_sp+redL+redB,
+      'E05':_st+redL,  'E06':_st+redL+redB,
+      'E07':_2c,       'E08':_2c+redL,  'E09':_2cf+redL, 'E10':_2c+redB,
+      'E11':_2c+redL+redB, 'E12':_2cf+redL+redB,
+      // G types
+      'G03':_sp+redL,  'G04':_sp+redL+redB, 'G05':_st+redL, 'G06':_st+redL+redB,
+      'GM06':_st+redL,
+      // M types
+      'M06':_st+redL,  'M10':_2c,       'M11':_2c+redL,  'M12':_2cf+redL,
+    };
+
     let cells='';
     floors.forEach((fl,fi)=>{
       const isStruct=STRUCT_FLOORS.has(fl);
@@ -13672,9 +13702,14 @@ function renderAAAPage(){
             s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};${redL}${redB}`;
           }else if(type==='T12'){
             s+=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};${redL}${redB}`;
-          }
+          // ── C / D / E / G / M named variants ────────────────────────────────
+          }else if(_TM[type]){
+            s+=_TM[type];
+          // ── R25xx / R34xx / R4xxx: sequential trapezoid codes → colour only ─
+          }else if(/^R(25|34)\d{2,}$|^R4\d{3,}$/.test(type)){
+            /* status colour only */
           // ── Structural/special types: 3+ digit numeric suffix (R301, R1801…) ─
-          else if(/^[A-Za-z]\d{3,}/.test(type)){
+          }else if(/^[A-Za-z]\d{3,}/.test(type)){
             const sfx=type.slice(-2);
             const pfx=type[0].toUpperCase();
             if(sfx==='01'||sfx==='51'){
