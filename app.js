@@ -12427,12 +12427,14 @@ function _refreshAAAColors(){
     cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',
     defect:'#ED1C24',pending:'#E8F0FB'
   };
-  // Rebuild panel cells in place: each face grid div contains child divs whose
-  // dataset.pid is set to the panel id so we can look up the status.
+  // Update background-color for every cell that has a real Supabase panel.
+  // Skip _local (seed-only) cells — those show the dark JOINT gap colour and must stay dark.
   el.querySelectorAll('[data-pid]').forEach(div=>{
     const id=div.dataset.pid;
     if(!id)return;
-    const status=(panels[id]||{}).status||'pending';
+    const p=panels[id];
+    if(!p||p._local)return;          // leave JOINT / seed-only cells unchanged
+    const status=p.status||'pending';
     const col=SC[status]||SC.pending;
     div.style.backgroundColor=col;
   });
@@ -13778,7 +13780,7 @@ function renderAAAPage(){
           }
           // Standard remaining types (Cxx, Dxx, Gxx, Mxx …): status colour only
         }
-        cells+=`<div${pid?` data-pid="${pid}"`:''}style="${s}"></div>`;
+        cells+=`<div${pid?` data-pid="${pid}" `:''}style="${s}"></div>`;
       });
     });
 
