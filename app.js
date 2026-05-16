@@ -13603,10 +13603,17 @@ function renderAAAPage(){
   // ── Column width helpers ─────────────────────────────────────
   function colsW(n){return n*CELL+(n-1)*GAP;}
 
-  const sfW=colsW(SF_COLS.length); // 35→314
-  const nfW=colsW(NF_COLS.length); // 33→296
-  const efW=colsW(EF_COLS.length); // 17→152
-  const wfW=colsW(WF_COLS.length); // 18→161
+  // Strip corner-adjustment cols for 3D (WF drops '15-A', SF drops '15-A'+'15-B')
+  const sfCols3D=SF_COLS.filter(c=>c!=='15-A'&&c!=='15-B'); // 35→33
+  const wfCols3D=WF_COLS.filter(c=>c!=='15-A');              // 18→17
+  const sfTypes3D={},wfTypes3D={};
+  SF_FLOORS.forEach(fl=>{sfTypes3D[fl]=(SF_TYPES[fl]||[]).slice(2);});
+  WF_FLOORS.forEach(fl=>{wfTypes3D[fl]=(WF_TYPES[fl]||[]).slice(0,-1);});
+
+  const sfW=colsW(sfCols3D.length); // 33→296
+  const nfW=colsW(NF_COLS.length);  // 33→296
+  const efW=colsW(EF_COLS.length);  // 17→152
+  const wfW=colsW(wfCols3D.length); // 17→152
   const fH =totalH(SF_FLOORS);     // shared floor list → same H for all faces
 
   const W=Math.max(sfW,nfW); // east-west box half-width → 314
@@ -13650,9 +13657,9 @@ function renderAAAPage(){
 
   // Pre-render grids
   const nfGrid=faceGrid('NF',NF_COLS,NF_FLOORS,NF_TYPES);
-  const sfGrid=faceGrid('SF',SF_COLS,SF_FLOORS,SF_TYPES);
+  const sfGrid=faceGrid('SF',sfCols3D,SF_FLOORS,sfTypes3D);
   const efGrid=faceGrid('EF',EF_COLS,EF_FLOORS,EF_TYPES);
-  const wfGrid=faceGrid('WF',WF_COLS,WF_FLOORS,WF_TYPES);
+  const wfGrid=faceGrid('WF',wfCols3D,WF_FLOORS,wfTypes3D);
 
   // ── Legend ───────────────────────────────────────────────────
   const LEGEND=[
