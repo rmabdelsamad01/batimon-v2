@@ -5089,6 +5089,7 @@ function buildComplexTable(zone){
             cell.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
           }
           if(['R301','R302','R303','G303','R306','C302'].includes(ref)) cell.style.borderBottom='5px double #ED1C24';
+          if(col===31) cell.style.borderLeft='5px double #ED1C24';
           cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.style.height='50px';td.style.maxHeight='50px';td.style.padding='0';td.style.verticalAlign='top';
           td.appendChild(cell);tr.appendChild(td);return;
