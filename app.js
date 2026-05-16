@@ -3821,7 +3821,7 @@ function buildComplexTable(zone){
       const p=panels[id]||{status:'pending'};
       const pType=(zone.types[fl]||[])[ci]||'';
       const pRef=(zone.refs[fl]||[])[ci]||'';
-      const td=document.createElement('td');td.className='tdc';
+      const td=document.createElement('td');td.className='tdc';td.dataset.col=String(col);
       if(zone.id==='SF' && (col===1||col===99||col===96)){td.classList.add('col-narrow');td.style.width='25px';td.style.maxWidth='25px';}
       if(zone.id==='NF' && (col===45||col===47||col===50)){td.classList.add('col-narrow');td.style.width='25px';td.style.maxWidth='25px';}
 
@@ -3837,36 +3837,6 @@ function buildComplexTable(zone){
       }
       // WF: col 15-A deleted for all regular floors (not orange R+18/17 rows)
       if(zone.id==='WF' && col==='15-A' && fl!=='R+18M' && fl!=='R+18MD' && fl!=='R+18B' && fl!=='R+17T'){tr.appendChild(td);return;}
-      // WF col 15: read-only mirror of SF-{floor}-C15 — no onclick, pointer-events:none
-      // (R+01 and RDC already returned early above as empty spacers)
-      if(zone.id==='WF' && col===15){
-        const _sfMirrorP=panels[`SF-${fl}-C15`]||{status:'pending'};
-        const _mirrorMeta=SM[_sfMirrorP.status]||SM.pending;
-        const _mc=document.createElement('div');
-        if(fl==='R+18MD'){
-          // Merges with R+18B below (rowspan=2 = 110px+40px=150px), orange bg
-          td.setAttribute('rowspan','2');
-          td.style.cssText='height:150px;max-height:150px;overflow:hidden;padding:0;vertical-align:top;';
-          _mc.className=`wfc ef-r18md ${_mirrorMeta.cls}`;
-          _mc.style.cssText='height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;pointer-events:none;cursor:default;';
-          td.appendChild(_mc);tr.appendChild(td);return;
-        }
-        if(fl==='R+18B'){tr.appendChild(td);return;} // covered by R+18MD rowspan=2
-        const _orangeMap={'R+18T':['ef-r18t','25px',true],'R+18M':['ef-r18m','50px',true],'R+17T':['ef-r17t','50px',true],'R+17B':['ef-r17b','100px',false]};
-        if(_orangeMap[fl]){
-          const [_cls,_h,_isOrg]=_orangeMap[fl];
-          _mc.className=`wfc ${_cls} ${_mirrorMeta.cls}`;
-          const _orgStyle=_isOrg?'background:#FF8C00;border:1.5px solid #cc6600;':'';
-          _mc.style.cssText=`height:${_h} !important;min-height:${_h};overflow:hidden;display:flex;align-items:center;justify-content:center;${_orgStyle}pointer-events:none;cursor:default;`;
-          td.style.height=_h;td.style.padding='0';
-          td.appendChild(_mc);tr.appendChild(td);return;
-        }
-        // Regular floor — show status color, no interaction
-        _mc.className=`wfc ${_mirrorMeta.cls}`;
-        _mc.title=`WF C15 — mirrors SF-${fl}-C15 (${_mirrorMeta.label})`;
-        _mc.style.cssText='pointer-events:none;cursor:default;';
-        td.appendChild(_mc);tr.appendChild(td);return;
-      }
       // SF: handle 15-A and 15-B cols — empty except orange R+18/17 rows
       if(zone.id==='SF' && (col==='15-A'||col==='15-B') && fl!=='R+18M' && fl!=='R+18MD' && fl!=='R+18B' && fl!=='R+17T'){tr.appendChild(td);return;}
       // Dimming: non-matching panels stay visible at 10% opacity (90% transparent)
@@ -5839,6 +5809,13 @@ function buildComplexTable(zone){
     tbody.appendChild(tr);
   });
   tbl.appendChild(tbody);
+
+  // WF col 15: read-only mirror of SF-15 — strip all click handlers after normal rendering
+  if(zone.id==='WF'){
+    tbl.querySelectorAll('td[data-col="15"] .wfc, td[data-col="15"] .wfc-empty').forEach(c=>{
+      c.onclick=null;c.style.pointerEvents='none';c.style.cursor='default';
+    });
+  }
 
   // Yellow: delivered+installed when filter="delivered"
   if(filter==='delivered'){
