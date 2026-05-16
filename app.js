@@ -379,8 +379,9 @@ async function load(){
       if(!panels[id])panels[id]={status:'pending',notes:'',assigned:'',fabDate:'',installDate:'',deliveryDate:''};
     });
   });
-  // Apply SF-15 → WF-15 mirror on page load (after all seeding)
-  _applyWF15Mirror();
+  // Apply mirrors on page load (after all seeding)
+  _applyWF15Mirror();    // SF-15 → WF-15
+  _applyNFWF31Mirror();  // NF-31 → WF-31
 }
 
 function saveData(){
@@ -5810,9 +5811,13 @@ function buildComplexTable(zone){
   });
   tbl.appendChild(tbody);
 
-  // WF col 15: read-only mirror of SF-15 — strip all click handlers after normal rendering
+  // WF col 15 (mirrors SF-15) and WF col 31 (mirrors NF-31):
+  // strip all click handlers after normal rendering — format stays intact
   if(zone.id==='WF'){
-    tbl.querySelectorAll('td[data-col="15"] .wfc, td[data-col="15"] .wfc-empty').forEach(c=>{
+    tbl.querySelectorAll(
+      'td[data-col="15"] .wfc, td[data-col="15"] .wfc-empty,' +
+      'td[data-col="31"] .wfc, td[data-col="31"] .wfc-empty'
+    ).forEach(c=>{
       c.onclick=null;c.style.pointerEvents='none';c.style.cursor='default';
     });
   }
@@ -5958,15 +5963,21 @@ async function applyBulkStatus(status){
     _dirtyPanels.add(id);
   });
   // Mirror any SF-*-C15 bulk updates to WF-*-C15
-  let _sf15bulk=false;
+  // and any NF-*-C31 bulk updates to WF-*-C31
   multiSelPanels.forEach(id=>{
-    const _m=id.match(/^SF-(.+)-C15$/);
-    if(_m){
-      _sf15bulk=true;
-      const _wfId=`WF-${_m[1]}-C15`;
+    const _m15=id.match(/^SF-(.+)-C15$/);
+    if(_m15){
+      const _wfId=`WF-${_m15[1]}-C15`;
       const _sfP=panels[id];
       panels[_wfId]={...(panels[_wfId]||{}),status:_sfP.status||'pending',fabDate:_sfP.fabDate||'',deliveryDate:_sfP.deliveryDate||'',installDate:_sfP.installDate||'',installRef:_sfP.installRef||'',notes:'',assigned:''};
       _dirtyPanels.add(_wfId);
+    }
+    const _m31=id.match(/^NF-(.+)-C31$/);
+    if(_m31){
+      const _wf31Id=`WF-${_m31[1]}-C31`;
+      const _nfP=panels[id];
+      panels[_wf31Id]={...(panels[_wf31Id]||{}),status:_nfP.status||'pending',fabDate:_nfP.fabDate||'',deliveryDate:_nfP.deliveryDate||'',installDate:_nfP.installDate||'',installRef:_nfP.installRef||'',notes:'',assigned:''};
+      _dirtyPanels.add(_wf31Id);
     }
   });
   saveData();
@@ -6006,6 +6017,31 @@ function _applyWF15Mirror(){
       deliveryDate:sfP.deliveryDate||'',
       installDate:sfP.installDate||'',
       installRef:sfP.installRef||'',
+      notes:'',
+      assigned:''
+    };
+  });
+}
+// ── NF-31 → WF-31 one-way mirror ─────────────────────────────────────────────
+// NF-31 is the master (fully editable). WF-31 is a read-only viewer.
+// Copies status + fab/delivery/install dates from NF-{fl}-C31 to WF-{fl}-C31
+// for every shared floor.  Skips R+01/RDC where WF renders empty spacers.
+function _applyNFWF31Mirror(){
+  const wfZone=ZONES.find(z=>z.id==='WF');
+  if(!wfZone)return;
+  wfZone.floors.forEach(fl=>{
+    if(fl==='RDC'||fl==='R+01')return;
+    const nfId=`NF-${fl}-C31`;
+    const wfId=`WF-${fl}-C31`;
+    const nfP=panels[nfId];
+    if(!nfP)return;
+    panels[wfId]={
+      ...(panels[wfId]||{}),
+      status:nfP.status||'pending',
+      fabDate:nfP.fabDate||'',
+      deliveryDate:nfP.deliveryDate||'',
+      installDate:nfP.installDate||'',
+      installRef:nfP.installRef||'',
       notes:'',
       assigned:''
     };
@@ -6196,6 +6232,14 @@ async function savePanel(){
     const _sfMirror=panels[selPanel];
     panels[_wfMirrorId]={...(panels[_wfMirrorId]||{}),status:_sfMirror.status||'pending',fabDate:_sfMirror.fabDate||'',deliveryDate:_sfMirror.deliveryDate||'',installDate:_sfMirror.installDate||'',installRef:_sfMirror.installRef||'',notes:'',assigned:''};
     _dirtyPanels.add(_wfMirrorId);
+  }
+  // Mirror NF-{floor}-C31 → WF-{floor}-C31 (one-way, read-only mirror)
+  const _nf31m=selPanel.match(/^NF-(.+)-C31$/);
+  if(_nf31m){
+    const _wf31Id=`WF-${_nf31m[1]}-C31`;
+    const _nfMirror=panels[selPanel];
+    panels[_wf31Id]={...(panels[_wf31Id]||{}),status:_nfMirror.status||'pending',fabDate:_nfMirror.fabDate||'',deliveryDate:_nfMirror.deliveryDate||'',installDate:_nfMirror.installDate||'',installRef:_nfMirror.installRef||'',notes:'',assigned:''};
+    _dirtyPanels.add(_wf31Id);
   }
   saveData();
   // Immediate single-row Supabase save — faster and more reliable than waiting for bulk sync
