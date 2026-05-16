@@ -13760,7 +13760,7 @@ function renderAAAPage(){
         </div>
       </div>
       <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;letter-spacing:0.03em;">
-        🖱 Drag to orbit &nbsp;·&nbsp; Scroll to zoom
+        🖱 Left drag: Pan &nbsp;·&nbsp; Right drag: Orbit &nbsp;·&nbsp; Scroll: Zoom
       </div>
     </div>
   </div>`;
@@ -13768,20 +13768,33 @@ function renderAAAPage(){
   // ── Interaction ──────────────────────────────────────────────
   const bld=document.getElementById('aaa-bld');
   const vp =document.getElementById('aaa-vp');
-  let rotX=-22,rotY=30,zoom=1;
+  let rotX=-22,rotY=30,zoom=1,panX=0,panY=0;
   let dragging=false,lastX=0,lastY=0;
 
   function applyT(){
-    bld.style.transform=`scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    bld.style.transform=`translate(${panX}px,${panY}px) scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   }
 
-  vp.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;vp.style.cursor='grabbing';e.preventDefault();});
+  // Suppress context menu so right-click drag works cleanly
+  vp.addEventListener('contextmenu',e=>e.preventDefault());
+
+  vp.addEventListener('mousedown',e=>{
+    dragging=true;lastX=e.clientX;lastY=e.clientY;
+    vp.style.cursor=e.button===2?'grabbing':'move';
+    e.preventDefault();
+  });
   window.addEventListener('mouseup',()=>{dragging=false;if(vp.isConnected)vp.style.cursor='grab';});
   window.addEventListener('mousemove',e=>{
     if(!dragging)return;
-    rotY+=(e.clientX-lastX)*0.4;
-    rotX-=(e.clientY-lastY)*0.4;
-    rotX=Math.max(-88,Math.min(88,rotX));
+    const dx=e.clientX-lastX,dy=e.clientY-lastY;
+    if(e.buttons===2){
+      // Right-click drag → orbit
+      rotY+=dx*0.4;rotX-=dy*0.4;
+      rotX=Math.max(-88,Math.min(88,rotX));
+    }else{
+      // Left-click drag → pan
+      panX+=dx;panY+=dy;
+    }
     lastX=e.clientX;lastY=e.clientY;
     applyT();
   });
@@ -13802,9 +13815,8 @@ function renderAAAPage(){
   vp.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(e.touches.length===1){
-      rotY+=(e.touches[0].clientX-lastX)*0.4;
-      rotX-=(e.touches[0].clientY-lastY)*0.4;
-      rotX=Math.max(-88,Math.min(88,rotX));
+      // Single finger → pan
+      panX+=e.touches[0].clientX-lastX;panY+=e.touches[0].clientY-lastY;
       lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;
       applyT();
     }else if(e.touches.length===2){
