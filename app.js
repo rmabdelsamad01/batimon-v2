@@ -13597,9 +13597,9 @@ function renderAAAPage(){
   }
 
   const SC={
-    installed:'#1a9458',delivered:'#c49000',fabricated:'#1a5fa8',
-    cutting:'#b97fc9',cip:'#8e3da0',cl_not_issued:'#e05555',
-    defect:'#c02020',pending:'#1e3050'
+    installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',
+    cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',
+    defect:'#ED1C24',pending:'#E8F0FB'
   };
   const STRUCT_CLR='#1c1000'; // colour for structural/mechanical band rows
 
@@ -13770,14 +13770,14 @@ function renderAAAPage(){
 
   // ── Legend ───────────────────────────────────────────────────
   const LEGEND=[
-    {label:'Installed',    color:'#1a9458'},
-    {label:'Delivered',    color:'#c49000'},
-    {label:'Fabricated',   color:'#1a5fa8'},
-    {label:'CL Issued',    color:'#b97fc9'},
-    {label:'CL in Prog.',  color:'#8e3da0'},
-    {label:'CL Not Issued',color:'#e05555'},
-    {label:'Defect',       color:'#c02020'},
-    {label:'Pending',      color:'#1e3050'},
+    {label:'Installed',    color:'#00FF32'},
+    {label:'Delivered',    color:'#FFF000'},
+    {label:'Fabricated',   color:'#002DFF'},
+    {label:'CL Issued',    color:'#C98BCA'},
+    {label:'CL in Prog.',  color:'#A349A4'},
+    {label:'CL Not Issued',color:'#FFB3B3'},
+    {label:'Defect',       color:'#ED1C24'},
+    {label:'Pending',      color:'#E8F0FB'},
   ];
   const legendHTML=LEGEND.map(l=>`
     <div style="display:flex;align-items:center;gap:4px;">
