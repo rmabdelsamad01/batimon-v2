@@ -9560,6 +9560,16 @@ async function _demoImportFromMonitoring(){
   installedIds.forEach(id=>{ _demoData.panels[id]=instItem.id; });
   deliveredIds.forEach(id=>{ _demoData.panels[id]=delivItem.id; });
 
+  // Propagate corner-adjustment mirrors so hidden boundary columns get the same colour
+  // as their masters: SF-15→WF-15, NF-31→WF-31, NF-65→EF-65, SF-81→EF-81
+  installedIds.concat(deliveredIds).forEach(id=>{
+    const _lid=_demoData.panels[id]; if(!_lid) return;
+    const _sf15=id.match(/^SF-(.+)-C15$/); if(_sf15) _demoData.panels[`WF-${_sf15[1]}-C15`]=_lid;
+    const _nf31=id.match(/^NF-(.+)-C31$/); if(_nf31) _demoData.panels[`WF-${_nf31[1]}-C31`]=_lid;
+    const _nf65=id.match(/^NF-(.+)-C65$/); if(_nf65) _demoData.panels[`EF-${_nf65[1]}-C65`]=_lid;
+    const _sf81=id.match(/^SF-(.+)-C81$/); if(_sf81) _demoData.panels[`EF-${_sf81[1]}-C81`]=_lid;
+  });
+
   // Refresh view
   _demoRenderLegend();
   _demoRenderGrid();
