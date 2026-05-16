@@ -5811,6 +5811,7 @@ function buildComplexTable(zone){
   });
   tbl.appendChild(tbody);
 
+<<<<<<< HEAD
   // WF col 15 (mirrors SF-15) and WF col 31 (mirrors NF-31):
   // strip all click handlers after normal rendering — format stays intact
   if(zone.id==='WF'){
@@ -5818,6 +5819,11 @@ function buildComplexTable(zone){
       'td[data-col="15"] .wfc, td[data-col="15"] .wfc-empty,' +
       'td[data-col="31"] .wfc, td[data-col="31"] .wfc-empty'
     ).forEach(c=>{
+=======
+  // WF col 15: read-only mirror of SF-15 — strip all click handlers after normal rendering
+  if(zone.id==='WF'){
+    tbl.querySelectorAll('td[data-col="15"] .wfc, td[data-col="15"] .wfc-empty').forEach(c=>{
+>>>>>>> 32fa74d1cfabf7e60de345989f09b77a7d84f5af
       c.onclick=null;c.style.pointerEvents='none';c.style.cursor='default';
     });
   }
