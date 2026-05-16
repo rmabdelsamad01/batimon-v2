@@ -382,6 +382,8 @@ async function load(){
   // Apply mirrors on page load (after all seeding)
   _applyWF15Mirror();    // SF-15 → WF-15
   _applyNFWF31Mirror();  // NF-31 → WF-31
+  _applyNFEF65Mirror();  // NF-65 → EF-65
+  _applySFEF81Mirror();  // SF-81 → EF-81
 }
 
 function saveData(){
@@ -5811,13 +5813,12 @@ function buildComplexTable(zone){
   });
   tbl.appendChild(tbody);
 
-  // WF col 15 (mirrors SF-15) and WF col 31 (mirrors NF-31):
-  // strip all click handlers after normal rendering — format stays intact
-  if(zone.id==='WF'){
-    tbl.querySelectorAll(
-      'td[data-col="15"] .wfc, td[data-col="15"] .wfc-empty,' +
-      'td[data-col="31"] .wfc, td[data-col="31"] .wfc-empty'
-    ).forEach(c=>{
+  // Mirror columns: strip click handlers after normal rendering — format stays intact
+  // WF-15 (← SF-15), WF-31 (← NF-31), EF-65 (← NF-65), EF-81 (← SF-81)
+  const _mirrorCols={WF:['15','31'],EF:['65','81']};
+  if(_mirrorCols[zone.id]){
+    const _sel=_mirrorCols[zone.id].map(c=>`td[data-col="${c}"] .wfc,td[data-col="${c}"] .wfc-empty`).join(',');
+    tbl.querySelectorAll(_sel).forEach(c=>{
       c.onclick=null;c.style.pointerEvents='none';c.style.cursor='default';
     });
   }
@@ -5979,6 +5980,20 @@ async function applyBulkStatus(status){
       panels[_wf31Id]={...(panels[_wf31Id]||{}),status:_nfP.status||'pending',fabDate:_nfP.fabDate||'',deliveryDate:_nfP.deliveryDate||'',installDate:_nfP.installDate||'',installRef:_nfP.installRef||'',notes:'',assigned:''};
       _dirtyPanels.add(_wf31Id);
     }
+    const _m65=id.match(/^NF-(.+)-C65$/);
+    if(_m65){
+      const _ef65Id=`EF-${_m65[1]}-C65`;
+      const _nf65P=panels[id];
+      panels[_ef65Id]={...(panels[_ef65Id]||{}),status:_nf65P.status||'pending',fabDate:_nf65P.fabDate||'',deliveryDate:_nf65P.deliveryDate||'',installDate:_nf65P.installDate||'',installRef:_nf65P.installRef||'',notes:'',assigned:''};
+      _dirtyPanels.add(_ef65Id);
+    }
+    const _m81=id.match(/^SF-(.+)-C81$/);
+    if(_m81){
+      const _ef81Id=`EF-${_m81[1]}-C81`;
+      const _sf81P=panels[id];
+      panels[_ef81Id]={...(panels[_ef81Id]||{}),status:_sf81P.status||'pending',fabDate:_sf81P.fabDate||'',deliveryDate:_sf81P.deliveryDate||'',installDate:_sf81P.installDate||'',installRef:_sf81P.installRef||'',notes:'',assigned:''};
+      _dirtyPanels.add(_ef81Id);
+    }
   });
   saveData();
   closeBulkModal();
@@ -6042,6 +6057,52 @@ function _applyNFWF31Mirror(){
       deliveryDate:nfP.deliveryDate||'',
       installDate:nfP.installDate||'',
       installRef:nfP.installRef||'',
+      notes:'',
+      assigned:''
+    };
+  });
+}
+// ── NF-65 → EF-65 one-way mirror ─────────────────────────────────────────────
+// NF-65 is the master (fully editable). EF-65 is a read-only viewer.
+function _applyNFEF65Mirror(){
+  const efZone=ZONES.find(z=>z.id==='EF');
+  if(!efZone)return;
+  efZone.floors.forEach(fl=>{
+    if(fl==='RDC'||fl==='R+01')return;
+    const nfId=`NF-${fl}-C65`;
+    const efId=`EF-${fl}-C65`;
+    const nfP=panels[nfId];
+    if(!nfP)return;
+    panels[efId]={
+      ...(panels[efId]||{}),
+      status:nfP.status||'pending',
+      fabDate:nfP.fabDate||'',
+      deliveryDate:nfP.deliveryDate||'',
+      installDate:nfP.installDate||'',
+      installRef:nfP.installRef||'',
+      notes:'',
+      assigned:''
+    };
+  });
+}
+// ── SF-81 → EF-81 one-way mirror ─────────────────────────────────────────────
+// SF-81 is the master (fully editable). EF-81 is a read-only viewer.
+function _applySFEF81Mirror(){
+  const efZone=ZONES.find(z=>z.id==='EF');
+  if(!efZone)return;
+  efZone.floors.forEach(fl=>{
+    if(fl==='RDC'||fl==='R+01')return;
+    const sfId=`SF-${fl}-C81`;
+    const efId=`EF-${fl}-C81`;
+    const sfP=panels[sfId];
+    if(!sfP)return;
+    panels[efId]={
+      ...(panels[efId]||{}),
+      status:sfP.status||'pending',
+      fabDate:sfP.fabDate||'',
+      deliveryDate:sfP.deliveryDate||'',
+      installDate:sfP.installDate||'',
+      installRef:sfP.installRef||'',
       notes:'',
       assigned:''
     };
@@ -6240,6 +6301,22 @@ async function savePanel(){
     const _nfMirror=panels[selPanel];
     panels[_wf31Id]={...(panels[_wf31Id]||{}),status:_nfMirror.status||'pending',fabDate:_nfMirror.fabDate||'',deliveryDate:_nfMirror.deliveryDate||'',installDate:_nfMirror.installDate||'',installRef:_nfMirror.installRef||'',notes:'',assigned:''};
     _dirtyPanels.add(_wf31Id);
+  }
+  // Mirror NF-{floor}-C65 → EF-{floor}-C65 (one-way, read-only mirror)
+  const _nf65m=selPanel.match(/^NF-(.+)-C65$/);
+  if(_nf65m){
+    const _ef65Id=`EF-${_nf65m[1]}-C65`;
+    const _nf65=panels[selPanel];
+    panels[_ef65Id]={...(panels[_ef65Id]||{}),status:_nf65.status||'pending',fabDate:_nf65.fabDate||'',deliveryDate:_nf65.deliveryDate||'',installDate:_nf65.installDate||'',installRef:_nf65.installRef||'',notes:'',assigned:''};
+    _dirtyPanels.add(_ef65Id);
+  }
+  // Mirror SF-{floor}-C81 → EF-{floor}-C81 (one-way, read-only mirror)
+  const _sf81m=selPanel.match(/^SF-(.+)-C81$/);
+  if(_sf81m){
+    const _ef81Id=`EF-${_sf81m[1]}-C81`;
+    const _sf81=panels[selPanel];
+    panels[_ef81Id]={...(panels[_ef81Id]||{}),status:_sf81.status||'pending',fabDate:_sf81.fabDate||'',deliveryDate:_sf81.deliveryDate||'',installDate:_sf81.installDate||'',installRef:_sf81.installRef||'',notes:'',assigned:''};
+    _dirtyPanels.add(_ef81Id);
   }
   saveData();
   // Immediate single-row Supabase save — faster and more reliable than waiting for bulk sync
