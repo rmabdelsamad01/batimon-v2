@@ -13570,7 +13570,7 @@ function renderAAAPage(){
   const el=document.getElementById('page-aaa');
   if(!el)return;
 
-  const CELL=8;            // px per panel column (= 1 normal-floor height too)
+  const CELL=11;           // px per panel column (= 1 normal-floor height too)
   const GAP=1;             // px joint between panels
   const JOINT='#07111e';   // joint / structural-gap colour
   const BASE_H=150;        // table row height for a normal floor (px)
@@ -13626,21 +13626,44 @@ function renderAAAPage(){
     const rowTpl=rowHeights.map(h=>`${h}px`).join(' ');
     const w=colsW(cols.length), h=totalH(floors);
 
+    const DOTS   =`radial-gradient(circle,rgba(0,0,0,0.28) 1px,transparent 1px) 0 0/4px 4px`;
+    const STRIPES=`repeating-linear-gradient(90deg,rgba(0,0,0,0.28) 0,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 4px)`;
+    const redL=`border-left:2px solid #ED1C24;`;
+    const redB=`border-bottom:1px solid #ED1C24;`;
+
     let cells='';
     floors.forEach((fl,fi)=>{
       const isStruct=STRUCT_FLOORS.has(fl);
       cols.forEach((col,ci)=>{
         const type=(types[fl]||[])[ci]||'';
-        let bg;
+        let s;
         if(isStruct){
-          bg=STRUCT_CLR;
+          s=`background:${STRUCT_CLR};`;
         }else if(!type){
-          bg=JOINT;
+          s=`background:${JOINT};`;
         }else{
           const id=`${zid}-${fl}-C${col}`;
-          bg=SC[(panels[id]||{}).status||'pending']||SC.pending;
+          const sb=SC[(panels[id]||{}).status||'pending']||SC.pending;
+          s=`background-color:${sb};`;
+          // R+02 special structural/visual types — mirror buildComplexTable patterns
+          if(type==='R301'||type==='C301'){
+            s+=`background-image:${DOTS};background-size:4px 4px;${redB}`;
+          }else if(type==='C302'){
+            s+=`background-image:${DOTS};background-size:4px 4px;${redB}`;
+          }else if(type==='R302'){
+            s+=`background-image:${DOTS};background-size:4px 4px;${redL}${redB}`;
+          }else if(type==='R303'||type==='G303'){
+            s+=`background-image:${STRIPES};${redL}${redB}`;
+          }else if(type==='R304'){
+            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.14) 50%,transparent 50%);`;
+          }else if(type==='R305'){
+            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.14) 50%,transparent 50%);${redL}`;
+          }else if(type==='R306'){
+            s+=`background-image:linear-gradient(90deg,${STRIPES.replace('repeating-','')},rgba(0,0,0,0) 50%);${redL}${redB}`;
+          }
+          // Standard UCW panels (Txx, Cxx, Dxx, Gxx, Mxx …): status colour only
         }
-        cells+=`<div style="background:${bg};"></div>`;
+        cells+=`<div style="${s}"></div>`;
       });
     });
 
