@@ -13140,7 +13140,7 @@ function renderBetaPage(){
   const features=[
     {icon:'🧊',label:'3D View',       color:'#0ea5e9',bg:'#e0f2fe',desc:'View the building model in interactive 3D',   action:`goPage('3d')`},
     {icon:'🏗',label:'3D Builder',    color:'#f59e0b',bg:'#fef3c7',desc:'Build and arrange 3D shapes freely',           action:`goPage('builder')`},
-    {icon:'⭐',label:'AAA',           color:'#6366f1',bg:'#ede9fe',desc:'3D facade box overview across all zones',      action:`goPage('aaa')`},
+    {icon:'⭐',label:'3D',            color:'#6366f1',bg:'#ede9fe',desc:'3D facade box overview across all zones',      action:`goPage('aaa')`},
     {icon:'📸',label:'Site Pictures', color:'#f97316',bg:'#ffedd5',desc:'Photo gallery from the construction site',     action:`goPage('sitepictures')`},
   ];
 
