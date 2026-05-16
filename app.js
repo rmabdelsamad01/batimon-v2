@@ -13682,14 +13682,12 @@ function renderAAAPage(){
       const isStruct=STRUCT_FLOORS.has(fl);
       cols.forEach((col,ci)=>{
         const type=(types[fl]||[])[ci]||'';
+        const id=`${zid}-${fl}-C${col}`;
+        const sb=SC[(panels[id]||{}).status||'pending']||SC.pending;
         let s;
         if(isStruct){
           s=`background:${STRUCT_CLR};`;
-        }else if(!type){
-          s=`background:${JOINT};`;
         }else{
-          const id=`${zid}-${fl}-C${col}`;
-          const sb=SC[(panels[id]||{}).status||'pending']||SC.pending;
           s=`background-color:${sb};`;
           // ── T01-T12: exact patterns from buildComplexTable ───────────────────
           if(type==='T01'){
