@@ -10235,7 +10235,10 @@ function _demoRemoveLegendItem(lid){
 }
 
 function _demoCountPanels(lid){
-  return Object.values(_demoData.panels).filter(v=>v===lid).length;
+  // Mirror cells (WF-15, WF-31, EF-65, EF-81) must never be counted — they are
+  // read-only reflections of their masters and would double-count otherwise.
+  const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
+  return Object.entries(_demoData.panels).filter(([pid,v])=>v===lid&&!_isMirror.test(pid)).length;
 }
 
 function _demoRenderLegend(){
