@@ -13579,7 +13579,8 @@ function renderAAAPage(){
   // Actual table row heights per special floor (mirrors buildComplexTable)
   const TABLE_ROW_H={
     'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,
-    'R+18B':40,'R+17T':50,'R+17B':100
+    'R+18B':40,'R+17T':50,'R+17B':100,
+    'R+02':50,'R+01':25      // structural/special rows (R3xx@50px, R2xx@25px)
   };
   // Floors that carry no UCW panels — rendered as a structural band
   const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B','R+17T']);
