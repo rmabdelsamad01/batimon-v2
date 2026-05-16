@@ -13645,9 +13645,34 @@ function renderAAAPage(){
           const id=`${zid}-${fl}-C${col}`;
           const sb=SC[(panels[id]||{}).status||'pending']||SC.pending;
           s=`background-color:${sb};`;
-          // Structural/special types have 3+ digit numeric suffix (R301, R1801, C1802, G303, E1852 …)
-          // Standard UCW types (T01-T12, C01-C12, D05, G03, M06 …) = 1 letter + exactly 2 digits → no pattern
-          if(/^[A-Za-z]\d{3,}/.test(type)){
+          // ── T01-T12: exact patterns from buildComplexTable ───────────────────
+          if(type==='T01'){
+            s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);`;
+          }else if(type==='T02'){
+            s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);${redB}`;
+          }else if(type==='T03'){
+            s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);${redL}`;
+          }else if(type==='T04'){
+            s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);${redL}${redB}`;
+          }else if(type==='T05'){
+            s+=`background-image:${STRIPES};${redL}`;
+          }else if(type==='T06'){
+            s+=`background-image:${STRIPES};${redL}${redB}`;
+          }else if(type==='T07'){
+            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};`;
+          }else if(type==='T08'){
+            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};${redL}`;
+          }else if(type==='T09'){
+            s+=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};${redL}`;
+          }else if(type==='T10'){
+            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};${redB}`;
+          }else if(type==='T11'){
+            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};${redL}${redB}`;
+          }else if(type==='T12'){
+            s+=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};${redL}${redB}`;
+          }
+          // ── Structural/special types: 3+ digit numeric suffix (R301, R1801…) ─
+          else if(/^[A-Za-z]\d{3,}/.test(type)){
             const sfx=type.slice(-2);
             const pfx=type[0].toUpperCase();
             if(sfx==='01'||sfx==='51'){
@@ -13669,7 +13694,7 @@ function renderAAAPage(){
             }
             // Other suffixes (R3499, R2581 etc.): status colour only
           }
-          // Standard UCW panels (Txx, Cxx, Dxx, Gxx, Mxx …): status colour only
+          // Standard remaining types (Cxx, Dxx, Gxx, Mxx …): status colour only
         }
         cells+=`<div style="${s}"></div>`;
       });
