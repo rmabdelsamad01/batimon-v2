@@ -13645,21 +13645,29 @@ function renderAAAPage(){
           const id=`${zid}-${fl}-C${col}`;
           const sb=SC[(panels[id]||{}).status||'pending']||SC.pending;
           s=`background-color:${sb};`;
-          // R+02 special structural/visual types — mirror buildComplexTable patterns
-          if(type==='R301'||type==='C301'){
-            s+=`background-image:${DOTS};background-size:4px 4px;${redB}`;
-          }else if(type==='C302'){
-            s+=`background-image:${DOTS};background-size:4px 4px;${redB}`;
-          }else if(type==='R302'){
-            s+=`background-image:${DOTS};background-size:4px 4px;${redL}${redB}`;
-          }else if(type==='R303'||type==='G303'){
-            s+=`background-image:${STRIPES};${redL}${redB}`;
-          }else if(type==='R304'){
-            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.14) 50%,transparent 50%);`;
-          }else if(type==='R305'){
-            s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.14) 50%,transparent 50%);${redL}`;
-          }else if(type==='R306'){
-            s+=`background-image:linear-gradient(90deg,${STRIPES.replace('repeating-','')},rgba(0,0,0,0) 50%);${redL}${redB}`;
+          // Structural/special types have 3+ digit numeric suffix (R301, R1801, C1802, G303, E1852 …)
+          // Standard UCW types (T01-T12, C01-C12, D05, G03, M06 …) = 1 letter + exactly 2 digits → no pattern
+          if(/^[A-Za-z]\d{3,}/.test(type)){
+            const sfx=type.slice(-2);
+            const pfx=type[0].toUpperCase();
+            if(sfx==='01'||sfx==='51'){
+              s+=`background-image:${DOTS};background-size:4px 4px;${redB}`;
+            }else if(sfx==='02'){
+              s+=`background-image:${DOTS};background-size:4px 4px;`;
+              s+=pfx==='C'?redB:`${redL}${redB}`;
+            }else if(sfx==='52'){
+              s+=`background-image:${DOTS};background-size:4px 4px;${redL}${redB}`;
+              if(pfx==='E')s+=`border-right:2px solid #ED1C24;`;
+            }else if(sfx==='03'||sfx==='53'){
+              s+=`background-image:${STRIPES};${redL}${redB}`;
+            }else if(sfx==='04'||sfx==='54'){
+              s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%);${redB}`;
+            }else if(sfx==='05'||sfx==='55'){
+              s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%);${redL}${redB}`;
+            }else if(sfx==='06'||sfx==='56'){
+              s+=`background-image:${STRIPES};${redL}${redB}`;
+            }
+            // Other suffixes (R3499, R2581 etc.): status colour only
           }
           // Standard UCW panels (Txx, Cxx, Dxx, Gxx, Mxx …): status colour only
         }
