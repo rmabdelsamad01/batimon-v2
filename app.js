@@ -12378,7 +12378,7 @@ window.poFilter=function(){
   });
 };
 
-(async()=>{await load();updateTabs();router();startRealtimeSync();})();
+(async()=>{await load();updateTabs();router();startRealtimeSync();if(curPage==='aaa')renderAAAPage();})();
 
 let _lastSyncTime=Date.now();
 
@@ -12410,8 +12410,32 @@ function _reRenderCurrentPage(){
   if(!curPage)return;
   const monitoringPages=['dashboard','BM-dashboard','BM-NF','BM-SF','BM-EF','BM-WF'];
   if(monitoringPages.includes(curPage)){goPage(curPage);return;}
+  if(curPage==='aaa'){_refreshAAAColors();return;}
   const z=ZONES.find(z=>z.id===curPage);
   if(z){goPage(curPage);}
+}
+
+// Refresh only the cell background colors in the 3D view without rebuilding
+// the entire DOM (preserves camera/pan/zoom state).
+function _refreshAAAColors(){
+  const el=document.getElementById('page-aaa');
+  if(!el)return;
+  // If the page hasn't been fully rendered yet, do a full render instead.
+  if(!document.getElementById('aaa-bld')){renderAAAPage();return;}
+  const SC={
+    installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',
+    cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',
+    defect:'#ED1C24',pending:'#E8F0FB'
+  };
+  // Rebuild panel cells in place: each face grid div contains child divs whose
+  // dataset.pid is set to the panel id so we can look up the status.
+  el.querySelectorAll('[data-pid]').forEach(div=>{
+    const id=div.dataset.pid;
+    if(!id)return;
+    const status=(panels[id]||{}).status||'pending';
+    const col=SC[status]||SC.pending;
+    div.style.backgroundColor=col;
+  });
 }
 
 // ── BATIDOC INLINE PAGE ───────────────────────────────────────
@@ -13682,21 +13706,22 @@ function renderAAAPage(){
       const isStruct=STRUCT_FLOORS.has(fl);
       cols.forEach((col,ci)=>{
         const type=(types[fl]||[])[ci]||'';
-        let s;
+        // pid is set for non-structural cells so _refreshAAAColors() can update them in place
+        let s, pid='';
         if(isStruct){
           s=`background:${STRUCT_CLR};`;
         }else if(!type){
           // Show JOINT only for positions with no real Supabase data (_local=seed-only).
           // Positions that exist in Supabase (panels loaded from DB) show their status colour.
-          const id=`${zid}-${fl}-C${col}`;
-          const p=panels[id];
+          pid=`${zid}-${fl}-C${col}`;
+          const p=panels[pid];
           s = (p && !p._local)
             ? `background-color:${SC[p.status||'pending']||SC.pending};`
             : `background:${JOINT};`;
         }else{
-          const id=`${zid}-${fl}-C${col}`;
-          const sb=SC[(panels[id]||{}).status||'pending']||SC.pending;
-          s=`background-color:${sb};`;
+          pid=`${zid}-${fl}-C${col}`;
+          const statClr=SC[(panels[pid]||{}).status||'pending']||SC.pending;
+          s=`background-color:${statClr};`;
           // ── T01-T12: exact patterns from buildComplexTable ───────────────────
           if(type==='T01'){
             s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);`;
@@ -13753,7 +13778,7 @@ function renderAAAPage(){
           }
           // Standard remaining types (Cxx, Dxx, Gxx, Mxx …): status colour only
         }
-        cells+=`<div style="${s}"></div>`;
+        cells+=`<div${pid?` data-pid="${pid}"`:''}style="${s}"></div>`;
       });
     });
 
