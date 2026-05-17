@@ -13623,11 +13623,16 @@ function renderAAAPage(){
   const D=Math.max(efW,wfW); // north-south box half-depth → 161
 
   // ── Build a face grid with correct variable row heights ──────
-  function faceGrid(zid,cols,floors,types){
-    const rowHeights=floors.map(rowPx);
+  function faceGrid(zid,cols,floors,types,extraRowH){
+    function faceRowPx(fl){
+      if(extraRowH&&extraRowH[fl]!=null)return Math.max(2,Math.round(extraRowH[fl]*CELL/BASE_W));
+      return rowPx(fl);
+    }
+    const rowHeights=floors.map(faceRowPx);
     const colTpl=Array(cols.length).fill(`${CELL}px`).join(' ');
     const rowTpl=rowHeights.map(h=>`${h}px`).join(' ');
-    const w=colsW(cols.length), h=totalH(floors);
+    const w=colsW(cols.length);
+    const h=rowHeights.reduce((s,rh)=>s+rh,0)+(floors.length-1)*GAP;
 
     const DOTS   =`radial-gradient(circle,rgba(0,0,0,0.28) 1px,transparent 1px) 0 0/4px 4px`;
     const STRIPES=`repeating-linear-gradient(90deg,rgba(0,0,0,0.28) 0,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 4px)`;
@@ -13763,9 +13768,30 @@ function renderAAAPage(){
   }
 
   // Pre-render grids
-  const nfGrid=faceGrid('NF',NF_COLS,NF_FLOORS,NF_TYPES);
+  // NF: cols 65→54 (first 12, indices 0-11) get small R+01; cols 53→31 (indices 12-32) stay normal
+  const SMALL_R01={'R+01':25};
+  {
+    const nfSplit=12;
+    const nfSmCols=NF_COLS.slice(0,nfSplit), nfNmCols=NF_COLS.slice(nfSplit);
+    const nfTypSm={}, nfTypNm={};
+    NF_FLOORS.forEach(fl=>{const r=NF_TYPES[fl]||[];nfTypSm[fl]=r.slice(0,nfSplit);nfTypNm[fl]=r.slice(nfSplit);});
+    var nfGrid=`<div style="width:${nfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
+      +faceGrid('NF',nfSmCols,NF_FLOORS,nfTypSm,SMALL_R01)
+      +faceGrid('NF',nfNmCols,NF_FLOORS,nfTypNm)
+      +`</div>`;
+  }
   const sfGrid=faceGrid('SF',sfCols3D,SF_FLOORS,sfTypes3D);
-  const efGrid=faceGrid('EF',EF_COLS,EF_FLOORS,EF_TYPES);
+  // EF: cols 81→79 (first 3, indices 0-2) stay normal; cols 78→65 (indices 3-16) get small R+01
+  {
+    const efSplit=3;
+    const efNmCols=EF_COLS.slice(0,efSplit), efSmCols=EF_COLS.slice(efSplit);
+    const efTypNm={}, efTypSm={};
+    EF_FLOORS.forEach(fl=>{const r=EF_TYPES[fl]||[];efTypNm[fl]=r.slice(0,efSplit);efTypSm[fl]=r.slice(efSplit);});
+    var efGrid=`<div style="width:${efW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
+      +faceGrid('EF',efNmCols,EF_FLOORS,efTypNm)
+      +faceGrid('EF',efSmCols,EF_FLOORS,efTypSm,SMALL_R01)
+      +`</div>`;
+  }
   const wfGrid=faceGrid('WF',wfCols3D,WF_FLOORS,wfTypes3D);
 
   // ── Legend ───────────────────────────────────────────────────
