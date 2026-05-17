@@ -635,7 +635,7 @@ function _renderPage(id){
   else if(id==='labor-curve')renderLaborCurve();
   else if(id==='planning')renderPlanning();
   else if(id==='3d')render3DPage();
-  else if(id==='aaa'){renderAAAPage();setTimeout(_refreshAAAColors,100);}
+  else if(id==='aaa')renderAAAPage();
   else if(id==='builder')renderBuilderPage();
   else if(id==='agenda')renderAgendaPage();
   else if(id==='beta')renderBetaPage();
@@ -12410,34 +12410,8 @@ function _reRenderCurrentPage(){
   if(!curPage)return;
   const monitoringPages=['dashboard','BM-dashboard','BM-NF','BM-SF','BM-EF','BM-WF'];
   if(monitoringPages.includes(curPage)){goPage(curPage);return;}
-  if(curPage==='aaa'){_refreshAAAColors();return;}
   const z=ZONES.find(z=>z.id===curPage);
   if(z){goPage(curPage);}
-}
-
-// Refresh only the cell background colors in the 3D view without rebuilding
-// the entire DOM (preserves camera/pan/zoom state).
-function _refreshAAAColors(){
-  const el=document.getElementById('page-aaa');
-  if(!el)return;
-  // If the page hasn't been fully rendered yet, do a full render instead.
-  if(!document.getElementById('aaa-bld')){renderAAAPage();return;}
-  const SC={
-    installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',
-    cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',
-    defect:'#ED1C24',pending:'#E8F0FB'
-  };
-  // Update background-color for every cell that has a real Supabase panel.
-  // Skip _local (seed-only) cells — those show the dark JOINT gap colour and must stay dark.
-  el.querySelectorAll('[data-pid]').forEach(div=>{
-    const id=div.dataset.pid;
-    if(!id)return;
-    const p=panels[id];
-    if(!p||p._local)return;          // leave JOINT / seed-only cells unchanged
-    const status=p.status||'pending';
-    const col=SC[status]||SC.pending;
-    div.style.backgroundColor=col;
-  });
 }
 
 // ── BATIDOC INLINE PAGE ───────────────────────────────────────
@@ -13708,22 +13682,15 @@ function renderAAAPage(){
       const isStruct=STRUCT_FLOORS.has(fl);
       cols.forEach((col,ci)=>{
         const type=(types[fl]||[])[ci]||'';
-        // pid is set for non-structural cells so _refreshAAAColors() can update them in place
-        let s, pid='';
+        let s;
         if(isStruct){
           s=`background:${STRUCT_CLR};`;
         }else if(!type){
-          // Show JOINT only for positions with no real Supabase data (_local=seed-only).
-          // Positions that exist in Supabase (panels loaded from DB) show their status colour.
-          pid=`${zid}-${fl}-C${col}`;
-          const p=panels[pid];
-          s = (p && !p._local)
-            ? `background-color:${SC[p.status||'pending']||SC.pending};`
-            : `background:${JOINT};`;
+          s=`background:${JOINT};`;
         }else{
-          pid=`${zid}-${fl}-C${col}`;
-          const statClr=SC[(panels[pid]||{}).status||'pending']||SC.pending;
-          s=`background-color:${statClr};`;
+          const pid=`${zid}-${fl}-C${col}`;
+          const sb=SC[(panels[pid]||{}).status||'pending']||SC.pending;
+          s=`background-color:${sb};`;
           // ── T01-T12: exact patterns from buildComplexTable ───────────────────
           if(type==='T01'){
             s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);`;
@@ -13780,7 +13747,7 @@ function renderAAAPage(){
           }
           // Standard remaining types (Cxx, Dxx, Gxx, Mxx …): status colour only
         }
-        cells+=`<div${pid?` data-pid="${pid}" `:''}style="${s}"></div>`;
+        cells+=`<div style="${s}"></div>`;
       });
     });
 
