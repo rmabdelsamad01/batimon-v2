@@ -635,7 +635,7 @@ function _renderPage(id){
   else if(id==='labor-curve')renderLaborCurve();
   else if(id==='planning')renderPlanning();
   else if(id==='3d')render3DPage();
-  else if(id==='aaa')renderAAAPage();
+  else if(id==='aaa'){renderAAAPage();setTimeout(_refreshAAAColors,100);}
   else if(id==='builder')renderBuilderPage();
   else if(id==='agenda')renderAgendaPage();
   else if(id==='beta')renderBetaPage();
@@ -12378,7 +12378,7 @@ window.poFilter=function(){
   });
 };
 
-(async()=>{await load();updateTabs();router();startRealtimeSync();if(curPage==='aaa')renderAAAPage();})();
+(async()=>{await load();updateTabs();router();startRealtimeSync();})();
 
 let _lastSyncTime=Date.now();
 
