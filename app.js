@@ -13866,20 +13866,18 @@ function renderAAAPage(){
     bld.style.transform=`translate(${panX}px,${panY}px) scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   }
 
-  // Suppress context menu so right-click drag works cleanly
-  vp.addEventListener('contextmenu',e=>e.preventDefault());
-
   vp.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
     dragging=true;lastX=e.clientX;lastY=e.clientY;
-    vp.style.cursor=e.button===2?'grabbing':'move';
+    vp.style.cursor=e.shiftKey?'grabbing':'move';
     e.preventDefault();
   });
   window.addEventListener('mouseup',()=>{dragging=false;if(vp.isConnected)vp.style.cursor='grab';});
   window.addEventListener('mousemove',e=>{
     if(!dragging)return;
     const dx=e.clientX-lastX,dy=e.clientY-lastY;
-    if(e.buttons===2){
-      // Right-click drag → orbit
+    if(e.shiftKey&&e.buttons===1){
+      // Shift+Left-click drag → orbit
       rotY+=dx*0.4;rotX-=dy*0.4;
       rotX=Math.max(-88,Math.min(88,rotX));
     }else{
