@@ -13583,7 +13583,8 @@ function renderAAAPage(){
                               // R+02 and R+01 both use normal height (BASE_H) — per-section overrides below
   };
   // Floors that carry no UCW panels — rendered as a structural band
-  const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B','R+17T']);
+  const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B']);
+  // R+17T is NOT structural — WF has real UCW panels there (C1702, R17xx types)
 
   // Scale a table-px height to 3D-px height, respecting the 150×50 actual ratio
   // Standard floor: round(150 * 7 / 50) = 21px  (= 3× the 7px column width ✓)
