@@ -13623,7 +13623,7 @@ function renderAAAPage(){
   const D=Math.max(efW,wfW); // north-south box half-depth → 161
 
   // ── Build a face grid with correct variable row heights ──────
-  function faceGrid(zid,cols,floors,types,extraRowH){
+  function faceGrid(zid,cols,floors,types,extraRowH,merges){
     function faceRowPx(fl){
       if(extraRowH&&extraRowH[fl]!=null)return Math.max(2,Math.round(extraRowH[fl]*CELL/BASE_W));
       return rowPx(fl);
@@ -13756,7 +13756,28 @@ function renderAAAPage(){
       });
     });
 
-    return`<div style="display:grid;grid-template-columns:${colTpl};grid-template-rows:${rowTpl};gap:${GAP}px;background:${JOINT};width:${w}px;height:${h}px;">${cells}</div>`;
+    const gridDiv=`<div style="display:grid;grid-template-columns:${colTpl};grid-template-rows:${rowTpl};gap:${GAP}px;background:${JOINT};width:${w}px;height:${h}px;">${cells}</div>`;
+    if(!merges||!merges.length)return gridDiv;
+    // Compute row-top and col-left offsets for absolutely-positioned merge overlays
+    const rowTops={};let _y=0;
+    floors.forEach((fl,fi)=>{rowTops[fl]=_y;_y+=rowHeights[fi]+GAP;});
+    const colLefts={};let _x=0;
+    cols.forEach((col,ci)=>{colLefts[String(col)]=_x;_x+=CELL+GAP;});
+    let overlays='';
+    merges.forEach(m=>{
+      const fi1=floors.indexOf(m.fl1),fi2=floors.indexOf(m.fl2);
+      if(fi1<0||fi2<0)return;
+      const mH=rowHeights[fi1]+GAP+rowHeights[fi2];
+      const top=rowTops[m.fl1];
+      m.mCols.forEach(col=>{
+        const left=colLefts[String(col)];
+        if(left==null)return;
+        const pid=`${zid}-${m.fl1}-C${col}`;
+        const clr=SC[(panels[pid]||{}).status||'pending']||SC.pending;
+        overlays+=`<div style="position:absolute;left:${left}px;top:${top}px;width:${CELL}px;height:${mH}px;background:${clr};"></div>`;
+      });
+    });
+    return`<div style="position:relative;width:${w}px;height:${h}px;">${gridDiv}${overlays}</div>`;
   }
 
   // ── Face wrapper: lighting overlay + bottom label ─────────────
@@ -13780,7 +13801,7 @@ function renderAAAPage(){
     const nfTypSm={}, nfTypNm={};
     NF_FLOORS.forEach(fl=>{const r=NF_TYPES[fl]||[];nfTypSm[fl]=r.slice(0,nfSplit);nfTypNm[fl]=r.slice(nfSplit);});
     var nfGrid=`<div style="width:${nfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
-      +faceGrid('NF',nfSmCols,NF_FLOORS,nfTypSm,SMALL_R01)
+      +faceGrid('NF',nfSmCols,NF_FLOORS,nfTypSm,SMALL_R01,[{fl1:'R+02',fl2:'R+01',mCols:[60,59,58]}])
       +faceGrid('NF',nfNmCols,NF_FLOORS,nfTypNm,SMALL_R02)
       +`</div>`;
   }
@@ -13804,7 +13825,7 @@ function renderAAAPage(){
     EF_FLOORS.forEach(fl=>{const r=EF_TYPES[fl]||[];efTypNm[fl]=r.slice(0,efSplit);efTypSm[fl]=r.slice(efSplit);});
     var efGrid=`<div style="width:${efW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
       +faceGrid('EF',efNmCols,EF_FLOORS,efTypNm)
-      +faceGrid('EF',efSmCols,EF_FLOORS,efTypSm,SMALL_R01)
+      +faceGrid('EF',efSmCols,EF_FLOORS,efTypSm,SMALL_R01,[{fl1:'R+02',fl2:'R+01',mCols:[75,74,73,71,70,69]}])
       +`</div>`;
   }
   // WF: all columns in range 4-40 — small R+02
