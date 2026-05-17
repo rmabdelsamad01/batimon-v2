@@ -13580,7 +13580,7 @@ function renderAAAPage(){
   const TABLE_ROW_H={
     'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,
     'R+18B':40,'R+17T':50,'R+17B':100,
-    'R+02':50                 // structural/special rows (R3xx@50px); R+01 uses normal height
+                              // R+02 and R+01 both use normal height (BASE_H) — per-section overrides below
   };
   // Floors that carry no UCW panels — rendered as a structural band
   const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B','R+17T']);
@@ -13768,8 +13768,12 @@ function renderAAAPage(){
   }
 
   // Pre-render grids
-  // NF: cols 65→54 (first 12, indices 0-11) get small R+01; cols 53→31 (indices 12-32) stay normal
+  // Row-height override constants (table px → faceRowPx scales by CELL/BASE_W)
   const SMALL_R01={'R+01':25};
+  const SMALL_R02={'R+02':50};
+  const SMALL_R01_R02={'R+01':25,'R+02':50};
+  // NF: cols 65→54 (indices 0-11) — small R+01, normal R+02
+  //     cols 53→31 (indices 12-32) — normal R+01, small R+02
   {
     const nfSplit=12;
     const nfSmCols=NF_COLS.slice(0,nfSplit), nfNmCols=NF_COLS.slice(nfSplit);
@@ -13777,11 +13781,22 @@ function renderAAAPage(){
     NF_FLOORS.forEach(fl=>{const r=NF_TYPES[fl]||[];nfTypSm[fl]=r.slice(0,nfSplit);nfTypNm[fl]=r.slice(nfSplit);});
     var nfGrid=`<div style="width:${nfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
       +faceGrid('NF',nfSmCols,NF_FLOORS,nfTypSm,SMALL_R01)
-      +faceGrid('NF',nfNmCols,NF_FLOORS,nfTypNm)
+      +faceGrid('NF',nfNmCols,NF_FLOORS,nfTypNm,SMALL_R02)
       +`</div>`;
   }
-  const sfGrid=faceGrid('SF',sfCols3D,SF_FLOORS,sfTypes3D);
-  // EF: cols 81→79 (first 3, indices 0-2) stay normal; cols 78→65 (indices 3-16) get small R+01
+  // SF: cols 15→1 (indices 0-14) — small R+02; cols 99→81 (indices 15-32) — normal R+02
+  {
+    const sfSplit=15;
+    const sfSmCols=sfCols3D.slice(0,sfSplit), sfNmCols=sfCols3D.slice(sfSplit);
+    const sfTypSm={}, sfTypNm={};
+    SF_FLOORS.forEach(fl=>{const r=sfTypes3D[fl]||[];sfTypSm[fl]=r.slice(0,sfSplit);sfTypNm[fl]=r.slice(sfSplit);});
+    var sfGrid=`<div style="width:${sfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
+      +faceGrid('SF',sfSmCols,SF_FLOORS,sfTypSm,SMALL_R02)
+      +faceGrid('SF',sfNmCols,SF_FLOORS,sfTypNm)
+      +`</div>`;
+  }
+  // EF: cols 81→79 (indices 0-2) — normal R+01, normal R+02
+  //     cols 78→65 (indices 3-16) — small R+01, normal R+02
   {
     const efSplit=3;
     const efNmCols=EF_COLS.slice(0,efSplit), efSmCols=EF_COLS.slice(efSplit);
@@ -13792,7 +13807,8 @@ function renderAAAPage(){
       +faceGrid('EF',efSmCols,EF_FLOORS,efTypSm,SMALL_R01)
       +`</div>`;
   }
-  const wfGrid=faceGrid('WF',wfCols3D,WF_FLOORS,wfTypes3D);
+  // WF: all columns in range 4-40 — small R+02
+  const wfGrid=faceGrid('WF',wfCols3D,WF_FLOORS,wfTypes3D,SMALL_R02);
 
   // ── Legend ───────────────────────────────────────────────────
   const LEGEND=[
