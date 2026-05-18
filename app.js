@@ -2605,20 +2605,22 @@ function efSidebarHTML(){
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
     {id:'agenda', label:'Agenda', icon:'📅', color:'#10b981', subs:[]},
     {id:'beta', label:'Beta Version', icon:'🧪', color:'#f43f5e', subs:[]},
+    {id:'batitravaux', label:'Bati-Travaux', icon:'🔧', color:'#64748b', subs:[], soon:true},
+    {id:'affectation', label:'Affectation Projet', icon:'👥', color:'#64748b', subs:[], soon:true},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
       ${sections.map(s=>`
       <div style="margin-bottom:5px;">
         <div id="ef-sec-${s.id}"
-             style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:border-color 0.15s,background 0.15s;"
-             onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"
-             onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
-             ${s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:''}
+             style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:${s.soon?'var(--surface)':'var(--surface2)'};cursor:${s.soon?'default':'pointer'};transition:border-color 0.15s,background 0.15s;${s.soon?'opacity:0.7;':''}"
+             ${s.soon?'':`onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"`}
+             ${s.soon?'':`onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"`}
+             ${s.soon?'':(s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:'')}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
-          ${s.subs.length?`<span id="ef-arr-${s.id}" style="font-size:10px;color:var(--text3);transition:transform 0.2s;"">▸</span>`:`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block;"></span>`}
+          ${s.subs.length?`<span id="ef-arr-${s.id}" style="font-size:10px;color:var(--text3);transition:transform 0.2s;"">▸</span>`:s.soon?`<span style="font-size:9px;font-weight:700;color:#fff;background:#f59e0b;border-radius:3px;padding:1px 5px;flex-shrink:0;letter-spacing:0.3px;">Soon</span>`:`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block;"></span>`}
         </div>
         ${s.subs.length?`
         <div id="ef-sub-${s.id}" style="display:none;margin-top:3px;padding-left:12px;border-left:2px solid ${s.color}30;">
