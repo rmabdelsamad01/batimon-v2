@@ -3864,6 +3864,7 @@ function buildComplexTable(zone){
             c.className=`wfc ef-r18md ${meta93.cls}`;
             c.style.cssText='width:50px !important;height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1.5px solid #cc6600;';
             c.style.setProperty('background','#FF8C00','important');
+            c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.setAttribute('rowspan','2');
             td.style.cssText='width:50px !important;min-width:50px;max-width:50px;height:150px;padding:0;';
@@ -3880,6 +3881,8 @@ function buildComplexTable(zone){
           const c=document.createElement('div');
           c.className=`wfc ef-r17t ${meta93.cls}`;
           c.style.cssText='height:50px !important;min-height:50px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+          c.dataset.pid=id;
+          c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.style.cssText='height:50px;padding:0;';
           td.appendChild(c);tr.appendChild(td);return;
         }
@@ -4398,6 +4401,7 @@ function buildComplexTable(zone){
             c.className=`wfc ef-r18md ${meta.cls}`;
             c.style.cssText='width:50px !important;height:110px !important;min-height:110px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1.5px solid #cc6600;';
             c.style.setProperty('background','#FF8C00','important');
+            c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.style.cssText='width:50px !important;min-width:50px;max-width:50px;height:110px;padding:0;';
             td.appendChild(c);tr.appendChild(td);return;
@@ -4484,6 +4488,7 @@ function buildComplexTable(zone){
               const c=document.createElement('div');
               c.style.cssText='height:50px;width:225px;min-width:225px;overflow:hidden;display:flex;flex-direction:row;align-items:stretch;background:transparent;border:1.5px solid #cc6600;box-sizing:content-box;';
               c.innerHTML='<div style="width:74px;height:100%;flex-shrink:0;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="width:75px;height:100%;flex-shrink:0;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="width:74px;height:100%;flex-shrink:0;background:#FF8C00;"></div>';
+              c.dataset.pid=id;
               c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
               td.style.height='50px';td.appendChild(c);tr.appendChild(td);return;
             }
@@ -4494,6 +4499,7 @@ function buildComplexTable(zone){
             const c=document.createElement('div');
             c.className=`wfc ef-r18m ${meta.cls}`;
             c.style.cssText='height:50px !important;min-height:50px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+            c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.style.height='50px';td.style.padding='0';
             td.appendChild(c);tr.appendChild(td);return;
@@ -4504,6 +4510,7 @@ function buildComplexTable(zone){
               const c=document.createElement('div');
               c.className=`wfc ${meta.cls}`;
               c.style.cssText='height:110px !important;min-height:110px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FFD9A0;';
+              c.dataset.pid=id;
               c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
               td.style.height='110px';td.style.padding='0';
               td.appendChild(c);tr.appendChild(td);return;
@@ -4516,6 +4523,7 @@ function buildComplexTable(zone){
               c.className=`wfc ef-r18md ${meta.cls}`;
               c.style.cssText='height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1.5px solid #cc6600;';
               c.style.setProperty('background','#FF8C00','important');
+              c.dataset.pid=id;
               c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
               td.appendChild(c);tr.appendChild(td);return;
             }
@@ -4527,6 +4535,7 @@ function buildComplexTable(zone){
               const c=document.createElement('div');
               c.style.cssText='height:150px;width:225px;min-width:225px;overflow:hidden;background:transparent;border:1.5px solid #cc6600;box-sizing:content-box;display:flex;flex-direction:row;align-items:stretch;';
               c.innerHTML='<div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div>';
+              c.dataset.pid=id;
               c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
               td.style.height='150px';td.appendChild(c);tr.appendChild(td);return;
             }
@@ -4535,6 +4544,7 @@ function buildComplexTable(zone){
             const c=document.createElement('div');
             c.className=`wfc ${meta.cls}`;
             c.style.cssText='height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+            c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(c);tr.appendChild(td);return;
           }
@@ -4609,6 +4619,7 @@ function buildComplexTable(zone){
               const c=document.createElement('div');
               c.style.cssText='height:50px;width:100%;background:transparent;border:1.5px solid #cc6600;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:row;align-items:stretch;';
               c.innerHTML='<div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div><div style="width:1px;height:100%;flex-shrink:0;background:#fff;"></div><div style="flex:1;height:100%;background:#FF8C00;"></div>';
+              c.dataset.pid=id;
               c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
               td.style.height='50px';td.appendChild(c);tr.appendChild(td);return;
             }
@@ -4617,6 +4628,7 @@ function buildComplexTable(zone){
             const c=document.createElement('div');
             c.className=`wfc ef-r17t ${meta.cls}`;
             c.style.cssText='height:50px !important;min-height:50px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
+            c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.style.height='50px';td.style.padding='0';
             td.appendChild(c);tr.appendChild(td);return;
@@ -10400,10 +10412,12 @@ function _demoRenderGrid(){
     const legendId=_demoData.panels[pid]||null;
     const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
     if(legendItem){
-      // background-color only — preserves backgroundImage patterns and border colours
+      // remove background shorthand first (R+17/R+18 cells use it), then set background-color
+      cell.style.removeProperty('background');
       cell.style.setProperty('background-color',legendItem.color,'important');
     } else {
       cell.style.removeProperty('background-color');
+      cell.style.removeProperty('background');
     }
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
   });
