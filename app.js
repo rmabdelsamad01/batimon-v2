@@ -4138,6 +4138,7 @@ function buildComplexTable(zone){
             c.className=`wfc ef-r18t ${meta.cls}`;
             c.style.cssText='width:50px;height:75px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;border-left:5px double #ED1C24;border-right:5px double #ED1C24;';
             c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">E1852</span>`;
+            c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.appendChild(c);
           } else {
@@ -4213,6 +4214,7 @@ function buildComplexTable(zone){
         const c=document.createElement('div');
         c.className=`wfc ef-r17b ${meta.cls}`;
         c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+        c.dataset.pid=id;
         if(ref==='R1701'||ref==='C1702'||ref==='C1701'){
           c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${ref.split('').join('\n')}</span>`;
         } else if(ref==='R1702'||ref==='D1702'){
@@ -4291,6 +4293,7 @@ function buildComplexTable(zone){
           const c=document.createElement('div');
           c.className=`wfc ef-r18b ${meta.cls}`;
           c.style.cssText=`width:var(--cw);height:${h};min-height:${hmin};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+          c.dataset.pid=id;
           if(label==='R1754'){
             // EF format: left col [top 40px plain|vlines+red-right, bottom 150px dots|vlines+red-right] + red horiz at 40px
             c.style.cssText=`width:var(--cw);height:190px;min-height:190px;overflow:hidden;display:flex;flex-direction:row;padding:0;`;
@@ -4341,6 +4344,7 @@ function buildComplexTable(zone){
         const c=document.createElement('div');
         c.className=`wfc ef-r18t ${meta.cls}`;
         c.style.cssText='height:25px !important;min-height:25px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;';
+        c.dataset.pid=id;
         if(ref==='R1801'){
           c.innerHTML=`<div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;pointer-events:none;z-index:1;"></div><span style="position:relative;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;">${ref}</span>`;
         } else if(ref==='R1802'||ref==='C1802'){
@@ -4476,6 +4480,7 @@ function buildComplexTable(zone){
             }
             if(isMerge18M)c.style.borderBottom='5px double #ED1C24';
             if(zone.id==='SF' && col===4 && !/^D(0[1-9]|1[0-2])$/.test(pType)&&!['DM06','D1803','D1705','D304'].includes(pType)) c.style.borderRight='5px double #ED1C24';
+            c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.style.height=h;td.style.padding='0';
             td.appendChild(c);tr.appendChild(td);return;
@@ -4685,6 +4690,7 @@ function buildComplexTable(zone){
               c17.style.backgroundImage='repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px)';
             }
             if(zone.id==='SF' && col===4 && !/^D(0[1-9]|1[0-2])$/.test(pType)&&!['DM06','D1803','D1705','D304'].includes(pType)) c17.style.borderRight='5px double #ED1C24';
+            c17.dataset.pid=id;
             c17.onclick=(e)=>{e.currentTarget=c17;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
             td.style.height=h;td.style.padding='0';
             td.appendChild(c17);tr.appendChild(td);return;
@@ -4714,6 +4720,7 @@ function buildComplexTable(zone){
             c65.style.width='50px';
             c65.style.minWidth='50px';
             c65.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;"></div><div style="width:25px;height:40px;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${ref65.split('').join('\n')}</span></div></div><div style="width:25px;height:100%;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div></div></div>`;
+            c65.dataset.pid=id;
             c65.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
             td.appendChild(c65);tr.appendChild(td);return;
           }
@@ -4731,6 +4738,7 @@ function buildComplexTable(zone){
             c65.style.minWidth='50px';
             c65.style.borderLeft='5px double #ED1C24';
             c65.innerHTML=`<div style="width:50px;height:190px;display:flex;flex-direction:column;"><div style="height:40px;width:100%;flex-shrink:0;display:flex;border-bottom:5px double #ED1C24;"><div style="width:25px;height:40px;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:40px;"></div></div><div style="flex:1;display:flex;"><div style="width:25px;height:100%;border-right:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:25px;height:100%;display:flex;flex-direction:column;"><div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;"></div><div style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${ref65.split('').join('\n')}</span></div></div></div></div>`;
+            c65.dataset.pid=id;
             c65.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
             td.appendChild(c65);tr.appendChild(td);return;
           }
@@ -4750,6 +4758,7 @@ function buildComplexTable(zone){
             <div style="height:50px;width:100%;box-sizing:border-box;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;"></div>
             <div style="height:100px;width:100%;box-sizing:border-box;border:1.5px solid rgba(34,79,147,0.2);border-left:none;border-top:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;"><span style="font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.4;text-align:center;">${ref65.split('').join('\n')}</span></div>`;
           }
+          c65.dataset.pid=id;
           c65.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
           td.appendChild(c65);tr.appendChild(td);return;
         }
@@ -4794,6 +4803,7 @@ function buildComplexTable(zone){
             c18.innerHTML=`<div style="width:25px;height:100%;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);flex-shrink:0;border-right:5px double #ED1C24;"></div><div style="flex:1;height:100%;background-image:radial-gradient(circle,rgba(0,0,0,0.18) 1px,transparent 1px);background-size:5px 5px;"></div><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;font-family:var(--mono);font-size:12px;font-weight:700;color:inherit;pointer-events:none;">${label}</span>`;
           }
           c18.style.borderBottom='5px double #ED1C24';
+          c18.dataset.pid=id;
           c18.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
           td.appendChild(c18);tr.appendChild(td);return;
         }
@@ -4813,6 +4823,7 @@ function buildComplexTable(zone){
         c18.style.cssText=`height:${mergedH} !important;min-height:${mergedH};overflow:hidden;display:flex;align-items:center;justify-content:center;`;
         const refStyle='font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;';
         c18.innerHTML = pRef ? `<span style="${refStyle}">${pRef}</span>` : '';
+        c18.dataset.pid=id;
         c18.onclick=()=>openComplexModal(id,fl,col,pRef,pType,zone);
         td.appendChild(c18);tr.appendChild(td);return;
       }
