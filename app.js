@@ -4608,6 +4608,7 @@ function buildComplexTable(zone){
                   c17.innerHTML=`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${sfR17ref}</span>`;
                 }
               }
+              c17.dataset.pid=r17bId;
               c17.onclick=(e)=>{e.currentTarget=c17;handlePanelClick(e,r17bId,'R+17B',col,sfR17ref,'',zone);};
               td.style.height=h;td.style.padding='0';td.style.verticalAlign='top';
               td.appendChild(c17);tr.appendChild(td);return;
@@ -5663,6 +5664,7 @@ function buildComplexTable(zone){
           c8991.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
           const label8991=pRef||pType||'';
           if(label8991) c8991.innerHTML=`<span class="c-type" style="position:relative;z-index:1;">${label8991.split('').join('\n')}</span><div style="position:absolute;top:150px;left:0;right:0;height:2px;background:#fff;z-index:2;pointer-events:none;"></div>`;
+          c8991.dataset.pid=id;
           c8991.onclick=(e)=>{e.currentTarget=c8991;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(c8991);tr.appendChild(td);return;
         }
@@ -5770,6 +5772,7 @@ function buildComplexTable(zone){
           c.title=`Floor:${fl} Col:C${col}\nType:${pType||'—'}\nStatus:${meta0.label}`;
           const t05label=pRef||pType;
           if(t05label)c.innerHTML=`<span class="c-type" style="position:relative;z-index:1;">${t05label.split('').join('\n')}</span>`;
+          c.dataset.pid=id;
           c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(c);tr.appendChild(td);return;
         }
@@ -5791,6 +5794,7 @@ function buildComplexTable(zone){
               <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type">${cellLabel}</span></div>
             </div>
             <div style="width:25px;height:${mergedH}px;flex-shrink:0;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
+          c.dataset.pid=id;
           c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(c);tr.appendChild(td);return;
         }
