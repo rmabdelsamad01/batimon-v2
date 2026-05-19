@@ -9511,13 +9511,48 @@ function _demoExit(){
 }
 
 function _demoSave(){
-  const blob=new Blob([JSON.stringify(_demoData,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`batimon-demo-${new Date().toISOString().slice(0,10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // Prompt for a document name
+  const today=new Date().toISOString().slice(0,10);
+  const suggested=`batimon-demo-${today}`;
+  // Build custom modal
+  const backdrop=document.createElement('div');
+  backdrop.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  backdrop.innerHTML=`
+    <div style="background:#fff;border-radius:12px;padding:28px 28px 22px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.22);font-family:var(--font);">
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;">Save Demo Snapshot</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Enter a name for this saved document.</div>
+      <input id="_demoSaveNameInput" type="text" value="${suggested}"
+        style="width:100%;box-sizing:border-box;border:1.5px solid var(--border2);border-radius:7px;padding:8px 10px;font-size:13px;font-family:var(--font);color:var(--text);outline:none;margin-bottom:18px;"
+        onkeydown="if(event.key==='Enter')document.getElementById('_demoSaveConfirmBtn').click();if(event.key==='Escape')document.getElementById('_demoSaveCancelBtn').click();"
+      />
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button id="_demoSaveCancelBtn"
+          style="padding:7px 16px;border-radius:7px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;">
+          Cancel
+        </button>
+        <button id="_demoSaveConfirmBtn"
+          style="padding:7px 18px;border-radius:7px;border:none;background:var(--blue);color:#fff;font-size:12px;font-weight:700;cursor:pointer;">
+          Save
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  const input=backdrop.querySelector('#_demoSaveNameInput');
+  input.focus();input.select();
+  const close=()=>document.body.removeChild(backdrop);
+  backdrop.querySelector('#_demoSaveCancelBtn').onclick=close;
+  backdrop.querySelector('#_demoSaveConfirmBtn').onclick=()=>{
+    let name=(input.value||suggested).trim();
+    if(!name)name=suggested;
+    if(!name.endsWith('.json'))name+='.json';
+    const blob=new Blob([JSON.stringify(_demoData,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=name;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    close();
+  };
+  backdrop.addEventListener('click',e=>{if(e.target===backdrop)close();});
 }
 
 async function _demoImportFromMonitoring(){
