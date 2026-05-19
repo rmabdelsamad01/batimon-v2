@@ -10425,6 +10425,8 @@ function _demoRenderGrid(){
 
   // Pass 2: apply legend colours + redirect clicks for identifiable cells
   table.querySelectorAll('.wfc[data-pid]').forEach(cell=>{
+    // Orange architectural cells must keep their inline #FF8C00 !important — skip entirely
+    if(ORANGE_CLS.some(c=>cell.classList.contains(c))) return;
     const pid=cell.dataset.pid;
     const legendId=_demoData.panels[pid]||null;
     const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
