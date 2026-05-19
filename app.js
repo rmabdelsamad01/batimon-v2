@@ -10422,13 +10422,22 @@ function _demoRenderGrid(){
     const pid=cell.dataset.pid;
     const legendId=_demoData.panels[pid]||null;
     const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
+    // Pattern cells (T05/T06/M/GM etc.) have repeating-linear-gradient on the cell itself.
+    // st-p gives pale #E8F0FB which makes rgba(0,0,0,0.2) lines nearly invisible.
+    // Use white bg so lines remain clearly visible; legend color overrides it when set.
+    const hasPattern=cell.style.backgroundImage&&cell.style.backgroundImage.includes('repeating-linear-gradient');
     if(legendItem){
       // remove background shorthand first (R+17/R+18 cells use it), then set background-color
       cell.style.removeProperty('background');
       cell.style.setProperty('background-color',legendItem.color,'important');
     } else {
-      cell.style.removeProperty('background-color');
       cell.style.removeProperty('background');
+      if(hasPattern){
+        // keep white so the line pattern stays visible
+        cell.style.setProperty('background-color','#fff','important');
+      } else {
+        cell.style.removeProperty('background-color');
+      }
     }
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
   });
