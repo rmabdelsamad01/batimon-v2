@@ -10410,9 +10410,14 @@ function _demoRenderGrid(){
   // All other ef-r18x / ef-r17x classes are purely height constraints — don't skip them
   const ORANGE_CLS=['ef-r18md'];
 
-  // Pass 1: reset wfc cells to pending, skipping orange architectural rows
+  // Pass 1: reset wfc cells to pending, skipping orange architectural rows and pattern cells.
+  // Pattern cells (T05/T06/M/GM etc.) use repeating-linear-gradient on themselves — their lines
+  // are only visible on bright/saturated backgrounds (green, yellow...). Resetting them to st-p
+  // (#E8F0FB pale blue) makes the rgba(0,0,0,0.2) lines nearly invisible. So we leave them on
+  // their monitoring status colour; Pass 2 will override with the legend colour when assigned.
   table.querySelectorAll('.wfc').forEach(cell=>{
     if(ORANGE_CLS.some(c=>cell.classList.contains(c))) return;
+    if(cell.style.backgroundImage&&cell.style.backgroundImage.includes('repeating-linear-gradient')) return;
     STATUS_CLS.forEach(c=>cell.classList.remove(c));
     cell.classList.add('st-p');
   });
@@ -10422,22 +10427,13 @@ function _demoRenderGrid(){
     const pid=cell.dataset.pid;
     const legendId=_demoData.panels[pid]||null;
     const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
-    // Pattern cells (T05/T06/M/GM etc.) have repeating-linear-gradient on the cell itself.
-    // st-p gives pale #E8F0FB which makes rgba(0,0,0,0.2) lines nearly invisible.
-    // Use white bg so lines remain clearly visible; legend color overrides it when set.
-    const hasPattern=cell.style.backgroundImage&&cell.style.backgroundImage.includes('repeating-linear-gradient');
     if(legendItem){
       // remove background shorthand first (R+17/R+18 cells use it), then set background-color
       cell.style.removeProperty('background');
       cell.style.setProperty('background-color',legendItem.color,'important');
     } else {
+      cell.style.removeProperty('background-color');
       cell.style.removeProperty('background');
-      if(hasPattern){
-        // keep white so the line pattern stays visible
-        cell.style.setProperty('background-color','#fff','important');
-      } else {
-        cell.style.removeProperty('background-color');
-      }
     }
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
   });
