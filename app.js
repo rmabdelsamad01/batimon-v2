@@ -10410,16 +10410,17 @@ function _demoRenderGrid(){
   // All other ef-r18x / ef-r17x classes are purely height constraints — don't skip them
   const ORANGE_CLS=['ef-r18md'];
 
-  // Pass 1: reset wfc cells to pending, skipping orange architectural rows and pattern cells.
-  // Pattern cells (T05/T06/M/GM etc.) use repeating-linear-gradient on themselves — their lines
-  // are only visible on bright/saturated backgrounds (green, yellow...). Resetting them to st-p
-  // (#E8F0FB pale blue) makes the rgba(0,0,0,0.2) lines nearly invisible. So we leave them on
-  // their monitoring status colour; Pass 2 will override with the legend colour when assigned.
+  // Pass 1: reset wfc cells to pending, skipping orange architectural rows.
+  // T01-T04 dots are visible on st-p pale blue because they use 100% opacity black (CSS class).
+  // T05/T06/M/GM lines use rgba(0,0,0,0.2) — nearly invisible on pale blue. Fix: bump to 0.5
+  // opacity so they're as visible as T01-T04 dots, without skipping the st-p reset.
   table.querySelectorAll('.wfc').forEach(cell=>{
     if(ORANGE_CLS.some(c=>cell.classList.contains(c))) return;
-    if(cell.style.backgroundImage&&cell.style.backgroundImage.includes('repeating-linear-gradient')) return;
     STATUS_CLS.forEach(c=>cell.classList.remove(c));
     cell.classList.add('st-p');
+    if(cell.style.backgroundImage&&cell.style.backgroundImage.includes('repeating-linear-gradient')){
+      cell.style.backgroundImage=cell.style.backgroundImage.replace(/rgba\(0,\s*0,\s*0,\s*[\d.]+\)/g,'rgba(0,0,0,0.5)');
+    }
   });
 
   // Pass 2: apply legend colours + redirect clicks for identifiable cells
