@@ -9649,6 +9649,28 @@ async function _demoImportFromMonitoring(){
   setTimeout(()=>{toast.style.opacity='0';setTimeout(()=>document.body.removeChild(toast),400);},2800);
 }
 
+// ── Legend fit helper ────────────────────────────────────────
+// Shrinks font / swatch / padding on ._leg-pill elements inside `legRow`
+// until all items fit within 2 flex rows (or until min font 6px is reached).
+function _demoFitLegRow(legRow){
+  var pills=Array.from(legRow.querySelectorAll('._leg-pill'));
+  if(!pills.length) return;
+  var firstH=pills[0].offsetHeight;
+  var maxH=firstH*2+10; // 2 rows + gap/tolerance
+  if(legRow.scrollHeight<=maxH) return;
+  var fs=10, ss=10;
+  while(legRow.scrollHeight>maxH && fs>6){
+    fs=parseFloat((fs-0.5).toFixed(1));
+    ss=Math.max(6,parseFloat((ss-0.5).toFixed(1)));
+    pills.forEach(function(p){
+      p.querySelectorAll('span').forEach(function(s){s.style.fontSize=fs+'px';});
+      var sw=p.querySelector('._leg-swatch');
+      if(sw){sw.style.width=ss+'px';sw.style.height=ss+'px';}
+      p.style.padding=(fs<7.5?'1px 5px':fs<8.5?'2px 7px':'3px 9px');
+    });
+  }
+}
+
 // ── Print picker ─────────────────────────────────────────────
 function _demoPrintPDF(){
   const existing=document.getElementById('_demo_print_picker');
@@ -9753,8 +9775,8 @@ function _demoPrintCurrentView(){
   if(_demoData.legend.length){
     legendHTML=_demoData.legend.map(item=>{
       const count=_demoCountPanels(item.id);
-      return `<div style="display:flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;">
-        <div style="width:10px;height:10px;border-radius:2px;background:${item.color};border:1px solid rgba(0,0,0,0.10);flex-shrink:0;"></div>
+      return `<div class="_leg-pill" style="display:flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;">
+        <div class="_leg-swatch" style="width:10px;height:10px;border-radius:2px;background:${item.color};border:1px solid rgba(0,0,0,0.10);flex-shrink:0;"></div>
         <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
         <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>
       </div>`;
@@ -9800,6 +9822,26 @@ function _demoPrintCurrentView(){
   </style>
   <script>
     window.onload=function(){
+      // Fit legend pills to max 2 rows, shrinking font if needed
+      var legEl=document.querySelector('.leg');
+      if(legEl){
+        var pills=Array.from(legEl.querySelectorAll('._leg-pill'));
+        if(pills.length){
+          var firstH=pills[0].offsetHeight;
+          var maxH=firstH*2+10;
+          var fs=10, ss=10;
+          while(legEl.scrollHeight>maxH && fs>6){
+            fs=parseFloat((fs-0.5).toFixed(1));
+            ss=Math.max(6,parseFloat((ss-0.5).toFixed(1)));
+            pills.forEach(function(p){
+              p.querySelectorAll('span').forEach(function(s){s.style.fontSize=fs+'px';});
+              var sw=p.querySelector('._leg-swatch');
+              if(sw){sw.style.width=ss+'px';sw.style.height=ss+'px';}
+              p.style.padding=(fs<7.5?'1px 5px':fs<8.5?'2px 7px':'3px 9px');
+            });
+          }
+        }
+      }
       // Mirror printEF(): scale the clip div, then set explicit body height
       var pw=window.innerWidth;    // iframe width  = 1587
       var ph=window.innerHeight;   // iframe height = 1122
@@ -9807,7 +9849,7 @@ function _demoPrintCurrentView(){
       var leg=document.querySelector('.leg');
       var clip=document.querySelector('.clip');
       var headerH=header ? header.offsetHeight+14 : 0; // +14 for margin-bottom
-      var legH=leg ? leg.offsetHeight+10 : 0;          // +10 for margin-top
+      var legH=leg ? leg.offsetHeight+10 : 0;          // +10 for margin-top (measured after fit)
       var availH=ph-headerH-legH;
       var scaleX=pw/${viewW};
       var scaleY=availH/${viewH};
@@ -9920,8 +9962,9 @@ function _demoPrintCurrent(){
     _demoData.legend.forEach(item=>{
       const count=_demoCountPanels(item.id);
       const pill=document.createElement('div');
+      pill.className='_leg-pill';
       pill.style.cssText='display:flex;align-items:center;gap:5px;padding:4px 9px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;';
-      pill.innerHTML=`<div style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
+      pill.innerHTML=`<div class="_leg-swatch" style="width:12px;height:12px;border-radius:2px;flex-shrink:0;background:${item.color};border:1px solid rgba(0,0,0,0.10);"></div>
         <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
         <span style="font-size:10px;font-weight:700;color:#224F93;">${count}</span>`;
       legRow.appendChild(pill);
@@ -9956,7 +9999,9 @@ function _demoPrintCurrent(){
 
   // 5. Scale grid — forced synchronous reflow keeps window.print() in the
   //    user-gesture call stack (rAF breaks the gesture context in some browsers)
-  void layer.offsetHeight; // force layout so measurements are accurate
+  void layer.offsetHeight; // force layout so fit function can measure
+  _demoFitLegRow(legRow);  // shrink pills to ≤2 rows if needed
+  void leg.offsetHeight;   // re-flow so leg.offsetHeight is accurate for scaling
   const wrap=pgw.querySelector('.wf-wrap');
   if(wrap){
     // A4 portrait printable area: 194mm × 277mm at 96 dpi
@@ -10140,11 +10185,11 @@ async function _demoPrintAll(){
       const leg=document.createElement('div');
       leg.className='_dpp_leg';
       leg.style.cssText='flex-shrink:0;border-top:1px solid #e0e8f0;padding-top:8px;margin-top:10px;';
-      let lh='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8099b0;margin-bottom:5px;">Legend</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+      let lh='<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8099b0;margin-bottom:5px;">Legend</div><div id="_dpp_legrow_'+zi+'" style="display:flex;flex-wrap:wrap;gap:6px;">';
       _demoData.legend.forEach(item=>{
         const cnt=_demoCountPanels(item.id);
-        lh+=`<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;">
-          <div style="width:10px;height:10px;border-radius:2px;background:${item.color};border:1px solid rgba(0,0,0,.1);"></div>
+        lh+=`<div class="_leg-pill" style="display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid #e0e8f0;border-radius:20px;background:#f8fafd;">
+          <div class="_leg-swatch" style="width:10px;height:10px;border-radius:2px;background:${item.color};border:1px solid rgba(0,0,0,.1);"></div>
           <span style="font-size:10px;font-weight:600;color:#1e3a5f;">${item.label}</span>
           <span style="font-size:10px;font-weight:700;color:#224F93;">${cnt}</span>
         </div>`;
@@ -10158,6 +10203,9 @@ async function _demoPrintAll(){
 
     // Scale grid to fit A4 page
     await new Promise(r=>requestAnimationFrame(r));
+    // Fit legend pills to ≤2 rows before measuring height for grid scaling
+    const legRowEl=document.getElementById('_dpp_legrow_'+zi);
+    if(legRowEl) _demoFitLegRow(legRowEl);
     const wrap=pgw.querySelector('.wf-wrap');
     if(wrap){
       const printH=Math.round(267*MM);
