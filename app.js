@@ -10410,9 +10410,10 @@ function _demoRenderGrid(){
 
   // ── Demo overrides ────────────────────────────────────────────────
   const STATUS_CLS=['st-i','st-d','st-f','st-c','st-cn','st-cip','st-x','st-p'];
-  // Only ef-r18md has an actual orange CSS background (#FFD9A0 !important)
-  // All other ef-r18x / ef-r17x classes are purely height constraints — don't skip them
-  const ORANGE_CLS=['ef-r18md'];
+  // ef-r18md: orange from CSS (#FFD9A0 !important)
+  // ef-r17t, ef-r18m, ef-r18b, ef-r17b: orange from inline background:#FF8C00 set during render
+  // All must be skipped in both passes to preserve their inline orange backgrounds
+  const ORANGE_CLS=['ef-r18md','ef-r17t','ef-r18m','ef-r18b','ef-r17b'];
 
   // Pass 1: reset wfc cells to pending, skipping orange architectural rows.
   // T01-T04 dots are visible on st-p pale blue because they use 100% opacity black (CSS class).
