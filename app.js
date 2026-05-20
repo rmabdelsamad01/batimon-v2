@@ -10509,8 +10509,9 @@ function _demoRenderGrid(){
     const legendId=_demoData.panels[pid]||null;
     const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
     // Save white-overlay gradient used by trapezoid cells (clip-path floors like R+25, R+33, R+34…)
+    // Note: browser normalises #fff → rgb(255,255,255), so check for 'transparent' + no 'repeating'
     const _bgImg=cell.style.getPropertyValue('background-image');
-    const _hasTrapGrad=_bgImg&&_bgImg!=='none'&&_bgImg.includes('linear-gradient(to bottom,#fff');
+    const _hasTrapGrad=_bgImg&&_bgImg!=='none'&&!_bgImg.includes('repeating')&&_bgImg.includes('linear-gradient')&&_bgImg.includes('transparent');
     if(legendItem){
       // remove background shorthand first (R+17/R+18 cells use it), then set background-color
       cell.style.removeProperty('background');
