@@ -10496,10 +10496,8 @@ function _demoRenderGrid(){
     if(ORANGE_CLS.some(c=>cell.classList.contains(c))) return;
     STATUS_CLS.forEach(c=>cell.classList.remove(c));
     cell.classList.add('st-p');
-    if(cell.style.backgroundImage&&cell.style.backgroundImage.includes('repeating-linear-gradient')){
-      cell.dataset._origBgImg=cell.style.backgroundImage; // save original opacity before bumping
-      cell.style.backgroundImage=cell.style.backgroundImage.replace(/rgba\(0,\s*0,\s*0,\s*[\d.]+\)/g,'rgba(0,0,0,0.5)');
-    }
+    // Note: no opacity bump needed — Pass 2 re-applies background-image with !important so lines
+    // are visible regardless. Bumping caused inconsistency vs T08/T11 (texture on child divs).
   });
 
   // Pass 2: apply legend colours + redirect clicks for identifiable cells
@@ -10517,16 +10515,12 @@ function _demoRenderGrid(){
       // remove background shorthand first (R+17/R+18 cells use it), then set background-color
       cell.style.removeProperty('background');
       cell.style.setProperty('background-color',legendItem.color,'important');
-      // Re-apply gradient with !important. For repeating-gradient texture cells use the original
-      // (pre-bump) opacity so legend cells match monitoring appearance (0.2 not 0.5)
-      if(_hasBgImg){
-        const _bgImgOrig=cell.dataset._origBgImg||_bgImg;
-        cell.style.setProperty('background-image',_bgImgOrig,'important');
-      }
+      // Re-apply at original opacity — matches monitoring appearance on the legend colour
+      if(_hasBgImg) cell.style.setProperty('background-image',_bgImg,'important');
     } else {
       cell.style.removeProperty('background-color');
       cell.style.removeProperty('background');
-      // Re-apply bumped opacity so texture is visible on pale st-p background
+      // Re-apply so texture is visible on st-p base colour (inline !important beats class background)
       if(_hasBgImg) cell.style.setProperty('background-image',_bgImg,'important');
     }
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
