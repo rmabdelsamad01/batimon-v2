@@ -10497,6 +10497,7 @@ function _demoRenderGrid(){
     STATUS_CLS.forEach(c=>cell.classList.remove(c));
     cell.classList.add('st-p');
     if(cell.style.backgroundImage&&cell.style.backgroundImage.includes('repeating-linear-gradient')){
+      cell.dataset._origBgImg=cell.style.backgroundImage; // save original opacity before bumping
       cell.style.backgroundImage=cell.style.backgroundImage.replace(/rgba\(0,\s*0,\s*0,\s*[\d.]+\)/g,'rgba(0,0,0,0.5)');
     }
   });
@@ -10516,12 +10517,16 @@ function _demoRenderGrid(){
       // remove background shorthand first (R+17/R+18 cells use it), then set background-color
       cell.style.removeProperty('background');
       cell.style.setProperty('background-color',legendItem.color,'important');
-      // Re-apply gradient with !important so texture/overlay isn't suppressed by background-color !important
-      if(_hasBgImg) cell.style.setProperty('background-image',_bgImg,'important');
+      // Re-apply gradient with !important. For repeating-gradient texture cells use the original
+      // (pre-bump) opacity so legend cells match monitoring appearance (0.2 not 0.5)
+      if(_hasBgImg){
+        const _bgImgOrig=cell.dataset._origBgImg||_bgImg;
+        cell.style.setProperty('background-image',_bgImgOrig,'important');
+      }
     } else {
       cell.style.removeProperty('background-color');
       cell.style.removeProperty('background');
-      // Re-apply so texture remains visible on st-p base colour even if removeProperty cleared it
+      // Re-apply bumped opacity so texture is visible on pale st-p background
       if(_hasBgImg) cell.style.setProperty('background-image',_bgImg,'important');
     }
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
