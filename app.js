@@ -10508,13 +10508,20 @@ function _demoRenderGrid(){
     const pid=cell.dataset.pid;
     const legendId=_demoData.panels[pid]||null;
     const legendItem=legendId?_demoData.legend.find(l=>l.id===legendId):null;
+    // Save white-overlay gradient used by trapezoid cells (clip-path floors like R+25, R+33, R+34…)
+    const _bgImg=cell.style.getPropertyValue('background-image');
+    const _hasTrapGrad=_bgImg&&_bgImg!=='none'&&_bgImg.includes('linear-gradient(to bottom,#fff');
     if(legendItem){
       // remove background shorthand first (R+17/R+18 cells use it), then set background-color
       cell.style.removeProperty('background');
       cell.style.setProperty('background-color',legendItem.color,'important');
+      // Re-apply white-overlay gradient with !important so it isn't suppressed by background-color
+      if(_hasTrapGrad) cell.style.setProperty('background-image',_bgImg,'important');
     } else {
       cell.style.removeProperty('background-color');
       cell.style.removeProperty('background');
+      // Keep gradient visible on st-p base colour
+      if(_hasTrapGrad) cell.style.setProperty('background-image',_bgImg,'important');
     }
     cell.onclick=(e)=>{e.stopPropagation();_demoHandlePanelClick(e,pid);};
   });
