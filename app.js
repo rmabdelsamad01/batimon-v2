@@ -10475,11 +10475,15 @@ function _demoRenderGrid(){
   // ── Demo overrides ────────────────────────────────────────────────
   const STATUS_CLS=['st-i','st-d','st-f','st-c','st-cn','st-cip','st-x','st-p'];
   // ef-r18md: orange from CSS (#FFD9A0 !important)
-  // ef-r17t, ef-r18m, ef-r18b: orange architectural bands with inline background:#FF8C00
-  // ef-orange-row: marker class on WF R+18MD merged cells (rowspan=2, 150px, inline orange)
-  // ef-r17b: NOT here — those are real UCW panels (WF/NF cols 31-40) that must be colorable
-  // NF architectural orange cells (R+17T, R+18MD) have no wfc class → never touched by passes
-  const ORANGE_CLS=['ef-r18md','ef-r17t','ef-r18m','ef-r18b','ef-orange-row'];
+  // ef-r18md: orange CSS background (#FFD9A0 !important) — must skip
+  // ef-r17t, ef-r18m: orange architectural bands (WF/SF/NF) with inline #FF8C00 — must skip
+  // ef-orange-row: marker on WF R+18MD merged cells (150px inline orange) — must skip
+  //
+  // NOT included (real colorable UCW panels):
+  //   ef-r17b — WF/NF UCW panels (cols 31-40) and EF/NF generic R+17B cells
+  //   ef-r18b — NF R+18B (cols 54-65, rowspan=3), EF R+18B (cols 65-81, rowspan=3): real panels
+  // NF architectural orange (R+17T, R+18MD divs) have no wfc class → never touched by passes
+  const ORANGE_CLS=['ef-r18md','ef-r17t','ef-r18m','ef-orange-row'];
 
   // Pass 1: reset wfc cells to pending, skipping orange architectural rows.
   // T01-T04 dots are visible on st-p pale blue because they use 100% opacity black (CSS class).
