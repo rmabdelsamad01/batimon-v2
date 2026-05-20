@@ -9652,12 +9652,18 @@ async function _demoImportFromMonitoring(){
 // ── Legend fit helper ────────────────────────────────────────
 // Shrinks font / swatch / padding on ._leg-pill elements inside `legRow`
 // until all items fit within 2 flex rows (or until min font 6px is reached).
-function _demoFitLegRow(legRow){
+// constrainPx: temporarily limits legRow width to the actual print content width
+// so the flex-wrap is evaluated at print dimensions, not screen dimensions.
+function _demoFitLegRow(legRow, constrainPx){
   var pills=Array.from(legRow.querySelectorAll('._leg-pill'));
   if(!pills.length) return;
+  // Apply print-width constraint so measurement matches real print layout
+  if(constrainPx){
+    legRow.style.maxWidth=constrainPx+'px';
+    void legRow.offsetHeight; // force reflow at print width
+  }
   var firstH=pills[0].offsetHeight;
   var maxH=firstH*2+10; // 2 rows + gap/tolerance
-  if(legRow.scrollHeight<=maxH) return;
   var fs=10, ss=10;
   while(legRow.scrollHeight>maxH && fs>6){
     fs=parseFloat((fs-0.5).toFixed(1));
@@ -9669,6 +9675,7 @@ function _demoFitLegRow(legRow){
       p.style.padding=(fs<7.5?'1px 5px':fs<8.5?'2px 7px':'3px 9px');
     });
   }
+  // Keep max-width on so the leg container stays at print width for height measurement
 }
 
 // ── Print picker ─────────────────────────────────────────────
@@ -9823,10 +9830,14 @@ function _demoPrintCurrentView(){
   <script>
     window.onload=function(){
       // Fit legend pills to max 2 rows, shrinking font if needed
+      // Landscape iframe is 1587px; @page margins are 12mm each side (~91px total)
       var legEl=document.querySelector('.leg');
       if(legEl){
         var pills=Array.from(legEl.querySelectorAll('._leg-pill'));
         if(pills.length){
+          var fitW=window.innerWidth-92; // available content width inside @page margins
+          legEl.style.maxWidth=fitW+'px';
+          void legEl.offsetHeight; // reflow at print width
           var firstH=pills[0].offsetHeight;
           var maxH=firstH*2+10;
           var fs=10, ss=10;
@@ -9840,6 +9851,7 @@ function _demoPrintCurrentView(){
               p.style.padding=(fs<7.5?'1px 5px':fs<8.5?'2px 7px':'3px 9px');
             });
           }
+          // keep maxWidth so legEl.offsetHeight reflects print layout for scaling calc below
         }
       }
       // Mirror printEF(): scale the clip div, then set explicit body height
@@ -9999,8 +10011,10 @@ function _demoPrintCurrent(){
 
   // 5. Scale grid — forced synchronous reflow keeps window.print() in the
   //    user-gesture call stack (rAF breaks the gesture context in some browsers)
+  // A4 portrait printable content width: 194mm minus 2×24px page padding ≈ 685px
+  const _legFitW=Math.round(194*96/25.4)-48; // ~685 px
   void layer.offsetHeight; // force layout so fit function can measure
-  _demoFitLegRow(legRow);  // shrink pills to ≤2 rows if needed
+  _demoFitLegRow(legRow, _legFitW); // shrink pills at print width, ≤2 rows
   void leg.offsetHeight;   // re-flow so leg.offsetHeight is accurate for scaling
   const wrap=pgw.querySelector('.wf-wrap');
   if(wrap){
@@ -10203,9 +10217,10 @@ async function _demoPrintAll(){
 
     // Scale grid to fit A4 page
     await new Promise(r=>requestAnimationFrame(r));
-    // Fit legend pills to ≤2 rows before measuring height for grid scaling
+    // Fit legend pills to ≤2 rows at print content width before measuring height
+    // printW = 194mm printable; page has 24px horiz padding each side → content width = printW-48
     const legRowEl=document.getElementById('_dpp_legrow_'+zi);
-    if(legRowEl) _demoFitLegRow(legRowEl);
+    if(legRowEl) _demoFitLegRow(legRowEl, printW-48);
     const wrap=pgw.querySelector('.wf-wrap');
     if(wrap){
       const printH=Math.round(267*MM);
