@@ -4547,7 +4547,8 @@ function buildComplexTable(zone){
             td.setAttribute('rowspan','2');
             td.style.height='150px';td.style.maxHeight='150px';td.style.overflow='hidden';td.style.padding='0';td.style.verticalAlign='top';
             const c=document.createElement('div');
-            c.className=`wfc ${meta.cls}`;
+            // ef-orange-row: marker class so demo ORANGE_CLS skips this cell and preserves its orange
+            c.className=`wfc ef-orange-row ${meta.cls}`;
             c.style.cssText='height:150px !important;min-height:150px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FF8C00;border:1.5px solid #cc6600;';
             c.dataset.pid=id;
             c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
@@ -10474,9 +10475,11 @@ function _demoRenderGrid(){
   // ── Demo overrides ────────────────────────────────────────────────
   const STATUS_CLS=['st-i','st-d','st-f','st-c','st-cn','st-cip','st-x','st-p'];
   // ef-r18md: orange from CSS (#FFD9A0 !important)
-  // ef-r17t, ef-r18m, ef-r18b, ef-r17b: orange from inline background:#FF8C00 set during render
-  // All must be skipped in both passes to preserve their inline orange backgrounds
-  const ORANGE_CLS=['ef-r18md','ef-r17t','ef-r18m','ef-r18b','ef-r17b'];
+  // ef-r17t, ef-r18m, ef-r18b: orange architectural bands with inline background:#FF8C00
+  // ef-orange-row: marker class on WF R+18MD merged cells (rowspan=2, 150px, inline orange)
+  // ef-r17b: NOT here — those are real UCW panels (WF/NF cols 31-40) that must be colorable
+  // NF architectural orange cells (R+17T, R+18MD) have no wfc class → never touched by passes
+  const ORANGE_CLS=['ef-r18md','ef-r17t','ef-r18m','ef-r18b','ef-orange-row'];
 
   // Pass 1: reset wfc cells to pending, skipping orange architectural rows.
   // T01-T04 dots are visible on st-p pale blue because they use 100% opacity black (CSS class).
