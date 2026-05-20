@@ -5004,7 +5004,8 @@ function buildComplexTable(zone){
           } else {
             const sfRedLeftCols=[90,88,86];
             const bLeftSF=sfRedLeftCols.includes(col)?'border-left:5px double #ED1C24;':'';
-            cell.style.cssText+=`height:150px;${bLeftSF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
+            cell.style.cssText+=`height:150px;${bLeftSF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;`;
+            cell.style.setProperty('background-image','linear-gradient(to bottom,#fff 100px,transparent 100px)','important');
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
           }
           cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
@@ -5033,7 +5034,8 @@ function buildComplexTable(zone){
           } else {
             const nfRedLeftCols=[62,60,58,56,54];
             const bLeftNF=nfRedLeftCols.includes(col)?'border-left:5px double #ED1C24;':'';
-            cell.style.cssText+=`height:150px;${bLeftNF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
+            cell.style.cssText+=`height:150px;${bLeftNF}clip-path:polygon(0 ${left}px, 100% ${right}px, 100% 150px, 0 150px);overflow:hidden;position:relative;`;
+            cell.style.setProperty('background-image','linear-gradient(to bottom,#fff 100px,transparent 100px)','important');
             cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref25.split('').join('\n')}</span>`;
           }
           cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
@@ -5044,7 +5046,8 @@ function buildComplexTable(zone){
       if(zone.id==='NF' && fl==='R+26' && [55,54,53].includes(col)){
         const ref26=pRef||pType||'';
         cell.classList.remove('big-type');
-        cell.style.cssText+=`height:150px;clip-path:polygon(0 76px, 100% 76px, 100% 150px, 0 150px);overflow:hidden;position:relative;background-image:linear-gradient(to bottom,#fff 100px,transparent 100px);`;
+        cell.style.cssText+=`height:150px;clip-path:polygon(0 76px, 100% 76px, 100% 150px, 0 150px);overflow:hidden;position:relative;`;
+        cell.style.setProperty('background-image','linear-gradient(to bottom,#fff 100px,transparent 100px)','important');
         cell.innerHTML=`<span class="c-type" style="position:absolute;bottom:1px;left:0;right:0;font-size:12px;line-height:1.4;text-align:center;">${ref26.split('').join('\n')}</span>`;
         cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell);tr.appendChild(td);return;
