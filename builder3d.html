@@ -440,6 +440,8 @@
   <button class="tb-btn" onclick="copySelected()"      >⎘ Copy</button>
   <button class="tb-btn" onclick="pasteClipboard()"    >⎗ Paste</button>
   <button class="tb-btn" onclick="duplicateSelected()" >⧉ Dup</button>
+  <button class="tb-btn" id="btn-block"   onclick="groupSelected()"  title="Combine selected shapes into a Block">⬡ Block</button>
+  <button class="tb-btn" id="btn-unblock" onclick="ungroupSelected()" title="Explode Block back to individual shapes" style="display:none;">⤹ Unblock</button>
   <button class="tb-btn del" onclick="deleteSelected()">🗑 Delete</button>
 
   <div class="sep"></div>
@@ -594,6 +596,12 @@
 <div id="props">
   <div class="p-head">Properties</div>
   <div class="p-sub" id="p-name"></div>
+
+  <!-- Block info — shown only when a group/block is selected -->
+  <div id="p-block-info" style="display:none;background:#0ea5e910;border:1px solid #0ea5e930;border-radius:6px;padding:6px 8px;margin-bottom:6px;">
+    <div style="font-size:9px;color:#38bdf8;text-transform:uppercase;letter-spacing:.5px;font-weight:700;">⬡ Block</div>
+    <div id="p-block-count" style="font-size:10px;color:#8b949e;margin-top:2px;"></div>
+  </div>
 
   <div class="p-lbl">Element ID</div>
   <input id="p-eid" type="text" placeholder="e.g. BM-EF-R1C1"
@@ -1211,7 +1219,13 @@ function fitCamera() {
 const SEL_EMI = new THREE.Color(0x0a3a6a);
 
 function _applyHighlight(obj) {
-  if (obj.material && obj.material.emissive) {
+  if (obj.isGroup) {
+    obj.traverse(c => {
+      if (!c.isMesh || !c.material?.emissive) return;
+      c.userData._emi = c.material.emissive.clone();
+      c.material.emissive.copy(SEL_EMI);
+    });
+  } else if (obj.material?.emissive) {
     obj.userData._emi = obj.material.emissive.clone();
     obj.material.emissive.copy(SEL_EMI);
   } else if (obj.material) {
@@ -1221,12 +1235,35 @@ function _applyHighlight(obj) {
 }
 
 function _clearHighlight(obj) {
-  if (obj.material && obj.material.emissive) {
+  if (obj.isGroup) {
+    obj.traverse(c => {
+      if (!c.isMesh || !c.material?.emissive) return;
+      c.material.emissive.copy(c.userData._emi ?? new THREE.Color(0));
+    });
+  } else if (obj.material?.emissive) {
     obj.material.emissive.copy(obj.userData._emi ?? new THREE.Color(0));
   } else if (obj.material && obj.userData._selColor !== undefined) {
     obj.material.color.setHex(obj.userData._selColor);
     delete obj.userData._selColor;
   }
+}
+
+/* Dispose geometry+material recursively (works for plain Mesh and Group) */
+function _disposeObject(o) {
+  o.traverse(c => {
+    if (c.geometry) c.geometry.dispose();
+    if (c.material) c.material.dispose();
+  });
+}
+
+/* Walk up to find the top-level object that lives in our objects[] array */
+function _resolveHit(obj) {
+  let o = obj;
+  while (o && o !== scene) {
+    if (objects.includes(o)) return o;
+    o = o.parent;
+  }
+  return null;
 }
 
 function _syncBadge() {
@@ -1278,6 +1315,7 @@ function selectObject(obj, additive = false) {
     selection.size > 1 ? `${selection.size} objects` : (obj.userData.label || '');
   _syncBadge();
   syncProps();
+  _updateBlockButtons();
 }
 
 function deselect() {
@@ -1287,6 +1325,7 @@ function deselect() {
   selected = null;
   document.getElementById('props').classList.remove('show');
   document.getElementById('badge').classList.remove('show');
+  _updateBlockButtons();
 }
 
 /* ── raycaster ─────────────────────────────────────────────────────────── */
@@ -1409,19 +1448,21 @@ renderer.domElement.addEventListener('pointerdown', e => {
   _fdReady = false; _fdActive = false; _fdObj = null;
   if (tc.axis === null && tc.mode === 'translate') {
     ray.setFromCamera(_ndcFromEvent(e), camera);
-    const hits = ray.intersectObjects(objects, false);
+    const hits = ray.intersectObjects(objects, true);  // recursive for group children
     if (hits.length) {
-      const hit = hits[0];
-      _fdObj = hit.object;
-      // Horizontal plane at the surface hit point's Y
-      _fdPlane.setFromNormalAndCoplanarPoint(new THREE.Vector3(0,1,0), hit.point);
-      // Raycast plane to get exact grab world position
-      const grabPt = new THREE.Vector3();
-      ray.ray.intersectPlane(_fdPlane, grabPt);
-      // Offset keeps the grabbed surface point under the cursor
-      _fdOffset.copy(_fdObj.position).sub(grabPt);
-      _fdReady = true;
-      orbit.enabled = false;
+      const resolved = _resolveHit(hits[0].object);
+      if (resolved) {
+        _fdObj = resolved;
+        // Horizontal plane at the surface hit point's Y
+        _fdPlane.setFromNormalAndCoplanarPoint(new THREE.Vector3(0,1,0), hits[0].point);
+        // Raycast plane to get exact grab world position
+        const grabPt = new THREE.Vector3();
+        ray.ray.intersectPlane(_fdPlane, grabPt);
+        // Offset keeps the grabbed surface point under the cursor
+        _fdOffset.copy(_fdObj.position).sub(grabPt);
+        _fdReady = true;
+        orbit.enabled = false;
+      }
     }
   }
 });
@@ -1477,8 +1518,9 @@ renderer.domElement.addEventListener('pointerup', e => {
   mp.x = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
   mp.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
   ray.setFromCamera(mp, camera);
-  const hits = ray.intersectObjects(objects, false);
-  if (hits.length) selectObject(hits[0].object, e.shiftKey);
+  const hits = ray.intersectObjects(objects, true);  // recursive for groups
+  const hit  = hits.length ? _resolveHit(hits[0].object) : null;
+  if (hit) selectObject(hit, e.shiftKey);
   else if (!e.shiftKey) deselect();
 });
 
@@ -1506,13 +1548,13 @@ window.deleteSelected = function() {
   selection.forEach(o => {
     scene.remove(o);
     objects = objects.filter(x => x !== o);
-    o.geometry.dispose();
-    o.material.dispose();
+    _disposeObject(o);
   });
   selection.clear();
   selected = null;
   document.getElementById('props').classList.remove('show');
   document.getElementById('badge').classList.remove('show');
+  _updateBlockButtons();
 };
 
 window.copySelected = function() {
@@ -1570,9 +1612,102 @@ window.clearAll = function() {
   tc.detach();
   document.getElementById('props').classList.remove('show');
   document.getElementById('badge').classList.remove('show');
-  objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
+  objects.forEach(o => { _disposeObject(o); scene.remove(o); });
   objects = [];
   count   = 0;
+  _updateBlockButtons();
+};
+
+/* ── Block / Unblock ────────────────────────────────────────────────────── */
+function _updateBlockButtons() {
+  const isGroup  = selected?.userData.isGroup === true;
+  const canBlock = selection.size >= 2 && !isGroup;
+  document.getElementById('btn-block').style.display   = isGroup ? 'none' : '';
+  document.getElementById('btn-unblock').style.display = isGroup ? ''     : 'none';
+  // Block info panel in properties
+  const blockInfo = document.getElementById('p-block-info');
+  if (blockInfo) {
+    blockInfo.style.display = isGroup ? '' : 'none';
+    if (isGroup && selected) {
+      document.getElementById('p-block-count').textContent =
+        `${selected.children.length} shape${selected.children.length !== 1 ? 's' : ''} inside`;
+    }
+  }
+}
+
+window.groupSelected = function() {
+  if (selection.size < 2) { toast('Select 2+ shapes to create a Block'); return; }
+
+  const group = new THREE.Group();
+  group.userData.type      = 'group';
+  group.userData.isGroup   = true;
+  group.userData.label     = `Block ${++count}`;
+  group.userData.elementId = '';
+  group.userData.status    = '';
+  group.userData.layerId   = selected?.userData.layerId || activeLayerId;
+
+  // Centre the group at the bounding-box centre of all selected objects
+  const box    = new THREE.Box3();
+  selection.forEach(o => box.expandByObject(o));
+  const center = box.getCenter(new THREE.Vector3());
+  group.position.copy(center);
+
+  scene.add(group);
+
+  const members = [...selection];
+  members.forEach(o => {
+    _clearHighlight(o);
+    scene.remove(o);
+    objects = objects.filter(x => x !== o);
+    o.position.sub(center);      // position relative to group
+    group.add(o);
+  });
+
+  objects.push(group);
+  selection.clear();
+  selected = null;
+  selectObject(group);
+  toast(`Block created (${members.length} shapes)`);
+};
+
+window.ungroupSelected = function() {
+  if (!selected?.userData.isGroup) return;
+  const group    = selected;
+  const children = [...group.children];
+
+  deselect();
+
+  // Restore world transforms before re-parenting
+  group.updateWorldMatrix(true, false);
+  children.forEach(child => {
+    const wp = new THREE.Vector3(), wq = new THREE.Quaternion(), ws = new THREE.Vector3();
+    child.getWorldPosition(wp);
+    child.getWorldQuaternion(wq);
+    child.getWorldScale(ws);
+    group.remove(child);
+    child.position.copy(wp);
+    child.quaternion.copy(wq);
+    child.scale.copy(ws);
+    scene.add(child);
+    objects.push(child);
+    selection.add(child);
+    _applyHighlight(child);
+    selected = child;
+  });
+
+  scene.remove(group);
+  objects = objects.filter(o => o !== group);
+
+  if (selected) {
+    tc.attach(selected);
+    document.getElementById('props').classList.add('show');
+    document.getElementById('p-name').textContent =
+      selection.size > 1 ? `${selection.size} objects` : (selected.userData.label || '');
+    _syncBadge();
+    syncProps();
+  }
+  _updateBlockButtons();
+  toast(`Block exploded (${children.length} shapes)`);
 };
 
 /* ── Status → colour map (matches monitoring sheet) ────────────────────── */
@@ -1596,7 +1731,14 @@ function syncProps() {
   setValue('px', f(p.x)); setValue('py', f(p.y)); setValue('pz', f(p.z));
   setValue('rx', d(r.x)); setValue('ry', d(r.y)); setValue('rz', d(r.z));
   setValue('sx', f(s.x)); setValue('sy', f(s.y)); setValue('sz', f(s.z));
-  document.getElementById('p-color').value = '#' + selected.material.color.getHexString();
+  // Colour — for groups, use first child's colour
+  if (selected.userData.isGroup) {
+    let col = '#808080';
+    selected.traverse(c => { if (c.isMesh && c.material && col === '#808080') col = '#' + c.material.color.getHexString(); });
+    document.getElementById('p-color').value = col;
+  } else {
+    document.getElementById('p-color').value = '#' + selected.material.color.getHexString();
+  }
   // p-name shows single label or multi count
   document.getElementById('p-name').textContent =
     selection.size > 1 ? `${selection.size} objects selected` : (selected.userData.label || '');
@@ -1630,7 +1772,12 @@ window.applyStatus = function(status) {
   selection.forEach(o => {
     o.userData.status = status;
     if (status && STATUS_COLORS[status]) {
-      o.material.color.set(STATUS_COLORS[status]);
+      const col = STATUS_COLORS[status];
+      if (o.userData.isGroup) {
+        o.traverse(c => { if (c.isMesh && c.material) c.material.color.set(col); });
+      } else if (o.material) {
+        o.material.color.set(col);
+      }
     }
   });
   if (status && STATUS_COLORS[status]) {
@@ -2248,15 +2395,28 @@ window.onLayerColorChange = function(hex) {
   activeColor = hex;
   document.getElementById('col-swatch').style.background = hex;
   document.getElementById('alc-dot').style.background    = hex;
-  objects.forEach(o => { if (o.userData.layerId === activeLayerId) o.material.color.set(hex); });
+  objects.forEach(o => {
+    if (o.userData.layerId !== activeLayerId) return;
+    if (o.userData.isGroup) {
+      o.traverse(c => { if (c.isMesh && c.material) c.material.color.set(hex); });
+    } else if (o.material) {
+      o.material.color.set(hex);
+    }
+  });
   _renderLayers();
 };
 
-// Properties panel colour picker → changes only the selected object
+// Properties panel colour picker → changes all selected objects (group-aware)
 window.onObjectColorChange = function(hex) {
   activeColor = hex;
   document.getElementById('p-color').value = hex;
-  if (selected) selected.material.color.set(hex);
+  selection.forEach(o => {
+    if (o.userData.isGroup) {
+      o.traverse(c => { if (c.isMesh && c.material) c.material.color.set(hex); });
+    } else if (o.material) {
+      o.material.color.set(hex);
+    }
+  });
 };
 
 // Legacy alias (snap panel etc. may call this)
@@ -2269,23 +2429,33 @@ _renderLayers();
 /* ── Cloud Save / Load (Supabase) ──────────────────────────────────────── */
 const _cloudScenes = new Map();  // id → scene_data (filled when browser opens)
 
+function _serializeObj(o) {
+  const base = {
+    type:      o.userData.type,
+    label:     o.userData.label,
+    layerId:   o.userData.layerId,
+    elementId: o.userData.elementId || '',
+    status:    o.userData.status    || '',
+    position:  o.position.toArray(),
+    rotation:  [o.rotation.x, o.rotation.y, o.rotation.z],
+    scale:     o.scale.toArray(),
+  };
+  if (o.userData.isGroup) {
+    base.isGroup  = true;
+    base.children = o.children.map(c => _serializeObj(c));
+  } else {
+    base.color = '#' + o.material.color.getHexString();
+  }
+  return base;
+}
+
 function _scenePayload() {
   return {
-    version: 2,
+    version: 3,
     saved: new Date().toISOString(),
     layers,
     activeLayerId,
-    objects: objects.map(o => ({
-      type:      o.userData.type,
-      label:     o.userData.label,
-      layerId:   o.userData.layerId,
-      elementId: o.userData.elementId || '',
-      status:    o.userData.status    || '',
-      position:  o.position.toArray(),
-      rotation:  [o.rotation.x, o.rotation.y, o.rotation.z],
-      scale:     o.scale.toArray(),
-      color:     '#' + o.material.color.getHexString(),
-    }))
+    objects: objects.map(o => _serializeObj(o))
   };
 }
 
@@ -2394,9 +2564,48 @@ async function _refreshScenesList() {
   });
 }
 
+function _deserializeObj(od) {
+  if (od.isGroup || od.type === 'group') {
+    const group = new THREE.Group();
+    group.userData.type      = 'group';
+    group.userData.isGroup   = true;
+    group.userData.label     = od.label     || `Block ${++count}`;
+    group.userData.layerId   = od.layerId   || activeLayerId;
+    group.userData.elementId = od.elementId || '';
+    group.userData.status    = od.status    || '';
+    if (od.position) group.position.fromArray(od.position);
+    if (od.rotation) group.rotation.set(...od.rotation);
+    if (od.scale)    group.scale.fromArray(od.scale);
+    if (od.children) od.children.forEach(cd => {
+      const child = _deserializeObj(cd);
+      if (child) group.add(child);
+    });
+    return group;
+  }
+  if (!GEO[od.type]) return null;
+  const geo = GEO[od.type]();
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(od.color || '#0ea5e9'),
+    roughness: 0.55, metalness: 0.1,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow    = true;
+  mesh.receiveShadow = true;
+  mesh.userData.type      = od.type;
+  mesh.userData.layerId   = od.layerId   || activeLayerId;
+  mesh.userData.label     = od.label     || `${od.type} ${++count}`;
+  mesh.userData.elementId = od.elementId || '';
+  mesh.userData.status    = od.status    || '';
+  count = Math.max(count, parseInt(od.label?.match(/\d+$/)?.[0] || 0));
+  if (od.position) mesh.position.fromArray(od.position);
+  if (od.rotation) mesh.rotation.set(...od.rotation);
+  if (od.scale)    mesh.scale.fromArray(od.scale);
+  return mesh;
+}
+
 function _applySceneData(data) {
   deselect();
-  objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
+  objects.forEach(o => { _disposeObject(o); scene.remove(o); });
   objects = []; count = 0;
 
   // Restore layers
@@ -2411,28 +2620,13 @@ function _applySceneData(data) {
   _syncChip(); _renderLayers();
 
   data.objects.forEach(od => {
-    if (!GEO[od.type]) return;
-    const geo = GEO[od.type]();
-    const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(od.color || '#0ea5e9'),
-      roughness: 0.55, metalness: 0.1,
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.castShadow    = true;
-    mesh.receiveShadow = true;
-    mesh.userData.type      = od.type;
-    mesh.userData.layerId   = od.layerId   || activeLayerId;
-    mesh.userData.label     = od.label     || `${od.type} ${++count}`;
-    mesh.userData.elementId = od.elementId || '';
-    mesh.userData.status    = od.status    || '';
-    count = Math.max(count, parseInt(od.label?.match(/\d+$/)?.[0] || 0));
-    if (od.position) mesh.position.fromArray(od.position);
-    if (od.rotation) mesh.rotation.set(...od.rotation);
-    if (od.scale)    mesh.scale.fromArray(od.scale);
-    const lyr = _layerById(mesh.userData.layerId);
-    if (lyr && !lyr.visible) mesh.visible = false;
-    scene.add(mesh);
-    objects.push(mesh);
+    const obj = _deserializeObj(od);
+    if (!obj) return;
+    // Apply layer visibility
+    const lyr = _layerById(obj.userData.layerId);
+    if (lyr && !lyr.visible) obj.visible = false;
+    scene.add(obj);
+    objects.push(obj);
   });
 
   fitCamera();
