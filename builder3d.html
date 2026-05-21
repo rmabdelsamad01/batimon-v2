@@ -1304,8 +1304,15 @@ function _loadDXFEntities(dxf) {
     if (obj) { scene.add(obj); objects.push(obj); n++; }
   });
 
+  // Debug: log what entity types were found
+  const typeCounts = {};
+  (dxf.entities || []).forEach(e => { typeCounts[e.type] = (typeCounts[e.type]||0)+1; });
+  console.log('[DXF] Entity types found:', typeCounts);
+  console.log('[DXF] Layers found:', Object.keys(dxfLayers));
+  console.log('[DXF] Total entities:', (dxf.entities||[]).length);
+
   if (n > 0) { fitCamera(); toast(`Imported ${n} DXF entities`); }
-  else        { toast('No supported entities found in DXF'); }
+  else        { toast('No supported entities found in DXF — check console (F12) for entity types'); }
 }
 
 window.importDXF = function() { document.getElementById('dxf-input').click(); };
