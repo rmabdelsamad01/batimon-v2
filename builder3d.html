@@ -89,13 +89,13 @@
     #props.show { transform: translateX(0); }
     .p-head { font-size: 12px; font-weight: 700; color: #e6edf3; margin-bottom: 3px; }
     .p-sub  { font-size: 10px; color: #8b949e; margin-bottom: 10px; word-break: break-all; }
-    .p-lbl  { font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; margin: 10px 0 4px; }
-    .p-row  { display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
-    .p-ax   { font-size: 10px; font-weight: 700; width: 12px; flex-shrink: 0; }
+    .p-lbl  { font-size: 9px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; margin: 8px 0 3px; }
+    .p-row  { display: flex; align-items: center; gap: 3px; margin-bottom: 2px; }
+    .p-ax   { font-size: 9px; font-weight: 700; width: 9px; flex-shrink: 0; text-align: center; }
     .p-inp  {
-      flex: 1; padding: 3px 6px; border: 1px solid #30363d;
+      flex: 1; padding: 3px 4px; border: 1px solid #30363d;
       border-radius: 4px; background: #21262d; color: #e6edf3;
-      font-size: 11px; font-family: monospace; text-align: right; min-width: 0;
+      font-size: 10px; font-family: monospace; text-align: right; min-width: 0; width: 0;
     }
     .p-inp:focus { outline: none; border-color: #0ea5e9; }
     #p-color { width: 100%; height: 28px; border: 1px solid #30363d; border-radius: 5px; background: transparent; cursor: pointer; margin-top: 2px; }
@@ -554,19 +554,25 @@
   <div class="p-sub" id="p-name"></div>
 
   <div class="p-lbl">Position</div>
-  <div class="p-row"><span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="px" type="number" step="0.1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="py" type="number" step="0.1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="pz" type="number" step="0.1" oninput="applyProps()"></div>
+  <div class="p-row">
+    <span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="px" type="number" step="0.1" oninput="applyProps()">
+    <span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="py" type="number" step="0.1" oninput="applyProps()">
+    <span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="pz" type="number" step="0.1" oninput="applyProps()">
+  </div>
 
   <div class="p-lbl">Rotation (°)</div>
-  <div class="p-row"><span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="rx" type="number" step="1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="ry" type="number" step="1" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="rz" type="number" step="1" oninput="applyProps()"></div>
+  <div class="p-row">
+    <span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="rx" type="number" step="1" oninput="applyProps()">
+    <span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="ry" type="number" step="1" oninput="applyProps()">
+    <span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="rz" type="number" step="1" oninput="applyProps()">
+  </div>
 
   <div class="p-lbl">Scale</div>
-  <div class="p-row"><span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="sx" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="sy" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
-  <div class="p-row"><span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="sz" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
+  <div class="p-row">
+    <span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="sx" type="number" step="0.1" min="0.01" oninput="applyProps()">
+    <span class="p-ax" style="color:#4ade80;">Y</span><input class="p-inp" id="sy" type="number" step="0.1" min="0.01" oninput="applyProps()">
+    <span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="sz" type="number" step="0.1" min="0.01" oninput="applyProps()">
+  </div>
 
   <div class="p-lbl">Layer</div>
   <select class="p-layer-sel" id="p-layer" onchange="moveToLayer(this.value)"></select>
