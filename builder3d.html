@@ -1248,11 +1248,19 @@ function _loadDXFEntities(dxf) {
     ...(modelBlock?.entities || []),
   ];
 
-  // Debug
+  // Debug — log every block's entity count and types
+  console.log('[DXF] Block breakdown:');
+  Object.entries(dxf.blocks || {}).forEach(([name, blk]) => {
+    const ents = blk.entities || [];
+    const tc = {};
+    ents.forEach(e => { tc[e.type] = (tc[e.type]||0)+1; });
+    console.log(`  block "${name}": ${ents.length} entities`, tc);
+  });
   const typeCounts = {};
   allEntities.forEach(e => { typeCounts[e.type] = (typeCounts[e.type]||0)+1; });
   console.log('[DXF] Entity types (combined):', typeCounts);
-  console.log('[DXF] Blocks available:', Object.keys(dxf.blocks || {}));
+  console.log('[DXF] Raw dxf.entities length:', (dxf.entities||[]).length);
+  console.log('[DXF] *Model_Space raw:', dxf.blocks?.['*Model_Space']);
 
   // ── Convert entities ──────────────────────────────────────────────────
   let n = 0;
