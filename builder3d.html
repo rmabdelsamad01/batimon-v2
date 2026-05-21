@@ -360,6 +360,54 @@
     .sb-foot-btn:hover { background: #30363d; }
 
     /* ── Scene name dialog ── */
+    /* ── Array dialog ── */
+    #array-dlg {
+      display: none; position: fixed; inset: 0; z-index: 1100;
+      background: rgba(0,0,0,.72); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    #array-dlg.open { display: flex; }
+    #array-box {
+      background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+      width: 340px; padding: 20px 20px 16px; box-shadow: 0 20px 60px #000c;
+    }
+    #array-box h3 { font-size: 14px; font-weight: 700; color: #e6edf3; margin: 0 0 14px; }
+    .arr-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+    .arr-tab {
+      flex: 1; padding: 6px; border-radius: 6px; font-size: 11px; font-weight: 600;
+      border: 1px solid #30363d; background: #21262d; color: #8b949e;
+      cursor: pointer; text-align: center; font-family: system-ui;
+    }
+    .arr-tab.active { background: #0ea5e918; border-color: #0ea5e9; color: #38bdf8; }
+    .arr-panel { display: none; }
+    .arr-panel.active { display: block; }
+    .arr-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+    }
+    .arr-lbl { font-size: 11px; color: #8b949e; width: 90px; flex-shrink: 0; }
+    .arr-inp {
+      flex: 1; padding: 5px 8px; border: 1px solid #30363d; border-radius: 5px;
+      background: #0d1117; color: #e6edf3; font-size: 12px; font-family: monospace;
+      outline: none; min-width: 0;
+    }
+    .arr-inp:focus { border-color: #0ea5e9; }
+    .arr-unit { font-size: 10px; color: #484f58; flex-shrink: 0; width: 22px; }
+    .arr-sep { height: 1px; background: #30363d; margin: 10px 0; }
+    .arr-check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; cursor: pointer; }
+    .arr-check-row input[type=checkbox] { accent-color: #0ea5e9; width: 13px; height: 13px; }
+    .arr-check-row span { font-size: 11px; color: #8b949e; }
+    .arr-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    .arr-cancel {
+      padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      border: 1px solid #30363d; background: transparent; color: #8b949e; cursor: pointer; font-family: system-ui;
+    }
+    .arr-cancel:hover { background: #21262d; color: #e6edf3; }
+    .arr-apply {
+      padding: 7px 20px; border-radius: 6px; font-size: 12px; font-weight: 700;
+      border: none; background: #0ea5e9; color: #fff; cursor: pointer; font-family: system-ui;
+    }
+    .arr-apply:hover { background: #38bdf8; }
+
     #scene-name-dlg {
       display: none; position: fixed; inset: 0; z-index: 1100;
       background: rgba(0,0,0,.72); backdrop-filter: blur(4px);
@@ -440,8 +488,9 @@
   <button class="tb-btn" onclick="copySelected()"      >⎘ Copy</button>
   <button class="tb-btn" onclick="pasteClipboard()"    >⎗ Paste</button>
   <button class="tb-btn" onclick="duplicateSelected()" >⧉ Dup</button>
-  <button class="tb-btn" id="btn-block"   onclick="groupSelected()"  title="Combine selected shapes into a Block">⬡ Block</button>
-  <button class="tb-btn" id="btn-unblock" onclick="ungroupSelected()" title="Explode Block back to individual shapes" style="display:none;">⤹ Unblock</button>
+  <button class="tb-btn" id="btn-block"   onclick="groupSelected()"   title="Combine selected shapes into a Block">⬡ Block</button>
+  <button class="tb-btn" id="btn-unblock" onclick="ungroupSelected()"  title="Explode Block back to individual shapes" style="display:none;">⤹ Unblock</button>
+  <button class="tb-btn" onclick="openArrayDialog()"   title="Create a linear or rectangular array of the selected shape">⊞ Array</button>
   <button class="tb-btn del" onclick="deleteSelected()">🗑 Delete</button>
 
   <div class="sep"></div>
@@ -671,6 +720,90 @@
     </div>
     <div class="sb-footer">
       <button class="sb-foot-btn" onclick="closeMyScenes()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ARRAY DIALOG ═════════════════════════════════════════════════════ -->
+<div id="array-dlg">
+  <div id="array-box">
+    <h3>⊞ Array</h3>
+
+    <!-- Tabs -->
+    <div class="arr-tabs">
+      <button class="arr-tab active" id="arr-tab-linear" onclick="arrSwitchTab('linear')">Linear</button>
+      <button class="arr-tab"        id="arr-tab-rect"   onclick="arrSwitchTab('rect')">Rectangular</button>
+    </div>
+
+    <!-- Linear panel -->
+    <div class="arr-panel active" id="arr-panel-linear">
+      <div class="arr-row">
+        <span class="arr-lbl">Count</span>
+        <input class="arr-inp" id="arr-lin-count" type="number" min="2" max="500" value="4">
+        <span class="arr-unit">pcs</span>
+      </div>
+      <div class="arr-row">
+        <span class="arr-lbl">Spacing X</span>
+        <input class="arr-inp" id="arr-lin-dx" type="number" step="0.1" value="2.0">
+        <span class="arr-unit">m</span>
+      </div>
+      <div class="arr-row">
+        <span class="arr-lbl">Spacing Y</span>
+        <input class="arr-inp" id="arr-lin-dy" type="number" step="0.1" value="0.0">
+        <span class="arr-unit">m</span>
+      </div>
+      <div class="arr-row">
+        <span class="arr-lbl">Spacing Z</span>
+        <input class="arr-inp" id="arr-lin-dz" type="number" step="0.1" value="0.0">
+        <span class="arr-unit">m</span>
+      </div>
+    </div>
+
+    <!-- Rectangular panel -->
+    <div class="arr-panel" id="arr-panel-rect">
+      <div class="arr-row">
+        <span class="arr-lbl">Columns (X)</span>
+        <input class="arr-inp" id="arr-rect-cols"  type="number" min="1" max="100" value="3">
+        <span class="arr-unit">pcs</span>
+      </div>
+      <div class="arr-row">
+        <span class="arr-lbl">Col spacing</span>
+        <input class="arr-inp" id="arr-rect-dx"    type="number" step="0.1" value="2.0">
+        <span class="arr-unit">m</span>
+      </div>
+      <div class="arr-sep"></div>
+      <div class="arr-row">
+        <span class="arr-lbl">Rows (Z)</span>
+        <input class="arr-inp" id="arr-rect-rows"  type="number" min="1" max="100" value="3">
+        <span class="arr-unit">pcs</span>
+      </div>
+      <div class="arr-row">
+        <span class="arr-lbl">Row spacing</span>
+        <input class="arr-inp" id="arr-rect-dz"    type="number" step="0.1" value="2.0">
+        <span class="arr-unit">m</span>
+      </div>
+      <div class="arr-sep"></div>
+      <div class="arr-row">
+        <span class="arr-lbl">Levels (Y)</span>
+        <input class="arr-inp" id="arr-rect-lvls"  type="number" min="1" max="100" value="1">
+        <span class="arr-unit">pcs</span>
+      </div>
+      <div class="arr-row">
+        <span class="arr-lbl">Level spacing</span>
+        <input class="arr-inp" id="arr-rect-dy"    type="number" step="0.1" value="3.0">
+        <span class="arr-unit">m</span>
+      </div>
+    </div>
+
+    <div class="arr-sep"></div>
+    <label class="arr-check-row">
+      <input type="checkbox" id="arr-group" checked>
+      <span>Group result as a Block</span>
+    </label>
+
+    <div class="arr-btns">
+      <button class="arr-cancel" onclick="closeArrayDialog()">Cancel</button>
+      <button class="arr-apply"  onclick="applyArray()">Apply Array</button>
     </div>
   </div>
 </div>
@@ -1810,6 +1943,141 @@ window.applyProps = function() {
   selected.rotation.set(rd(v('rx')), rd(v('ry')), rd(v('rz')));
   selected.scale.set(Math.max(.01, v('sx')), Math.max(.01, v('sy')), Math.max(.01, v('sz')));
 };
+
+/* ── Array ──────────────────────────────────────────────────────────────── */
+let _arrMode = 'linear';
+
+window.openArrayDialog = function() {
+  if (!selected) { toast('Select a shape first'); return; }
+  document.getElementById('array-dlg').classList.add('open');
+};
+
+window.closeArrayDialog = function() {
+  document.getElementById('array-dlg').classList.remove('open');
+};
+
+window.arrSwitchTab = function(mode) {
+  _arrMode = mode;
+  document.getElementById('arr-tab-linear').classList.toggle('active', mode === 'linear');
+  document.getElementById('arr-tab-rect').classList.toggle('active',   mode === 'rect');
+  document.getElementById('arr-panel-linear').classList.toggle('active', mode === 'linear');
+  document.getElementById('arr-panel-rect').classList.toggle('active',   mode === 'rect');
+};
+
+window.applyArray = function() {
+  if (!selected) { toast('Select a shape first'); return; }
+  closeArrayDialog();
+
+  const source    = selected;
+  const shouldGrp = document.getElementById('arr-group').checked;
+  const copies    = [];   // all resulting objects (original + clones)
+
+  if (_arrMode === 'linear') {
+    const n  = Math.max(2, parseInt(document.getElementById('arr-lin-count').value) || 2);
+    const dx = parseFloat(document.getElementById('arr-lin-dx').value) || 0;
+    const dy = parseFloat(document.getElementById('arr-lin-dy').value) || 0;
+    const dz = parseFloat(document.getElementById('arr-lin-dz').value) || 0;
+
+    copies.push(source);
+    for (let i = 1; i < n; i++) {
+      const clone = _cloneObject(source);
+      clone.position.set(
+        source.position.x + dx * i,
+        source.position.y + dy * i,
+        source.position.z + dz * i
+      );
+      scene.add(clone);
+      objects.push(clone);
+      copies.push(clone);
+    }
+    toast(`Linear array: ${n} × shape`);
+
+  } else {
+    const cols = Math.max(1, parseInt(document.getElementById('arr-rect-cols').value) || 1);
+    const rows = Math.max(1, parseInt(document.getElementById('arr-rect-rows').value) || 1);
+    const lvls = Math.max(1, parseInt(document.getElementById('arr-rect-lvls').value) || 1);
+    const cdx  = parseFloat(document.getElementById('arr-rect-dx').value) || 0;
+    const rdz  = parseFloat(document.getElementById('arr-rect-dz').value) || 0;
+    const ldy  = parseFloat(document.getElementById('arr-rect-dy').value) || 0;
+    let   first = true;
+
+    for (let l = 0; l < lvls; l++) {
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (first) { copies.push(source); first = false; continue; }
+          const clone = _cloneObject(source);
+          clone.position.set(
+            source.position.x + c * cdx,
+            source.position.y + l * ldy,
+            source.position.z + r * rdz
+          );
+          scene.add(clone);
+          objects.push(clone);
+          copies.push(clone);
+        }
+      }
+    }
+    toast(`Rectangular array: ${cols}×${rows}×${lvls} = ${copies.length} shapes`);
+  }
+
+  if (shouldGrp && copies.length > 1) {
+    // Group all copies into a block
+    const box    = new THREE.Box3();
+    copies.forEach(o => box.expandByObject(o));
+    const center = box.getCenter(new THREE.Vector3());
+
+    const group = new THREE.Group();
+    group.userData.type      = 'group';
+    group.userData.isGroup   = true;
+    group.userData.label     = `Array Block ${++count}`;
+    group.userData.elementId = '';
+    group.userData.status    = '';
+    group.userData.layerId   = source.userData.layerId || activeLayerId;
+    group.position.copy(center);
+    scene.add(group);
+
+    copies.forEach(o => {
+      scene.remove(o);
+      objects = objects.filter(x => x !== o);
+      o.position.sub(center);
+      group.add(o);
+    });
+    objects.push(group);
+    selection.clear();
+    selected = null;
+    selectObject(group);
+  } else {
+    // Select all results (no grouping)
+    deselect();
+    copies.forEach(o => {
+      selection.add(o);
+      _applyHighlight(o);
+      selected = o;
+    });
+    if (selected) {
+      tc.attach(selected);
+      document.getElementById('props').classList.add('show');
+      _syncBadge();
+      syncProps();
+    }
+    _updateBlockButtons();
+  }
+};
+
+/* Deep clone a mesh or group, including userData and material */
+function _cloneObject(src) {
+  const clone = src.clone();
+  // Clone materials recursively so color changes don't affect original
+  clone.traverse(c => {
+    if (c.material) c.material = c.material.clone();
+  });
+  clone.userData = {
+    ...src.userData,
+    label: src.userData.label + ' copy',
+    _emi: undefined,
+  };
+  return clone;
+}
 
 /* ── save menu toggle ──────────────────────────────────────────────────── */
 window.toggleSaveMenu = function() {
