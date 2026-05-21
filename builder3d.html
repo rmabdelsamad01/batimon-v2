@@ -200,6 +200,74 @@
     }
     .snp-foot-btn:hover { background: #30363d; }
 
+    /* ── Layers panel ── */
+    #layers-panel {
+      position: absolute; top: 50px; left: 72px; width: 210px; bottom: 0;
+      background: #161b22; border-right: 1px solid #30363d;
+      display: flex; flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform .22s cubic-bezier(.4,0,.2,1);
+      z-index: 88;
+    }
+    #layers-panel.open { transform: translateX(0); }
+    .lp-head {
+      padding: 11px 12px 9px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #30363d; flex-shrink: 0;
+    }
+    .lp-title { font-size: 10px; font-weight: 700; color: #8b949e; text-transform: uppercase; letter-spacing: .6px; }
+    .lp-add {
+      width: 22px; height: 22px; border-radius: 5px; border: 1px solid #30363d;
+      background: #21262d; color: #8b949e; cursor: pointer; font-size: 15px; line-height: 1;
+      display: flex; align-items: center; justify-content: center; font-family: system-ui;
+    }
+    .lp-add:hover { background: #238636; border-color: #238636; color: #fff; }
+    .lp-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+    .lp-list::-webkit-scrollbar { width: 3px; }
+    .lp-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+    .lp-row {
+      display: flex; align-items: center; gap: 7px; padding: 7px 10px 7px 8px;
+      cursor: pointer; transition: background .1s; user-select: none;
+      border-left: 2px solid transparent;
+    }
+    .lp-row:hover { background: #21262d; }
+    .lp-row.active { background: #0ea5e910; border-left-color: #0ea5e9; }
+    .lp-row.lp-hidden .lp-name { color: #484f58; }
+    .lp-row.lp-hidden .lp-dot  { opacity: .35; }
+    .lp-dot {
+      width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,.18); cursor: pointer; position: relative;
+    }
+    .lp-dot:hover::after {
+      content: '✏'; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; color: #e6edf3;
+    }
+    .lp-name {
+      flex: 1; font-size: 11px; color: #e6edf3; font-weight: 500;
+      min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lp-row.active .lp-name { color: #38bdf8; font-weight: 700; }
+    .lp-eye {
+      font-size: 11px; cursor: pointer; color: #8b949e; flex-shrink: 0; width: 18px; text-align: center;
+    }
+    .lp-eye:hover { color: #e6edf3; }
+    .lp-del {
+      font-size: 10px; cursor: pointer; color: transparent; flex-shrink: 0; width: 14px; text-align: center;
+      transition: color .1s;
+    }
+    .lp-row:hover .lp-del { color: #484f58; }
+    .lp-del:hover { color: #ff7b72 !important; }
+
+    /* Active layer chip in toolbar */
+    #alc-wrap {
+      display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px;
+      border: 1px solid #30363d; background: #21262d; cursor: pointer; flex-shrink: 0; max-width: 140px;
+    }
+    #alc-wrap:hover { border-color: #8b949e; }
+    #alc-wrap.panel-open { border-color: #0ea5e9; background: #0ea5e910; }
+    #alc-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,.2); }
+    #alc-name { font-size: 11px; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #alc-arr  { font-size: 9px; color: #8b949e; flex-shrink: 0; }
+
     /* ── Snap marker label overlay ── */
     #snap-label {
       position: absolute; pointer-events: none; z-index: 200;
@@ -326,10 +394,18 @@
   <button id="btn-scale"  class="tb-btn"         onclick="setMode('scale')">⤢ Scale</button>
 
   <div class="sep"></div>
-  <div id="col-wrap" onclick="document.getElementById('col-input').click()" title="Colour">
+  <span class="grp">Layer:</span>
+  <div id="alc-wrap" onclick="toggleLayersPanel()" title="Manage layers">
+    <div id="alc-dot" style="background:#0ea5e9;"></div>
+    <span id="alc-name">Default</span>
+    <span id="alc-arr">▾</span>
+  </div>
+
+  <div class="sep"></div>
+  <div id="col-wrap" onclick="document.getElementById('col-input').click()" title="Layer colour — changes all objects in active layer">
     <div id="col-swatch" style="background:#0ea5e9;"></div>
     <span style="font-size:11px;color:#8b949e;">Colour</span>
-    <input type="color" id="col-input" value="#0ea5e9" oninput="onColorChange(this.value)">
+    <input type="color" id="col-input" value="#0ea5e9" oninput="onLayerColorChange(this.value)">
   </div>
 
   <div class="sep"></div>
@@ -435,6 +511,15 @@
   <input type="file" id="load-input" accept=".json" style="display:none" onchange="onLoadFile(this)">
 </div>
 
+<!-- ══ LAYERS PANEL ══════════════════════════════════════════════════════════ -->
+<div id="layers-panel">
+  <div class="lp-head">
+    <span class="lp-title">Layers</span>
+    <button class="lp-add" onclick="addLayer()" title="New layer">+</button>
+  </div>
+  <div class="lp-list" id="layer-list"></div>
+</div>
+
 <!-- ══ SHAPE SIDEBAR ════════════════════════════════════════════════════════ -->
 <div id="shape-sidebar">
   <div class="shp-lbl">Shapes</div>
@@ -485,7 +570,7 @@
   <div class="p-row"><span class="p-ax" style="color:#60a5fa;">Z</span><input class="p-inp" id="sz" type="number" step="0.1" min="0.01" oninput="applyProps()"></div>
 
   <div class="p-lbl">Colour</div>
-  <input type="color" id="p-color" oninput="onColorChange(this.value)">
+  <input type="color" id="p-color" oninput="onObjectColorChange(this.value)">
 
   <button class="p-btn" id="p-dup" onclick="duplicateSelected()">⧉ Duplicate</button>
   <button class="p-btn" id="p-del" onclick="deleteSelected()">🗑 Delete</button>
@@ -767,8 +852,9 @@ const LABEL = { box:'Cube', sphere:'Sphere', cylinder:'Cylinder', cone:'Cone', p
 window.addShape = function(type) {
   try {
     const geo = GEO[type]();
+    const layer = _layerById(activeLayerId) || layers[0];
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(activeColor),
+      color: new THREE.Color(layer.color),
       roughness: 0.55,
       metalness: 0.1,
     });
@@ -776,8 +862,9 @@ window.addShape = function(type) {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow    = true;
     mesh.receiveShadow = true;
-    mesh.userData.type  = type;
-    mesh.userData.label = `${LABEL[type]} ${++count}`;
+    mesh.userData.type    = type;
+    mesh.userData.label   = `${LABEL[type]} ${++count}`;
+    mesh.userData.layerId = activeLayerId;
 
     /* place on the ground, in front of camera */
     if (type === 'plane') {
@@ -1028,36 +1115,7 @@ window.onLoadFile = function(input) {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.objects || !Array.isArray(data.objects)) throw new Error('Invalid scene file');
-
-      // Clear current scene
-      deselect();
-      objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
-      objects = [];
-      count   = 0;
-
-      data.objects.forEach(od => {
-        if (!GEO[od.type]) return;
-        const geo = GEO[od.type]();
-        const mat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(od.color || '#0ea5e9'),
-          roughness: 0.55, metalness: 0.1,
-        });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.castShadow    = true;
-        mesh.receiveShadow = true;
-        mesh.userData.type  = od.type;
-        mesh.userData.label = od.label || `${od.type} ${++count}`;
-        count = Math.max(count, parseInt(od.label?.match(/\d+$/)?.[0] || 0));
-
-        if (od.position) mesh.position.fromArray(od.position);
-        if (od.rotation) mesh.rotation.set(...od.rotation);
-        if (od.scale)    mesh.scale.fromArray(od.scale);
-
-        scene.add(mesh);
-        objects.push(mesh);
-      });
-
-      fitCamera();
+      _applySceneData(data);
       toast(`Loaded ${objects.length} objects`);
     } catch(err) {
       toast('Failed to load file');
@@ -1097,16 +1155,206 @@ window.exportGLB = function() {
   );
 };
 
+/* ── Layer System ──────────────────────────────────────────────────────── */
+const LAYER_PALETTE = ['#0ea5e9','#3fb950','#f97316','#a855f7','#ec4899','#facc15','#06b6d4','#ef4444','#84cc16','#8b5cf6'];
+let _lid = 1;
+let layers = [{ id:'layer_1', name:'Default', color:'#0ea5e9', visible:true }];
+let activeLayerId = 'layer_1';
+
+function _layerById(id) { return layers.find(l => l.id === id); }
+
+function _syncChip() {
+  const l = _layerById(activeLayerId) || layers[0];
+  document.getElementById('alc-dot').style.background  = l.color;
+  document.getElementById('alc-name').textContent       = l.name;
+  document.getElementById('col-swatch').style.background = l.color;
+  document.getElementById('col-input').value             = l.color;
+  activeColor = l.color;
+}
+
+function _renderLayers() {
+  const list = document.getElementById('layer-list');
+  list.innerHTML = '';
+  layers.forEach(layer => {
+    const isActive  = layer.id === activeLayerId;
+    const isHidden  = !layer.visible;
+    const row = document.createElement('div');
+    row.className = `lp-row${isActive ? ' active' : ''}${isHidden ? ' lp-hidden' : ''}`;
+    row.dataset.lid = layer.id;
+
+    // Color dot — opens color picker
+    const dot = document.createElement('div');
+    dot.className = 'lp-dot';
+    dot.style.background = layer.color;
+    dot.title = 'Change colour';
+    dot.onclick = e => { e.stopPropagation(); _pickLayerColor(layer.id, dot); };
+
+    // Name — double-click to rename
+    const name = document.createElement('div');
+    name.className = 'lp-name';
+    name.title = 'Double-click to rename';
+    name.textContent = layer.name;
+    name.ondblclick = e => { e.stopPropagation(); _renameLayer(layer.id, name); };
+
+    // Eye — toggle visibility
+    const eye = document.createElement('div');
+    eye.className = 'lp-eye';
+    eye.title = layer.visible ? 'Hide layer' : 'Show layer';
+    eye.textContent = layer.visible ? '👁' : '🚫';
+    eye.onclick = e => { e.stopPropagation(); toggleLayerVisibility(layer.id); };
+
+    // Delete (hidden unless hovered, disabled if only 1 layer)
+    const del = document.createElement('div');
+    del.className = 'lp-del';
+    del.title = 'Delete layer';
+    del.textContent = '✕';
+    del.onclick = e => { e.stopPropagation(); deleteLayer(layer.id); };
+    if (layers.length <= 1) del.style.display = 'none';
+
+    row.appendChild(dot);
+    row.appendChild(name);
+    row.appendChild(eye);
+    row.appendChild(del);
+
+    // Click row → set active layer
+    row.onclick = () => setActiveLayer(layer.id);
+    list.appendChild(row);
+  });
+}
+
+window.toggleLayersPanel = function() {
+  const panel = document.getElementById('layers-panel');
+  const chip  = document.getElementById('alc-wrap');
+  panel.classList.toggle('open');
+  chip.classList.toggle('panel-open', panel.classList.contains('open'));
+};
+
+window.setActiveLayer = function(id) {
+  const layer = _layerById(id);
+  if (!layer) return;
+  activeLayerId = id;
+  _syncChip();
+  _renderLayers();
+};
+
+window.addLayer = function() {
+  _lid++;
+  const id    = 'layer_' + _lid;
+  const color = LAYER_PALETTE[(_lid - 1) % LAYER_PALETTE.length];
+  layers.push({ id, name: 'Layer ' + _lid, color, visible: true });
+  setActiveLayer(id);
+  _renderLayers();
+  // Immediately open inline rename
+  setTimeout(() => {
+    const el = document.querySelector(`[data-lid="${id}"] .lp-name`);
+    if (el) _renameLayer(id, el);
+  }, 40);
+};
+
+function _pickLayerColor(id, dotEl) {
+  const layer = _layerById(id);
+  if (!layer) return;
+  const inp = document.createElement('input');
+  inp.type = 'color';
+  inp.value = layer.color;
+  inp.style.cssText = 'opacity:0;width:0;height:0;position:absolute;';
+  document.body.appendChild(inp);
+  inp.click();
+  inp.oninput = () => {
+    layer.color = inp.value;
+    dotEl.style.background = inp.value;
+    objects.forEach(o => { if (o.userData.layerId === id) o.material.color.set(inp.value); });
+    if (id === activeLayerId) _syncChip();
+  };
+  inp.onchange = () => { _renderLayers(); document.body.removeChild(inp); };
+}
+
+function _renameLayer(id, nameEl) {
+  const layer = _layerById(id);
+  if (!layer) return;
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.value = layer.name;
+  inp.style.cssText = 'background:#0d1117;border:1px solid #0ea5e9;border-radius:3px;color:#e6edf3;font-size:11px;font-weight:600;padding:1px 4px;width:100%;outline:none;font-family:system-ui;';
+  nameEl.textContent = '';
+  nameEl.appendChild(inp);
+  inp.focus(); inp.select();
+  const commit = () => {
+    layer.name = inp.value.trim() || layer.name;
+    _renderLayers();
+    if (id === activeLayerId) _syncChip();
+  };
+  inp.onblur   = commit;
+  inp.onkeydown = e => {
+    if (e.key === 'Enter')  { e.preventDefault(); inp.blur(); }
+    if (e.key === 'Escape') { inp.value = layer.name; inp.blur(); }
+    e.stopPropagation();
+  };
+}
+
+window.toggleLayerVisibility = function(id) {
+  const layer = _layerById(id);
+  if (!layer) return;
+  layer.visible = !layer.visible;
+  objects.forEach(o => { if (o.userData.layerId === id) o.visible = layer.visible; });
+  _renderLayers();
+};
+
+window.deleteLayer = function(id) {
+  if (layers.length <= 1) { toast('Cannot delete the last layer'); return; }
+  const cnt = objects.filter(o => o.userData.layerId === id).length;
+  if (cnt > 0 && !confirm(`Delete layer? ${cnt} object(s) will move to the first remaining layer.`)) return;
+  const fallback = layers.find(l => l.id !== id);
+  objects.forEach(o => {
+    if (o.userData.layerId === id) {
+      o.userData.layerId = fallback.id;
+      o.material.color.set(fallback.color);
+    }
+  });
+  layers = layers.filter(l => l.id !== id);
+  if (activeLayerId === id) setActiveLayer(layers[0].id);
+  _renderLayers();
+};
+
+// Toolbar colour picker → changes active layer colour
+window.onLayerColorChange = function(hex) {
+  const layer = _layerById(activeLayerId);
+  if (!layer) return;
+  layer.color = hex;
+  activeColor = hex;
+  document.getElementById('col-swatch').style.background = hex;
+  document.getElementById('alc-dot').style.background    = hex;
+  objects.forEach(o => { if (o.userData.layerId === activeLayerId) o.material.color.set(hex); });
+  _renderLayers();
+};
+
+// Properties panel colour picker → changes only the selected object
+window.onObjectColorChange = function(hex) {
+  activeColor = hex;
+  document.getElementById('p-color').value = hex;
+  if (selected) selected.material.color.set(hex);
+};
+
+// Legacy alias (snap panel etc. may call this)
+window.onColorChange = window.onLayerColorChange;
+
+// Init layers UI
+_syncChip();
+_renderLayers();
+
 /* ── Cloud Save / Load (Supabase) ──────────────────────────────────────── */
 const _cloudScenes = new Map();  // id → scene_data (filled when browser opens)
 
 function _scenePayload() {
   return {
-    version: 1,
+    version: 2,
     saved: new Date().toISOString(),
+    layers,
+    activeLayerId,
     objects: objects.map(o => ({
       type:     o.userData.type,
       label:    o.userData.label,
+      layerId:  o.userData.layerId,
       position: o.position.toArray(),
       rotation: [o.rotation.x, o.rotation.y, o.rotation.z],
       scale:    o.scale.toArray(),
@@ -1220,15 +1468,21 @@ async function _refreshScenesList() {
   });
 }
 
-window.loadCloudScene = function(id) {
-  const data = _cloudScenes.get(id);
-  if (!data || !Array.isArray(data.objects)) { toast('Invalid scene data'); return; }
-  if (objects.length > 0 && !confirm('Replace current scene with this one?')) return;
-  closeMyScenes();
-
+function _applySceneData(data) {
   deselect();
   objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
   objects = []; count = 0;
+
+  // Restore layers
+  if (data.layers && data.layers.length) {
+    layers = data.layers.map(l => ({ ...l }));
+    activeLayerId = data.activeLayerId || layers[0].id;
+    _lid = Math.max(...layers.map(l => parseInt(l.id.replace('layer_', '')) || 1));
+  } else {
+    layers = [{ id:'layer_1', name:'Default', color:'#0ea5e9', visible:true }];
+    activeLayerId = 'layer_1'; _lid = 1;
+  }
+  _syncChip(); _renderLayers();
 
   data.objects.forEach(od => {
     if (!GEO[od.type]) return;
@@ -1240,17 +1494,28 @@ window.loadCloudScene = function(id) {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow    = true;
     mesh.receiveShadow = true;
-    mesh.userData.type  = od.type;
-    mesh.userData.label = od.label || `${od.type} ${++count}`;
+    mesh.userData.type    = od.type;
+    mesh.userData.layerId = od.layerId || activeLayerId;
+    mesh.userData.label   = od.label || `${od.type} ${++count}`;
     count = Math.max(count, parseInt(od.label?.match(/\d+$/)?.[0] || 0));
     if (od.position) mesh.position.fromArray(od.position);
     if (od.rotation) mesh.rotation.set(...od.rotation);
     if (od.scale)    mesh.scale.fromArray(od.scale);
+    const lyr = _layerById(mesh.userData.layerId);
+    if (lyr && !lyr.visible) mesh.visible = false;
     scene.add(mesh);
     objects.push(mesh);
   });
 
   fitCamera();
+}
+
+window.loadCloudScene = function(id) {
+  const data = _cloudScenes.get(id);
+  if (!data || !Array.isArray(data.objects)) { toast('Invalid scene data'); return; }
+  if (objects.length > 0 && !confirm('Replace current scene with this one?')) return;
+  closeMyScenes();
+  _applySceneData(data);
   toast(`Loaded ${objects.length} objects`);
 };
 
