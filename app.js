@@ -13275,14 +13275,7 @@ function renderBuilderPage(){
   const el=document.getElementById('page-builder');
   if(!el)return;
   el.innerHTML=`<div class="fpw" style="flex-direction:column;">
-    <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
-      <span style="font-size:16px;line-height:1;">🏗</span>
-      <span style="font-size:14px;font-weight:700;color:var(--text);">3D Builder</span>
-      <span style="font-size:11px;color:var(--text3);">Create and arrange 3D shapes</span>
-    </div>
-    <div style="flex:1;min-height:0;overflow:hidden;position:relative;">
-      <iframe src="builder3d.html" style="width:100%;height:100%;border:none;display:block;"></iframe>
-    </div>
+    <iframe src="builder3d.html" style="width:100%;height:100%;border:none;display:block;flex:1;"></iframe>
   </div>`;
 }
 
