@@ -335,7 +335,9 @@ sun.shadow.camera.far    = 200;
 sun.shadow.camera.left   = sun.shadow.camera.bottom = -30;
 sun.shadow.camera.right  = sun.shadow.camera.top    =  30;
 scene.add(sun);
-scene.add(Object.assign(new THREE.DirectionalLight(0x6699cc, 0.4), { position: new THREE.Vector3(-10, 5, -10) }));
+const fillLight = new THREE.DirectionalLight(0x6699cc, 0.4);
+fillLight.position.set(-10, 5, -10);
+scene.add(fillLight);
 scene.add(new THREE.HemisphereLight(0x223355, 0x111a11, 0.3));
 
 /* ── grid & shadow ground ──────────────────────────────────────────────── */
