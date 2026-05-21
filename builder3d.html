@@ -1236,10 +1236,46 @@ ray.params.Line = { threshold: 0.08 };  // makes DXF lines clickable
 const mp   = new THREE.Vector2();
 let   _md  = null;
 
-// ── Crosshair + draw preview on every mouse move ──
+/* ── Free-drag (grab from any surface point) ───────────────────────────── */
+const _fdPlane  = new THREE.Plane();          // horizontal plane at grab point
+const _fdOffset = new THREE.Vector3();        // object centre − grab point
+let   _fdObj    = null;                       // object being dragged
+let   _fdActive = false;                      // drag is live
+let   _fdReady  = false;                      // pointerdown hit an object
+
+function _ndcFromEvent(e) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  return new THREE.Vector2(
+    ((e.clientX - rect.left) / rect.width)  * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1
+  );
+}
+
+// ── Crosshair + draw preview + free-drag on every mouse move ──
 renderer.domElement.addEventListener('pointermove', e => {
   const wRect = wrap.getBoundingClientRect();
   _moveCrosshair(e.clientX - wRect.left, e.clientY - wRect.top);
+
+  // ── Free drag (move only, TC gizmo not grabbed) ──
+  if (_fdReady && !drawTool && (e.buttons & 1) && tc.axis === null) {
+    const dx = e.clientX - _md.x, dy = e.clientY - _md.y;
+    if (!_fdActive && Math.hypot(dx, dy) > 4) {
+      _fdActive = true;
+      if (_fdObj !== selected) selectObject(_fdObj); // auto-select dragged object
+    }
+    if (_fdActive) {
+      _drawRay.setFromCamera(_ndcFromEvent(e), camera);
+      const pt = new THREE.Vector3();
+      if (_drawRay.ray.intersectPlane(_fdPlane, pt)) {
+        const np = pt.clone().add(_fdOffset);
+        if (SNAP.grid) { np.x = _snapVal(np.x); np.z = _snapVal(np.z); }
+        _fdObj.position.copy(np);
+        syncProps();
+      }
+      return; // skip draw-tool update while dragging
+    }
+  }
+
   if (!drawTool) return;
 
   const cfg = DRAW_CFG[drawTool];
@@ -1307,6 +1343,26 @@ renderer.domElement.addEventListener('pointerdown', e => {
   }
 
   _md = { x: e.clientX, y: e.clientY };
+
+  // ── Set up free drag if TC gizmo is NOT grabbed ──
+  _fdReady = false; _fdActive = false; _fdObj = null;
+  if (tc.axis === null && tc.mode === 'translate') {
+    ray.setFromCamera(_ndcFromEvent(e), camera);
+    const hits = ray.intersectObjects(objects, false);
+    if (hits.length) {
+      const hit = hits[0];
+      _fdObj = hit.object;
+      // Horizontal plane at the surface hit point's Y
+      _fdPlane.setFromNormalAndCoplanarPoint(new THREE.Vector3(0,1,0), hit.point);
+      // Raycast plane to get exact grab world position
+      const grabPt = new THREE.Vector3();
+      ray.ray.intersectPlane(_fdPlane, grabPt);
+      // Offset keeps the grabbed surface point under the cursor
+      _fdOffset.copy(_fdObj.position).sub(grabPt);
+      _fdReady = true;
+      orbit.enabled = false;
+    }
+  }
 });
 
 // ── Pointer up ──
@@ -1345,6 +1401,12 @@ renderer.domElement.addEventListener('pointerup', e => {
     }
     return;
   }
+
+  // ── End free drag ──
+  const wasDrag = _fdActive;
+  _fdActive = false; _fdReady = false;
+  orbit.enabled = true;
+  if (wasDrag) return; // drag ended — don't do click-selection
 
   if (!_md) return;
   if (Math.hypot(e.clientX - _md.x, e.clientY - _md.y) > 6) { _md = null; return; }
