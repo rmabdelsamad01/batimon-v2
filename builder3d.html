@@ -181,7 +181,105 @@
       border-radius: 4px; padding: 2px 7px; font-size: 10px; color: #e6edf3;
       display: none; white-space: nowrap;
     }
+
+    /* ── Scenes browser modal ── */
+    #scenes-modal {
+      display: none; position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,.72); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    #scenes-modal.open { display: flex; }
+    #scenes-box {
+      background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+      width: 500px; max-height: 75vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px #000c;
+    }
+    .sb-head {
+      padding: 16px 18px 12px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #30363d; flex-shrink: 0;
+    }
+    .sb-head h3 { font-size: 14px; font-weight: 700; color: #e6edf3; margin: 0; }
+    .sb-close {
+      width: 26px; height: 26px; border-radius: 6px; border: 1px solid #30363d;
+      background: #21262d; color: #8b949e; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sb-close:hover { background: #30363d; color: #e6edf3; }
+    .sb-body { flex: 1; overflow-y: auto; }
+    .sb-body::-webkit-scrollbar { width: 4px; }
+    .sb-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+    .sb-empty { padding: 40px; text-align: center; color: #8b949e; font-size: 12px; line-height: 1.7; }
+    .sb-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 18px; transition: background .1s;
+    }
+    .sb-item:hover { background: #21262d; }
+    .sb-item-ico { font-size: 22px; flex-shrink: 0; }
+    .sb-item-info { flex: 1; min-width: 0; }
+    .sb-item-name { font-size: 13px; color: #e6edf3; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-item-meta { font-size: 10px; color: #8b949e; margin-top: 2px; }
+    .sb-item-actions { display: flex; gap: 5px; flex-shrink: 0; }
+    .sb-act-btn {
+      padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
+      cursor: pointer; font-family: system-ui; line-height: 1.4;
+    }
+    .sb-act-load { border: 1px solid #238636; background: #1a3a22; color: #3fb950; }
+    .sb-act-load:hover { background: #238636; color: #fff; }
+    .sb-act-del  { border: 1px solid #ff7b7240; background: transparent; color: #ff7b72; }
+    .sb-act-del:hover  { background: #ff7b7220; border-color: #ff7b72; }
+    .sb-footer {
+      padding: 12px 18px; border-top: 1px solid #30363d; flex-shrink: 0;
+      display: flex; justify-content: flex-end;
+    }
+    .sb-foot-btn {
+      padding: 6px 18px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: system-ui;
+      border: 1px solid #30363d; background: #21262d; color: #e6edf3;
+    }
+    .sb-foot-btn:hover { background: #30363d; }
+
+    /* ── Scene name dialog ── */
+    #scene-name-dlg {
+      display: none; position: fixed; inset: 0; z-index: 1100;
+      background: rgba(0,0,0,.72); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    #scene-name-dlg.open { display: flex; }
+    #snd-box {
+      background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+      width: 360px; padding: 22px 22px 18px; box-shadow: 0 20px 60px #000c;
+    }
+    #snd-box h3 { font-size: 14px; font-weight: 700; color: #e6edf3; margin: 0 0 14px; }
+    #snd-input {
+      width: 100%; padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px;
+      background: #0d1117; color: #e6edf3; font-size: 13px; font-family: system-ui;
+      outline: none; margin-bottom: 14px; box-sizing: border-box;
+    }
+    #snd-input:focus { border-color: #0ea5e9; }
+    .snd-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    .snd-cancel {
+      padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: system-ui;
+      border: 1px solid #30363d; background: #21262d; color: #e6edf3;
+    }
+    .snd-cancel:hover { background: #30363d; }
+    .snd-ok {
+      padding: 7px 18px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: system-ui;
+      border: 1px solid #238636; background: #1a3a22; color: #3fb950;
+    }
+    .snd-ok:hover { background: #238636; color: #fff; }
   </style>
+
+  <!-- Supabase for cloud save (shares auth session with parent app via localStorage) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    window._sb = supabase.createClient(
+      'https://gmrpmyumvotczqbjagfd.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtcnBteXVtdm90Y3pxYmphZ2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTAyMDcsImV4cCI6MjA5MDAyNjIwN30.Q80FFpwMe3Kj4rNN_85GyEVn1btxLu5ddIXjPWD8hhE',
+      { auth: { persistSession: true, autoRefreshToken: true } }
+    );
+  </script>
 
   <script type="importmap">
   {
@@ -277,11 +375,11 @@
           <div class="sm-desc">Save current view as PNG image</div>
         </div>
       </div>
-      <div class="sm-item" onclick="saveScene();closeSaveMenu()">
-        <span class="sm-ico">💾</span>
+      <div class="sm-item" onclick="saveToCloud();closeSaveMenu()">
+        <span class="sm-ico">☁️</span>
         <div>
-          <div>Save Scene</div>
-          <div class="sm-desc">Save all shapes as .json (reload later)</div>
+          <div>Save to Cloud</div>
+          <div class="sm-desc">Save scene to your account</div>
         </div>
       </div>
       <div class="sm-item" onclick="exportGLB();closeSaveMenu()">
@@ -292,11 +390,26 @@
         </div>
       </div>
       <div class="sm-sep"></div>
+      <div class="sm-item" onclick="openMyScenes();closeSaveMenu()">
+        <span class="sm-ico">📁</span>
+        <div>
+          <div>My Scenes</div>
+          <div class="sm-desc">Browse and load your cloud scenes</div>
+        </div>
+      </div>
+      <div class="sm-sep"></div>
+      <div class="sm-item" onclick="saveScene();closeSaveMenu()">
+        <span class="sm-ico">💾</span>
+        <div>
+          <div>Download .json</div>
+          <div class="sm-desc">Save as local file (no account needed)</div>
+        </div>
+      </div>
       <div class="sm-item" onclick="loadScene();closeSaveMenu()">
         <span class="sm-ico">📂</span>
         <div>
-          <div>Load Scene</div>
-          <div class="sm-desc">Open a previously saved .json file</div>
+          <div>Open .json file</div>
+          <div class="sm-desc">Load a previously saved .json file</div>
         </div>
       </div>
     </div>
@@ -350,6 +463,34 @@
   <div style="font-size:32px;">⚠️</div>
   <div id="err-msg"></div>
   <div style="font-size:11px;color:#8b949e;">Check the browser console for details (F12)</div>
+</div>
+
+<!-- ══ SCENES BROWSER ════════════════════════════════════════════════════ -->
+<div id="scenes-modal">
+  <div id="scenes-box">
+    <div class="sb-head">
+      <h3>☁️ My Scenes</h3>
+      <button class="sb-close" onclick="closeMyScenes()">✕</button>
+    </div>
+    <div class="sb-body" id="scenes-list">
+      <div class="sb-empty">Loading…</div>
+    </div>
+    <div class="sb-footer">
+      <button class="sb-foot-btn" onclick="closeMyScenes()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCENE NAME DIALOG ════════════════════════════════════════════════ -->
+<div id="scene-name-dlg">
+  <div id="snd-box">
+    <h3>☁️ Save Scene to Cloud</h3>
+    <input type="text" id="snd-input" placeholder="Give this scene a name…" maxlength="80">
+    <div class="snd-btns">
+      <button class="snd-cancel" onclick="closeNameDlg()">Cancel</button>
+      <button class="snd-ok" onclick="confirmCloudSave()">Save</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══ THREE.JS ════════════════════════════════════════════════════════════ -->
@@ -910,6 +1051,186 @@ window.exportGLB = function() {
     { binary: true }
   );
 };
+
+/* ── Cloud Save / Load (Supabase) ──────────────────────────────────────── */
+const _cloudScenes = new Map();  // id → scene_data (filled when browser opens)
+
+function _scenePayload() {
+  return {
+    version: 1,
+    saved: new Date().toISOString(),
+    objects: objects.map(o => ({
+      type:     o.userData.type,
+      label:    o.userData.label,
+      position: o.position.toArray(),
+      rotation: [o.rotation.x, o.rotation.y, o.rotation.z],
+      scale:    o.scale.toArray(),
+      color:    '#' + o.material.color.getHexString(),
+    }))
+  };
+}
+
+async function _getUser() {
+  const { data: { user } } = await window._sb.auth.getUser();
+  return user;
+}
+
+function _escHtml(s) {
+  return String(s).replace(/[&<>"']/g,
+    c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Save to cloud ──
+window.saveToCloud = async function() {
+  if (objects.length === 0) { toast('Nothing to save!'); return; }
+  const user = await _getUser();
+  if (!user) { toast('Please log in first'); return; }
+  const d = new Date();
+  document.getElementById('snd-input').value =
+    `Scene ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+  document.getElementById('scene-name-dlg').classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('snd-input');
+    inp.focus(); inp.select();
+  }, 60);
+};
+
+window.closeNameDlg = function() {
+  document.getElementById('scene-name-dlg').classList.remove('open');
+};
+
+window.confirmCloudSave = async function() {
+  const name = document.getElementById('snd-input').value.trim();
+  if (!name) { document.getElementById('snd-input').focus(); return; }
+  closeNameDlg();
+  const user = await _getUser();
+  if (!user) { toast('Please log in first'); return; }
+  toast('Saving…');
+  const { error } = await window._sb.from('builder_scenes').insert({
+    user_id:    user.id,
+    name:       name,
+    scene_data: _scenePayload(),
+  });
+  if (error) { toast('Save failed'); console.error(error); return; }
+  toast(`Saved "${name}"`);
+};
+
+// ── My Scenes browser ──
+window.openMyScenes = async function() {
+  document.getElementById('scenes-modal').classList.add('open');
+  await _refreshScenesList();
+};
+
+window.closeMyScenes = function() {
+  document.getElementById('scenes-modal').classList.remove('open');
+};
+
+async function _refreshScenesList() {
+  const listEl = document.getElementById('scenes-list');
+  listEl.innerHTML = '<div class="sb-empty">Loading…</div>';
+
+  const user = await _getUser();
+  if (!user) {
+    listEl.innerHTML = '<div class="sb-empty">Please log in to see your saved scenes.</div>';
+    return;
+  }
+
+  const { data, error } = await window._sb
+    .from('builder_scenes')
+    .select('id, name, created_at, scene_data')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    listEl.innerHTML = '<div class="sb-empty">Failed to load scenes.</div>';
+    console.error(error); return;
+  }
+  if (!data || data.length === 0) {
+    listEl.innerHTML = '<div class="sb-empty">No saved scenes yet.<br>Use ☁️ Save to Cloud to save your first scene.</div>';
+    return;
+  }
+
+  _cloudScenes.clear();
+  listEl.innerHTML = '';
+  data.forEach(s => {
+    _cloudScenes.set(s.id, s.scene_data);
+    const cnt = s.scene_data?.objects?.length ?? '?';
+    const d   = new Date(s.created_at);
+    const item = document.createElement('div');
+    item.className = 'sb-item';
+    item.innerHTML = `
+      <div class="sb-item-ico">🗂️</div>
+      <div class="sb-item-info">
+        <div class="sb-item-name">${_escHtml(s.name)}</div>
+        <div class="sb-item-meta">${cnt} object${cnt !== 1 ? 's' : ''} &nbsp;·&nbsp; ${d.toLocaleDateString()} ${d.toLocaleTimeString()}</div>
+      </div>
+      <div class="sb-item-actions">
+        <button class="sb-act-btn sb-act-load">Load</button>
+        <button class="sb-act-btn sb-act-del">Del</button>
+      </div>`;
+    item.querySelector('.sb-act-load').onclick = () => loadCloudScene(s.id);
+    item.querySelector('.sb-act-del').onclick  = () => deleteCloudScene(s.id, item);
+    listEl.appendChild(item);
+  });
+}
+
+window.loadCloudScene = function(id) {
+  const data = _cloudScenes.get(id);
+  if (!data || !Array.isArray(data.objects)) { toast('Invalid scene data'); return; }
+  if (objects.length > 0 && !confirm('Replace current scene with this one?')) return;
+  closeMyScenes();
+
+  deselect();
+  objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
+  objects = []; count = 0;
+
+  data.objects.forEach(od => {
+    if (!GEO[od.type]) return;
+    const geo = GEO[od.type]();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(od.color || '#0ea5e9'),
+      roughness: 0.55, metalness: 0.1,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow    = true;
+    mesh.receiveShadow = true;
+    mesh.userData.type  = od.type;
+    mesh.userData.label = od.label || `${od.type} ${++count}`;
+    count = Math.max(count, parseInt(od.label?.match(/\d+$/)?.[0] || 0));
+    if (od.position) mesh.position.fromArray(od.position);
+    if (od.rotation) mesh.rotation.set(...od.rotation);
+    if (od.scale)    mesh.scale.fromArray(od.scale);
+    scene.add(mesh);
+    objects.push(mesh);
+  });
+
+  fitCamera();
+  toast(`Loaded ${objects.length} objects`);
+};
+
+window.deleteCloudScene = async function(id, itemEl) {
+  if (!confirm('Delete this scene from cloud? This cannot be undone.')) return;
+  const { error } = await window._sb.from('builder_scenes').delete().eq('id', id);
+  if (error) { toast('Delete failed'); console.error(error); return; }
+  _cloudScenes.delete(id);
+  itemEl?.remove();
+  const listEl = document.getElementById('scenes-list');
+  if (!listEl.querySelector('.sb-item')) {
+    listEl.innerHTML = '<div class="sb-empty">No saved scenes yet.<br>Use ☁️ Save to Cloud to save your first scene.</div>';
+  }
+  toast('Scene deleted');
+};
+
+// Close modals on backdrop click / Escape
+document.getElementById('scenes-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('scenes-modal')) closeMyScenes();
+});
+document.getElementById('scene-name-dlg').addEventListener('click', e => {
+  if (e.target === document.getElementById('scene-name-dlg')) closeNameDlg();
+});
+document.getElementById('snd-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); confirmCloudSave(); }
+  if (e.key === 'Escape') closeNameDlg();
+});
 
 /* ── date helper ───────────────────────────────────────────────────────── */
 function datestamp() {
