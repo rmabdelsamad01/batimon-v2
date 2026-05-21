@@ -169,9 +169,9 @@
     }
 
     /* ── Save dropdown ── */
-    .save-wrap { position: relative; flex-shrink: 0; }
+    .save-wrap { flex-shrink: 0; }
     #save-menu {
-      display: none; position: absolute; top: calc(100% + 6px); right: 0;
+      display: none; position: fixed;
       background: #161b22; border: 1px solid #30363d; border-radius: 8px;
       box-shadow: 0 8px 24px #00000066; z-index: 500; min-width: 190px; overflow: hidden;
     }
@@ -196,9 +196,9 @@
     #err.show { display: flex; }
 
     /* ── OSNAP panel ── */
-    .snap-wrap { position: relative; flex-shrink: 0; }
+    .snap-wrap { flex-shrink: 0; }
     #snap-panel {
-      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      display: none; position: fixed;
       background: #161b22; border: 1px solid #30363d; border-radius: 8px;
       box-shadow: 0 8px 24px #00000066; z-index: 500; min-width: 220px; padding: 5px 0;
     }
@@ -854,7 +854,12 @@ function _applySnap() {
 
 // UI: toggle snap panel
 window.toggleSnapPanel = function() {
-  document.getElementById('snap-panel').classList.toggle('open');
+  const panel = document.getElementById('snap-panel');
+  const btn   = document.getElementById('snap-btn');
+  const r     = btn.getBoundingClientRect();
+  panel.style.top  = (r.bottom + 6) + 'px';
+  panel.style.left = r.left + 'px';
+  panel.classList.toggle('open');
 };
 window.toggleSnapMode = function(mode) {
   SNAP[mode] = !SNAP[mode];
@@ -1470,7 +1475,17 @@ window.applyProps = function() {
 
 /* ── save menu toggle ──────────────────────────────────────────────────── */
 window.toggleSaveMenu = function() {
-  document.getElementById('save-menu').classList.toggle('open');
+  const menu = document.getElementById('save-menu');
+  const btn  = document.getElementById('save-btn');
+  const r    = btn.getBoundingClientRect();
+  menu.style.top   = (r.bottom + 6) + 'px';
+  menu.style.right = 'auto';
+  menu.style.left  = (r.right - menu.offsetWidth || r.left) + 'px';
+  menu.classList.toggle('open');
+  // Adjust left after it's visible so we can measure offsetWidth
+  requestAnimationFrame(() => {
+    menu.style.left = Math.max(4, r.right - menu.offsetWidth) + 'px';
+  });
 };
 window.closeSaveMenu = function() {
   document.getElementById('save-menu').classList.remove('open');
