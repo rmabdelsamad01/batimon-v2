@@ -595,6 +595,24 @@
   <div class="p-head">Properties</div>
   <div class="p-sub" id="p-name"></div>
 
+  <div class="p-lbl">Element ID</div>
+  <input class="p-inp" id="p-eid" type="text" placeholder="e.g. BM-EF-R1C1"
+         style="width:100%;font-size:10px;padding:4px 6px;"
+         oninput="applyElementId(this.value)">
+
+  <div class="p-lbl">Status</div>
+  <select class="p-layer-sel" id="p-status" onchange="applyStatus(this.value)">
+    <option value="">— none —</option>
+    <option value="pending">· Pending</option>
+    <option value="cl_not_issued">✗ CL not issued</option>
+    <option value="cip">◑ CL in Progress</option>
+    <option value="cutting">✂ CL issued</option>
+    <option value="fabricated">⬡ Fabricated</option>
+    <option value="delivered">▣ Delivered</option>
+    <option value="installed">✓ Installed</option>
+    <option value="defect">! Defect</option>
+  </select>
+
   <div class="p-lbl">Position</div>
   <div class="p-row">
     <span class="p-ax" style="color:#f87171;">X</span><input class="p-inp" id="px" type="number" step="0.1" oninput="applyProps()">
@@ -621,9 +639,6 @@
 
   <div class="p-lbl">Colour</div>
   <input type="color" id="p-color" oninput="onObjectColorChange(this.value)">
-
-  <button class="p-btn" id="p-dup" onclick="duplicateSelected()">⧉ Duplicate</button>
-  <button class="p-btn" id="p-del" onclick="deleteSelected()">🗑 Delete</button>
 </div>
 
 <!-- ══ OVERLAYS ════════════════════════════════════════════════════════════ -->
@@ -1492,6 +1507,18 @@ window.clearAll = function() {
   count   = 0;
 };
 
+/* ── Status → colour map (matches monitoring sheet) ────────────────────── */
+const STATUS_COLORS = {
+  installed:     '#1a9458',
+  delivered:     '#a07800',
+  fabricated:    '#1a5fa8',
+  cutting:       '#C98BCA',
+  cip:           '#7a3679',
+  cl_not_issued: '#FF6666',
+  defect:        '#c02020',
+  pending:       '#6e7681',
+};
+
 /* ── properties ────────────────────────────────────────────────────────── */
 function syncProps() {
   if (!selected) return;
@@ -1502,13 +1529,36 @@ function syncProps() {
   setValue('rx', d(r.x)); setValue('ry', d(r.y)); setValue('rz', d(r.z));
   setValue('sx', f(s.x)); setValue('sy', f(s.y)); setValue('sz', f(s.z));
   document.getElementById('p-color').value = '#' + selected.material.color.getHexString();
-  // Populate layer dropdown
+  // Element ID
+  const eidEl = document.getElementById('p-eid');
+  if (eidEl !== document.activeElement) eidEl.value = selected.userData.elementId || '';
+  // Status
+  document.getElementById('p-status').value = selected.userData.status || '';
+  // Layer dropdown
   const sel = document.getElementById('p-layer');
   const curLid = selected.userData.layerId || layers[0].id;
   sel.innerHTML = layers.map(l =>
     `<option value="${l.id}"${l.id === curLid ? ' selected' : ''}>${l.name}</option>`
   ).join('');
 }
+
+window.applyElementId = function(val) {
+  if (!selected) return;
+  selected.userData.elementId = val.trim();
+  // Update label in badge / name
+  const label = val.trim() || selected.userData.label || '';
+  document.getElementById('badge').textContent = '✦ ' + (label || 'Object');
+};
+
+window.applyStatus = function(status) {
+  if (!selected) return;
+  selected.userData.status = status;
+  if (status && STATUS_COLORS[status]) {
+    const hex = STATUS_COLORS[status];
+    selected.material.color.set(hex);
+    document.getElementById('p-color').value = hex;
+  }
+};
 
 window.moveToLayer = function(layerId) {
   if (!selected) return;
@@ -2147,13 +2197,15 @@ function _scenePayload() {
     layers,
     activeLayerId,
     objects: objects.map(o => ({
-      type:     o.userData.type,
-      label:    o.userData.label,
-      layerId:  o.userData.layerId,
-      position: o.position.toArray(),
-      rotation: [o.rotation.x, o.rotation.y, o.rotation.z],
-      scale:    o.scale.toArray(),
-      color:    '#' + o.material.color.getHexString(),
+      type:      o.userData.type,
+      label:     o.userData.label,
+      layerId:   o.userData.layerId,
+      elementId: o.userData.elementId || '',
+      status:    o.userData.status    || '',
+      position:  o.position.toArray(),
+      rotation:  [o.rotation.x, o.rotation.y, o.rotation.z],
+      scale:     o.scale.toArray(),
+      color:     '#' + o.material.color.getHexString(),
     }))
   };
 }
@@ -2289,9 +2341,11 @@ function _applySceneData(data) {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.castShadow    = true;
     mesh.receiveShadow = true;
-    mesh.userData.type    = od.type;
-    mesh.userData.layerId = od.layerId || activeLayerId;
-    mesh.userData.label   = od.label || `${od.type} ${++count}`;
+    mesh.userData.type      = od.type;
+    mesh.userData.layerId   = od.layerId   || activeLayerId;
+    mesh.userData.label     = od.label     || `${od.type} ${++count}`;
+    mesh.userData.elementId = od.elementId || '';
+    mesh.userData.status    = od.status    || '';
     count = Math.max(count, parseInt(od.label?.match(/\d+$/)?.[0] || 0));
     if (od.position) mesh.position.fromArray(od.position);
     if (od.rotation) mesh.rotation.set(...od.rotation);
