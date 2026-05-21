@@ -555,25 +555,25 @@
 <!-- ══ SHAPE SIDEBAR ════════════════════════════════════════════════════════ -->
 <div id="shape-sidebar">
   <div class="shp-lbl">Shapes</div>
-  <button class="shp-btn" id="shp-box" onclick="activateDrawTool('box')">
+  <button class="shp-btn" id="shp-box"      onclick="activateDrawTool('box')">
     <span class="shp-ico">⬜</span><span class="shp-name">Cube</span>
   </button>
-  <button class="shp-btn" onclick="addShape('sphere')">
+  <button class="shp-btn" id="shp-sphere"   onclick="activateDrawTool('sphere')">
     <span class="shp-ico">⚪</span><span class="shp-name">Sphere</span>
   </button>
-  <button class="shp-btn" onclick="addShape('cylinder')">
+  <button class="shp-btn" id="shp-cylinder" onclick="activateDrawTool('cylinder')">
     <span class="shp-ico">🔵</span><span class="shp-name">Cylinder</span>
   </button>
-  <button class="shp-btn" onclick="addShape('cone')">
+  <button class="shp-btn" id="shp-cone"     onclick="activateDrawTool('cone')">
     <span class="shp-ico">🔺</span><span class="shp-name">Cone</span>
   </button>
-  <button class="shp-btn" onclick="addShape('pyramid')">
+  <button class="shp-btn" id="shp-pyramid"  onclick="activateDrawTool('pyramid')">
     <span class="shp-ico">🔷</span><span class="shp-name">Pyramid</span>
   </button>
-  <button class="shp-btn" onclick="addShape('torus')">
+  <button class="shp-btn" id="shp-torus"    onclick="activateDrawTool('torus')">
     <span class="shp-ico">⭕</span><span class="shp-name">Torus</span>
   </button>
-  <button class="shp-btn" onclick="addShape('plane')">
+  <button class="shp-btn" id="shp-plane"    onclick="activateDrawTool('plane')">
     <span class="shp-ico">▬</span><span class="shp-name">Plane</span>
   </button>
 </div>
@@ -892,21 +892,32 @@ function _moveCrosshair(lx, ly) {
 }
 
 /* ── DRAW TOOL ─────────────────────────────────────────────────────────── */
+// Config per shape — mode:'rect' needs corner+drag, 'circle' needs centre+radius
+const DRAW_CFG = {
+  box:      { mode:'rect',   hasHeight:true,  label:'Cube'     },
+  sphere:   { mode:'circle', hasHeight:false, label:'Sphere'   },
+  cylinder: { mode:'circle', hasHeight:true,  label:'Cylinder' },
+  cone:     { mode:'circle', hasHeight:true,  label:'Cone'     },
+  pyramid:  { mode:'rect',   hasHeight:true,  label:'Pyramid'  },
+  torus:    { mode:'circle', hasHeight:false, label:'Torus'    },
+  plane:    { mode:'rect',   hasHeight:false, label:'Plane'    },
+};
+
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
 const _drawRay     = new THREE.Raycaster();
 
-let drawTool    = null;   // 'box' | null
-let drawPhase   = null;   // 'corner1' | 'base' | 'height'
-let drawP1      = null;   // THREE.Vector3 first corner (ground)
-let drawP2      = null;   // THREE.Vector3 second corner (ground)
-let drawH       = 0;      // current height
-let _hPlane     = null;   // height-phase vertical plane
+let drawTool    = null;
+let drawPhase   = null;   // 'corner1'|'center'|'base'|'radius'|'height'
+let drawP1      = null;   // first corner / centre (ground)
+let drawP2      = null;   // second corner (rect mode)
+let drawRadius  = 0;      // circle mode radius
+let drawH       = 0;      // height
+let _hPlane     = null;   // vertical plane for height phase
 let _prevMesh   = null;   // live preview mesh
 
 function _snapVal(v) {
   return SNAP.grid ? Math.round(v / SNAP.gridSize) * SNAP.gridSize : v;
 }
-
 function _groundPt(cx, cy) {
   const rect = renderer.domElement.getBoundingClientRect();
   _drawRay.setFromCamera(
@@ -916,28 +927,38 @@ function _groundPt(cx, cy) {
   const pt = new THREE.Vector3();
   return _drawRay.ray.intersectPlane(_groundPlane, pt) ? pt : null;
 }
-
 function _snappedGround(cx, cy) {
   const pt = _groundPt(cx, cy);
   if (!pt) return null;
-  pt.x = _snapVal(pt.x);
-  pt.z = _snapVal(pt.z);
+  pt.x = _snapVal(pt.x); pt.z = _snapVal(pt.z);
   return pt;
 }
 
-function _makePrev() {
+// Build unit-sized preview geometry for each shape type
+function _prevGeo(type) {
+  switch(type) {
+    case 'sphere':   return new THREE.SphereGeometry(1, 32, 24);
+    case 'cylinder': return new THREE.CylinderGeometry(1, 1, 1, 32);
+    case 'cone':     return new THREE.ConeGeometry(1, 1, 32);
+    case 'pyramid':  return new THREE.ConeGeometry(1, 1, 4);
+    case 'torus':    return new THREE.TorusGeometry(1, 0.2, 16, 60);
+    default:         return new THREE.BoxGeometry(1, 1, 1); // box / plane
+  }
+}
+function _makePrev(type) {
   _dropPrev();
-  const geo = new THREE.BoxGeometry(1,1,1);
+  const geo = _prevGeo(type);
   const mat = new THREE.MeshBasicMaterial({ color:0x0ea5e9, transparent:true, opacity:0.18, depthWrite:false });
   _prevMesh = new THREE.Mesh(geo, mat);
-  const edges = new THREE.LineSegments(
+  _prevMesh.add(new THREE.LineSegments(
     new THREE.EdgesGeometry(geo),
     new THREE.LineBasicMaterial({ color:0x38bdf8 })
-  );
-  _prevMesh.add(edges);
+  ));
+  // flat shapes need a 90° rotation
+  if (type === 'torus' || type === 'plane') _prevMesh.rotation.x = -Math.PI / 2;
+  if (type === 'pyramid') _prevMesh.rotation.y = Math.PI / 4;
   scene.add(_prevMesh);
 }
-
 function _dropPrev() {
   if (!_prevMesh) return;
   _prevMesh.children.forEach(c => { c.geometry?.dispose(); c.material?.dispose(); });
@@ -945,77 +966,147 @@ function _dropPrev() {
   scene.remove(_prevMesh); _prevMesh = null;
 }
 
+// Update preview position/scale to match current draw state
 function _syncPrev() {
-  if (!_prevMesh || !drawP1 || !drawP2) return;
-  const w = Math.max(Math.abs(drawP2.x-drawP1.x), 0.01);
-  const d = Math.max(Math.abs(drawP2.z-drawP1.z), 0.01);
-  const h = Math.max(drawH, 0.01);
-  _prevMesh.scale.set(w, h, d);
-  _prevMesh.position.set((drawP1.x+drawP2.x)/2, h/2, (drawP1.z+drawP2.z)/2);
+  if (!_prevMesh || !drawP1) return;
+  const cfg = DRAW_CFG[drawTool];
+  const h   = Math.max(drawH, 0.01);
+
+  if (cfg.mode === 'rect') {
+    if (!drawP2) return;
+    const w  = Math.max(Math.abs(drawP2.x - drawP1.x), 0.01);
+    const d  = Math.max(Math.abs(drawP2.z - drawP1.z), 0.01);
+    const cx = (drawP1.x + drawP2.x) / 2;
+    const cz = (drawP1.z + drawP2.z) / 2;
+    if (drawTool === 'plane') {
+      _prevMesh.scale.set(w, d, 1);           // plane rotated, so Y→depth
+      _prevMesh.position.set(cx, 0.005, cz);
+    } else if (drawTool === 'pyramid') {
+      const r = Math.min(w, d) * Math.SQRT2 / 2;
+      _prevMesh.scale.set(r, h, r);
+      _prevMesh.position.set(cx, h / 2, cz);
+    } else {                                   // box
+      _prevMesh.scale.set(w, h, d);
+      _prevMesh.position.set(cx, h / 2, cz);
+    }
+  } else {                                     // circle mode
+    const r = Math.max(drawRadius, 0.01);
+    if (drawTool === 'sphere') {
+      _prevMesh.scale.setScalar(r);
+      _prevMesh.position.set(drawP1.x, r, drawP1.z);
+    } else if (drawTool === 'torus') {
+      _prevMesh.scale.setScalar(r);
+      _prevMesh.position.set(drawP1.x, 0, drawP1.z);
+    } else {                                   // cylinder / cone
+      _prevMesh.scale.set(r, h, r);
+      _prevMesh.position.set(drawP1.x, h / 2, drawP1.z);
+    }
+  }
 }
 
 function _setHint(msg) {
-  if (msg) { _dhEl.textContent = msg; _dhEl.style.display='block'; }
-  else      _dhEl.style.display='none';
+  if (msg) { _dhEl.textContent = msg; _dhEl.style.display = 'block'; }
+  else        _dhEl.style.display = 'none';
 }
 
 function _startHeightPhase() {
-  drawPhase = 'height';
-  drawH = 0.01;
-  const bc = new THREE.Vector3((drawP1.x+drawP2.x)/2, 0, (drawP1.z+drawP2.z)/2);
+  drawPhase = 'height'; drawH = 0.01;
+  const cfg = DRAW_CFG[drawTool];
+  const bc  = cfg.mode === 'rect'
+    ? new THREE.Vector3((drawP1.x+drawP2.x)/2, 0, (drawP1.z+drawP2.z)/2)
+    : new THREE.Vector3(drawP1.x, 0, drawP1.z);
   const camDir = new THREE.Vector3();
-  camera.getWorldDirection(camDir);
-  camDir.y = 0;
+  camera.getWorldDirection(camDir); camDir.y = 0;
   if (camDir.length() < 0.001) camDir.set(0,0,-1);
   camDir.normalize();
   _hPlane = new THREE.Plane().setFromNormalAndCoplanarPoint(camDir, bc);
-  orbit.enabled = false;
   _setHint('Move up for height → click to confirm  |  ESC to cancel');
 }
 
-function _finalizeBox() {
-  if (!drawP1 || !drawP2) return;
-  const w = Math.max(Math.abs(drawP2.x-drawP1.x), 0.01);
-  const d = Math.max(Math.abs(drawP2.z-drawP1.z), 0.01);
-  const h = Math.max(drawH, 0.01);
-  const geo = new THREE.BoxGeometry(w, h, d);
+function _finalizeShape() {
+  if (!drawP1) return;
+  const cfg   = DRAW_CFG[drawTool];
   const layer = _layerById(activeLayerId) || layers[0];
-  const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(layer.color), roughness:0.55, metalness:0.1 });
+  const h     = Math.max(drawH, 0.01);
+  let geo, pos, rotX = 0, rotY = 0;
+
+  if (cfg.mode === 'rect') {
+    if (!drawP2) return;
+    const w  = Math.max(Math.abs(drawP2.x - drawP1.x), 0.01);
+    const d  = Math.max(Math.abs(drawP2.z - drawP1.z), 0.01);
+    const cx = (drawP1.x + drawP2.x) / 2;
+    const cz = (drawP1.z + drawP2.z) / 2;
+    if (drawTool === 'box') {
+      geo = new THREE.BoxGeometry(w, h, d);
+      pos = new THREE.Vector3(cx, h / 2, cz);
+    } else if (drawTool === 'pyramid') {
+      const r = Math.min(w, d) * Math.SQRT2 / 2;
+      geo = new THREE.ConeGeometry(r, h, 4);
+      pos = new THREE.Vector3(cx, h / 2, cz); rotY = Math.PI / 4;
+    } else {                                   // plane
+      geo = new THREE.PlaneGeometry(w, d);
+      pos = new THREE.Vector3(cx, 0.005, cz); rotX = -Math.PI / 2;
+    }
+  } else {
+    const r = Math.max(drawRadius, 0.01);
+    if (drawTool === 'sphere') {
+      geo = new THREE.SphereGeometry(r, 32, 24);
+      pos = new THREE.Vector3(drawP1.x, r, drawP1.z);
+    } else if (drawTool === 'cylinder') {
+      geo = new THREE.CylinderGeometry(r, r, h, 32);
+      pos = new THREE.Vector3(drawP1.x, h / 2, drawP1.z);
+    } else if (drawTool === 'cone') {
+      geo = new THREE.ConeGeometry(r, h, 32);
+      pos = new THREE.Vector3(drawP1.x, h / 2, drawP1.z);
+    } else {                                   // torus
+      geo = new THREE.TorusGeometry(r, Math.max(r * 0.15, 0.05), 16, 60);
+      pos = new THREE.Vector3(drawP1.x, 0, drawP1.z); rotX = -Math.PI / 2;
+    }
+  }
+  if (!geo) return;
+
+  const mat  = new THREE.MeshStandardMaterial({ color: new THREE.Color(layer.color), roughness:0.55, metalness:0.1 });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.castShadow = mesh.receiveShadow = true;
-  mesh.userData.type    = 'box';
-  mesh.userData.label   = `Cube ${++count}`;
+  mesh.rotation.set(rotX, rotY, 0);
+  mesh.position.copy(pos);
+  mesh.userData.type    = drawTool;
+  mesh.userData.label   = `${cfg.label} ${++count}`;
   mesh.userData.layerId = activeLayerId;
-  mesh.position.set((drawP1.x+drawP2.x)/2, h/2, (drawP1.z+drawP2.z)/2);
   scene.add(mesh); objects.push(mesh);
-  toast('Cube added');
+  toast(`${cfg.label} added`);
+
   _dropPrev();
-  // Stay in draw mode, reset for next box
-  drawP1=null; drawP2=null; drawH=0; _hPlane=null;
-  drawPhase='corner1';
-  _setHint('Click to place next corner  |  ESC to exit draw mode');
+  // Reset for next shape in same tool
+  drawP1=null; drawP2=null; drawH=0; drawRadius=0; _hPlane=null;
+  drawPhase = cfg.mode === 'rect' ? 'corner1' : 'center';
+  const nextHint = cfg.mode === 'rect' ? 'Click to place first corner' : 'Click to place centre';
+  _setHint(`${nextHint}  |  ESC to exit`);
   selectObject(mesh);
 }
 
 window.activateDrawTool = function(type) {
-  if (drawTool === type) { cancelDraw(); return; }  // toggle off
+  if (drawTool === type) { cancelDraw(); return; }
   cancelDraw();
   drawTool  = type;
-  drawPhase = 'corner1';
+  const cfg = DRAW_CFG[type];
+  drawPhase = cfg.mode === 'rect' ? 'corner1' : 'center';
   deselect();
   orbit.enabled = false;
-  _setHint('Click to place first corner  |  ESC to cancel');
-  document.getElementById('shp-box').classList.add('draw-active');
+  const hint = cfg.mode === 'rect' ? 'Click to place first corner' : 'Click to place centre';
+  _setHint(`${hint}  |  ESC to cancel`);
+  document.querySelectorAll('.shp-btn').forEach(b => b.classList.remove('draw-active'));
+  const btn = document.getElementById('shp-' + type);
+  if (btn) btn.classList.add('draw-active');
 };
 
 window.cancelDraw = function cancelDraw() {
-  drawTool=null; drawPhase=null; drawP1=null; drawP2=null; drawH=0; _hPlane=null;
-  orbit.enabled=true;
-  _setHint(null);
-  _crEl.style.display='none';
+  drawTool=null; drawPhase=null; drawP1=null; drawP2=null;
+  drawH=0; drawRadius=0; _hPlane=null;
+  orbit.enabled = true;
+  _setHint(null); _crEl.style.display = 'none';
   _dropPrev();
-  const btn = document.getElementById('shp-box');
-  if (btn) btn.classList.remove('draw-active');
+  document.querySelectorAll('.shp-btn').forEach(b => b.classList.remove('draw-active'));
 };
 
 /* ── state ─────────────────────────────────────────────────────────────── */
@@ -1140,26 +1231,31 @@ ray.params.Line = { threshold: 0.08 };  // makes DXF lines clickable
 const mp   = new THREE.Vector2();
 let   _md  = null;
 
-// ── Crosshair on every mouse move ──
+// ── Crosshair + draw preview on every mouse move ──
 renderer.domElement.addEventListener('pointermove', e => {
   const wRect = wrap.getBoundingClientRect();
   _moveCrosshair(e.clientX - wRect.left, e.clientY - wRect.top);
-
   if (!drawTool) return;
 
-  // Coordinate readout
-  const gp = _snappedGround(e.clientX, e.clientY);
-  if (gp) {
-    _crEl.style.display = 'block';
-    _crEl.textContent = `X ${gp.x.toFixed(2)}  Y ${(-gp.z).toFixed(2)}`;
-  }
+  const cfg = DRAW_CFG[drawTool];
+  const gp  = _snappedGround(e.clientX, e.clientY);
+  if (gp) { _crEl.style.display = 'block'; _crEl.textContent = `X ${gp.x.toFixed(2)}  Y ${(-gp.z).toFixed(2)}`; }
 
+  // Dragging rect base
   if (drawPhase === 'base' && drawP1 && (e.buttons & 1)) {
-    // Dragging base
     drawP2 = _snappedGround(e.clientX, e.clientY) || drawP2;
     _syncPrev();
-  } else if (drawPhase === 'height' && _hPlane) {
-    // Mouse moves up → height changes via vertical plane intersection
+  }
+  // Dragging circle radius
+  else if (drawPhase === 'radius' && drawP1 && (e.buttons & 1)) {
+    const pt = _snappedGround(e.clientX, e.clientY);
+    if (pt) {
+      drawRadius = Math.max(0.01, Math.hypot(pt.x - drawP1.x, pt.z - drawP1.z));
+      _syncPrev();
+    }
+  }
+  // Height phase (mouse-move, no button required)
+  else if (drawPhase === 'height' && _hPlane) {
     const rect = renderer.domElement.getBoundingClientRect();
     _drawRay.setFromCamera(
       new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1),
@@ -1178,18 +1274,31 @@ renderer.domElement.addEventListener('pointermove', e => {
 renderer.domElement.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
 
-  if (drawTool === 'box') {
-    if (drawPhase === 'corner1') {
+  if (drawTool) {
+    const cfg = DRAW_CFG[drawTool];
+
+    if (drawPhase === 'corner1') {               // rect: place first corner
       const pt = _snappedGround(e.clientX, e.clientY);
       if (!pt) return;
       drawP1 = pt.clone(); drawP2 = pt.clone();
       drawPhase = 'base';
-      _makePrev(); _syncPrev();
-      _setHint('Drag to define base footprint  |  release to set height');
-    } else if (drawPhase === 'height') {
-      _finalizeBox();
+      _makePrev(drawTool); _syncPrev();
+      const next = cfg.hasHeight ? 'release to set height' : 'release to confirm';
+      _setHint(`Drag to define footprint  |  ${next}`);
+
+    } else if (drawPhase === 'center') {         // circle: place centre
+      const pt = _snappedGround(e.clientX, e.clientY);
+      if (!pt) return;
+      drawP1 = pt.clone(); drawRadius = 0.01;
+      drawPhase = 'radius';
+      _makePrev(drawTool); _syncPrev();
+      const next = cfg.hasHeight ? 'release to set height' : 'release to confirm';
+      _setHint(`Drag to set radius  |  ${next}`);
+
+    } else if (drawPhase === 'height') {         // confirm height
+      _finalizeShape();
     }
-    return;   // don't record _md during draw mode
+    return;
   }
 
   _md = { x: e.clientX, y: e.clientY };
@@ -1199,20 +1308,36 @@ renderer.domElement.addEventListener('pointerdown', e => {
 renderer.domElement.addEventListener('pointerup', e => {
   if (e.button !== 0) return;
 
-  if (drawTool === 'box' && drawPhase === 'base') {
-    // Confirm base → start height phase
-    const pt = _snappedGround(e.clientX, e.clientY);
-    if (pt) drawP2 = pt.clone();
-    const w = Math.abs((drawP2?.x||0) - (drawP1?.x||0));
-    const d = Math.abs((drawP2?.z||0) - (drawP1?.z||0));
-    if (w < 0.01 && d < 0.01) {
-      // Near-zero base — treat as click, stay in corner1
-      _dropPrev(); drawP1=null; drawP2=null;
-      drawPhase = 'corner1';
-      _setHint('Click to place first corner  |  ESC to cancel');
+  if (drawTool) {
+    const cfg = DRAW_CFG[drawTool];
+
+    if (drawPhase === 'base') {                  // rect: confirm base
+      const pt = _snappedGround(e.clientX, e.clientY);
+      if (pt) drawP2 = pt.clone();
+      const w = Math.abs((drawP2?.x||0) - (drawP1?.x||0));
+      const d = Math.abs((drawP2?.z||0) - (drawP1?.z||0));
+      if (w < 0.01 && d < 0.01) {               // tiny drag — reset
+        _dropPrev(); drawP1 = null; drawP2 = null;
+        drawPhase = 'corner1';
+        _setHint('Click to place first corner  |  ESC to cancel');
+        return;
+      }
+      if (cfg.hasHeight) { _startHeightPhase(); }
+      else               { _finalizeShape(); }
       return;
     }
-    _startHeightPhase();
+
+    if (drawPhase === 'radius') {                // circle: confirm radius
+      if (drawRadius < 0.01) {
+        _dropPrev(); drawP1 = null; drawRadius = 0;
+        drawPhase = 'center';
+        _setHint('Click to place centre  |  ESC to cancel');
+        return;
+      }
+      if (cfg.hasHeight) { _startHeightPhase(); }
+      else               { _finalizeShape(); }
+      return;
+    }
     return;
   }
 
