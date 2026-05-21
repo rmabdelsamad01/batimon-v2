@@ -364,8 +364,6 @@
     .snd-ok:hover { background: #238636; color: #fff; }
   </style>
 
-  <!-- DXF parser -->
-  <script src="https://cdn.jsdelivr.net/npm/dxf-parser@1.1.2/dist/dxf-parser.js"></script>
 
   <!-- Supabase for cloud save (shares auth session with parent app via localStorage) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1194,22 +1192,183 @@ window.exportGLB = function() {
   );
 };
 
-/* ── DXF Import ────────────────────────────────────────────────────────── */
-// ACI (AutoCAD Color Index) → hex for the 9 standard colors
-const _ACI = {
-  1:'#ff0000', 2:'#ffff00', 3:'#00ff00', 4:'#00ffff',
-  5:'#0000ff', 6:'#ff00ff', 7:'#e6edf3', 8:'#808080', 9:'#c0c0c0'
+/* ── DXF Import — custom minimal parser ────────────────────────────────── */
+const _ACI = {                          // AutoCAD Color Index → hex
+  1:'#ff0000',2:'#ffff00',3:'#00ff00',4:'#00ffff',
+  5:'#0000ff',6:'#ff00ff',7:'#e6edf3',8:'#808080',9:'#c0c0c0'
 };
 
-function _dxfEntityColor(entity, dxfLayers) {
-  let idx = entity.colorIndex;
-  if (!idx || idx === 256) {   // ByLayer → use layer color
-    const dl = dxfLayers?.[entity.layer];
-    idx = dl?.colorIndex;
+// Parse raw DXF text into a list of entities + layer color map
+function _parseDXF(text) {
+  // Tokenise: alternate lines are group-code / value
+  const raw = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  const tok = [];
+  for (let i = 0; i + 1 < raw.length; i += 2)
+    tok.push([parseInt(raw[i].trim(), 10), raw[i+1].trim()]);
+
+  let p = 0;
+  const eof   = () => p >= tok.length;
+  const peek  = () => tok[p]  || [null,null];
+  const eat   = () => tok[p++]|| [null,null];
+
+  const entities   = [];
+  const layerColor = {};   // layerName → '#rrggbb'
+
+  // Skip ahead until group-code 0 with value v
+  function skipTo(v) {
+    while (!eof() && !(peek()[0]===0 && peek()[1]===v)) eat();
   }
-  return _ACI[idx] || '#e6edf3';
+
+  // Read all [code,val] pairs until next group-code-0
+  function readProps() {
+    const props = {};
+    while (!eof() && peek()[0] !== 0) {
+      const [c,v] = eat();
+      if (!props[c]) props[c] = v;          // keep first occurrence
+      else {
+        // Handle repeating coords (LWPOLYLINE vertices)
+        if (!props['_'+c]) props['_'+c] = [props[c]];
+        props['_'+c].push(v);
+        props[c] = v;                        // update to latest
+      }
+    }
+    return props;
+  }
+
+  // ── Walk sections ────────────────────────────────────────────────────
+  while (!eof()) {
+    const [c,v] = eat();
+    if (c !== 0 || v !== 'SECTION') continue;
+    const section = eat()[1];
+
+    // TABLES → grab layer colors
+    if (section === 'TABLES') {
+      while (!eof() && !(peek()[0]===0 && peek()[1]==='ENDSEC')) {
+        if (peek()[0]===0 && peek()[1]==='LAYER') {
+          eat();
+          const p2 = readProps();
+          if (p2[2]) layerColor[p2[2]] = _ACI[Math.abs(parseInt(p2[62]||'7'))] || '#e6edf3';
+        } else eat();
+      }
+      continue;
+    }
+
+    // ENTITIES section
+    if (section === 'ENTITIES') {
+      while (!eof()) {
+        const [c2,v2] = peek();
+        if (c2===0 && v2==='ENDSEC') { eat(); break; }
+        if (c2===0) { eat(); const props=readProps(); _collectEntity(v2,props,entities); }
+        else eat();
+      }
+      continue;
+    }
+
+    // BLOCKS section — read every block's entities
+    if (section === 'BLOCKS') {
+      while (!eof()) {
+        const [c2,v2] = peek();
+        if (c2===0 && v2==='ENDSEC') { eat(); break; }
+        if (c2===0 && v2==='BLOCK') {
+          eat(); readProps(); // skip block header props
+          while (!eof()) {
+            const [c3,v3] = peek();
+            if (c3===0 && (v3==='ENDBLK'||v3==='ENDSEC')) break;
+            if (c3===0) { eat(); const props=readProps(); _collectEntity(v3,props,entities); }
+            else eat();
+          }
+          if (peek()[0]===0 && peek()[1]==='ENDBLK') eat(); // consume ENDBLK
+        } else eat();
+      }
+      continue;
+    }
+
+    // Skip other sections
+    skipTo('ENDSEC');
+    if (!eof()) eat();
+  }
+
+  return { entities, layerColor };
 }
 
+
+function _collectEntity(type, props, out) {
+  const layer = props[8] || '0';
+  if (type === 'LINE') {
+    out.push({ type, layer,
+      start:{ x:+props[10]||0, y:+props[20]||0, z:+props[30]||0 },
+      end:  { x:+props[11]||0, y:+props[21]||0, z:+props[31]||0 }
+    });
+
+  } else if (type === 'LWPOLYLINE') {
+    // X values are in props['_10'], Y values in props['_20']
+    const xs = props['_10'] ? props['_10'] : (props[10] ? [props[10]] : []);
+    const ys = props['_20'] ? props['_20'] : (props[20] ? [props[20]] : []);
+    const verts = xs.map((x,i) => ({ x:+x, y:+(ys[i]||0), z:0 }));
+    const closed = (parseInt(props[70]||'0') & 1) === 1;
+    if (verts.length >= 2) out.push({ type, layer, vertices:verts, shape:closed });
+
+  } else if (type === 'POLYLINE') {
+    // vertices will come as separate VERTEX entities — collect them
+    out.push({ type, layer, vertices:[], shape:(parseInt(props[70]||'0')&1)===1 });
+
+  } else if (type === 'VERTEX') {
+    // attach to last POLYLINE
+    const last = [...out].reverse().find(e=>e.type==='POLYLINE');
+    if (last) last.vertices.push({ x:+props[10]||0, y:+props[20]||0, z:+props[30]||0 });
+
+  } else if (type === 'CIRCLE') {
+    out.push({ type, layer,
+      center:{ x:+props[10]||0, y:+props[20]||0, z:+props[30]||0 },
+      radius:+props[40]||1
+    });
+
+  } else if (type === 'ARC') {
+    out.push({ type, layer,
+      center:{ x:+props[10]||0, y:+props[20]||0, z:+props[30]||0 },
+      radius:+props[40]||1,
+      startAngle:+props[50]||0, endAngle:+props[51]||360
+    });
+
+  } else if (type === '3DFACE') {
+    const v = [
+      {x:+props[10]||0,y:+props[20]||0,z:+props[30]||0},
+      {x:+props[11]||0,y:+props[21]||0,z:+props[31]||0},
+      {x:+props[12]||0,y:+props[22]||0,z:+props[32]||0},
+      {x:+props[13]||0,y:+props[23]||0,z:+props[33]||0},
+    ];
+    out.push({ type, layer, vertices:v });
+
+  } else if (type === 'SOLID' || type === 'TRACE') {
+    // 2-D filled quad — 4 corner points (codes 10/11/12/13 + 20/21/22/23)
+    const v = [
+      {x:+props[10]||0,y:+props[20]||0,z:+props[30]||0},
+      {x:+props[11]||0,y:+props[21]||0,z:+props[31]||0},
+      {x:+props[12]||0,y:+props[22]||0,z:+props[32]||0},
+      {x:+props[13]||0,y:+props[23]||0,z:+props[33]||0},
+    ];
+    // close the quad outline
+    out.push({ type:'LWPOLYLINE', layer, vertices:[v[0],v[1],v[3],v[2]], shape:true });
+
+  } else if (type === 'SPLINE') {
+    // Use fit points (codes 11/21/31) or control points (10/20/30)
+    const hasfit = props['_11'] || props[11];
+    const xs = hasfit ? (props['_11']||(props[11]?[props[11]]:[])) : (props['_10']||(props[10]?[props[10]]:[]));
+    const ys = hasfit ? (props['_21']||(props[21]?[props[21]]:[])) : (props['_20']||(props[20]?[props[20]]:[]));
+    const zs = hasfit ? (props['_31']||(props[31]?[props[31]]:[])) : (props['_30']||(props[30]?[props[30]]:[]));
+    const verts = xs.map((x,i)=>({ x:+x, y:+(ys[i]||0), z:+(zs[i]||0) }));
+    if (verts.length>=2) out.push({ type:'LWPOLYLINE', layer, vertices:verts, shape:false });
+
+  } else if (type === 'MLINE') {
+    // skip — complex
+  } else {
+    // track genuinely unsupported types for diagnostics
+    if (!_DXF_UNKNOWN) window._DXF_UNKNOWN = {};
+    window._DXF_UNKNOWN[type] = (window._DXF_UNKNOWN[type]||0)+1;
+  }
+}
+
+// Build Three.js line from point array
 function _dxfLine(points, color, layerId) {
   const geo = new THREE.BufferGeometry().setFromPoints(points);
   const mat = new THREE.LineBasicMaterial({ color });
@@ -1218,18 +1377,19 @@ function _dxfLine(points, color, layerId) {
   return obj;
 }
 
-function _loadDXFEntities(dxf) {
-  const dxfLayers = dxf.tables?.layer?.layers || {};
-  const scale     = 0.001;    // DXF mm → scene metres (adjust if needed)
+function _loadDXFEntities(parsed) {
+  const { entities, layerColor } = parsed;
+  const scale = 0.001;   // mm → metres; change to 0.01 for cm or 1 for m
+  window._DXF_UNKNOWN = {};   // reset unsupported-type tracker
 
   // ── Map DXF layers → builder layers ──────────────────────────────────
-  const lidMap = {};   // dxfLayerName → builder layer id
-  Object.keys(dxfLayers).forEach(name => {
+  const allLayerNames = [...new Set(entities.map(e=>e.layer).filter(Boolean))];
+  const lidMap = {};
+  allLayerNames.forEach(name => {
     let bl = layers.find(l => l.name === name);
     if (!bl) {
       _lid++;
-      const aci   = dxfLayers[name]?.colorIndex;
-      const color = _ACI[aci] || LAYER_PALETTE[_lid % LAYER_PALETTE.length];
+      const color = layerColor[name] || LAYER_PALETTE[_lid % LAYER_PALETTE.length];
       bl = { id:'layer_'+_lid, name, color, visible:true };
       layers.push(bl);
     }
@@ -1237,102 +1397,80 @@ function _loadDXFEntities(dxf) {
   });
   _syncChip(); _renderLayers();
 
-  // ── Gather entities: top-level + Model_Space block (most DXF files store
-  //    everything inside blocks rather than the root entities array) ──────
-  const modelBlock = dxf.blocks?.['*Model_Space']
-                  || dxf.blocks?.['*MODEL_SPACE']
-                  || dxf.blocks?.['*model_space']
-                  || null;
-  const allEntities = [
-    ...(dxf.entities || []),
-    ...(modelBlock?.entities || []),
-  ];
+  // ── Log what we found ─────────────────────────────────────────────────
+  const tc = {};
+  entities.forEach(e => { tc[e.type]=(tc[e.type]||0)+1; });
+  console.log('[DXF] Entity types:', tc, '| Layers:', allLayerNames, '| Total:', entities.length);
 
-  // Debug — log every block's entity count and types
-  console.log('[DXF] Block breakdown:');
-  Object.entries(dxf.blocks || {}).forEach(([name, blk]) => {
-    const ents = blk.entities || [];
-    const tc = {};
-    ents.forEach(e => { tc[e.type] = (tc[e.type]||0)+1; });
-    console.log(`  block "${name}": ${ents.length} entities`, tc);
-  });
-  const typeCounts = {};
-  allEntities.forEach(e => { typeCounts[e.type] = (typeCounts[e.type]||0)+1; });
-  console.log('[DXF] Entity types (combined):', typeCounts);
-  console.log('[DXF] Raw dxf.entities length:', (dxf.entities||[]).length);
-  console.log('[DXF] *Model_Space raw:', dxf.blocks?.['*Model_Space']);
-
-  // ── Convert entities ──────────────────────────────────────────────────
+  // ── Convert to Three.js objects ───────────────────────────────────────
   let n = 0;
-  allEntities.forEach(e => {
-    const color   = _dxfEntityColor(e, dxfLayers);
-    const layerId = lidMap[e.layer] || activeLayerId;
+  entities.forEach(e => {
+    const color   = layerColor[e.layer] || '#e6edf3';
+    const layerId = lidMap[e.layer]     || activeLayerId;
     let obj = null;
 
     if (e.type === 'LINE') {
-      const pts = [
-        new THREE.Vector3( e.start.x*scale, (e.start.z||0)*scale, -e.start.y*scale),
-        new THREE.Vector3( e.end.x  *scale, (e.end.z  ||0)*scale, -e.end.y  *scale)
-      ];
-      obj = _dxfLine(pts, color, layerId);
+      obj = _dxfLine([
+        new THREE.Vector3(e.start.x*scale, e.start.z*scale, -e.start.y*scale),
+        new THREE.Vector3(e.end.x  *scale, e.end.z  *scale, -e.end.y  *scale)
+      ], color, layerId);
 
     } else if (e.type === 'LWPOLYLINE' || e.type === 'POLYLINE') {
-      const verts = e.vertices || [];
-      if (verts.length < 2) return;
-      const pts = verts.map(v => new THREE.Vector3(v.x*scale, (v.z||0)*scale, -v.y*scale));
-      if (e.shape) pts.push(pts[0].clone());   // close loop
+      if ((e.vertices||[]).length < 2) return;
+      const pts = e.vertices.map(v => new THREE.Vector3(v.x*scale, (v.z||0)*scale, -v.y*scale));
+      if (e.shape) pts.push(pts[0].clone());
       obj = _dxfLine(pts, color, layerId);
 
     } else if (e.type === 'CIRCLE') {
-      const {x,y,z=0} = e.center;
-      const r = e.radius * scale;
-      const segs = 48;
+      const {x,y,z} = e.center; const r = e.radius*scale;
       const pts = [];
-      for (let i = 0; i <= segs; i++) {
-        const a = (i/segs) * Math.PI*2;
-        pts.push(new THREE.Vector3(x*scale + Math.cos(a)*r, z*scale, -y*scale + Math.sin(a)*r));
-      }
+      for (let i=0;i<=48;i++) { const a=i/48*Math.PI*2; pts.push(new THREE.Vector3(x*scale+Math.cos(a)*r,z*scale,-y*scale+Math.sin(a)*r)); }
       obj = _dxfLine(pts, color, layerId);
 
     } else if (e.type === 'ARC') {
-      const {x,y,z=0} = e.center;
-      const r = e.radius * scale;
-      let sa = THREE.MathUtils.degToRad(e.startAngle);
-      let ea = THREE.MathUtils.degToRad(e.endAngle);
-      if (ea < sa) ea += Math.PI*2;
-      const segs = Math.max(8, Math.round((ea-sa)/(Math.PI/24)));
-      const pts = [];
-      for (let i = 0; i <= segs; i++) {
-        const a = sa + (ea-sa)*(i/segs);
-        pts.push(new THREE.Vector3(x*scale + Math.cos(a)*r, z*scale, -y*scale + Math.sin(a)*r));
-      }
+      const {x,y,z} = e.center; const r = e.radius*scale;
+      let sa=THREE.MathUtils.degToRad(e.startAngle), ea=THREE.MathUtils.degToRad(e.endAngle);
+      if (ea<sa) ea+=Math.PI*2;
+      const segs=Math.max(8,Math.round((ea-sa)/(Math.PI/24)));
+      const pts=[];
+      for (let i=0;i<=segs;i++){const a=sa+(ea-sa)*(i/segs);pts.push(new THREE.Vector3(x*scale+Math.cos(a)*r,z*scale,-y*scale+Math.sin(a)*r));}
       obj = _dxfLine(pts, color, layerId);
 
     } else if (e.type === '3DFACE') {
-      const v = e.vertices || [];
-      if (v.length < 3) return;
-      const positions = [];
-      const tri = (a,b,c) => {
-        [a,b,c].forEach(i => positions.push(v[i].x*scale, (v[i].z||0)*scale, -v[i].y*scale));
-      };
-      tri(0,1,2);
-      if (v.length === 4) tri(0,2,3);
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+      const v=e.vertices; if(v.length<3)return;
+      const pos=[];
+      const tri=(a,b,c)=>[a,b,c].forEach(i=>pos.push(v[i].x*scale,(v[i].z||0)*scale,-v[i].y*scale));
+      tri(0,1,2); if(v.length===4)tri(0,2,3);
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
       geo.computeVertexNormals();
-      const mat = new THREE.MeshStandardMaterial({ color, roughness:.6, metalness:.1, side:THREE.DoubleSide });
-      obj = new THREE.Mesh(geo, mat);
-      obj.userData = { type:'dxf-face', label:`DXF Face ${++count}`, layerId, isDxf:true };
-      obj.castShadow = obj.receiveShadow = true;
+      const mat=new THREE.MeshStandardMaterial({color,roughness:.6,metalness:.1,side:THREE.DoubleSide});
+      obj=new THREE.Mesh(geo,mat);
+      obj.userData={type:'dxf-face',label:`DXF Face ${++count}`,layerId,isDxf:true};
+      obj.castShadow=obj.receiveShadow=true;
     }
 
     if (obj) { scene.add(obj); objects.push(obj); n++; }
   });
 
-  console.log('[DXF] Layers:', Object.keys(dxfLayers), '| Imported:', n, 'of', allEntities.length, 'entities');
-
-  if (n > 0) { fitCamera(); toast(`Imported ${n} DXF entities`); }
-  else        { toast('No supported entities found — check console (F12) for types'); }
+  if (n > 0) {
+    fitCamera();
+    toast(`Imported ${n} DXF object${n>1?'s':''} from ${allLayerNames.length||1} layer${allLayerNames.length>1?'s':''}`);
+  } else if (entities.length === 0) {
+    const unk = Object.keys(window._DXF_UNKNOWN||{});
+    if (unk.length) {
+      // 3DSOLID / unsupported types
+      const types = unk.join(', ');
+      toast(`DXF has ${unk.reduce((s,k)=>s+(window._DXF_UNKNOWN[k]||0),0)} unsupported object(s): ${types}. In AutoCAD, select all → EXPLODE → re-export as DXF.`);
+      console.warn('[DXF] Unsupported types:', window._DXF_UNKNOWN);
+    } else {
+      toast('DXF parsed but no entities found — check console for details');
+    }
+    console.log('[DXF] Entity breakdown:', tc);
+  } else {
+    toast(`Parsed ${entities.length} DXF entities but none are displayable — check console`);
+    console.log('[DXF] Found but not rendered:', tc);
+  }
 }
 
 window.importDXF = function() { document.getElementById('dxf-input').click(); };
@@ -1345,9 +1483,8 @@ window.onDXFFile = function(input) {
   const reader = new FileReader();
   reader.onload = ev => {
     try {
-      if (typeof DxfParser === 'undefined') { toast('DXF parser not loaded'); return; }
-      const dxf = new DxfParser().parseSync(ev.target.result);
-      _loadDXFEntities(dxf);
+      const parsed = _parseDXF(ev.target.result);
+      _loadDXFEntities(parsed);
     } catch(err) { toast('Failed to parse DXF'); console.error(err); }
   };
   reader.readAsText(file);
