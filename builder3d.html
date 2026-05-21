@@ -1237,9 +1237,26 @@ function _loadDXFEntities(dxf) {
   });
   _syncChip(); _renderLayers();
 
+  // ── Gather entities: top-level + Model_Space block (most DXF files store
+  //    everything inside blocks rather than the root entities array) ──────
+  const modelBlock = dxf.blocks?.['*Model_Space']
+                  || dxf.blocks?.['*MODEL_SPACE']
+                  || dxf.blocks?.['*model_space']
+                  || null;
+  const allEntities = [
+    ...(dxf.entities || []),
+    ...(modelBlock?.entities || []),
+  ];
+
+  // Debug
+  const typeCounts = {};
+  allEntities.forEach(e => { typeCounts[e.type] = (typeCounts[e.type]||0)+1; });
+  console.log('[DXF] Entity types (combined):', typeCounts);
+  console.log('[DXF] Blocks available:', Object.keys(dxf.blocks || {}));
+
   // ── Convert entities ──────────────────────────────────────────────────
   let n = 0;
-  (dxf.entities || []).forEach(e => {
+  allEntities.forEach(e => {
     const color   = _dxfEntityColor(e, dxfLayers);
     const layerId = lidMap[e.layer] || activeLayerId;
     let obj = null;
@@ -1304,15 +1321,10 @@ function _loadDXFEntities(dxf) {
     if (obj) { scene.add(obj); objects.push(obj); n++; }
   });
 
-  // Debug: log what entity types were found
-  const typeCounts = {};
-  (dxf.entities || []).forEach(e => { typeCounts[e.type] = (typeCounts[e.type]||0)+1; });
-  console.log('[DXF] Entity types found:', typeCounts);
-  console.log('[DXF] Layers found:', Object.keys(dxfLayers));
-  console.log('[DXF] Total entities:', (dxf.entities||[]).length);
+  console.log('[DXF] Layers:', Object.keys(dxfLayers), '| Imported:', n, 'of', allEntities.length, 'entities');
 
   if (n > 0) { fitCamera(); toast(`Imported ${n} DXF entities`); }
-  else        { toast('No supported entities found in DXF — check console (F12) for entity types'); }
+  else        { toast('No supported entities found — check console (F12) for types'); }
 }
 
 window.importDXF = function() { document.getElementById('dxf-input').click(); };
