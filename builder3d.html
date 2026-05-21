@@ -595,10 +595,12 @@
   <div class="p-head">Properties</div>
   <div class="p-sub" id="p-name"></div>
 
-  <div class="p-lbl">Element ID</div>
-  <input class="p-inp" id="p-eid" type="text" placeholder="e.g. BM-EF-R1C1"
-         style="width:100%;font-size:10px;padding:4px 6px;"
-         oninput="applyElementId(this.value)">
+  <div style="display:flex;align-items:center;gap:6px;margin:8px 0 3px;">
+    <span class="p-lbl" style="margin:0;white-space:nowrap;flex-shrink:0;">Element ID</span>
+    <input class="p-inp" id="p-eid" type="text" placeholder="e.g. BM-EF-R1C1"
+           style="flex:1;min-width:0;font-size:10px;padding:4px 6px;box-sizing:border-box;margin:0;"
+           oninput="applyElementId(this.value)">
+  </div>
 
   <div class="p-lbl">Status</div>
   <select class="p-layer-sel" id="p-status" onchange="applyStatus(this.value)">
