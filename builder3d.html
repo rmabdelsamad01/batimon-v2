@@ -43,9 +43,35 @@
     #col-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid #555; }
     #col-input  { opacity: 0; width: 0; height: 0; position: absolute; }
 
-    /* ── Canvas fills below toolbar ── */
+    /* ── Shape sidebar ── */
+    #shape-sidebar {
+      position: absolute; top: 50px; left: 0; bottom: 0; width: 72px;
+      background: #161b22; border-right: 1px solid #30363d;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 10px 0 10px; gap: 1px; overflow-y: auto; z-index: 90;
+    }
+    #shape-sidebar::-webkit-scrollbar { width: 0; }
+    .shp-lbl {
+      font-size: 9px; color: #484f58; text-transform: uppercase; letter-spacing: .6px;
+      padding: 2px 0 8px; text-align: center; width: 100%; user-select: none;
+    }
+    .shp-sep { width: 40px; height: 1px; background: #30363d; margin: 5px 0; }
+    .shp-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; width: 56px; padding: 9px 4px 7px; border-radius: 8px;
+      border: 1px solid transparent; background: transparent;
+      color: #8b949e; cursor: pointer;
+      transition: background .12s, border-color .12s, color .12s;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .shp-btn:hover { background: #21262d; border-color: #30363d; color: #e6edf3; }
+    .shp-btn:active { background: #0ea5e918; border-color: #0ea5e9; color: #38bdf8; }
+    .shp-ico  { font-size: 20px; line-height: 1; }
+    .shp-name { font-size: 9px; font-weight: 600; letter-spacing: .3px; white-space: nowrap; }
+
+    /* ── Canvas fills below toolbar, right of sidebar ── */
     #canvas-wrap {
-      position: absolute; top: 50px; left: 0; right: 0; bottom: 0;
+      position: absolute; top: 50px; left: 72px; right: 0; bottom: 0;
     }
 
     /* ── Properties panel ── */
@@ -94,7 +120,7 @@
 
     /* ── Selection badge ── */
     #badge {
-      position: absolute; bottom: 14px; left: 12px;
+      position: absolute; bottom: 14px; left: 84px; /* 72px sidebar + 12px gap */
       background: rgba(13,17,23,.82); backdrop-filter: blur(6px);
       color: #e6edf3; font-size: 11px;
       padding: 5px 12px; border-radius: 6px; z-index: 200;
@@ -294,16 +320,6 @@
 
 <!-- ══ TOOLBAR ══════════════════════════════════════════════════════════════ -->
 <div id="toolbar">
-  <span class="grp">Add shape:</span>
-  <button class="tb-btn" onclick="addShape('box')"      >⬜ Cube</button>
-  <button class="tb-btn" onclick="addShape('sphere')"   >⚪ Sphere</button>
-  <button class="tb-btn" onclick="addShape('cylinder')" >🔵 Cylinder</button>
-  <button class="tb-btn" onclick="addShape('cone')"     >🔺 Cone</button>
-  <button class="tb-btn" onclick="addShape('pyramid')"  >🔷 Pyramid</button>
-  <button class="tb-btn" onclick="addShape('torus')"    >⭕ Torus</button>
-  <button class="tb-btn" onclick="addShape('plane')"    >▬ Plane</button>
-
-  <div class="sep"></div>
   <span class="grp">Transform:</span>
   <button id="btn-move"   class="tb-btn active" onclick="setMode('translate')">↔ Move</button>
   <button id="btn-rotate" class="tb-btn"         onclick="setMode('rotate')">↻ Rotate</button>
@@ -417,6 +433,32 @@
 
   <!-- Hidden inputs -->
   <input type="file" id="load-input" accept=".json" style="display:none" onchange="onLoadFile(this)">
+</div>
+
+<!-- ══ SHAPE SIDEBAR ════════════════════════════════════════════════════════ -->
+<div id="shape-sidebar">
+  <div class="shp-lbl">Shapes</div>
+  <button class="shp-btn" onclick="addShape('box')">
+    <span class="shp-ico">⬜</span><span class="shp-name">Cube</span>
+  </button>
+  <button class="shp-btn" onclick="addShape('sphere')">
+    <span class="shp-ico">⚪</span><span class="shp-name">Sphere</span>
+  </button>
+  <button class="shp-btn" onclick="addShape('cylinder')">
+    <span class="shp-ico">🔵</span><span class="shp-name">Cylinder</span>
+  </button>
+  <button class="shp-btn" onclick="addShape('cone')">
+    <span class="shp-ico">🔺</span><span class="shp-name">Cone</span>
+  </button>
+  <button class="shp-btn" onclick="addShape('pyramid')">
+    <span class="shp-ico">🔷</span><span class="shp-name">Pyramid</span>
+  </button>
+  <button class="shp-btn" onclick="addShape('torus')">
+    <span class="shp-ico">⭕</span><span class="shp-name">Torus</span>
+  </button>
+  <button class="shp-btn" onclick="addShape('plane')">
+    <span class="shp-ico">▬</span><span class="shp-name">Plane</span>
+  </button>
 </div>
 
 <!-- ══ CANVAS ═══════════════════════════════════════════════════════════════ -->
@@ -619,11 +661,14 @@ function _snapPts(exclude) {
   return pts;
 }
 
-// Project world point → screen coords
+// Project world point → screen coords (accounts for sidebar offset)
 function _toScreen(wp) {
-  const v = wp.clone().project(camera);
-  const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
-  return new THREE.Vector2((v.x+1)*.5*w, (-v.y+1)*.5*h);
+  const v    = wp.clone().project(camera);
+  const rect = renderer.domElement.getBoundingClientRect();
+  return new THREE.Vector2(
+    (v.x + 1) * .5 * rect.width  + rect.left,
+    (-v.y + 1) * .5 * rect.height + rect.top
+  );
 }
 
 // Snap marker (small sphere drawn on top of everything)
