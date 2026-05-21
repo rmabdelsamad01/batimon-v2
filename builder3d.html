@@ -1850,25 +1850,19 @@ window.saveScreenshot = function() {
 /* ── save scene (JSON) ─────────────────────────────────────────────────── */
 window.saveScene = function() {
   if (objects.length === 0) { toast('Nothing to save!'); return; }
-  const data = {
-    version: 1,
-    saved: new Date().toISOString(),
-    objects: objects.map(o => ({
-      type:     o.userData.type,
-      label:    o.userData.label,
-      position: o.position.toArray(),
-      rotation: [o.rotation.x, o.rotation.y, o.rotation.z],
-      scale:    o.scale.toArray(),
-      color:    '#' + o.material.color.getHexString(),
-    }))
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `batimon-sketch-${datestamp()}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast(`Scene saved (${objects.length} objects)`);
+  try {
+    const data = _scenePayload();   // reuse the same serialiser (handles groups)
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `batimon-sketch-${datestamp()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast(`Scene saved (${objects.length} objects)`);
+  } catch(err) {
+    toast('Save failed — see console');
+    console.error('[saveScene]', err);
+  }
 };
 
 /* ── load scene (JSON) ─────────────────────────────────────────────────── */
@@ -2473,17 +2467,26 @@ function _escHtml(s) {
 // ── Save to cloud ──
 window.saveToCloud = async function() {
   if (objects.length === 0) { toast('Nothing to save!'); return; }
-  const user = await _getUser();
-  console.log('[Builder] saveToCloud user:', user);
-  if (!user) { toast('Not logged in — please log in from the main app'); return; }
-  const d = new Date();
-  document.getElementById('snd-input').value =
-    `Scene ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
-  document.getElementById('scene-name-dlg').classList.add('open');
-  setTimeout(() => {
-    const inp = document.getElementById('snd-input');
-    inp.focus(); inp.select();
-  }, 60);
+  try {
+    const user = await _getUser();
+    if (!user) {
+      toast('Not logged in — please log in first');
+      alert('You are not logged in.\nPlease log in from the main app and try again.');
+      return;
+    }
+    const d = new Date();
+    document.getElementById('snd-input').value =
+      `Scene ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+    document.getElementById('scene-name-dlg').classList.add('open');
+    setTimeout(() => {
+      const inp = document.getElementById('snd-input');
+      inp.focus(); inp.select();
+    }, 60);
+  } catch(err) {
+    toast('Auth error — see console');
+    console.error('[saveToCloud]', err);
+    alert('Save error: ' + err.message);
+  }
 };
 
 window.closeNameDlg = function() {
@@ -2494,16 +2497,28 @@ window.confirmCloudSave = async function() {
   const name = document.getElementById('snd-input').value.trim();
   if (!name) { document.getElementById('snd-input').focus(); return; }
   closeNameDlg();
-  const user = await _getUser();
-  if (!user) { toast('Please log in first'); return; }
-  toast('Saving…');
-  const { error } = await window._sb.from('builder_scenes').insert({
-    user_id:    user.id,
-    name:       name,
-    scene_data: _scenePayload(),
-  });
-  if (error) { toast('Save failed'); console.error(error); return; }
-  toast(`Saved "${name}"`);
+  try {
+    const user = await _getUser();
+    if (!user) { toast('Not logged in'); return; }
+    toast('Saving…');
+    const payload = _scenePayload();
+    const { error } = await window._sb.from('builder_scenes').insert({
+      user_id:    user.id,
+      name:       name,
+      scene_data: payload,
+    });
+    if (error) {
+      toast('Save failed');
+      console.error('[confirmCloudSave]', error);
+      alert('Cloud save failed:\n' + (error.message || JSON.stringify(error)));
+      return;
+    }
+    toast(`Saved "${name}" ✓`);
+  } catch(err) {
+    toast('Save error — see console');
+    console.error('[confirmCloudSave]', err);
+    alert('Save error: ' + err.message);
+  }
 };
 
 // ── My Scenes browser ──
