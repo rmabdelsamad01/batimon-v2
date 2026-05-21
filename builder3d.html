@@ -364,6 +364,9 @@
     .snd-ok:hover { background: #238636; color: #fff; }
   </style>
 
+  <!-- DXF parser -->
+  <script src="https://cdn.jsdelivr.net/npm/dxf-parser@1.1.2/dist/dxf-parser.js"></script>
+
   <!-- Supabase for cloud save (shares auth session with parent app via localStorage) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
@@ -450,6 +453,9 @@
   <button class="tb-btn del" onclick="clearAll()">🧹 Clear all</button>
 
   <div class="sep"></div>
+  <button class="tb-btn" onclick="importDXF()" style="border-color:#f97316;color:#f97316;" title="Import AutoCAD .dxf file">📐 Import DXF</button>
+
+  <div class="sep"></div>
 
   <!-- Save dropdown -->
   <div class="save-wrap">
@@ -508,6 +514,7 @@
 
   <!-- Hidden inputs -->
   <input type="file" id="load-input" accept=".json" style="display:none" onchange="onLoadFile(this)">
+  <input type="file" id="dxf-input"  accept=".dxf"  style="display:none" onchange="onDXFFile(this)">
 </div>
 
 <!-- ══ LAYERS PANEL ══════════════════════════════════════════════════════════ -->
@@ -915,8 +922,15 @@ function selectObject(obj) {
   deselect();
   if (!obj) return;
   selected = obj;
-  obj.userData._emi = obj.material.emissive.clone();
-  obj.material.emissive.copy(SEL_EMI);
+  if (obj.material.emissive) {
+    // Mesh — use emissive highlight
+    obj.userData._emi = obj.material.emissive.clone();
+    obj.material.emissive.copy(SEL_EMI);
+  } else {
+    // Line (DXF) — brighten color as selection indicator
+    obj.userData._selColor = obj.material.color.getHex();
+    obj.material.color.set(0xffffff);
+  }
   tc.attach(obj);
   document.getElementById('props').classList.add('show');
   document.getElementById('p-name').textContent = obj.userData.label || '';
@@ -928,7 +942,12 @@ function selectObject(obj) {
 
 function deselect() {
   if (!selected) return;
-  selected.material.emissive.copy(selected.userData._emi ?? new THREE.Color(0));
+  if (selected.material.emissive) {
+    selected.material.emissive.copy(selected.userData._emi ?? new THREE.Color(0));
+  } else if (selected.userData._selColor !== undefined) {
+    selected.material.color.setHex(selected.userData._selColor);
+    delete selected.userData._selColor;
+  }
   tc.detach();
   selected = null;
   document.getElementById('props').classList.remove('show');
@@ -937,6 +956,7 @@ function deselect() {
 
 /* ── raycaster ─────────────────────────────────────────────────────────── */
 const ray  = new THREE.Raycaster();
+ray.params.Line = { threshold: 0.08 };  // makes DXF lines clickable
 const mp   = new THREE.Vector2();
 let   _md  = null;
 
@@ -1172,6 +1192,138 @@ window.exportGLB = function() {
     err => { console.error(err); toast('Export failed'); },
     { binary: true }
   );
+};
+
+/* ── DXF Import ────────────────────────────────────────────────────────── */
+// ACI (AutoCAD Color Index) → hex for the 9 standard colors
+const _ACI = {
+  1:'#ff0000', 2:'#ffff00', 3:'#00ff00', 4:'#00ffff',
+  5:'#0000ff', 6:'#ff00ff', 7:'#e6edf3', 8:'#808080', 9:'#c0c0c0'
+};
+
+function _dxfEntityColor(entity, dxfLayers) {
+  let idx = entity.colorIndex;
+  if (!idx || idx === 256) {   // ByLayer → use layer color
+    const dl = dxfLayers?.[entity.layer];
+    idx = dl?.colorIndex;
+  }
+  return _ACI[idx] || '#e6edf3';
+}
+
+function _dxfLine(points, color, layerId) {
+  const geo = new THREE.BufferGeometry().setFromPoints(points);
+  const mat = new THREE.LineBasicMaterial({ color });
+  const obj = new THREE.Line(geo, mat);
+  obj.userData = { type:'dxf-line', label:`DXF ${++count}`, layerId, isDxf:true };
+  return obj;
+}
+
+function _loadDXFEntities(dxf) {
+  const dxfLayers = dxf.tables?.layer?.layers || {};
+  const scale     = 0.001;    // DXF mm → scene metres (adjust if needed)
+
+  // ── Map DXF layers → builder layers ──────────────────────────────────
+  const lidMap = {};   // dxfLayerName → builder layer id
+  Object.keys(dxfLayers).forEach(name => {
+    let bl = layers.find(l => l.name === name);
+    if (!bl) {
+      _lid++;
+      const aci   = dxfLayers[name]?.colorIndex;
+      const color = _ACI[aci] || LAYER_PALETTE[_lid % LAYER_PALETTE.length];
+      bl = { id:'layer_'+_lid, name, color, visible:true };
+      layers.push(bl);
+    }
+    lidMap[name] = bl.id;
+  });
+  _syncChip(); _renderLayers();
+
+  // ── Convert entities ──────────────────────────────────────────────────
+  let n = 0;
+  (dxf.entities || []).forEach(e => {
+    const color   = _dxfEntityColor(e, dxfLayers);
+    const layerId = lidMap[e.layer] || activeLayerId;
+    let obj = null;
+
+    if (e.type === 'LINE') {
+      const pts = [
+        new THREE.Vector3( e.start.x*scale, (e.start.z||0)*scale, -e.start.y*scale),
+        new THREE.Vector3( e.end.x  *scale, (e.end.z  ||0)*scale, -e.end.y  *scale)
+      ];
+      obj = _dxfLine(pts, color, layerId);
+
+    } else if (e.type === 'LWPOLYLINE' || e.type === 'POLYLINE') {
+      const verts = e.vertices || [];
+      if (verts.length < 2) return;
+      const pts = verts.map(v => new THREE.Vector3(v.x*scale, (v.z||0)*scale, -v.y*scale));
+      if (e.shape) pts.push(pts[0].clone());   // close loop
+      obj = _dxfLine(pts, color, layerId);
+
+    } else if (e.type === 'CIRCLE') {
+      const {x,y,z=0} = e.center;
+      const r = e.radius * scale;
+      const segs = 48;
+      const pts = [];
+      for (let i = 0; i <= segs; i++) {
+        const a = (i/segs) * Math.PI*2;
+        pts.push(new THREE.Vector3(x*scale + Math.cos(a)*r, z*scale, -y*scale + Math.sin(a)*r));
+      }
+      obj = _dxfLine(pts, color, layerId);
+
+    } else if (e.type === 'ARC') {
+      const {x,y,z=0} = e.center;
+      const r = e.radius * scale;
+      let sa = THREE.MathUtils.degToRad(e.startAngle);
+      let ea = THREE.MathUtils.degToRad(e.endAngle);
+      if (ea < sa) ea += Math.PI*2;
+      const segs = Math.max(8, Math.round((ea-sa)/(Math.PI/24)));
+      const pts = [];
+      for (let i = 0; i <= segs; i++) {
+        const a = sa + (ea-sa)*(i/segs);
+        pts.push(new THREE.Vector3(x*scale + Math.cos(a)*r, z*scale, -y*scale + Math.sin(a)*r));
+      }
+      obj = _dxfLine(pts, color, layerId);
+
+    } else if (e.type === '3DFACE') {
+      const v = e.vertices || [];
+      if (v.length < 3) return;
+      const positions = [];
+      const tri = (a,b,c) => {
+        [a,b,c].forEach(i => positions.push(v[i].x*scale, (v[i].z||0)*scale, -v[i].y*scale));
+      };
+      tri(0,1,2);
+      if (v.length === 4) tri(0,2,3);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+      geo.computeVertexNormals();
+      const mat = new THREE.MeshStandardMaterial({ color, roughness:.6, metalness:.1, side:THREE.DoubleSide });
+      obj = new THREE.Mesh(geo, mat);
+      obj.userData = { type:'dxf-face', label:`DXF Face ${++count}`, layerId, isDxf:true };
+      obj.castShadow = obj.receiveShadow = true;
+    }
+
+    if (obj) { scene.add(obj); objects.push(obj); n++; }
+  });
+
+  if (n > 0) { fitCamera(); toast(`Imported ${n} DXF entities`); }
+  else        { toast('No supported entities found in DXF'); }
+}
+
+window.importDXF = function() { document.getElementById('dxf-input').click(); };
+
+window.onDXFFile = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  toast('Parsing DXF…');
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      if (typeof DxfParser === 'undefined') { toast('DXF parser not loaded'); return; }
+      const dxf = new DxfParser().parseSync(ev.target.result);
+      _loadDXFEntities(dxf);
+    } catch(err) { toast('Failed to parse DXF'); console.error(err); }
+  };
+  reader.readAsText(file);
 };
 
 /* ── Layer System ──────────────────────────────────────────────────────── */
