@@ -1071,8 +1071,9 @@ function _scenePayload() {
 }
 
 async function _getUser() {
-  const { data: { user } } = await window._sb.auth.getUser();
-  return user;
+  // getSession() reads localStorage directly — works reliably in iframes
+  const { data: { session } } = await window._sb.auth.getSession();
+  return session?.user ?? null;
 }
 
 function _escHtml(s) {
@@ -1084,7 +1085,8 @@ function _escHtml(s) {
 window.saveToCloud = async function() {
   if (objects.length === 0) { toast('Nothing to save!'); return; }
   const user = await _getUser();
-  if (!user) { toast('Please log in first'); return; }
+  console.log('[Builder] saveToCloud user:', user);
+  if (!user) { toast('Not logged in — please log in from the main app'); return; }
   const d = new Date();
   document.getElementById('snd-input').value =
     `Scene ${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
@@ -1245,7 +1247,7 @@ function toast(msg) {
   el.textContent = msg + ' ✓';
   el.classList.add('show');
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
 }
 
 /* ── keyboard ──────────────────────────────────────────────────────────── */
