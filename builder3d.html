@@ -1130,8 +1130,9 @@ window.cancelDraw = function cancelDraw() {
 };
 
 /* ── state ─────────────────────────────────────────────────────────────── */
-let selected   = null;
-let clipboard  = null;
+let selected   = null;          // primary selected object (TC gizmo target)
+let selection  = new Set();     // ALL currently selected objects
+let clipboard  = [];            // array of copied objects
 let objects    = [];
 let count      = 0;
 let activeColor = '#0ea5e9';
@@ -1209,36 +1210,79 @@ function fitCamera() {
 /* ── selection ─────────────────────────────────────────────────────────── */
 const SEL_EMI = new THREE.Color(0x0a3a6a);
 
-function selectObject(obj) {
-  deselect();
-  if (!obj) return;
-  selected = obj;
-  if (obj.material.emissive) {
-    // Mesh — use emissive highlight
+function _applyHighlight(obj) {
+  if (obj.material && obj.material.emissive) {
     obj.userData._emi = obj.material.emissive.clone();
     obj.material.emissive.copy(SEL_EMI);
-  } else {
-    // Line (DXF) — brighten color as selection indicator
+  } else if (obj.material) {
     obj.userData._selColor = obj.material.color.getHex();
     obj.material.color.set(0xffffff);
   }
+}
+
+function _clearHighlight(obj) {
+  if (obj.material && obj.material.emissive) {
+    obj.material.emissive.copy(obj.userData._emi ?? new THREE.Color(0));
+  } else if (obj.material && obj.userData._selColor !== undefined) {
+    obj.material.color.setHex(obj.userData._selColor);
+    delete obj.userData._selColor;
+  }
+}
+
+function _syncBadge() {
+  const badge = document.getElementById('badge');
+  if (selection.size === 0) {
+    badge.classList.remove('show');
+  } else if (selection.size === 1) {
+    badge.textContent = '✦ ' + (selected?.userData.label || 'Object');
+    badge.classList.add('show');
+  } else {
+    badge.textContent = `✦ ${selection.size} objects selected`;
+    badge.classList.add('show');
+  }
+}
+
+/* additive=true → Shift+click: toggle obj in/out of selection */
+function selectObject(obj, additive = false) {
+  if (!additive) {
+    // Clear everything first
+    selection.forEach(o => _clearHighlight(o));
+    selection.clear();
+    selected = null;
+  }
+  if (!obj) {
+    tc.detach();
+    document.getElementById('props').classList.remove('show');
+    _syncBadge();
+    return;
+  }
+  if (additive && selection.has(obj)) {
+    // Shift-click on already-selected: deselect just this one
+    _clearHighlight(obj);
+    selection.delete(obj);
+    if (selected === obj) {
+      selected = selection.size ? [...selection][selection.size - 1] : null;
+      if (selected) tc.attach(selected); else tc.detach();
+    }
+    if (selection.size === 0) document.getElementById('props').classList.remove('show');
+    else syncProps();
+    _syncBadge();
+    return;
+  }
+  selection.add(obj);
+  selected = obj;
+  _applyHighlight(obj);
   tc.attach(obj);
   document.getElementById('props').classList.add('show');
-  document.getElementById('p-name').textContent = obj.userData.label || '';
-  const badge = document.getElementById('badge');
-  badge.textContent = '✦ ' + (obj.userData.label || 'Object');
-  badge.classList.add('show');
+  document.getElementById('p-name').textContent =
+    selection.size > 1 ? `${selection.size} objects` : (obj.userData.label || '');
+  _syncBadge();
   syncProps();
 }
 
 function deselect() {
-  if (!selected) return;
-  if (selected.material.emissive) {
-    selected.material.emissive.copy(selected.userData._emi ?? new THREE.Color(0));
-  } else if (selected.userData._selColor !== undefined) {
-    selected.material.color.setHex(selected.userData._selColor);
-    delete selected.userData._selColor;
-  }
+  selection.forEach(o => _clearHighlight(o));
+  selection.clear();
   tc.detach();
   selected = null;
   document.getElementById('props').classList.remove('show');
@@ -1276,7 +1320,7 @@ renderer.domElement.addEventListener('pointermove', e => {
     const dx = e.clientX - _md.x, dy = e.clientY - _md.y;
     if (!_fdActive && Math.hypot(dx, dy) > 4) {
       _fdActive = true;
-      if (_fdObj !== selected) selectObject(_fdObj); // auto-select dragged object
+      if (!selection.has(_fdObj)) selectObject(_fdObj); // auto-select if not already in selection
     }
     if (_fdActive) {
       _drawRay.setFromCamera(_ndcFromEvent(e), camera);
@@ -1284,7 +1328,9 @@ renderer.domElement.addEventListener('pointermove', e => {
       if (_drawRay.ray.intersectPlane(_fdPlane, pt)) {
         const np = pt.clone().add(_fdOffset);
         if (SNAP.grid) { np.x = _snapVal(np.x); np.z = _snapVal(np.z); }
-        _fdObj.position.copy(np);
+        const delta = np.clone().sub(_fdObj.position);
+        // Move ALL selected objects by the same delta
+        selection.forEach(o => o.position.add(delta));
         syncProps();
       }
       return; // skip draw-tool update while dragging
@@ -1432,8 +1478,8 @@ renderer.domElement.addEventListener('pointerup', e => {
   mp.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
   ray.setFromCamera(mp, camera);
   const hits = ray.intersectObjects(objects, false);
-  if (hits.length) selectObject(hits[0].object);
-  else             deselect();
+  if (hits.length) selectObject(hits[0].object, e.shiftKey);
+  else if (!e.shiftKey) deselect();
 });
 
 /* ── transform mode ────────────────────────────────────────────────────── */
@@ -1450,42 +1496,60 @@ window.onColorChange = function(hex) {
   document.getElementById('col-swatch').style.background = hex;
   document.getElementById('col-input').value = hex;
   document.getElementById('p-color').value   = hex;
-  if (selected) selected.material.color.set(hex);
+  selection.forEach(o => o.material.color.set(hex));
 };
 
 /* ── actions ───────────────────────────────────────────────────────────── */
 window.deleteSelected = function() {
-  if (!selected) return;
+  if (selection.size === 0) return;
   tc.detach();
-  scene.remove(selected);
-  objects = objects.filter(o => o !== selected);
-  selected.geometry.dispose();
-  selected.material.dispose();
+  selection.forEach(o => {
+    scene.remove(o);
+    objects = objects.filter(x => x !== o);
+    o.geometry.dispose();
+    o.material.dispose();
+  });
+  selection.clear();
   selected = null;
   document.getElementById('props').classList.remove('show');
   document.getElementById('badge').classList.remove('show');
 };
 
 window.copySelected = function() {
-  if (selected) { clipboard = selected; toast('Copied'); }
+  if (selection.size === 0) return;
+  clipboard = [...selection];
+  toast(`Copied ${clipboard.length} object${clipboard.length > 1 ? 's' : ''}`);
 };
 
 window.pasteClipboard = function() {
-  if (!clipboard) return;
-  const m = clipboard.clone();
-  m.material = clipboard.material.clone();
-  m.userData  = { ...clipboard.userData, label: clipboard.userData.label + ' copy', _emi: undefined };
-  m.position.x += 1.5;
-  m.position.z += 1.5;
-  scene.add(m);
-  objects.push(m);
-  selectObject(m);
-  toast('Pasted');
+  if (!clipboard || clipboard.length === 0) return;
+  deselect();
+  clipboard.forEach(orig => {
+    const m = orig.clone();
+    m.material = orig.material.clone();
+    m.userData = { ...orig.userData, label: orig.userData.label + ' copy', _emi: undefined };
+    m.position.x += 1.5;
+    m.position.z += 1.5;
+    scene.add(m);
+    objects.push(m);
+    selection.add(m);
+    _applyHighlight(m);
+    selected = m;
+  });
+  if (selected) {
+    tc.attach(selected);
+    document.getElementById('props').classList.add('show');
+    document.getElementById('p-name').textContent =
+      selection.size > 1 ? `${selection.size} objects` : (selected.userData.label || '');
+    _syncBadge();
+    syncProps();
+  }
+  toast(`Pasted ${clipboard.length} object${clipboard.length > 1 ? 's' : ''}`);
 };
 
 window.duplicateSelected = function() {
-  if (!selected) return;
-  clipboard = selected;
+  if (selection.size === 0) return;
+  clipboard = [...selection];
   pasteClipboard();
 };
 
@@ -1501,7 +1565,11 @@ window.resetCamera = function() {
 window.clearAll = function() {
   if (objects.length === 0) return;
   if (!confirm(`Delete all ${objects.length} object(s)?`)) return;
-  deselect();
+  selection.clear();
+  selected = null;
+  tc.detach();
+  document.getElementById('props').classList.remove('show');
+  document.getElementById('badge').classList.remove('show');
   objects.forEach(o => { o.geometry.dispose(); o.material.dispose(); scene.remove(o); });
   objects = [];
   count   = 0;
@@ -1529,11 +1597,18 @@ function syncProps() {
   setValue('rx', d(r.x)); setValue('ry', d(r.y)); setValue('rz', d(r.z));
   setValue('sx', f(s.x)); setValue('sy', f(s.y)); setValue('sz', f(s.z));
   document.getElementById('p-color').value = '#' + selected.material.color.getHexString();
-  // Element ID
+  // p-name shows single label or multi count
+  document.getElementById('p-name').textContent =
+    selection.size > 1 ? `${selection.size} objects selected` : (selected.userData.label || '');
+  // Element ID — only meaningful for single selection
   const eidEl = document.getElementById('p-eid');
-  if (eidEl !== document.activeElement) eidEl.value = selected.userData.elementId || '';
-  // Status
-  document.getElementById('p-status').value = selected.userData.status || '';
+  if (eidEl !== document.activeElement)
+    eidEl.value = selection.size === 1 ? (selected.userData.elementId || '') : '';
+  eidEl.placeholder = selection.size > 1 ? '(multiple)' : 'e.g. BM-EF-R1C1';
+  // Status — show common value or blank if mixed
+  const statuses = [...selection].map(o => o.userData.status || '');
+  const commonStatus = statuses.every(s => s === statuses[0]) ? statuses[0] : '';
+  document.getElementById('p-status').value = commonStatus;
   // Layer dropdown
   const sel = document.getElementById('p-layer');
   const curLid = selected.userData.layerId || layers[0].id;
@@ -1551,24 +1626,28 @@ window.applyElementId = function(val) {
 };
 
 window.applyStatus = function(status) {
-  if (!selected) return;
-  selected.userData.status = status;
+  if (selection.size === 0) return;
+  selection.forEach(o => {
+    o.userData.status = status;
+    if (status && STATUS_COLORS[status]) {
+      o.material.color.set(STATUS_COLORS[status]);
+    }
+  });
   if (status && STATUS_COLORS[status]) {
-    const hex = STATUS_COLORS[status];
-    selected.material.color.set(hex);
-    document.getElementById('p-color').value = hex;
+    document.getElementById('p-color').value = STATUS_COLORS[status];
   }
 };
 
 window.moveToLayer = function(layerId) {
-  if (!selected) return;
+  if (selection.size === 0) return;
   const layer = _layerById(layerId);
   if (!layer) return;
-  selected.userData.layerId = layerId;
-  selected.material.color.set(layer.color);
+  selection.forEach(o => {
+    o.userData.layerId = layerId;
+    o.material.color.set(layer.color);
+    o.visible = layer.visible;
+  });
   document.getElementById('p-color').value = '#' + selected.material.color.getHexString();
-  // Respect visibility of the target layer
-  selected.visible = layer.visible;
 };
 
 function setValue(id, v) {
