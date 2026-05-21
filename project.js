@@ -43,7 +43,7 @@ async function openProject(id){
   if(sbProfile) updateUserChip(sbProfile.full_name||sbProfile.username||sbUser?.email||'');
   // Re-load data now that the user is authenticated — Supabase RLS will allow the read
   await load();
-  renderDash();
+  navigate('dashboard');   // creates #dash-cards shell then calls renderDash()
 }
 
 // Copy logo to project screen — called explicitly when screen is shown
