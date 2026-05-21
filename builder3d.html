@@ -141,6 +141,46 @@
       padding: 20px; line-height: 1.8; z-index: 300; flex-direction: column; gap: 8px;
     }
     #err.show { display: flex; }
+
+    /* ── OSNAP panel ── */
+    .snap-wrap { position: relative; flex-shrink: 0; }
+    #snap-panel {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      box-shadow: 0 8px 24px #00000066; z-index: 500; min-width: 220px; padding: 5px 0;
+    }
+    #snap-panel.open { display: block; }
+    .snp-head { padding: 5px 14px 3px; font-size: 10px; color: #8b949e; text-transform: uppercase; letter-spacing: .5px; }
+    .snp-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 14px; cursor: pointer; font-size: 12px; color: #e6edf3;
+      user-select: none; transition: background .1s;
+    }
+    .snp-item:hover:not(.snp-na) { background: #21262d; }
+    .snp-item.snp-na { color: #484f58; cursor: default; }
+    .snp-cb {
+      width: 13px; height: 13px; border: 1px solid #30363d; border-radius: 3px;
+      background: #21262d; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 9px; color: transparent;
+    }
+    .snp-item.on .snp-cb { background: #0ea5e9; border-color: #0ea5e9; color: #fff; }
+    .snp-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(255,255,255,.25); }
+    .snp-sep { height: 1px; background: #30363d; margin: 4px 0; }
+    .snp-footer { padding: 5px 14px; display: flex; gap: 6px; }
+    .snp-foot-btn {
+      flex: 1; padding: 4px; border-radius: 5px; font-size: 11px;
+      border: 1px solid #30363d; background: #21262d; color: #e6edf3;
+      cursor: pointer; font-family: system-ui;
+    }
+    .snp-foot-btn:hover { background: #30363d; }
+
+    /* ── Snap marker label overlay ── */
+    #snap-label {
+      position: absolute; pointer-events: none; z-index: 200;
+      background: rgba(13,17,23,.88); border: 1px solid #30363d;
+      border-radius: 4px; padding: 2px 7px; font-size: 10px; color: #e6edf3;
+      display: none; white-space: nowrap;
+    }
   </style>
 
   <script type="importmap">
@@ -187,6 +227,37 @@
   <div class="sep"></div>
   <button class="tb-btn" onclick="resetCamera()">🎥 Reset view</button>
   <button class="tb-btn" onclick="toggleGrid()" >⊞ Grid</button>
+
+  <!-- OSNAP dropdown -->
+  <div class="snap-wrap">
+    <button class="tb-btn" id="snap-btn" onclick="toggleSnapPanel()" title="Object Snap (OSNAP)">🧲 Snap</button>
+    <div id="snap-panel">
+      <div class="snp-head">Object Snap</div>
+      <div class="snp-item on"  id="snp-endpoint" onclick="toggleSnapMode('endpoint')"><div class="snp-cb">✓</div><div class="snp-dot" style="background:#00ff88;"></div><span>Endpoint</span></div>
+      <div class="snp-item on"  id="snp-midpoint" onclick="toggleSnapMode('midpoint')"><div class="snp-cb">✓</div><div class="snp-dot" style="background:#ff8800;"></div><span>Midpoint</span></div>
+      <div class="snp-item on"  id="snp-center"   onclick="toggleSnapMode('center')"  ><div class="snp-cb">✓</div><div class="snp-dot" style="background:#00aaff;"></div><span>Center</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Geometric Center</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Node</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Quadrant</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Intersection</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Extension</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Insertion</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Perpendicular</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Tangent</span></div>
+      <div class="snp-item on"  id="snp-nearest"  onclick="toggleSnapMode('nearest')" ><div class="snp-cb">✓</div><div class="snp-dot" style="background:#ff66ff;"></div><span>Nearest</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Apparent Intersection</span></div>
+      <div class="snp-item snp-na"><div class="snp-cb"></div><div class="snp-dot" style="background:#484f58;"></div><span>Parallel</span></div>
+      <div class="snp-sep"></div>
+      <div class="snp-head">Grid Snap</div>
+      <div class="snp-item on"  id="snp-grid"     onclick="toggleSnapMode('grid')"    ><div class="snp-cb">✓</div><div class="snp-dot" style="background:#aaaaaa;"></div><span>Grid (0.5 units)</span></div>
+      <div class="snp-sep"></div>
+      <div class="snp-footer">
+        <button class="snp-foot-btn" onclick="setAllSnap(true)">Select All</button>
+        <button class="snp-foot-btn" onclick="setAllSnap(false)">Clear All</button>
+      </div>
+    </div>
+  </div>
+
   <button class="tb-btn del" onclick="clearAll()">🧹 Clear all</button>
 
   <div class="sep"></div>
@@ -266,6 +337,7 @@
 </div>
 
 <!-- ══ OVERLAYS ════════════════════════════════════════════════════════════ -->
+<div id="snap-label"></div>
 <div id="toast">Shape added ✓</div>
 <div id="badge"></div>
 <div id="kbhint">
@@ -367,8 +439,124 @@ orbit.update();
 const tc = new TransformControls(camera, renderer.domElement);
 tc.setMode('translate');
 tc.addEventListener('dragging-changed', e => { orbit.enabled = !e.value; });
-tc.addEventListener('objectChange', syncProps);
+tc.addEventListener('objectChange', () => { _applySnap(); syncProps(); });
 scene.add(tc);
+
+/* ── OSNAP System ──────────────────────────────────────────────────────── */
+const SNAP = { endpoint:true, midpoint:true, center:true, nearest:true, grid:true, gridSize:0.5, threshold:20 };
+
+// Apply initial TC snaps
+tc.translationSnap = SNAP.gridSize;
+tc.rotationSnap    = Math.PI / 12; // 15°
+
+// Compute candidate snap points from all objects except 'exclude'
+function _snapPts(exclude) {
+  const pts = [];
+  objects.forEach(o => {
+    if (o === exclude) return;
+    const bb = new THREE.Box3().setFromObject(o);
+    const {min:mn, max:mx} = bb;
+    const cx=(mn.x+mx.x)/2, cy=(mn.y+mx.y)/2, cz=(mn.z+mx.z)/2;
+    if (SNAP.endpoint) {
+      for (let a=0;a<2;a++) for (let b=0;b<2;b++) for (let c=0;c<2;c++)
+        pts.push({p:new THREE.Vector3(a?mx.x:mn.x, b?mx.y:mn.y, c?mx.z:mn.z), t:'endpoint'});
+    }
+    if (SNAP.midpoint) {
+      [[cx,mn.y,mn.z],[cx,mx.y,mn.z],[cx,mn.y,mx.z],[cx,mx.y,mx.z],
+       [mn.x,cy,mn.z],[mx.x,cy,mn.z],[mn.x,cy,mx.z],[mx.x,cy,mx.z],
+       [mn.x,mn.y,cz],[mx.x,mn.y,cz],[mn.x,mx.y,cz],[mx.x,mx.y,cz],
+       [cx,cy,mn.z],[cx,cy,mx.z],[mn.x,cy,cz],[mx.x,cy,cz],[cx,mn.y,cz],[cx,mx.y,cz]]
+        .forEach(([x,y,z])=>pts.push({p:new THREE.Vector3(x,y,z),t:'midpoint'}));
+    }
+    if (SNAP.center) {
+      pts.push({p:new THREE.Vector3(cx,cy,cz), t:'center'});
+    }
+    if (SNAP.nearest) {
+      pts.push({p:null, t:'nearest', bb:bb.clone()});
+    }
+  });
+  return pts;
+}
+
+// Project world point → screen coords
+function _toScreen(wp) {
+  const v = wp.clone().project(camera);
+  const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
+  return new THREE.Vector2((v.x+1)*.5*w, (-v.y+1)*.5*h);
+}
+
+// Snap marker (small sphere drawn on top of everything)
+const _sm = new THREE.Mesh(
+  new THREE.SphereGeometry(0.09, 8, 8),
+  new THREE.MeshBasicMaterial({color:0xffff00, depthTest:false})
+);
+_sm.renderOrder = 999; _sm.visible = false;
+scene.add(_sm);
+const _smCol = {endpoint:0x00ff88, midpoint:0xff8800, center:0x00aaff, nearest:0xff66ff};
+const _smLabel = {endpoint:'Endpoint', midpoint:'Midpoint', center:'Center', nearest:'Nearest'};
+const _snapLabelEl = document.getElementById('snap-label');
+
+function _applySnap() {
+  if (!selected || tc.mode !== 'translate') { _sm.visible = false; _snapLabelEl.style.display='none'; return; }
+  const pos = selected.position;
+  const scr = _toScreen(pos);
+  const pts = _snapPts(selected);
+
+  // Fill in nearest points (depends on current pos)
+  pts.forEach(sp => {
+    if (sp.t === 'nearest' && !sp.p) {
+      sp.p = new THREE.Vector3(
+        Math.max(sp.bb.min.x, Math.min(pos.x, sp.bb.max.x)),
+        Math.max(sp.bb.min.y, Math.min(pos.y, sp.bb.max.y)),
+        Math.max(sp.bb.min.z, Math.min(pos.z, sp.bb.max.z))
+      );
+    }
+  });
+
+  // Find closest snap point in screen space
+  let best = null, bestDist = SNAP.threshold;
+  pts.filter(sp=>sp.p).forEach(sp => {
+    const d = scr.distanceTo(_toScreen(sp.p));
+    if (d < bestDist) { bestDist = d; best = sp; }
+  });
+
+  if (best) {
+    selected.position.copy(best.p);
+    _sm.position.copy(best.p);
+    _sm.material.color.setHex(_smCol[best.t] || 0xffff00);
+    _sm.visible = true;
+    // Show label near snap point in screen space
+    const s = _toScreen(best.p);
+    _snapLabelEl.style.cssText = `display:block;left:${s.x+12}px;top:${s.y-8}px;`;
+    _snapLabelEl.textContent = _smLabel[best.t] || best.t;
+    return;
+  }
+
+  // Grid snap handled by tc.translationSnap — just hide indicator
+  _sm.visible = false;
+  _snapLabelEl.style.display = 'none';
+}
+
+// UI: toggle snap panel
+window.toggleSnapPanel = function() {
+  document.getElementById('snap-panel').classList.toggle('open');
+};
+window.toggleSnapMode = function(mode) {
+  SNAP[mode] = !SNAP[mode];
+  const el = document.getElementById('snp-'+mode);
+  if (el) el.classList.toggle('on', SNAP[mode]);
+  tc.translationSnap = SNAP.grid ? SNAP.gridSize : null;
+  tc.rotationSnap    = SNAP.grid ? (Math.PI/12) : null;
+};
+window.setAllSnap = function(on) {
+  ['endpoint','midpoint','center','nearest','grid'].forEach(m => {
+    SNAP[m] = on;
+    const el = document.getElementById('snp-'+m);
+    if (el) el.classList.toggle('on', on);
+  });
+  tc.translationSnap = on ? SNAP.gridSize : null;
+  tc.rotationSnap    = on ? (Math.PI/12) : null;
+};
 
 /* ── state ─────────────────────────────────────────────────────────────── */
 let selected   = null;
@@ -599,6 +787,7 @@ window.closeSaveMenu = function() {
 // close if clicked outside
 document.addEventListener('click', e => {
   if (!e.target.closest('.save-wrap')) closeSaveMenu();
+  if (!e.target.closest('.snap-wrap')) document.getElementById('snap-panel').classList.remove('open');
 });
 
 /* ── screenshot (PNG) ──────────────────────────────────────────────────── */
