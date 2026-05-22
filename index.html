@@ -229,7 +229,14 @@
   <!-- Content -->
   <div style="flex:1;overflow-y:auto;padding:40px 32px;">
     <div style="max-width:960px;margin:0 auto;">
-      <div style="margin-bottom:8px;font-size:22px;font-weight:700;color:#1a2a3a;">Select a Project</div>
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="font-size:22px;font-weight:700;color:#1a2a3a;">Select a Project</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="pf-raed"  onclick="setProjectFilter('raed')"  style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Raed Abdel Samad</button>
+          <button id="pf-anas"  onclick="setProjectFilter('anas')"  style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Anas Filali</button>
+          <button id="pf-nabil" onclick="setProjectFilter('nabil')" style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Nabil Gaich</button>
+        </div>
+      </div>
       <div style="margin-bottom:32px;font-size:13px;color:#8099b0;">Choose a project to open the monitoring sheet</div>
 
       <!-- Projects grid — rendered dynamically based on user's project access -->

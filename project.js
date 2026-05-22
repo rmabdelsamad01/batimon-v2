@@ -1,3 +1,20 @@
+// Active person filter — null means show all
+let _projFilter = null;
+
+function setProjectFilter(person){
+  _projFilter = (_projFilter === person) ? null : person;
+  const people = ['raed','anas','nabil'];
+  people.forEach(p => {
+    const btn = document.getElementById(`pf-${p}`);
+    if(!btn) return;
+    const on = _projFilter === p;
+    btn.style.background   = on ? '#224F93' : '#f0f4f9';
+    btn.style.color        = on ? '#fff'     : '#1a2a3a';
+    btn.style.borderColor  = on ? '#224F93'  : 'rgba(34,79,147,0.25)';
+  });
+  renderProjectScreen();
+}
+
 function renderProjectScreen(){
   const profile = sbProfile || {};
   const isAdmin = profile.role === 'admin' || profile.username === 'Admin';
@@ -12,9 +29,10 @@ function renderProjectScreen(){
     ? profile.projects
     : Object.keys(PROJECT_META);
 
-  // Show only assigned projects
+  // Show only assigned projects, filtered by active person chip if any
   grid.innerHTML = Object.entries(PROJECT_META).map(([id, meta]) => {
     if(!userProjects.includes(id)) return '';
+    if(_projFilter && !(meta.members||[]).includes(_projFilter)) return '';
 
     if(!meta.active){
       return `<div style="background:#fff;border:1px solid rgba(34,79,147,0.12);border-radius:14px;padding:24px;cursor:not-allowed;opacity:0.5;position:relative;">
