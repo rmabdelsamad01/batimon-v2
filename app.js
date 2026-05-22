@@ -6124,12 +6124,16 @@ function _applyNFEF65Mirror(){
 }
 // ── SF-81 → EF-81 one-way mirror ─────────────────────────────────────────────
 // SF-81 is the master (fully editable). EF-81 is a read-only viewer.
+// Floor-name remap: EF uses 'R+18B' for what SF calls 'R+17B' (both display as "R+17").
+// Without this remap the mirror would look up SF-R+18B-C81 which is always empty.
+const _EF_TO_SF_FL={'R+18B':'R+17B'};
 function _applySFEF81Mirror(){
   const efZone=ZONES.find(z=>z.id==='EF');
   if(!efZone)return;
   efZone.floors.forEach(fl=>{
     if(fl==='RDC'||fl==='R+01')return;
-    const sfId=`SF-${fl}-C81`;
+    const sfFl=_EF_TO_SF_FL[fl]||fl;
+    const sfId=`SF-${sfFl}-C81`;
     const efId=`EF-${fl}-C81`;
     const sfP=panels[sfId];
     if(!sfP)return;
