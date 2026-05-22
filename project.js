@@ -9,6 +9,45 @@ function saveCustomProjects(list){
   try{ localStorage.setItem('bm_custom_projects', JSON.stringify(list)); }catch(e){}
 }
 
+// ── Project deletion request ───────────────────────────────────────────────
+async function requestProjectDeletion(projId, projName){
+  if(!confirm(`Request admin approval to delete "${projName}"?`)) return;
+  const user = sbUser;
+  const name = sbProfile?.full_name || sbProfile?.username || user?.email || 'Unknown';
+  const {error} = await sb.from('project_delete_requests').insert({
+    project_id: projId,
+    project_name: projName,
+    requested_by: user?.id,
+    requested_by_name: name,
+    status: 'pending'
+  });
+  if(error){ alert('Failed to send request: '+error.message); return; }
+  // Mark locally as pending deletion
+  const list = getCustomProjects();
+  const idx = list.findIndex(p=>p.id===projId);
+  if(idx>=0){ list[idx].deletionRequested=true; saveCustomProjects(list); }
+  renderProjectScreen();
+  if(typeof toast==='function') toast('Deletion request sent to admin');
+}
+
+// Check Supabase for approved deletions and remove those projects locally
+async function checkApprovedDeletions(){
+  try{
+    const list = getCustomProjects();
+    if(!list.length) return;
+    const ids = list.filter(p=>p.deletionRequested).map(p=>p.id);
+    if(!ids.length) return;
+    const {data} = await sb.from('project_delete_requests')
+      .select('project_id')
+      .in('project_id', ids)
+      .eq('status','approved');
+    if(!data||!data.length) return;
+    const approvedIds = data.map(r=>r.project_id);
+    const updated = list.filter(p=>!approvedIds.includes(p.id));
+    saveCustomProjects(updated);
+  }catch(e){}
+}
+
 // ── Add New Project modal ──────────────────────────────────────────────────
 function showAddProjectModal(){
   const modal = document.getElementById('add-project-modal');
@@ -88,14 +127,24 @@ function renderProjectScreen(){
   }).join('');
 
   // Custom projects
+  const isDev = (sbProfile?.role === 'developer');
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
-    cards += `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid #1a9458;border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="position:absolute;top:14px;right:14px;background:#1a9458;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">Active</div>
+    const isPendingDel = proj.deletionRequested;
+    const deleteBtn = isDev
+      ? `<button onclick="event.stopPropagation();requestProjectDeletion('${proj.id}','${proj.name.replace(/'/g,"\\'")}')"
+           style="position:absolute;bottom:14px;right:14px;padding:4px 10px;border:1px solid rgba(192,32,32,0.3);border-radius:6px;background:rgba(192,32,32,0.06);color:#c02020;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;cursor:pointer;"
+           ${isPendingDel?'disabled':''}>
+           ${isPendingDel?'⏳ Pending deletion':'Delete'}
+         </button>`
+      : '';
+    cards += `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="position:absolute;top:14px;right:14px;background:${isPendingDel?'#c02020':'#1a9458'};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">${isPendingDel?'Pending deletion':'Active'}</div>
       <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       </div>
       <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
+      ${deleteBtn}
     </div>`;
   });
 

@@ -38,6 +38,42 @@ async function adminRefresh(){
   } catch(e){
     document.getElementById('admin-list-all').innerHTML=`<div style="text-align:center;padding:20px;color:#c02020;font-size:12px;">Error loading users: ${e.message}</div>`;
   }
+  // Load project deletion requests
+  try{
+    const {data:delReqs}=await sb.from('project_delete_requests').select('*').eq('status','pending').order('created_at',{ascending:false});
+    renderDelRequests(delReqs||[]);
+  } catch(e){}
+}
+
+function renderDelRequests(reqs){
+  const section = document.getElementById('admin-section-del-requests');
+  const list    = document.getElementById('admin-list-del-requests');
+  const badge   = document.getElementById('badge-del-requests');
+  if(!section||!list) return;
+  if(!reqs.length){ section.style.display='none'; return; }
+  section.style.display='block';
+  if(badge) badge.textContent=reqs.length;
+  list.innerHTML = reqs.map(r=>`
+    <div style="background:#fff;border:1px solid rgba(192,32,32,0.2);border-radius:10px;padding:16px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:3px;">${r.project_name}</div>
+        <div style="font-size:11px;color:#8099b0;">Requested by <b>${r.requested_by_name||'Unknown'}</b> · ${new Date(r.created_at).toLocaleDateString()}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button onclick="rejectDelRequest('${r.id}')" style="padding:7px 14px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;background:#f0f4f9;color:#8099b0;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Reject</button>
+        <button onclick="approveDelRequest('${r.id}','${r.project_id}')" style="padding:7px 14px;border:none;border-radius:7px;background:#c02020;color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Approve</button>
+      </div>
+    </div>`).join('');
+}
+
+async function approveDelRequest(reqId, projectId){
+  await sb.from('project_delete_requests').update({status:'approved'}).eq('id',reqId);
+  await adminRefresh();
+}
+
+async function rejectDelRequest(reqId){
+  await sb.from('project_delete_requests').update({status:'rejected'}).eq('id',reqId);
+  await adminRefresh();
 }
 
 function renderAdminUsers(){

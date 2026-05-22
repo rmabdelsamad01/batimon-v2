@@ -663,7 +663,56 @@ function _renderPage(id){
   else if(id==='agenda')renderAgendaPage();
   else if(id==='beta')renderBetaPage();
   else if(id==='batidoc')openBatidocPage();
-  else{const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
+  else{
+    // Custom projects get a blank A–Z grid instead of the Shift Tower facade tables
+    const isCustom = window._activeProjectId && window._activeProjectId !== 'shift-tower';
+    const facadeIds = ['NF','SF','EF','WF','BM-NF','BM-SF','BM-EF','BM-WF'];
+    if(isCustom && facadeIds.includes(id)){
+      renderCustomMonitoring(id);
+    } else {
+      const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);
+    }
+  }
+}
+
+// ── Custom project monitoring grid (blank A–Z / 1–10 table) ───────────────
+function renderCustomMonitoring(pageId){
+  const facadeLabel = {
+    'NF':'North Facade','BM-NF':'North Facade',
+    'SF':'South Facade','BM-SF':'South Facade',
+    'EF':'East Facade', 'BM-EF':'East Facade',
+    'WF':'West Facade', 'BM-WF':'West Facade'
+  }[pageId]||pageId;
+
+  const cols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const rows = Array.from({length:10},(_,i)=>i+1);
+  const projName = window._activeProjectName || window._activeProjectId || 'Project';
+
+  const headerCells = cols.map(c=>`<th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);min-width:60px;">${c}</th>`).join('');
+  const bodyRows = rows.map(r=>`
+    <tr>
+      <td style="padding:8px 12px;background:#f0f4f9;font-size:12px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;">${r}</td>
+      ${cols.map(()=>`<td style="padding:8px;border:1px solid #dde6f0;background:#fff;min-width:60px;"></td>`).join('')}
+    </tr>`).join('');
+
+  const page = document.getElementById(`page-${pageId}`);
+  if(!page) return;
+  page.innerHTML=`
+    <div style="padding:24px;font-family:'Barlow',sans-serif;">
+      <div style="margin-bottom:4px;font-size:18px;font-weight:700;color:#1a2a3a;">${facadeLabel}</div>
+      <div style="margin-bottom:20px;font-size:11px;color:#8099b0;">${projName}</div>
+      <div style="overflow-x:auto;border-radius:10px;box-shadow:0 2px 12px rgba(34,79,147,0.08);">
+        <table style="border-collapse:collapse;width:100%;">
+          <thead>
+            <tr>
+              <th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);">Column</th>
+              ${headerCells}
+            </tr>
+          </thead>
+          <tbody>${bodyRows}</tbody>
+        </table>
+      </div>
+    </div>`;
 }
 
 function toggleFacadeValMode(){

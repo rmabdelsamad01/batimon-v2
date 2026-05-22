@@ -197,6 +197,7 @@ async function afterLogin(user){
   const projUser = document.getElementById('proj-user');
   if(projUser) projUser.textContent = displayName;
   copyLogoToProjectScreen();
+  await checkApprovedDeletions();
   renderProjectScreen();
   updateUserChip(displayName);
 }
