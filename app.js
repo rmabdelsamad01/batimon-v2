@@ -266,43 +266,60 @@ ZONES.forEach(z=>fFilters[z.id]='all');
 function lsG(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsS(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 
-async function load(){
-  // Step 1: Always load localStorage first as a baseline (ensures data survives even if Supabase returns empty)
-  try{const v=lsG('bm_full_panels');if(v){const saved=JSON.parse(v);Object.assign(panels,saved);}}catch(e2){}
-  try{const v=lsG('bm_full_issues');if(v){const saved=JSON.parse(v);if(!issues.length)issues=saved;}}catch(e2){}
+// Returns a project-scoped localStorage key.
+// Shift Tower uses the bare key for backward compatibility; custom projects get a suffix.
+function projKey(base){
+  const id=window._activeProjectId;
+  if(!id||id==='shift-tower') return base;
+  return base+'__'+id;
+}
 
-  // Step 2: Load panels from Supabase with pagination (overrides localStorage only if Supabase returns real data)
-  try{
-    const PAGE=1000;let from=0;let totalLoaded=0;
-    while(true){
-      const {data,error}=await sb.from('panels').select('*').range(from,from+PAGE-1);
-      if(error||!data||data.length===0) break;
-      data.forEach(row=>{
-        panels[row.id]={
-          status:row.status||'pending',
-          notes:row.notes||'',
-          assigned:row.assigned||'',
-          ref:row.panel_ref||'',
-          type:row.panel_type||'',
-          fabDate:row.fab_date||'',
-          deliveryDate:row.delivery_date||'',
-          installDate:row.install_date||'',
-          installRef:row.install_ref||''
-        };
-      });
-      totalLoaded+=data.length;
-      if(data.length<PAGE) break;
-      from+=PAGE;
-    }
-  }catch(e){/* localStorage already loaded above */}
-  // Load issues from Supabase
-  try{
-    const {data:issData}=await sb.from('issues').select('*');
-    if(issData && issData.length>0) issues=issData.map(r=>({id:r.id,panelId:r.panel_id,type:r.issue_type,desc:r.description,reporter:r.reporter,date:r.reported_at}));
-  }catch(e){/* localStorage already loaded above */}
+async function load(){
+  const isShiftTower = !window._activeProjectId || window._activeProjectId==='shift-tower';
+
+  // Reset data when switching projects so stale data never leaks across
+  if(!isShiftTower){ Object.keys(panels).forEach(k=>delete panels[k]); issues=[]; }
+
+  // Step 1: Always load localStorage first as a baseline (ensures data survives even if Supabase returns empty)
+  try{const v=lsG(projKey('bm_full_panels'));if(v){const saved=JSON.parse(v);Object.assign(panels,saved);}}catch(e2){}
+  try{const v=lsG(projKey('bm_full_issues'));if(v){const saved=JSON.parse(v);if(!issues.length)issues=saved;}}catch(e2){}
+
+  // Step 2: Load from Supabase — only for Shift Tower (custom projects use localStorage only for now)
+  if(isShiftTower){
+    try{
+      const PAGE=1000;let from=0;let totalLoaded=0;
+      while(true){
+        const {data,error}=await sb.from('panels').select('*').range(from,from+PAGE-1);
+        if(error||!data||data.length===0) break;
+        data.forEach(row=>{
+          panels[row.id]={
+            status:row.status||'pending',
+            notes:row.notes||'',
+            assigned:row.assigned||'',
+            ref:row.panel_ref||'',
+            type:row.panel_type||'',
+            fabDate:row.fab_date||'',
+            deliveryDate:row.delivery_date||'',
+            installDate:row.install_date||'',
+            installRef:row.install_ref||''
+          };
+        });
+        totalLoaded+=data.length;
+        if(data.length<PAGE) break;
+        from+=PAGE;
+      }
+    }catch(e){/* localStorage already loaded above */}
+    // Load issues from Supabase
+    try{
+      const {data:issData}=await sb.from('issues').select('*');
+      if(issData && issData.length>0) issues=issData.map(r=>({id:r.id,panelId:r.panel_id,type:r.issue_type,desc:r.description,reporter:r.reporter,date:r.reported_at}));
+    }catch(e){/* localStorage already loaded above */}
+  }
+
   // Load panel-assembly checklist IDs for fabricated filter highlighting
   await _loadAssemblyPanels();
-  // Seed panels that don't exist yet
+  // Seed panels that don't exist yet — Shift Tower only
+  if(!isShiftTower) return;
   ZONES.filter(z=>z.simple).forEach(z=>{
     for(let r=1;r<=z.rows;r++)for(let c=1;c<=z.cols;c++){
       const id=`${z.id}-R${r}C${c}`;
@@ -394,10 +411,10 @@ function saveData(){
   _applyNFEF65Mirror();
   _applySFEF81Mirror();
   // 1. Persist to localStorage immediately — instant, never fails
-  lsS('bm_full_panels',JSON.stringify(panels));
-  lsS('bm_full_issues',JSON.stringify(issues));
-  // 2. Fire-and-forget cloud sync with auto-retry
-  _triggerCloudSync();
+  lsS(projKey('bm_full_panels'),JSON.stringify(panels));
+  lsS(projKey('bm_full_issues'),JSON.stringify(issues));
+  // 2. Fire-and-forget cloud sync — Shift Tower only (custom projects use localStorage for now)
+  if(!window._activeProjectId||window._activeProjectId==='shift-tower') _triggerCloudSync();
 }
 
 let _syncRetryTimer=null;

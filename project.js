@@ -1,6 +1,40 @@
 // Active person filter — null means show all
 let _projFilter = null;
 
+// ── Custom project storage ─────────────────────────────────────────────────
+function getCustomProjects(){
+  try{ return JSON.parse(localStorage.getItem('bm_custom_projects')||'[]'); }catch(e){ return []; }
+}
+function saveCustomProjects(list){
+  try{ localStorage.setItem('bm_custom_projects', JSON.stringify(list)); }catch(e){}
+}
+
+// ── Add New Project modal ──────────────────────────────────────────────────
+function showAddProjectModal(){
+  const modal = document.getElementById('add-project-modal');
+  if(!modal) return;
+  document.getElementById('add-project-input').value='';
+  document.getElementById('add-project-err').style.display='none';
+  modal.style.display='flex';
+  setTimeout(()=>document.getElementById('add-project-input').focus(),50);
+}
+function closeAddProjectModal(){
+  const modal = document.getElementById('add-project-modal');
+  if(modal) modal.style.display='none';
+}
+function confirmAddProject(){
+  const input = document.getElementById('add-project-input');
+  const err   = document.getElementById('add-project-err');
+  const name  = (input?.value||'').trim();
+  if(!name){ err.textContent='Please enter a project name.'; err.style.display='block'; return; }
+  const id = 'proj-'+Date.now();
+  const list = getCustomProjects();
+  list.push({ id, name, owner: _projFilter||'', createdAt: new Date().toISOString() });
+  saveCustomProjects(list);
+  closeAddProjectModal();
+  renderProjectScreen();
+}
+
 function setProjectFilter(person){
   _projFilter = (_projFilter === person) ? null : person;
   const people = ['raed','anas','nabil'];
@@ -29,8 +63,8 @@ function renderProjectScreen(){
     ? profile.projects
     : Object.keys(PROJECT_META);
 
-  // Show only assigned projects, filtered by active person chip if any
-  grid.innerHTML = Object.entries(PROJECT_META).map(([id, meta]) => {
+  // Build cards — PROJECT_META entries
+  let cards = Object.entries(PROJECT_META).map(([id, meta]) => {
     if(!userProjects.includes(id)) return '';
     if(_projFilter && !(meta.members||[]).includes(_projFilter)) return '';
 
@@ -52,16 +86,40 @@ function renderProjectScreen(){
       <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${meta.name}</div>
     </div>`;
   }).join('');
+
+  // Custom projects
+  getCustomProjects().forEach(proj => {
+    if(_projFilter && proj.owner !== _projFilter) return;
+    cards += `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid #1a9458;border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="position:absolute;top:14px;right:14px;background:#1a9458;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">Active</div>
+      <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
+    </div>`;
+  });
+
+  // "Add New Project" card — visible when a person filter is active
+  if(_projFilter){
+    cards += `<div onclick="showAddProjectModal()" style="background:#f8faff;border:2px dashed rgba(34,79,147,0.3);border-radius:14px;padding:24px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;gap:10px;" onmouseover="this.style.borderColor='#224F93';this.style.background='rgba(34,79,147,0.04)'" onmouseout="this.style.borderColor='rgba(34,79,147,0.3)';this.style.background='#f8faff'">
+      <div style="width:44px;height:44px;background:rgba(34,79,147,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      </div>
+      <div style="font-size:14px;font-weight:700;color:#224F93;">Add New Project</div>
+    </div>`;
+  }
+
+  grid.innerHTML = cards;
 }
 
 async function openProject(id){
-  if(id!=='shift-tower')return;
   window._activeProjectId = id;
+  const customProj = getCustomProjects().find(p=>p.id===id);
+  window._activeProjectName = customProj ? customProj.name : (PROJECT_META[id]?.name||id);
   document.getElementById('project-screen').style.display='none';
   if(sbProfile) updateUserChip(sbProfile.full_name||sbProfile.username||sbUser?.email||'');
-  // Re-load data now that the user is authenticated — Supabase RLS will allow the read
   await load();
-  goPage('dashboard');     // creates #dash-cards shell then calls renderDash()
+  goPage('dashboard');
 }
 
 // Copy logo to project screen — called explicitly when screen is shown
