@@ -99,8 +99,9 @@ function renderProjectScreen(){
     </div>`;
   });
 
-  // "Add New Project" card — visible when a person filter is active
-  if(_projFilter){
+  // "Add New Project" card — visible to developers only, when a person filter is active
+  const isDeveloper = (sbProfile?.role === 'developer');
+  if(_projFilter && isDeveloper){
     cards += `<div onclick="showAddProjectModal()" style="background:#f8faff;border:2px dashed rgba(34,79,147,0.3);border-radius:14px;padding:24px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;gap:10px;" onmouseover="this.style.borderColor='#224F93';this.style.background='rgba(34,79,147,0.04)'" onmouseout="this.style.borderColor='rgba(34,79,147,0.3)';this.style.background='#f8faff'">
       <div style="width:44px;height:44px;background:rgba(34,79,147,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
