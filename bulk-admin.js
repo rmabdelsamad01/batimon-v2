@@ -85,8 +85,8 @@ function adminUserCard(u){
   const statusColor = {approved:'#1a9458', pending:'#e05c00', suspended:'#c02020'}[u.status]||'#8099b0';
   const statusBg = {approved:'rgba(26,148,88,0.08)', pending:'rgba(224,92,0,0.08)', suspended:'rgba(192,32,32,0.08)'}[u.status]||'rgba(128,153,176,0.08)';
   const statusLabel = {approved:'Approved', pending:'Pending', suspended:'Suspended'}[u.status]||'Pending';
-  const roleColor = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a'}[u.role]||'#8099b0';
-  const roleLabel = {admin:'Admin', user:'User', viewer:'Viewer', batidoc_user:'Batidoc Only', phone_only:'Phone Only'}[u.role]||u.role||'Viewer';
+  const roleColor = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'}[u.role]||'#8099b0';
+  const roleLabel = {admin:'Admin', user:'User', viewer:'Viewer', batidoc_user:'Batidoc Only', phone_only:'Phone Only', developer:'Developer'}[u.role]||u.role||'Viewer';
   const projects = (u.projects||[]);
   const projStr = projects.length ? projects.map(p=>PROJECT_META[p]?.name||p).join(', ') : '—';
   const isSelf = sbUser && u.id === sbUser.id;
