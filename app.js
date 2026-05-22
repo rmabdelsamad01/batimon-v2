@@ -388,6 +388,11 @@ async function load(){
 }
 
 function saveData(){
+  // Re-apply all mirrors so changes propagate immediately without a full page reload
+  _applyWF15Mirror();
+  _applyNFWF31Mirror();
+  _applyNFEF65Mirror();
+  _applySFEF81Mirror();
   // 1. Persist to localStorage immediately — instant, never fails
   lsS('bm_full_panels',JSON.stringify(panels));
   lsS('bm_full_issues',JSON.stringify(issues));
