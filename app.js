@@ -676,42 +676,111 @@ function _renderPage(id){
 }
 
 // ── Custom project monitoring grid (blank A–Z / 1–10 table) ───────────────
-function renderCustomMonitoring(pageId){
-  const facadeLabel = {
-    'NF':'North Facade','BM-NF':'North Facade',
-    'SF':'South Facade','BM-SF':'South Facade',
-    'EF':'East Facade', 'BM-EF':'East Facade',
-    'WF':'West Facade', 'BM-WF':'West Facade'
-  }[pageId]||pageId;
+const _custStBg    = {installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+const _custStText  = {installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+const _custStLabel = {installed:'Installed',delivered:'Delivered',fabricated:'Fabricated',cutting:'CL Issued',cip:'CL In Prog',cl_not_issued:'CL Not Issued',defect:'Defect',pending:'Pending'};
+const _custStatuses = ['pending','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'];
 
-  const cols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const rows = Array.from({length:10},(_,i)=>i+1);
-  const projName = window._activeProjectName || window._activeProjectId || 'Project';
+// In-memory cache: { 'projId|facade': { '1-A': {status,notes}, ... } }
+const _custFacadeCache = {};
 
-  const headerCells = cols.map(c=>`<th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);min-width:60px;">${c}</th>`).join('');
-  const bodyRows = rows.map(r=>`
-    <tr>
-      <td style="padding:8px 12px;background:#f0f4f9;font-size:12px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;">${r}</td>
-      ${cols.map(()=>`<td style="padding:8px;border:1px solid #dde6f0;background:#fff;min-width:60px;"></td>`).join('')}
-    </tr>`).join('');
+async function _loadCustomFacade(projectId, facade){
+  const key = projectId+'|'+facade;
+  try{
+    const {data} = await sb.from('custom_project_facades').select('cells').eq('project_id',projectId).eq('facade',facade).single();
+    _custFacadeCache[key] = data?.cells || {};
+  }catch(e){ _custFacadeCache[key] = {}; }
+}
+
+async function _saveCustomFacadeCell(projectId, facade, cellKey, status){
+  const key = projectId+'|'+facade;
+  if(!_custFacadeCache[key]) _custFacadeCache[key]={};
+  _custFacadeCache[key][cellKey] = {status};
+  try{
+    await sb.from('custom_project_facades').upsert({
+      project_id: projectId,
+      facade,
+      cells: _custFacadeCache[key],
+      updated_at: new Date().toISOString()
+    },{onConflict:'project_id,facade'});
+  }catch(e){}
+}
+
+function _custCycleStatus(projectId, facade, cellKey, currentStatus){
+  const idx = _custStatuses.indexOf(currentStatus);
+  const next = _custStatuses[(idx+1) % _custStatuses.length];
+  _saveCustomFacadeCell(projectId, facade, cellKey, next);
+  // Update cell UI immediately
+  const td = document.getElementById('cpcell-'+cellKey);
+  if(td){
+    td.style.background = _custStBg[next];
+    td.style.color = _custStText[next];
+    td.title = _custStLabel[next];
+    td.dataset.status = next;
+  }
+}
+
+async function renderCustomMonitoring(pageId){
+  const facadeMap = {'NF':'NF','BM-NF':'NF','SF':'SF','BM-SF':'SF','EF':'EF','BM-EF':'EF','WF':'WF','BM-WF':'WF'};
+  const facadeLabel = {'NF':'North Facade','SF':'South Facade','EF':'East Facade','WF':'West Facade'};
+  const facade = facadeMap[pageId]||pageId;
+  const label  = facadeLabel[facade]||facade;
+  const projectId = window._activeProjectId;
+  const projName  = window._activeProjectName || projectId || 'Project';
 
   const page = document.getElementById(`page-${pageId}`);
   if(!page) return;
+
+  // Loading state
+  page.innerHTML=`<div style="padding:40px;font-family:'Barlow',sans-serif;color:#8099b0;font-size:13px;">Loading…</div>`;
+
+  await _loadCustomFacade(projectId, facade);
+  const cells = _custFacadeCache[projectId+'|'+facade] || {};
+
+  const cols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const rows = Array.from({length:10},(_,i)=>i+1);
+
+  const headerCells = cols.map(c=>`<th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);min-width:60px;">${c}</th>`).join('');
+
+  const bodyRows = rows.map(r=>`
+    <tr>
+      <td style="padding:8px 12px;background:#f0f4f9;font-size:12px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;user-select:none;">${r}</td>
+      ${cols.map(c=>{
+        const ck = r+'-'+c;
+        const st = (cells[ck]?.status)||'pending';
+        const bg = _custStBg[st]; const col = _custStText[st];
+        return `<td id="cpcell-${ck}" data-status="${st}" onclick="_custCycleStatus('${projectId}','${facade}','${ck}',this.dataset.status)"
+          title="${_custStLabel[st]}"
+          style="padding:8px;border:1px solid #dde6f0;background:${bg};color:${col};min-width:60px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;user-select:none;">
+          ${st==='pending'?'':_custStLabel[st]}
+        </td>`;
+      }).join('')}
+    </tr>`).join('');
+
+  // Status legend
+  const legend = _custStatuses.filter(s=>s!=='pending').map(s=>`
+    <span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;">
+      <span style="width:12px;height:12px;border-radius:3px;background:${_custStBg[s]};display:inline-block;"></span>
+      <span style="font-size:11px;color:#1a2a3a;">${_custStLabel[s]}</span>
+    </span>`).join('');
+
   page.innerHTML=`
-    <div style="padding:24px;font-family:'Barlow',sans-serif;">
-      <div style="margin-bottom:4px;font-size:18px;font-weight:700;color:#1a2a3a;">${facadeLabel}</div>
-      <div style="margin-bottom:20px;font-size:11px;color:#8099b0;">${projName}</div>
-      <div style="overflow-x:auto;border-radius:10px;box-shadow:0 2px 12px rgba(34,79,147,0.08);">
-        <table style="border-collapse:collapse;width:100%;">
+    <div style="padding:24px;font-family:'Barlow',sans-serif;height:100%;box-sizing:border-box;display:flex;flex-direction:column;">
+      <div style="margin-bottom:4px;font-size:18px;font-weight:700;color:#1a2a3a;">${label}</div>
+      <div style="margin-bottom:8px;font-size:11px;color:#8099b0;">${projName}</div>
+      <div style="margin-bottom:16px;flex-wrap:wrap;">${legend}</div>
+      <div style="overflow:auto;border-radius:10px;box-shadow:0 2px 12px rgba(34,79,147,0.08);flex:1;">
+        <table style="border-collapse:collapse;">
           <thead>
             <tr>
-              <th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);">Column</th>
+              <th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);">Row</th>
               ${headerCells}
             </tr>
           </thead>
           <tbody>${bodyRows}</tbody>
         </table>
       </div>
+      <div style="margin-top:10px;font-size:11px;color:#8099b0;">Click a cell to cycle through statuses. Changes are saved automatically.</div>
     </div>`;
 }
 
@@ -13148,6 +13217,16 @@ const _3D_IFC_URL = `${SUPABASE_URL}/storage/v1/object/public/${_3D_BUCKET}/${_3
 async function render3DPage(){
   const el=document.getElementById('page-3d');
   if(!el)return;
+
+  // Custom projects: 3D is set up per project individually — show blank placeholder
+  if(window._activeProjectId && window._activeProjectId!=='shift-tower'){
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;font-family:'Barlow',sans-serif;color:#8099b0;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <div style="font-size:15px;font-weight:600;">3D not configured for this project</div>
+      <div style="font-size:12px;">The 3D view will be set up individually for each project.</div>
+    </div>`;
+    return;
+  }
 
   // Use .fpw wrapper (same pattern as all other pages) + column direction for vertical layout
   el.innerHTML=`<div class="fpw" style="flex-direction:column;">
