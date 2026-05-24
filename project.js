@@ -48,6 +48,32 @@ async function checkApprovedDeletions(){
   }catch(e){}
 }
 
+// ── Rename Project ─────────────────────────────────────────────────────────
+function showRenameProjectModal(projId, currentName){
+  const modal = document.getElementById('rename-project-modal');
+  if(!modal) return;
+  document.getElementById('rename-project-id').value = projId;
+  document.getElementById('rename-project-input').value = currentName;
+  document.getElementById('rename-project-err').style.display = 'none';
+  modal.style.display = 'flex';
+  setTimeout(()=>document.getElementById('rename-project-input').focus(),50);
+}
+function closeRenameProjectModal(){
+  const modal = document.getElementById('rename-project-modal');
+  if(modal) modal.style.display = 'none';
+}
+function confirmRenameProject(){
+  const id   = document.getElementById('rename-project-id').value;
+  const name = document.getElementById('rename-project-input').value.trim();
+  const err  = document.getElementById('rename-project-err');
+  if(!name){ err.textContent='Please enter a name.'; err.style.display='block'; return; }
+  const list = getCustomProjects();
+  const idx  = list.findIndex(p=>p.id===id);
+  if(idx>=0){ list[idx].name = name; saveCustomProjects(list); }
+  closeRenameProjectModal();
+  renderProjectScreen();
+}
+
 // ── Delete Project panel ───────────────────────────────────────────────────
 function showDeleteProjectPanel(){
   const custom = getCustomProjects().filter(p => !_projFilter || p.owner === _projFilter);
@@ -156,12 +182,21 @@ function renderProjectScreen(){
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
     const isPendingDel = proj.deletionRequested;
-    cards += `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+    const editBtn = isDev
+      ? `<button onclick="event.stopPropagation();showRenameProjectModal('${proj.id}','${proj.name.replace(/'/g,"\\'")}')"
+           title="Rename project"
+           style="position:absolute;bottom:14px;right:14px;width:28px;height:28px;border-radius:6px;border:1px solid rgba(34,79,147,0.2);background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"
+           onmouseover="this.style.background='#224F93'" onmouseout="this.style.background='#f0f4f9'">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+         </button>`
+      : '';
+    cards += `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
       <div style="position:absolute;top:14px;right:14px;background:${isPendingDel?'#c02020':'#1a9458'};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">${isPendingDel?'Pending deletion':'Active'}</div>
       <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       </div>
       <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
+      ${editBtn}
     </div>`;
   });
 
