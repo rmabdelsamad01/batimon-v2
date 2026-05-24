@@ -288,6 +288,15 @@ function activeFacadeNames(){
   if(!pid||pid==='shift-tower') return null;
   return getCustomFacadeNames(pid);
 }
+// Update the nav-bar tab labels to reflect stored (or default) facade names
+function updateNavFacadeLabels(){
+  const names = activeFacadeNames() || _DEFAULT_FACADE_NAMES;
+  ['NF','SF','EF','WF'].forEach(id=>{
+    const el = document.getElementById('nav-label-'+id);
+    if(el) el.textContent = names[id] || _DEFAULT_FACADE_NAMES[id];
+  });
+}
+
 function showRenameFacadeModal(facadeId){
   const modal=document.getElementById('rename-facade-modal');
   if(!modal) return;
@@ -313,6 +322,7 @@ function confirmRenameFacade(){
   names[facadeId]=newName;
   saveCustomFacadeNames(pid, names);
   closeRenameFacadeModal();
+  updateNavFacadeLabels();
   // Re-render: find which custom page is currently visible
   const dashEl = document.getElementById('page-dashboard');
   const isDashVisible = dashEl && (dashEl.style.display!=='none');
@@ -690,7 +700,7 @@ function _renderPage(id){
   else if(id==='proj-bati-org')renderBatiOrg();
   else if(id==='proj-org')renderProjOrg();
   else if(id==='proj-financial')renderProjFinancial();
-  else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom) renderCustomDash(); else renderDash(); }
+  else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom){ updateNavFacadeLabels(); renderCustomDash(); } else { updateNavFacadeLabels(); renderDash(); } }
   else if(id==='BM-dashboard')renderBMDashboard();
   else if(id==='BM-NF')renderBMNF();
   else if(id==='BM-SF')renderBMSF();
@@ -718,6 +728,7 @@ function _renderPage(id){
     const isCustom = window._activeProjectId && window._activeProjectId !== 'shift-tower';
     const facadeIds = ['NF','SF','EF','WF','BM-NF','BM-SF','BM-EF','BM-WF'];
     if(isCustom && facadeIds.includes(id)){
+      updateNavFacadeLabels();
       renderCustomMonitoring(id);
     } else {
       const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);
@@ -2879,10 +2890,11 @@ function renderSimpleGrid(zone){
 // COMPLEX FACADES (EF, WF) — from PDF data, table layout
 function efSidebarHTML(){
   // Use stored facade names for custom projects; fall back to defaults for Shift Tower
+  const isCustomProject = !!(window._activeProjectId && window._activeProjectId !== 'shift-tower');
   const _sbn = activeFacadeNames() || _DEFAULT_FACADE_NAMES;
   const sections=[
     {id:'projinfo', label:'Project Info', icon:'🏗️', color:'#2d6a8f', subs:['General Description','Batiglobe Organigram','Project Organigram','Financial Info']},
-    {id:'monitoring', label:'Monitoring Sheet', icon:'📊', color:'#6d35d9', subs:['Bracket Monitoring','UCW Monitoring'], subSubs:{'Bracket Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF],'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]}},
+    {id:'monitoring', label:'Monitoring Sheet', icon:'📊', color:'#6d35d9', subs:isCustomProject?['Category 1']:['Bracket Monitoring','UCW Monitoring'], subSubs:{...(!isCustomProject?{'Bracket Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]}:{}),...(isCustomProject?{'Category 1':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]}:{'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]})}},
     {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['UCW Fabrication Rate','UCW Delivery Rate','UCW Installation Rate','Bracket Installation Rate','Fabrication Counting']},
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
@@ -3106,7 +3118,7 @@ function efSidebarHTML(){
               <div id="ef-sub-${sub2id}" style="display:none;padding-left:10px;border-left:2px solid ${s.color}18;">
                 ${s.subSubs[sub].map(item=>{
                   const isBM=sub==='Bracket Monitoring';
-                  const isUCW=sub==='UCW Monitoring';
+                  const isUCW=sub==='UCW Monitoring'||sub==='Category 1';
                   const isTemplate=sub==='Template Checklist';
                   const isSigned=sub==='Signed Checklist';
                   const isCashOut=sub==='Cash-Out';
