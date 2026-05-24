@@ -274,6 +274,56 @@ function projKey(base){
   return base+'__'+id;
 }
 
+// ── Custom facade name storage ─────────────────────────────────────────────
+const _DEFAULT_FACADE_NAMES = {NF:'North Facade', SF:'South Facade', EF:'East Facade', WF:'West Facade'};
+function getCustomFacadeNames(projId){
+  try{ return JSON.parse(localStorage.getItem('bm_facade_names__'+projId)||'null')||{..._DEFAULT_FACADE_NAMES}; }catch(e){ return {..._DEFAULT_FACADE_NAMES}; }
+}
+function saveCustomFacadeNames(projId, names){
+  try{ localStorage.setItem('bm_facade_names__'+projId, JSON.stringify(names)); }catch(e){}
+}
+// Returns facade names for the active project (null for Shift Tower — uses fixed labels)
+function activeFacadeNames(){
+  const pid=window._activeProjectId;
+  if(!pid||pid==='shift-tower') return null;
+  return getCustomFacadeNames(pid);
+}
+function showRenameFacadeModal(facadeId){
+  const modal=document.getElementById('rename-facade-modal');
+  if(!modal) return;
+  const names=activeFacadeNames()||{..._DEFAULT_FACADE_NAMES};
+  document.getElementById('rename-facade-id').value=facadeId;
+  document.getElementById('rename-facade-input').value=names[facadeId]||'';
+  document.getElementById('rename-facade-err').style.display='none';
+  modal.style.display='flex';
+  setTimeout(()=>document.getElementById('rename-facade-input').focus(),50);
+}
+function closeRenameFacadeModal(){
+  const modal=document.getElementById('rename-facade-modal');
+  if(modal) modal.style.display='none';
+}
+function confirmRenameFacade(){
+  const facadeId=document.getElementById('rename-facade-id').value;
+  const newName=(document.getElementById('rename-facade-input').value||'').trim();
+  const err=document.getElementById('rename-facade-err');
+  if(!newName){ err.textContent='Please enter a name.'; err.style.display='block'; return; }
+  const pid=window._activeProjectId;
+  if(!pid||pid==='shift-tower') return;
+  const names=getCustomFacadeNames(pid);
+  names[facadeId]=newName;
+  saveCustomFacadeNames(pid, names);
+  closeRenameFacadeModal();
+  // Re-render: find which custom page is currently visible
+  const dashEl = document.getElementById('page-dashboard');
+  const isDashVisible = dashEl && (dashEl.style.display!=='none');
+  if(isDashVisible){
+    renderCustomDash();
+  } else {
+    const pageId = window._currentCustomPage || 'NF';
+    renderCustomMonitoring(pageId);
+  }
+}
+
 async function load(){
   const isShiftTower = !window._activeProjectId || window._activeProjectId==='shift-tower';
 
@@ -694,7 +744,8 @@ async function renderCustomDash(){
 
   // Load all 4 facades from Supabase
   const facades = ['NF','SF','EF','WF'];
-  const facadeLabel = {NF:'North Facade', SF:'South Facade', EF:'East Facade', WF:'West Facade'};
+  const _storedNames = getCustomFacadeNames(projectId);
+  const facadeLabel = {NF:_storedNames.NF, SF:_storedNames.SF, EF:_storedNames.EF, WF:_storedNames.WF};
   const facadeColor = {NF:'#2d65bd', SF:'#1a9458', EF:'#e05c00', WF:'#7c3aed'};
 
   const {data: rows} = await sb.from('custom_project_facades')
@@ -747,11 +798,17 @@ async function renderCustomDash(){
     const bars    = _custStatuses.filter(s=>s!=='pending'&&fTotals[s]>0).map(s=>`
       <div title="${_custStLabel[s]}: ${fTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.round(fTotals[s]/fTotal*100)}%;border-radius:2px;"></div>`).join('');
     return `
-      <div onclick="goPage('${f}')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <div style="width:10px;height:10px;border-radius:50%;background:${facadeColor[f]};"></div>
-          <div style="font-size:13px;font-weight:700;color:#1a2a3a;">${facadeLabel[f]}</div>
-          <div style="margin-left:auto;font-size:18px;font-weight:800;color:${facadeColor[f]};">${pct}%</div>
+      <div style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;position:relative;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
+        <div onclick="goPage('${f}')" style="position:absolute;inset:0;border-radius:12px;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;z-index:1;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>
+          <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${facadeLabel[f]}</div>
+          <button onclick="event.stopPropagation();showRenameFacadeModal('${f}')" title="Rename facade"
+            style="width:24px;height:24px;border:1px solid rgba(34,79,147,0.15);border-radius:5px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
+            onmouseover="this.style.background='#6d35d9';this.style.borderColor='#6d35d9'" onmouseout="this.style.background='#f0f4f9';this.style.borderColor='rgba(34,79,147,0.15)'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <div style="font-size:18px;font-weight:800;color:${facadeColor[f]};">${pct}%</div>
         </div>
         <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
         <div style="font-size:11px;color:#8099b0;">${fActive} / ${fTotal} cells active</div>
@@ -811,11 +868,12 @@ function _custCycleStatus(projectId, facade, cellKey, currentStatus){
 }
 
 async function renderCustomMonitoring(pageId){
+  window._currentCustomPage = pageId;
   const facadeMap = {'NF':'NF','BM-NF':'NF','SF':'SF','BM-SF':'SF','EF':'EF','BM-EF':'EF','WF':'WF','BM-WF':'WF'};
-  const facadeLabel = {'NF':'North Facade','SF':'South Facade','EF':'East Facade','WF':'West Facade'};
   const facade = facadeMap[pageId]||pageId;
-  const label  = facadeLabel[facade]||facade;
   const projectId = window._activeProjectId;
+  const _storedFacadeNames = getCustomFacadeNames(projectId);
+  const label = _storedFacadeNames[facade] || facade;
   const projName  = window._activeProjectName || projectId || 'Project';
 
   const page = document.getElementById(`page-${pageId}`);
@@ -856,7 +914,14 @@ async function renderCustomMonitoring(pageId){
 
   page.innerHTML=`
     <div style="padding:24px;font-family:'Barlow',sans-serif;height:100%;box-sizing:border-box;display:flex;flex-direction:column;">
-      <div style="margin-bottom:4px;font-size:18px;font-weight:700;color:#1a2a3a;">${label}</div>
+      <div style="margin-bottom:4px;display:flex;align-items:center;gap:10px;">
+        <div style="font-size:18px;font-weight:700;color:#1a2a3a;">${label}</div>
+        <button onclick="showRenameFacadeModal('${facade}')" title="Rename this facade"
+          style="width:26px;height:26px;border:1px solid rgba(34,79,147,0.18);border-radius:6px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
+          onmouseover="this.style.background='#6d35d9';this.style.borderColor='#6d35d9'" onmouseout="this.style.background='#f0f4f9';this.style.borderColor='rgba(34,79,147,0.18)'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
       <div style="margin-bottom:8px;font-size:11px;color:#8099b0;">${projName}</div>
       <div style="margin-bottom:16px;flex-wrap:wrap;">${legend}</div>
       <div style="overflow:auto;border-radius:10px;box-shadow:0 2px 12px rgba(34,79,147,0.08);flex:1;">
@@ -2813,9 +2878,11 @@ function renderSimpleGrid(zone){
 
 // COMPLEX FACADES (EF, WF) — from PDF data, table layout
 function efSidebarHTML(){
+  // Use stored facade names for custom projects; fall back to defaults for Shift Tower
+  const _sbn = activeFacadeNames() || _DEFAULT_FACADE_NAMES;
   const sections=[
     {id:'projinfo', label:'Project Info', icon:'🏗️', color:'#2d6a8f', subs:['General Description','Batiglobe Organigram','Project Organigram','Financial Info']},
-    {id:'monitoring', label:'Monitoring Sheet', icon:'📊', color:'#6d35d9', subs:['Bracket Monitoring','UCW Monitoring'], subSubs:{'Bracket Monitoring':['Overview','North Facade','South Facade','East Facade','West Facade'],'UCW Monitoring':['Overview','North Facade','South Facade','East Facade','West Facade']}},
+    {id:'monitoring', label:'Monitoring Sheet', icon:'📊', color:'#6d35d9', subs:['Bracket Monitoring','UCW Monitoring'], subSubs:{'Bracket Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF],'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]}},
     {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['UCW Fabrication Rate','UCW Delivery Rate','UCW Installation Rate','Bracket Installation Rate','Fabrication Counting']},
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
@@ -3043,8 +3110,8 @@ function efSidebarHTML(){
                   const isTemplate=sub==='Template Checklist';
                   const isSigned=sub==='Signed Checklist';
                   const isCashOut=sub==='Cash-Out';
-                  const ucwMap={'Overview':'dashboard','North Facade':'NF','South Facade':'SF','East Facade':'EF','West Facade':'WF'};
-                  const bmMap={'Overview':'BM-dashboard','North Facade':'BM-NF','South Facade':'BM-SF','East Facade':'BM-EF','West Facade':'BM-WF'};
+                  const ucwMap={'Overview':'dashboard',[_sbn.NF]:'NF',[_sbn.SF]:'SF',[_sbn.EF]:'EF',[_sbn.WF]:'WF'};
+                  const bmMap={'Overview':'BM-dashboard',[_sbn.NF]:'BM-NF',[_sbn.SF]:'BM-SF',[_sbn.EF]:'BM-EF',[_sbn.WF]:'BM-WF'};
                   const checklistMap={'Bracket Installation':'bracket-installation','Panel Assembly':'panel-assembly','Panel Prep et Inst':'panel-preparation'};
                   const signedMap={'Signed Bracket Installation':'bracket-installation','Signed Panel Assembly':'panel-assembly','Signed Panel Prep et Inst':'panel-preparation'};
                   const cashOutMap={'Employees Cost':'monthly-cost','Material Cost':'fournitures','Other Costs':'other-costs'};
