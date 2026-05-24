@@ -48,6 +48,32 @@ async function checkApprovedDeletions(){
   }catch(e){}
 }
 
+// ── Delete Project panel ───────────────────────────────────────────────────
+function showDeleteProjectPanel(){
+  const custom = getCustomProjects().filter(p => !_projFilter || p.owner === _projFilter);
+  const list = document.getElementById('del-proj-list');
+  const modal = document.getElementById('del-project-modal');
+  if(!modal||!list) return;
+  if(!custom.length){
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:#8099b0;font-size:13px;">No projects to delete.</div>';
+  } else {
+    list.innerHTML = custom.map(p=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:#f8faff;border:1px solid rgba(34,79,147,0.1);">
+        <span style="font-size:14px;font-weight:600;color:#1a2a3a;">${p.name}</span>
+        <button onclick="requestProjectDeletion('${p.id}','${p.name.replace(/'/g,"\\'")}');closeDelProjectModal();"
+          style="padding:5px 14px;border:none;border-radius:6px;background:#c02020;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;"
+          ${p.deletionRequested?'disabled':''}>
+          ${p.deletionRequested?'Pending…':'Request Deletion'}
+        </button>
+      </div>`).join('');
+  }
+  modal.style.display = 'flex';
+}
+function closeDelProjectModal(){
+  const modal = document.getElementById('del-project-modal');
+  if(modal) modal.style.display = 'none';
+}
+
 // ── Add New Project modal ──────────────────────────────────────────────────
 function showAddProjectModal(){
   const modal = document.getElementById('add-project-modal');
@@ -127,38 +153,22 @@ function renderProjectScreen(){
   }).join('');
 
   // Custom projects
-  const isDev = (sbProfile?.role === 'developer');
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
     const isPendingDel = proj.deletionRequested;
-    cards += `<div style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;display:flex;flex-direction:column;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+    cards += `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
       <div style="position:absolute;top:14px;right:14px;background:${isPendingDel?'#c02020':'#1a9458'};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">${isPendingDel?'Pending deletion':'Active'}</div>
-      <div onclick="openProject('${proj.id}')" style="flex:1;">
-        <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        </div>
-        <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
+      <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       </div>
-      ${isDev ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(34,79,147,0.08);display:flex;justify-content:flex-end;">
-        <button onclick="event.stopPropagation();requestProjectDeletion('${proj.id}','${proj.name.replace(/'/g,"\\'")}')"
-          style="padding:5px 14px;border:1px solid rgba(192,32,32,0.3);border-radius:6px;background:rgba(192,32,32,0.06);color:#c02020;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;"
-          ${isPendingDel?'disabled':''}>
-          ${isPendingDel?'⏳ Pending deletion':'🗑 Delete'}
-        </button>
-      </div>` : ''}
+      <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
     </div>`;
   });
 
-  // "Add New Project" card — visible to developers only, when a person filter is active
-  const isDeveloper = (sbProfile?.role === 'developer');
-  if(_projFilter && isDeveloper){
-    cards += `<div onclick="showAddProjectModal()" style="background:#f8faff;border:2px dashed rgba(34,79,147,0.3);border-radius:14px;padding:24px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;gap:10px;" onmouseover="this.style.borderColor='#224F93';this.style.background='rgba(34,79,147,0.04)'" onmouseout="this.style.borderColor='rgba(34,79,147,0.3)';this.style.background='#f8faff'">
-      <div style="width:44px;height:44px;background:rgba(34,79,147,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      </div>
-      <div style="font-size:14px;font-weight:700;color:#224F93;">Add New Project</div>
-    </div>`;
-  }
+  // Show/hide action buttons for developers
+  const isDev = (sbProfile?.role === 'developer');
+  const actionBtns = document.getElementById('proj-action-btns');
+  if(actionBtns) actionBtns.style.display = isDev ? 'flex' : 'none';
 
   grid.innerHTML = cards;
 }

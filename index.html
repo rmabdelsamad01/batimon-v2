@@ -229,12 +229,23 @@
   <!-- Content -->
   <div style="flex:1;overflow-y:auto;padding:40px 32px;">
     <div style="max-width:960px;margin:0 auto;">
-      <div style="margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <div style="font-size:22px;font-weight:700;color:#1a2a3a;">Select a Project</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="pf-raed"  onclick="setProjectFilter('raed')"  style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Raed Abdel Samad</button>
-          <button id="pf-anas"  onclick="setProjectFilter('anas')"  style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Anas Filali</button>
-          <button id="pf-nabil" onclick="setProjectFilter('nabil')" style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Nabil Gaich</button>
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <div style="font-size:22px;font-weight:700;color:#1a2a3a;">Select a Project</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="pf-raed"  onclick="setProjectFilter('raed')"  style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Raed Abdel Samad</button>
+            <button id="pf-anas"  onclick="setProjectFilter('anas')"  style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Anas Filali</button>
+            <button id="pf-nabil" onclick="setProjectFilter('nabil')" style="padding:5px 14px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Nabil Gaich</button>
+          </div>
+        </div>
+        <!-- Action buttons — developer only, shown via JS -->
+        <div id="proj-action-btns" style="display:none;gap:10px;">
+          <button onclick="showAddProjectModal()" title="Add New Project" style="width:44px;height:44px;border-radius:10px;border:2px solid #1a9458;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(26,148,88,0.08)'" onmouseout="this.style.background='#fff'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          </button>
+          <button onclick="showDeleteProjectPanel()" title="Delete a Project" style="width:44px;height:44px;border-radius:10px;border:2px solid #c02020;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.background='rgba(192,32,32,0.06)'" onmouseout="this.style.background='#fff'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c02020" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
         </div>
       </div>
       <div style="margin-bottom:32px;font-size:13px;color:#8099b0;">Choose a project to open the monitoring sheet</div>
@@ -1182,6 +1193,23 @@
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button onclick="closeDeleteConfirm()" style="padding:9px 20px;border:1px solid rgba(34,79,147,0.2);border-radius:8px;background:#f0f4f9;color:#8099b0;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
         <button id="del-confirm-btn" onclick="executeDeleteUser()" style="padding:9px 20px;border:none;border-radius:8px;background:#c02020;color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;" onmouseover="this.style.background='#a01818'" onmouseout="this.style.background='#c02020'">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Project Modal -->
+<div id="del-project-modal" style="display:none;position:fixed;inset:0;background:rgba(20,40,80,0.5);z-index:10030;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;width:420px;max-width:calc(100vw - 32px);box-shadow:0 24px 70px rgba(34,79,147,0.22);overflow:hidden;">
+    <div style="background:#c02020;padding:20px 24px;display:flex;align-items:center;gap:12px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      <div style="font-size:15px;font-weight:700;color:#fff;">Delete a Project</div>
+    </div>
+    <div style="padding:24px;">
+      <div style="font-size:12px;color:#8099b0;margin-bottom:16px;">Select a project to request deletion. Admin approval is required.</div>
+      <div id="del-proj-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+        <button onclick="closeDelProjectModal()" style="padding:9px 20px;border:1px solid rgba(34,79,147,0.2);border-radius:8px;background:#f0f4f9;color:#8099b0;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Close</button>
       </div>
     </div>
   </div>
