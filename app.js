@@ -640,7 +640,7 @@ function _renderPage(id){
   else if(id==='proj-bati-org')renderBatiOrg();
   else if(id==='proj-org')renderProjOrg();
   else if(id==='proj-financial')renderProjFinancial();
-  else if(id==='dashboard')renderDash();
+  else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom) renderCustomDash(); else renderDash(); }
   else if(id==='BM-dashboard')renderBMDashboard();
   else if(id==='BM-NF')renderBMNF();
   else if(id==='BM-SF')renderBMSF();
@@ -683,6 +683,92 @@ const _custStatuses = ['pending','installed','delivered','fabricated','cutting',
 
 // In-memory cache: { 'projId|facade': { '1-A': {status,notes}, ... } }
 const _custFacadeCache = {};
+
+async function renderCustomDash(){
+  const projectId = window._activeProjectId;
+  const projName  = window._activeProjectName || projectId || 'Project';
+  const el = document.getElementById('dash-cards');
+  if(!el) return;
+
+  el.innerHTML = `<div style="font-size:12px;color:#8099b0;padding:8px 0;">Loading overview…</div>`;
+
+  // Load all 4 facades from Supabase
+  const facades = ['NF','SF','EF','WF'];
+  const facadeLabel = {NF:'North Facade', SF:'South Facade', EF:'East Facade', WF:'West Facade'};
+  const facadeColor = {NF:'#2d65bd', SF:'#1a9458', EF:'#e05c00', WF:'#7c3aed'};
+
+  const {data: rows} = await sb.from('custom_project_facades')
+    .select('facade,cells')
+    .eq('project_id', projectId)
+    .in('facade', facades);
+
+  const byFacade = {};
+  (rows||[]).forEach(r=>{ byFacade[r.facade] = r.cells||{}; });
+
+  // Aggregate totals across all facades
+  const totals = {};
+  _custStatuses.forEach(s=>totals[s]=0);
+  let grandTotal = 0;
+
+  facades.forEach(f=>{
+    const cells = byFacade[f]||{};
+    Object.values(cells).forEach(c=>{
+      const s = c.status||'pending';
+      totals[s] = (totals[s]||0)+1;
+      grandTotal++;
+  });
+  });
+
+  // Active statuses (non-pending with data)
+  const activeStatuses = _custStatuses.filter(s=>s!=='pending'&&totals[s]>0);
+  const totalActive = activeStatuses.reduce((a,s)=>a+totals[s],0);
+  const totalCells  = 4*10*26; // 4 facades × 10 rows × 26 cols
+
+  // Summary cards
+  const summaryCards = _custStatuses.filter(s=>s!=='pending').map(s=>`
+    <div style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);min-width:140px;">
+      <div style="font-size:11px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${_custStLabel[s]}</div>
+      <div style="font-size:28px;font-weight:800;color:#1a2a3a;">${totals[s]||0}</div>
+      <div style="margin-top:6px;height:4px;border-radius:2px;background:#f0f4f9;">
+        <div style="height:4px;border-radius:2px;background:${_custStBg[s]};width:${totalCells?Math.round((totals[s]||0)/totalCells*100):0}%;"></div>
+      </div>
+      <div style="font-size:10px;color:#8099b0;margin-top:4px;">${totalCells?Math.round((totals[s]||0)/totalCells*100):0}%</div>
+    </div>`).join('');
+
+  // Per-facade breakdown
+  const facadeCards = facades.map(f=>{
+    const cells = byFacade[f]||{};
+    const fTotals = {};
+    _custStatuses.forEach(s=>fTotals[s]=0);
+    Object.values(cells).forEach(c=>{ const s=c.status||'pending'; fTotals[s]=(fTotals[s]||0)+1; });
+    const fActive = _custStatuses.filter(s=>s!=='pending').reduce((a,s)=>a+fTotals[s],0);
+    const fTotal  = 10*26;
+    const pct     = Math.round(fActive/fTotal*100);
+    const bars    = _custStatuses.filter(s=>s!=='pending'&&fTotals[s]>0).map(s=>`
+      <div title="${_custStLabel[s]}: ${fTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.round(fTotals[s]/fTotal*100)}%;border-radius:2px;"></div>`).join('');
+    return `
+      <div onclick="goPage('${f}')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:${facadeColor[f]};"></div>
+          <div style="font-size:13px;font-weight:700;color:#1a2a3a;">${facadeLabel[f]}</div>
+          <div style="margin-left:auto;font-size:18px;font-weight:800;color:${facadeColor[f]};">${pct}%</div>
+        </div>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
+        <div style="font-size:11px;color:#8099b0;">${fActive} / ${fTotal} cells active</div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="font-family:'Barlow',sans-serif;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;">${summaryCards}</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:12px;">Facades</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">${facadeCards}</div>
+    </div>`;
+
+  // Also update the facades-grid area if it exists
+  const fg = document.getElementById('facades-grid');
+  if(fg) fg.innerHTML='';
+}
 
 async function _loadCustomFacade(projectId, facade){
   const key = projectId+'|'+facade;
