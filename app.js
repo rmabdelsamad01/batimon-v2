@@ -1040,14 +1040,14 @@ function custGridCtx(e,pid,facade,type,idx){
   const items=type==='row'?[
     {l:'Rename Row…',      fn:`custGridRenameRow('${pid}','${facade}',${idx})`},
     {l:'Set Row Height…',  fn:`custGridSetRowHeight('${pid}','${facade}',${idx})`},
-    {l:'sep':true},
+    {sep:true},
     {l:'Insert Row Above', fn:`custGridAddRow('${pid}','${facade}',${idx})`},
     {l:'Insert Row Below', fn:`custGridAddRow('${pid}','${facade}',${idx+1})`},
     {l:'Delete Row',       fn:`custGridDelRow('${pid}','${facade}',${idx})`, danger:true},
   ]:[
     {l:'Rename Column…',      fn:`custGridRenameCol('${pid}','${facade}',${idx})`},
     {l:'Set Column Width…',   fn:`custGridSetColWidth('${pid}','${facade}',${idx})`},
-    {l:'sep':true},
+    {sep:true},
     {l:'Insert Column Left',  fn:`custGridAddCol('${pid}','${facade}',${idx})`},
     {l:'Insert Column Right', fn:`custGridAddCol('${pid}','${facade}',${idx+1})`},
     {l:'Delete Column',       fn:`custGridDelCol('${pid}','${facade}',${idx})`, danger:true},
@@ -1153,7 +1153,6 @@ async function renderCustomMonitoring(pageId){
 
   // Escape cancels merge/unmerge mode
   document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
-}
 }
 
 function toggleFacadeValMode(){
