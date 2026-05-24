@@ -14041,6 +14041,16 @@ function renderAAAPage(){
   const el=document.getElementById('page-aaa');
   if(!el)return;
 
+  // Custom projects: show blank page
+  if(window._activeProjectId && window._activeProjectId!=='shift-tower'){
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;font-family:'Barlow',sans-serif;color:#8099b0;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <div style="font-size:15px;font-weight:600;">3D not configured for this project</div>
+      <div style="font-size:12px;">The 3D view will be set up individually for each project.</div>
+    </div>`;
+    return;
+  }
+
   const CELL=7;            // px per panel column width in 3D
   const GAP=1;             // px joint between panels
   const JOINT='#07111e';   // joint / structural-gap colour
