@@ -297,6 +297,40 @@ function updateNavFacadeLabels(){
   });
 }
 
+// ── Multi-category management (custom projects only) ─────────────────────────
+function getProjectCategories(projId){
+  try{ return JSON.parse(localStorage.getItem('bm_cats__'+projId)||'null')||[]; }catch(e){ return []; }
+}
+function saveProjectCategories(projId,cats){
+  localStorage.setItem('bm_cats__'+projId,JSON.stringify(cats));
+}
+function initProjectCategories(projId){
+  let cats=getProjectCategories(projId);
+  if(!cats.length){
+    const n=getCustomFacadeNames(projId);
+    cats=[{num:1,name:'Category 1',facadeNames:{
+      NF:(n.NF||'North Facade')+' 1',
+      SF:(n.SF||'South Facade')+' 1',
+      EF:(n.EF||'East Facade')+' 1',
+      WF:(n.WF||'West Facade')+' 1'
+    }}];
+    saveProjectCategories(projId,cats);
+  }
+  return cats;
+}
+function addNewCategory(){
+  const projId=window._activeProjectId;
+  if(!projId||projId==='shift-tower') return;
+  const cats=initProjectCategories(projId);
+  const n=cats.length+1;
+  cats.push({num:n,name:'Category '+n,facadeNames:{
+    NF:'North Facade '+n,SF:'South Facade '+n,EF:'East Facade '+n,WF:'West Facade '+n
+  }});
+  saveProjectCategories(projId,cats);
+  goPage('c'+n+'-overview');
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function showRenameFacadeModal(facadeId){
   const modal=document.getElementById('rename-facade-modal');
   if(!modal) return;
@@ -700,7 +734,7 @@ function _renderPage(id){
   else if(id==='proj-bati-org')renderBatiOrg();
   else if(id==='proj-org')renderProjOrg();
   else if(id==='proj-financial')renderProjFinancial();
-  else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom){ updateNavFacadeLabels(); renderCustomDash(); } else { updateNavFacadeLabels(); renderDash(); } }
+  else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom){ renderAllCategoriesOverview(); } else { updateNavFacadeLabels(); renderDash(); } }
   else if(id==='BM-dashboard')renderBMDashboard();
   else if(id==='BM-NF')renderBMNF();
   else if(id==='BM-SF')renderBMSF();
@@ -723,6 +757,12 @@ function _renderPage(id){
   else if(id==='agenda')renderAgendaPage();
   else if(id==='beta')renderBetaPage();
   else if(id==='batidoc')openBatidocPage();
+  else if(/^c\d+-(NF|SF|EF|WF)$/.test(id)&&window._activeProjectId&&window._activeProjectId!=='shift-tower'){
+    updateNavFacadeLabels(); renderCustomMonitoring(id);
+  }
+  else if(/^c\d+-overview$/.test(id)&&window._activeProjectId&&window._activeProjectId!=='shift-tower'){
+    renderCustomCatOverview(parseInt(id.match(/^c(\d+)/)[1]));
+  }
   else{
     // Custom projects get a blank A–Z grid instead of the Shift Tower facade tables
     const isCustom = window._activeProjectId && window._activeProjectId !== 'shift-tower';
@@ -835,6 +875,104 @@ async function renderCustomDash(){
   const fg = document.getElementById('facades-grid');
   if(fg) fg.innerHTML='';
 }
+
+// ── All Categories overview (combined view for custom projects) ───────────────
+async function renderAllCategoriesOverview(){
+  const projId = window._activeProjectId;
+  const projName = window._activeProjectName || projId || 'Project';
+  const cats = initProjectCategories(projId);
+
+  const wrap = document.getElementById('dash-sidebar-wrap');
+  if(wrap) wrap.innerHTML = efSidebarHTML();
+  const fg = document.getElementById('facades-grid');
+  if(fg) fg.innerHTML = '';
+  const el = document.getElementById('dash-cards');
+  if(!el) return;
+  el.innerHTML = `<div style="font-size:12px;color:#8099b0;padding:8px 0;">Loading…</div>`;
+
+  // Load all facade data for every category
+  const allKeys = [];
+  cats.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>allKeys.push(cat.num===1?f:'c'+cat.num+'-'+f)));
+  const {data:rows} = await sb.from('custom_project_facades').select('facade,cells').eq('project_id',projId).in('facade',allKeys);
+  const byKey = {};
+  (rows||[]).forEach(r=>{ byKey[r.facade]=r.cells||{}; });
+
+  const facadeColor = {NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
+  const catCards = cats.map(cat=>{
+    const catTotals={};_custStatuses.forEach(s=>catTotals[s]=0);
+    ['NF','SF','EF','WF'].forEach(f=>{
+      const key=cat.num===1?f:'c'+cat.num+'-'+f;
+      Object.values(byKey[key]||{}).forEach(c=>{ const s=c.status||'pending';catTotals[s]=(catTotals[s]||0)+1; });
+    });
+    const active=_custStatuses.filter(s=>s!=='pending').reduce((a,s)=>a+catTotals[s],0);
+    const totalCells=4*10*26;
+    const pct=Math.round(active/totalCells*100);
+    const bars=_custStatuses.filter(s=>s!=='pending'&&catTotals[s]>0).map(s=>`<div title="${_custStLabel[s]}: ${catTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.max(Math.round(catTotals[s]/totalCells*100),1)}%;border-radius:2px;min-width:4px;"></div>`).join('');
+    const facadeDots=['NF','SF','EF','WF'].map(f=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#8099b0;"><div style="width:6px;height:6px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>${cat.facadeNames[f]}</div>`).join('');
+    return `<div onclick="goPage('c${cat.num}-overview')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${cat.name}</div>
+        <div style="font-size:18px;font-weight:800;color:#6d35d9;">${pct}%</div>
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">${facadeDots}</div>
+      <div style="font-size:10px;color:#8099b0;">${active} / ${totalCells} cells active</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div style="font-family:'Barlow',sans-serif;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:12px;">All Categories</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">${catCards||'<div style="color:#8099b0;font-size:12px;">No categories yet.</div>'}</div>
+  </div>`;
+}
+
+// ── Single category overview ──────────────────────────────────────────────────
+async function renderCustomCatOverview(catNum){
+  const projId = window._activeProjectId;
+  const projName = window._activeProjectName || projId || 'Project';
+  const cats = initProjectCategories(projId);
+  const cat = cats.find(c=>c.num===catNum) || {num:catNum,name:'Category '+catNum,facadeNames:{NF:'North Facade '+catNum,SF:'South Facade '+catNum,EF:'East Facade '+catNum,WF:'West Facade '+catNum}};
+  const el = document.getElementById('page-c'+catNum+'-overview');
+  if(!el) return;
+
+  el.innerHTML = `<div class="fpw">${efSidebarHTML()}<div class="fpm"><div style="padding:20px;overflow-y:auto;flex:1;background:#f0f4f9;">
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">${cat.name}</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">${projName}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;" id="catov-cards-${catNum}">
+      <div style="color:#8099b0;font-size:12px;padding:8px 0;">Loading…</div>
+    </div>
+  </div></div></div>`;
+
+  const facadeKeys=['NF','SF','EF','WF'].map(f=>catNum===1?f:'c'+catNum+'-'+f);
+  const {data:rows} = await sb.from('custom_project_facades').select('facade,cells').eq('project_id',projId).in('facade',facadeKeys);
+  const byKey={};
+  (rows||[]).forEach(r=>{byKey[r.facade]=r.cells||{};});
+
+  const facadeColor={NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
+  const cards=['NF','SF','EF','WF'].map(f=>{
+    const key=catNum===1?f:'c'+catNum+'-'+f;
+    const cells=byKey[key]||{};
+    const fTotals={};_custStatuses.forEach(s=>fTotals[s]=0);
+    Object.values(cells).forEach(c=>{const s=c.status||'pending';fTotals[s]=(fTotals[s]||0)+1;});
+    const fActive=_custStatuses.filter(s=>s!=='pending').reduce((a,s)=>a+fTotals[s],0);
+    const fTotal=10*26;
+    const pct=Math.round(fActive/fTotal*100);
+    const name=cat.facadeNames[f];
+    const pageId=catNum===1?f:'c'+catNum+'-'+f;
+    const bars=_custStatuses.filter(s=>s!=='pending'&&fTotals[s]>0).map(s=>`<div title="${_custStLabel[s]}: ${fTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.max(Math.round(fTotals[s]/fTotal*100),1)}%;border-radius:2px;min-width:3px;"></div>`).join('');
+    return `<div onclick="goPage('${pageId}')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:10px;height:10px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>
+        <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${name}</div>
+        <div style="font-size:18px;font-weight:800;color:${facadeColor[f]};">${pct}%</div>
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
+      <div style="font-size:10px;color:#8099b0;">${fActive} / ${fTotal} cells active</div>
+    </div>`;
+  }).join('');
+  const cont=document.getElementById('catov-cards-'+catNum);
+  if(cont) cont.innerHTML=cards;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function _loadCustomFacade(projectId, facade){
   const key = projectId+'|'+facade;
@@ -1060,10 +1198,20 @@ function _custHideCtx(){ if(_cgCtxMenu){_cgCtxMenu.remove();_cgCtxMenu=null;} do
 
 async function renderCustomMonitoring(pageId){
   window._currentCustomPage = pageId;
-  const facadeMap = {'NF':'NF','BM-NF':'NF','SF':'SF','BM-SF':'SF','EF':'EF','BM-EF':'EF','WF':'WF','BM-WF':'WF'};
-  const facade = facadeMap[pageId]||pageId;
   const pid = window._activeProjectId;
-  const label = (getCustomFacadeNames(pid)||{})[facade] || facade;
+  // Resolve facade Supabase key and display label
+  let facade,facadeDir,catNum;
+  const _catFM=pageId.match(/^c(\d+)-(NF|SF|EF|WF)$/);
+  if(_catFM){
+    catNum=parseInt(_catFM[1]); facadeDir=_catFM[2];
+    facade=catNum===1?facadeDir:pageId; // Cat1→'NF', Cat2→'c2-NF'
+  } else {
+    const _leg={'NF':'NF','BM-NF':'NF','SF':'SF','BM-SF':'SF','EF':'EF','BM-EF':'EF','WF':'WF','BM-WF':'WF'};
+    facade=_leg[pageId]||pageId; facadeDir=facade; catNum=1;
+  }
+  const _cats=getProjectCategories(pid);
+  const _cat=_cats.find(c=>c.num===catNum);
+  const label=_cat?(_cat.facadeNames[facadeDir]||facadeDir):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
   const projName = window._activeProjectName || pid || 'Project';
 
   const page = document.getElementById(`page-${pageId}`);
@@ -1157,7 +1305,7 @@ async function renderCustomMonitoring(pageId){
 
 function toggleFacadeValMode(){
   // Custom projects have their own overview — never touch Shift Tower renderer
-  if(window._activeProjectId && window._activeProjectId!=='shift-tower'){ renderCustomDash(); return; }
+  if(window._activeProjectId && window._activeProjectId!=='shift-tower'){ renderAllCategoriesOverview(); return; }
   facadeValMode=facadeValMode==='numbers'?'percentages':'numbers';
   const btn=document.getElementById('facade-val-toggle');
   if(btn){btn.textContent=facadeValMode==='numbers'?'%':'#';btn.title=facadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';}
@@ -3099,9 +3247,53 @@ function efSidebarHTML(){
   // Use stored facade names for custom projects; fall back to defaults for Shift Tower
   const isCustomProject = !!(window._activeProjectId && window._activeProjectId !== 'shift-tower');
   const _sbn = activeFacadeNames() || _DEFAULT_FACADE_NAMES;
+
+  // Build custom monitoring sub-HTML for multi-category custom projects
+  let _customMonHTML = null;
+  if(isCustomProject){
+    const _pid = window._activeProjectId;
+    const _cats = initProjectCategories(_pid);
+    _customMonHTML = `
+      <div style="margin-bottom:2px;">
+        <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+             onmouseover="this.style.background='#6d35d912'" onmouseout="this.style.background='transparent'"
+             onclick="goPage('dashboard')">
+          <span style="margin-right:6px;font-size:12px;">🗂</span>
+          <span style="flex:1;font-weight:700;">All Categories</span>
+        </div>
+      </div>
+      ${_cats.map(_cat=>{
+        const _sid='mon-cat'+_cat.num;
+        return `<div style="margin-bottom:2px;">
+          <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+               onmouseover="this.style.background='#6d35d912'" onmouseout="this.style.background='transparent'"
+               onclick="toggleEFSub('${_sid}',this)">
+            <span style="flex:1;">${_cat.name}</span>
+            <span id="ef-arr-${_sid}" style="font-size:9px;color:var(--text3);transition:transform 0.2s;">▸</span>
+          </div>
+          <div id="ef-sub-${_sid}" style="display:none;padding-left:10px;border-left:2px solid #6d35d918;">
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-overview')">Overview ${_cat.num}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-NF')">${_cat.facadeNames.NF}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-SF')">${_cat.facadeNames.SF}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-EF')">${_cat.facadeNames.EF}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-WF')">${_cat.facadeNames.WF}</div>
+          </div>
+        </div>`;
+      }).join('')}
+      <div style="margin-top:7px;padding:0 2px;">
+        <button onclick="addNewCategory()" style="width:100%;padding:7px 8px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:11px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;">+ Add New Category</button>
+      </div>`;
+  }
+
   const sections=[
     {id:'projinfo', label:'Project Info', icon:'🏗️', color:'#2d6a8f', subs:['General Description','Batiglobe Organigram','Project Organigram','Financial Info']},
-    {id:'monitoring', label:'Monitoring Sheet', icon:'📊', color:'#6d35d9', subs:isCustomProject?['Category 1']:['Bracket Monitoring','UCW Monitoring'], subSubs:{...(!isCustomProject?{'Bracket Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]}:{}),...(isCustomProject?{'Category 1':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]}:{'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]})}},
+    {id:'monitoring', label:'Monitoring Sheet', icon:'📊', color:'#6d35d9',
+     subs:isCustomProject?[]:['Bracket Monitoring','UCW Monitoring'],
+     subSubs:isCustomProject?{}:{
+       'Bracket Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF],
+       'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]
+     },
+     customSubHTML:_customMonHTML},
     {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['UCW Fabrication Rate','UCW Delivery Rate','UCW Installation Rate','Bracket Installation Rate','Fabrication Counting']},
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
@@ -3132,15 +3324,15 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:${s.soon?'var(--surface)':'var(--surface2)'};cursor:${s.soon?'default':'pointer'};transition:border-color 0.15s,background 0.15s;${s.soon?'opacity:0.7;':''}"
              ${s.soon?'':`onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"`}
              ${s.soon?'':`onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"`}
-             ${s.soon?'':(s.subs.length?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:'')}
+             ${s.soon?'':(s.subs.length||s.customSubHTML?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:'')}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
-          ${s.subs.length?`<span id="ef-arr-${s.id}" style="font-size:10px;color:var(--text3);transition:transform 0.2s;"">▸</span>`:s.soon?`<span style="font-size:9px;font-weight:700;color:#fff;background:#f59e0b;border-radius:3px;padding:1px 5px;flex-shrink:0;letter-spacing:0.3px;">Soon</span>`:`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block;"></span>`}
+          ${s.subs.length||s.customSubHTML?`<span id="ef-arr-${s.id}" style="font-size:10px;color:var(--text3);transition:transform 0.2s;"">▸</span>`:s.soon?`<span style="font-size:9px;font-weight:700;color:#fff;background:#f59e0b;border-radius:3px;padding:1px 5px;flex-shrink:0;letter-spacing:0.3px;">Soon</span>`:`<span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0;display:inline-block;"></span>`}
         </div>
-        ${s.subs.length?`
+        ${s.subs.length||s.customSubHTML?`
         <div id="ef-sub-${s.id}" style="display:none;margin-top:3px;padding-left:12px;border-left:2px solid ${s.color}30;">
-          ${s.subs.map(sub=>{
+          ${s.customSubHTML||s.subs.map(sub=>{
             const hasSub2 = s.subSubs && s.subSubs[sub];
             const sub2id = s.id+'-'+sub.replace(/\s+/g,'_');
             if(sub==='General Description'){
