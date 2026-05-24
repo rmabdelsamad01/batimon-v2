@@ -765,7 +765,11 @@ async function renderCustomDash(){
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">${facadeCards}</div>
     </div>`;
 
-  // Also update the facades-grid area if it exists
+  // Render sidebar (same as all other pages)
+  const wrap = document.getElementById('dash-sidebar-wrap');
+  if(wrap) wrap.innerHTML = efSidebarHTML();
+
+  // Clear the extra facades-grid area
   const fg = document.getElementById('facades-grid');
   if(fg) fg.innerHTML='';
 }
