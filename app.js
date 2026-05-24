@@ -924,29 +924,33 @@ async function renderCustomMonitoring(pageId){
     </span>`).join('');
 
   page.innerHTML=`
-    <div style="padding:24px;font-family:'Barlow',sans-serif;height:100%;box-sizing:border-box;display:flex;flex-direction:column;">
-      <div style="margin-bottom:4px;display:flex;align-items:center;gap:10px;">
-        <div style="font-size:18px;font-weight:700;color:#1a2a3a;">${label}</div>
-        <button onclick="showRenameFacadeModal('${facade}')" title="Rename this facade"
-          style="width:26px;height:26px;border:1px solid rgba(34,79,147,0.18);border-radius:6px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
-          onmouseover="this.style.background='#6d35d9';this.style.borderColor='#6d35d9'" onmouseout="this.style.background='#f0f4f9';this.style.borderColor='rgba(34,79,147,0.18)'">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
+    <div class="fpw">${efSidebarHTML()}
+      <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;font-family:'Barlow',sans-serif;">
+        <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:16px;font-weight:700;color:var(--text);">${label}</div>
+          <button onclick="showRenameFacadeModal('${facade}')" title="Rename this facade"
+            style="width:26px;height:26px;border:1px solid rgba(34,79,147,0.18);border-radius:6px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
+            onmouseover="this.style.background='#6d35d9';this.style.borderColor='#6d35d9'" onmouseout="this.style.background='#f0f4f9';this.style.borderColor='rgba(34,79,147,0.18)'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <div style="font-size:11px;color:var(--text3);margin-left:4px;">${projName}</div>
+        </div>
+        <div style="padding:12px 24px 8px;flex-shrink:0;flex-wrap:wrap;">${legend}</div>
+        <div style="flex:1;overflow:auto;padding:0 24px 16px;">
+          <div style="border-radius:10px;box-shadow:0 2px 12px rgba(34,79,147,0.08);overflow:auto;">
+            <table style="border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);">Row</th>
+                  ${headerCells}
+                </tr>
+              </thead>
+              <tbody>${bodyRows}</tbody>
+            </table>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:#8099b0;">Click a cell to cycle through statuses. Changes are saved automatically.</div>
+        </div>
       </div>
-      <div style="margin-bottom:8px;font-size:11px;color:#8099b0;">${projName}</div>
-      <div style="margin-bottom:16px;flex-wrap:wrap;">${legend}</div>
-      <div style="overflow:auto;border-radius:10px;box-shadow:0 2px 12px rgba(34,79,147,0.08);flex:1;">
-        <table style="border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);">Row</th>
-              ${headerCells}
-            </tr>
-          </thead>
-          <tbody>${bodyRows}</tbody>
-        </table>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:#8099b0;">Click a cell to cycle through statuses. Changes are saved automatically.</div>
     </div>`;
 }
 
