@@ -1,12 +1,16 @@
 // Active person filter — null means show all
 let _projFilter = null;
 
-// ── Custom project storage ─────────────────────────────────────────────────
-function getCustomProjects(){
-  try{ return JSON.parse(localStorage.getItem('bm_custom_projects')||'[]'); }catch(e){ return []; }
-}
-function saveCustomProjects(list){
-  try{ localStorage.setItem('bm_custom_projects', JSON.stringify(list)); }catch(e){}
+// ── Custom project storage (Supabase) ──────────────────────────────────────
+let _customProjectsCache = [];
+
+function getCustomProjects(){ return _customProjectsCache; }
+
+async function loadCustomProjects(){
+  try{
+    const {data} = await sb.from('custom_projects').select('*').order('created_at');
+    _customProjectsCache = data || [];
+  }catch(e){ _customProjectsCache = []; }
 }
 
 // ── Project deletion request ───────────────────────────────────────────────
@@ -22,10 +26,10 @@ async function requestProjectDeletion(projId, projName){
     status: 'pending'
   });
   if(error){ alert('Failed to send request: '+error.message); return; }
-  // Mark locally as pending deletion
-  const list = getCustomProjects();
-  const idx = list.findIndex(p=>p.id===projId);
-  if(idx>=0){ list[idx].deletionRequested=true; saveCustomProjects(list); }
+  // Mark in Supabase and cache
+  await sb.from('custom_projects').update({deletion_requested:true}).eq('id',projId);
+  const idx = _customProjectsCache.findIndex(p=>p.id===projId);
+  if(idx>=0) _customProjectsCache[idx].deletion_requested = true;
   renderProjectScreen();
   if(typeof toast==='function') toast('Deletion request sent to admin');
 }
@@ -33,9 +37,9 @@ async function requestProjectDeletion(projId, projName){
 // Check Supabase for approved deletions and remove those projects locally
 async function checkApprovedDeletions(){
   try{
-    const list = getCustomProjects();
+    const list = _customProjectsCache;
     if(!list.length) return;
-    const ids = list.filter(p=>p.deletionRequested).map(p=>p.id);
+    const ids = list.filter(p=>p.deletion_requested).map(p=>p.id);
     if(!ids.length) return;
     const {data} = await sb.from('project_delete_requests')
       .select('project_id')
@@ -43,8 +47,11 @@ async function checkApprovedDeletions(){
       .eq('status','approved');
     if(!data||!data.length) return;
     const approvedIds = data.map(r=>r.project_id);
-    const updated = list.filter(p=>!approvedIds.includes(p.id));
-    saveCustomProjects(updated);
+    // Remove from Supabase
+    await sb.from('custom_projects').delete().in('id', approvedIds);
+    await sb.from('custom_project_facades').delete().in('project_id', approvedIds);
+    // Update cache
+    _customProjectsCache = _customProjectsCache.filter(p=>!approvedIds.includes(p.id));
   }catch(e){}
 }
 
@@ -62,14 +69,14 @@ function closeRenameProjectModal(){
   const modal = document.getElementById('rename-project-modal');
   if(modal) modal.style.display = 'none';
 }
-function confirmRenameProject(){
+async function confirmRenameProject(){
   const id   = document.getElementById('rename-project-id').value;
   const name = document.getElementById('rename-project-input').value.trim();
   const err  = document.getElementById('rename-project-err');
   if(!name){ err.textContent='Please enter a name.'; err.style.display='block'; return; }
-  const list = getCustomProjects();
-  const idx  = list.findIndex(p=>p.id===id);
-  if(idx>=0){ list[idx].name = name; saveCustomProjects(list); }
+  await sb.from('custom_projects').update({name}).eq('id', id);
+  const idx = _customProjectsCache.findIndex(p=>p.id===id);
+  if(idx>=0) _customProjectsCache[idx].name = name;
   closeRenameProjectModal();
   renderProjectScreen();
 }
@@ -88,8 +95,8 @@ function showDeleteProjectPanel(){
         <span style="font-size:14px;font-weight:600;color:#1a2a3a;">${p.name}</span>
         <button onclick="requestProjectDeletion('${p.id}','${p.name.replace(/'/g,"\\'")}');closeDelProjectModal();"
           style="padding:5px 14px;border:none;border-radius:6px;background:#c02020;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;"
-          ${p.deletionRequested?'disabled':''}>
-          ${p.deletionRequested?'Pending…':'Request Deletion'}
+          ${p.deletion_requested?'disabled':''}>
+          ${p.deletion_requested?'Pending…':'Request Deletion'}
         </button>
       </div>`).join('');
   }
@@ -113,15 +120,16 @@ function closeAddProjectModal(){
   const modal = document.getElementById('add-project-modal');
   if(modal) modal.style.display='none';
 }
-function confirmAddProject(){
+async function confirmAddProject(){
   const input = document.getElementById('add-project-input');
   const err   = document.getElementById('add-project-err');
   const name  = (input?.value||'').trim();
   if(!name){ err.textContent='Please enter a project name.'; err.style.display='block'; return; }
   const id = 'proj-'+Date.now();
-  const list = getCustomProjects();
-  list.push({ id, name, owner: _projFilter||'', createdAt: new Date().toISOString() });
-  saveCustomProjects(list);
+  const proj = { id, name, owner: _projFilter||'', created_at: new Date().toISOString(), deletion_requested: false };
+  const {error} = await sb.from('custom_projects').insert(proj);
+  if(error){ err.textContent='Failed to create project: '+error.message; err.style.display='block'; return; }
+  _customProjectsCache.push(proj);
   closeAddProjectModal();
   renderProjectScreen();
 }
@@ -182,7 +190,7 @@ function renderProjectScreen(){
   const isDev = (sbProfile?.role === 'developer');
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
-    const isPendingDel = proj.deletionRequested;
+    const isPendingDel = proj.deletion_requested;
     const editBtn = isDev
       ? `<button onclick="event.stopPropagation();showRenameProjectModal('${proj.id}','${proj.name.replace(/'/g,"\\'")}')"
            title="Rename project"
