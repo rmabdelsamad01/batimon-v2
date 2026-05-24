@@ -949,6 +949,8 @@ async function renderCustomMonitoring(pageId){
 }
 
 function toggleFacadeValMode(){
+  // Custom projects have their own overview — never touch Shift Tower renderer
+  if(window._activeProjectId && window._activeProjectId!=='shift-tower'){ renderCustomDash(); return; }
   facadeValMode=facadeValMode==='numbers'?'percentages':'numbers';
   const btn=document.getElementById('facade-val-toggle');
   if(btn){btn.textContent=facadeValMode==='numbers'?'%':'#';btn.title=facadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';}
