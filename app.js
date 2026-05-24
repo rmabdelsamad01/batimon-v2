@@ -858,94 +858,302 @@ async function _saveCustomFacadeCell(projectId, facade, cellKey, status){
   }catch(e){}
 }
 
-function _custCycleStatus(projectId, facade, cellKey, currentStatus){
-  const idx = _custStatuses.indexOf(currentStatus);
-  const next = _custStatuses[(idx+1) % _custStatuses.length];
-  _saveCustomFacadeCell(projectId, facade, cellKey, next);
-  // Update cell UI immediately
-  const td = document.getElementById('cpcell-'+cellKey);
-  if(td){
-    td.style.background = _custStBg[next];
-    td.style.color = _custStText[next];
-    td.title = _custStLabel[next];
-    td.dataset.status = next;
-  }
+// ─── CUSTOM GRID ENGINE ───────────────────────────────────────────────────
+// Cell keys: "r{rowIdx}_c{colIdx}" (0-based)
+// Meta stored under cells['__meta__'] in Supabase
+
+const _DEFAULT_GRID_META = ()=>({
+  rows: Array.from({length:10},(_,i)=>({label:String(i+1),height:40})),
+  cols: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>({label:c,width:80})),
+  merges:[]
+});
+
+function _custGetMeta(pid,facade){
+  const m=(_custFacadeCache[pid+'|'+facade]||{})['__meta__'];
+  return m?JSON.parse(JSON.stringify(m)):_DEFAULT_GRID_META();
 }
+async function _custSaveFull(pid,facade){
+  try{ await sb.from('custom_project_facades').upsert({project_id:pid,facade,cells:_custFacadeCache[pid+'|'+facade]||{},updated_at:new Date().toISOString()},{onConflict:'project_id,facade'}); }catch(e){}
+}
+function _custSetMeta(pid,facade,meta){
+  const k=pid+'|'+facade;
+  if(!_custFacadeCache[k])_custFacadeCache[k]={};
+  _custFacadeCache[k]['__meta__']=meta;
+  _custSaveFull(pid,facade);
+}
+function _custRemapCells(pid,facade,mapFn){
+  const k=pid+'|'+facade; const cells=_custFacadeCache[k]||{}; const out={};
+  if(cells['__meta__'])out['__meta__']=cells['__meta__'];
+  Object.entries(cells).forEach(([key,val])=>{
+    if(key==='__meta__')return;
+    const m=key.match(/^r(\d+)_c(\d+)$/); if(!m)return;
+    const nk=mapFn(+m[1],+m[2]); if(nk)out[nk]=val;
+  });
+  _custFacadeCache[k]=out;
+}
+
+let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null;
+
+// Add / Delete rows & columns
+function custGridAddRow(pid,facade,atIdx){
+  const meta=_custGetMeta(pid,facade); const n=meta.rows.length;
+  const idx=atIdx!=null?atIdx:n;
+  _custRemapCells(pid,facade,(r,c)=>r>=idx?`r${r+1}_c${c}`:`r${r}_c${c}`);
+  meta.merges=meta.merges.map(m=>m.r>=idx?{...m,r:m.r+1}:(m.r<idx&&m.r+m.rowspan>idx?{...m,rowspan:m.rowspan+1}:m));
+  meta.rows.splice(idx,0,{label:String(n+1),height:40});
+  _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridDelRow(pid,facade,rowIdx){
+  const meta=_custGetMeta(pid,facade);
+  if(meta.rows.length<=1){alert('Cannot delete the last row.');return;}
+  _custRemapCells(pid,facade,(r,c)=>r===rowIdx?null:r>rowIdx?`r${r-1}_c${c}`:`r${r}_c${c}`);
+  meta.merges=meta.merges.map(m=>{
+    if(m.r>rowIdx)return{...m,r:m.r-1};
+    if(m.r<rowIdx&&m.r+m.rowspan>rowIdx)return{...m,rowspan:m.rowspan-1};
+    if(m.r===rowIdx&&m.rowspan>1)return{...m,r:m.r+1,rowspan:m.rowspan-1};
+    return null;
+  }).filter(Boolean).filter(m=>m.rowspan>0&&m.colspan>0);
+  meta.rows.splice(rowIdx,1);
+  _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridAddCol(pid,facade,atIdx){
+  const meta=_custGetMeta(pid,facade); const n=meta.cols.length;
+  const idx=atIdx!=null?atIdx:n;
+  _custRemapCells(pid,facade,(r,c)=>c>=idx?`r${r}_c${c+1}`:`r${r}_c${c}`);
+  meta.merges=meta.merges.map(m=>m.c>=idx?{...m,c:m.c+1}:(m.c<idx&&m.c+m.colspan>idx?{...m,colspan:m.colspan+1}:m));
+  // Generate column label (A-Z, then AA, AB…)
+  let lbl='',tmp=n+1; while(tmp>0){tmp--;lbl=String.fromCharCode(65+(tmp%26))+lbl;tmp=Math.floor(tmp/26);}
+  meta.cols.splice(idx,0,{label:lbl,width:80});
+  _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridDelCol(pid,facade,colIdx){
+  const meta=_custGetMeta(pid,facade);
+  if(meta.cols.length<=1){alert('Cannot delete the last column.');return;}
+  _custRemapCells(pid,facade,(r,c)=>c===colIdx?null:c>colIdx?`r${r}_c${c-1}`:`r${r}_c${c}`);
+  meta.merges=meta.merges.map(m=>{
+    if(m.c>colIdx)return{...m,c:m.c-1};
+    if(m.c<colIdx&&m.c+m.colspan>colIdx)return{...m,colspan:m.colspan-1};
+    if(m.c===colIdx&&m.colspan>1)return{...m,c:m.c+1,colspan:m.colspan-1};
+    return null;
+  }).filter(Boolean).filter(m=>m.rowspan>0&&m.colspan>0);
+  meta.cols.splice(colIdx,1);
+  _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridSetRowHeight(pid,facade,rowIdx){
+  const meta=_custGetMeta(pid,facade);
+  const cur=meta.rows[rowIdx]?.height||40;
+  const val=prompt('Row height (px):',cur); if(!val)return;
+  const h=parseInt(val); if(isNaN(h)||h<15||h>400){alert('Height must be 15–400 px.');return;}
+  meta.rows[rowIdx].height=h; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridSetColWidth(pid,facade,colIdx){
+  const meta=_custGetMeta(pid,facade);
+  const cur=meta.cols[colIdx]?.width||80;
+  const val=prompt('Column width (px):',cur); if(!val)return;
+  const w=parseInt(val); if(isNaN(w)||w<30||w>500){alert('Width must be 30–500 px.');return;}
+  meta.cols[colIdx].width=w; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridRenameRow(pid,facade,rowIdx){
+  const meta=_custGetMeta(pid,facade);
+  const cur=meta.rows[rowIdx]?.label||String(rowIdx+1);
+  const val=prompt('Row label:',cur); if(val===null)return;
+  const name=val.trim(); if(!name){alert('Label cannot be empty.');return;}
+  meta.rows[rowIdx].label=name; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridRenameCol(pid,facade,colIdx){
+  const meta=_custGetMeta(pid,facade);
+  const cur=meta.cols[colIdx]?.label||String.fromCharCode(65+colIdx);
+  const val=prompt('Column label:',cur); if(val===null)return;
+  const name=val.trim(); if(!name){alert('Label cannot be empty.');return;}
+  meta.cols[colIdx].label=name; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+
+// Merge / Unmerge
+function custGridStartMerge(){
+  _gridMode='merge'; _gridMergeStart=null;
+  const btn=document.getElementById('cg-merge-btn');
+  if(btn){btn.style.background='#224F93';btn.style.color='#fff';}
+  const h=document.getElementById('cg-hint'); if(h)h.textContent='Click the first cell, then click the last cell of the range.';
+}
+function custGridStartUnmerge(){
+  _gridMode='unmerge'; _gridMergeStart=null;
+  const btn=document.getElementById('cg-unmerge-btn');
+  if(btn){btn.style.background='#c02020';btn.style.color='#fff';}
+  const h=document.getElementById('cg-hint'); if(h)h.textContent='Click a merged cell to unmerge it.';
+}
+function custGridCancelMode(){
+  _gridMode=null; _gridMergeStart=null;
+  ['cg-merge-btn','cg-unmerge-btn'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
+  const h=document.getElementById('cg-hint'); if(h)h.textContent='';
+}
+function custGridMerge(pid,facade,r1,c1,r2,c2){
+  if(r1===r2&&c1===c2)return;
+  const meta=_custGetMeta(pid,facade);
+  meta.merges=meta.merges.filter(m=>{
+    const mr2=m.r+m.rowspan-1,mc2=m.c+m.colspan-1;
+    return mr2<r1||m.r>r2||mc2<c1||m.c>c2;
+  });
+  meta.merges.push({r:r1,c:c1,rowspan:r2-r1+1,colspan:c2-c1+1});
+  _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+function custGridUnmerge(pid,facade,r,c){
+  const meta=_custGetMeta(pid,facade);
+  const idx=meta.merges.findIndex(m=>r>=m.r&&r<m.r+m.rowspan&&c>=m.c&&c<m.c+m.colspan);
+  if(idx<0){custGridCancelMode();return;}
+  meta.merges.splice(idx,1);
+  _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+
+// Cell click handler
+function custGridCellClick(pid,facade,r,c){
+  if(_gridMode==='merge'){
+    if(!_gridMergeStart){
+      _gridMergeStart={r,c};
+      const td=document.getElementById(`cpcell-${r}_${c}`);
+      if(td)td.style.outline='3px solid #224F93';
+      const h=document.getElementById('cg-hint'); if(h)h.textContent='First cell selected — now click the last cell of the range.';
+    } else {
+      const r1=Math.min(_gridMergeStart.r,r),r2=Math.max(_gridMergeStart.r,r);
+      const c1=Math.min(_gridMergeStart.c,c),c2=Math.max(_gridMergeStart.c,c);
+      custGridMerge(pid,facade,r1,c1,r2,c2); custGridCancelMode();
+    }
+    return;
+  }
+  if(_gridMode==='unmerge'){ custGridUnmerge(pid,facade,r,c); custGridCancelMode(); return; }
+  // Normal: cycle status
+  const k=pid+'|'+facade; const key=`r${r}_c${c}`;
+  if(!_custFacadeCache[k])_custFacadeCache[k]={};
+  const cur=_custFacadeCache[k][key]?.status||'pending';
+  const next=_custStatuses[(_custStatuses.indexOf(cur)+1)%_custStatuses.length];
+  _custFacadeCache[k][key]={status:next};
+  _custSaveFull(pid,facade);
+  const td=document.getElementById(`cpcell-${r}_${c}`);
+  if(td){td.style.background=_custStBg[next];td.style.color=_custStText[next];td.title=_custStLabel[next];td.dataset.status=next;td.textContent=next==='pending'?'':_custStLabel[next];}
+}
+
+// Right-click context menu on row/col headers
+function custGridCtx(e,pid,facade,type,idx){
+  e.preventDefault(); e.stopPropagation(); _custHideCtx();
+  const menu=document.createElement('div');
+  menu.id='cg-ctx';
+  menu.style.cssText=`position:fixed;top:${e.clientY}px;left:${e.clientX}px;background:#fff;border:1px solid rgba(34,79,147,0.15);border-radius:8px;box-shadow:0 8px 28px rgba(34,79,147,0.18);z-index:9999;min-width:190px;overflow:hidden;font-family:'Barlow',sans-serif;font-size:12px;`;
+  const items=type==='row'?[
+    {l:'Rename Row…',      fn:`custGridRenameRow('${pid}','${facade}',${idx})`},
+    {l:'Set Row Height…',  fn:`custGridSetRowHeight('${pid}','${facade}',${idx})`},
+    {l:'sep':true},
+    {l:'Insert Row Above', fn:`custGridAddRow('${pid}','${facade}',${idx})`},
+    {l:'Insert Row Below', fn:`custGridAddRow('${pid}','${facade}',${idx+1})`},
+    {l:'Delete Row',       fn:`custGridDelRow('${pid}','${facade}',${idx})`, danger:true},
+  ]:[
+    {l:'Rename Column…',      fn:`custGridRenameCol('${pid}','${facade}',${idx})`},
+    {l:'Set Column Width…',   fn:`custGridSetColWidth('${pid}','${facade}',${idx})`},
+    {l:'sep':true},
+    {l:'Insert Column Left',  fn:`custGridAddCol('${pid}','${facade}',${idx})`},
+    {l:'Insert Column Right', fn:`custGridAddCol('${pid}','${facade}',${idx+1})`},
+    {l:'Delete Column',       fn:`custGridDelCol('${pid}','${facade}',${idx})`, danger:true},
+  ];
+  menu.innerHTML=items.map(it=>it.sep?`<div style="height:1px;background:rgba(34,79,147,0.08);margin:3px 0;"></div>`:`<div onclick="_custHideCtx();${it.fn}" style="padding:9px 16px;cursor:pointer;color:${it.danger?'#c02020':'#1a2a3a'};" onmouseover="this.style.background='${it.danger?'#fff5f5':'#f0f4f9'}'" onmouseout="this.style.background='transparent'">${it.l}</div>`).join('');
+  document.body.appendChild(menu); _cgCtxMenu=menu;
+  setTimeout(()=>document.addEventListener('click',_custHideCtx,{once:true}),10);
+}
+function _custHideCtx(){ if(_cgCtxMenu){_cgCtxMenu.remove();_cgCtxMenu=null;} document.removeEventListener('click',_custHideCtx); }
 
 async function renderCustomMonitoring(pageId){
   window._currentCustomPage = pageId;
   const facadeMap = {'NF':'NF','BM-NF':'NF','SF':'SF','BM-SF':'SF','EF':'EF','BM-EF':'EF','WF':'WF','BM-WF':'WF'};
   const facade = facadeMap[pageId]||pageId;
-  const projectId = window._activeProjectId;
-  const _storedFacadeNames = getCustomFacadeNames(projectId);
-  const label = _storedFacadeNames[facade] || facade;
-  const projName  = window._activeProjectName || projectId || 'Project';
+  const pid = window._activeProjectId;
+  const label = (getCustomFacadeNames(pid)||{})[facade] || facade;
+  const projName = window._activeProjectName || pid || 'Project';
 
   const page = document.getElementById(`page-${pageId}`);
   if(!page) return;
-
-  // Loading state
   page.innerHTML=`<div style="padding:40px;font-family:'Barlow',sans-serif;color:#8099b0;font-size:13px;">Loading…</div>`;
 
-  await _loadCustomFacade(projectId, facade);
-  const cells = _custFacadeCache[projectId+'|'+facade] || {};
+  await _loadCustomFacade(pid, facade);
+  const cells = _custFacadeCache[pid+'|'+facade] || {};
+  const meta  = _custGetMeta(pid, facade);
 
-  const cols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const rows = Array.from({length:10},(_,i)=>i+1);
+  // Merge helpers
+  const isMaster  = (r,c) => meta.merges.some(m=>m.r===r&&m.c===c);
+  const isCovered = (r,c) => meta.merges.some(m=>!(m.r===r&&m.c===c)&&r>=m.r&&r<m.r+m.rowspan&&c>=m.c&&c<m.c+m.colspan);
+  const getMerge  = (r,c) => meta.merges.find(m=>m.r===r&&m.c===c);
 
-  const headerCells = cols.map(c=>`<th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);min-width:60px;">${c}</th>`).join('');
+  const bs=`padding:5px 11px;border:1px solid rgba(34,79,147,0.18);border-radius:6px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;`;
 
-  const bodyRows = rows.map(r=>`
+  const colHdrs = meta.cols.map((col,ci)=>`
+    <th oncontextmenu="custGridCtx(event,'${pid}','${facade}','col',${ci})"
+        ondblclick="custGridRenameCol('${pid}','${facade}',${ci})"
+      style="padding:6px 8px;background:#224F93;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.12);width:${col.width}px;min-width:${col.width}px;cursor:pointer;user-select:none;"
+      title="Double-click to rename · Right-click for more options">${col.label}</th>`).join('');
+
+  const bodyRows = meta.rows.map((row,ri)=>`
     <tr>
-      <td style="padding:8px 12px;background:#f0f4f9;font-size:12px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;user-select:none;">${r}</td>
-      ${cols.map(c=>{
-        const ck = r+'-'+c;
-        const st = (cells[ck]?.status)||'pending';
-        const bg = _custStBg[st]; const col = _custStText[st];
-        return `<td id="cpcell-${ck}" data-status="${st}" onclick="_custCycleStatus('${projectId}','${facade}','${ck}',this.dataset.status)"
+      <td oncontextmenu="custGridCtx(event,'${pid}','${facade}','row',${ri})"
+          ondblclick="custGridRenameRow('${pid}','${facade}',${ri})"
+        style="padding:4px 8px;background:#f0f4f9;font-size:11px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;user-select:none;cursor:pointer;min-width:36px;height:${row.height}px;"
+        title="Double-click to rename · Right-click for more options">${row.label}</td>
+      ${meta.cols.map((col,ci)=>{
+        if(isCovered(ri,ci)) return '';
+        const merge=getMerge(ri,ci);
+        const rs=merge?merge.rowspan:1, cs=merge?merge.colspan:1;
+        const key=`r${ri}_c${ci}`;
+        const st=(cells[key]?.status)||'pending';
+        return `<td id="cpcell-${ri}_${ci}" data-status="${st}"
+          onclick="custGridCellClick('${pid}','${facade}',${ri},${ci})"
+          ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
           title="${_custStLabel[st]}"
-          style="padding:8px;border:1px solid #dde6f0;background:${bg};color:${col};min-width:60px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;user-select:none;">
-          ${st==='pending'?'':_custStLabel[st]}
-        </td>`;
+          style="padding:4px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;user-select:none;"
+          >${st==='pending'?'':_custStLabel[st]}</td>`;
       }).join('')}
     </tr>`).join('');
 
-  // Status legend
-  const legend = _custStatuses.filter(s=>s!=='pending').map(s=>`
-    <span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;">
-      <span style="width:12px;height:12px;border-radius:3px;background:${_custStBg[s]};display:inline-block;"></span>
-      <span style="font-size:11px;color:#1a2a3a;">${_custStLabel[s]}</span>
+  const legend=_custStatuses.filter(s=>s!=='pending').map(s=>`
+    <span style="display:inline-flex;align-items:center;gap:4px;">
+      <span style="width:10px;height:10px;border-radius:2px;background:${_custStBg[s]};display:inline-block;flex-shrink:0;"></span>
+      <span style="font-size:10px;color:#1a2a3a;white-space:nowrap;">${_custStLabel[s]}</span>
     </span>`).join('');
 
   page.innerHTML=`
     <div class="fpw">${efSidebarHTML()}
       <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;font-family:'Barlow',sans-serif;">
-        <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
-          <div style="font-size:16px;font-weight:700;color:var(--text);">${label}</div>
-          <button onclick="showRenameFacadeModal('${facade}')" title="Rename this facade"
-            style="width:26px;height:26px;border:1px solid rgba(34,79,147,0.18);border-radius:6px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
-            onmouseover="this.style.background='#6d35d9';this.style.borderColor='#6d35d9'" onmouseout="this.style.background='#f0f4f9';this.style.borderColor='rgba(34,79,147,0.18)'">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">${label}</div>
+          <button onclick="showRenameFacadeModal('${facade}')" title="Rename"
+            style="width:24px;height:24px;border:1px solid rgba(34,79,147,0.18);border-radius:5px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
+            onmouseover="this.style.background='#6d35d9'" onmouseout="this.style.background='#f0f4f9'">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <div style="font-size:11px;color:var(--text3);margin-left:4px;">${projName}</div>
+          <div style="font-size:11px;color:var(--text3);">${projName}</div>
         </div>
-        <div style="padding:12px 24px 8px;flex-shrink:0;flex-wrap:wrap;">${legend}</div>
-        <div style="flex:1;overflow:auto;padding:0 24px 16px;">
-          <div style="border-radius:10px;box-shadow:0 2px 12px rgba(34,79,147,0.08);overflow:auto;">
+        <div style="padding:7px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
+          <button onclick="custGridAddCol('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Column</button>
+          <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
+          <button id="cg-merge-btn" onclick="custGridStartMerge()" style="${bs}" title="Click two cells to merge them" onmouseover="this.style.background='#e0e8f5'" onmouseout="if(_gridMode!=='merge')this.style.background='#f0f4f9'">⊞ Merge</button>
+          <button id="cg-unmerge-btn" onclick="custGridStartUnmerge()" style="${bs}" title="Click a merged cell to split it" onmouseover="this.style.background='#fff0f0'" onmouseout="if(_gridMode!=='unmerge')this.style.background='#f0f4f9'">⊟ Unmerge</button>
+          <button onclick="custGridCancelMode()" style="${bs}color:#8099b0;" title="Cancel current mode (Esc)">✕</button>
+          <span id="cg-hint" style="font-size:11px;color:#224F93;font-style:italic;"></span>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${legend}</div>
+        </div>
+        <div style="flex:1;overflow:auto;padding:14px 20px;">
+          <div style="overflow:auto;border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);display:inline-block;">
             <table style="border-collapse:collapse;">
-              <thead>
-                <tr>
-                  <th style="padding:8px 12px;background:#224F93;color:#fff;font-size:12px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);">Row</th>
-                  ${headerCells}
-                </tr>
-              </thead>
+              <thead><tr>
+                <th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>
+                ${colHdrs}
+              </tr></thead>
               <tbody>${bodyRows}</tbody>
             </table>
           </div>
-          <div style="margin-top:10px;font-size:11px;color:#8099b0;">Click a cell to cycle through statuses. Changes are saved automatically.</div>
+          <div style="margin-top:8px;font-size:10px;color:#aab5c5;">Click cell = cycle status &nbsp;·&nbsp; Right-click row/column header = resize, insert, delete &nbsp;·&nbsp; Esc = cancel mode</div>
         </div>
       </div>
     </div>`;
+
+  // Escape cancels merge/unmerge mode
+  document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
+}
 }
 
 function toggleFacadeValMode(){
