@@ -809,16 +809,10 @@ async function renderCustomDash(){
     const bars    = _custStatuses.filter(s=>s!=='pending'&&fTotals[s]>0).map(s=>`
       <div title="${_custStLabel[s]}: ${fTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.round(fTotals[s]/fTotal*100)}%;border-radius:2px;"></div>`).join('');
     return `
-      <div style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;position:relative;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
-        <div onclick="goPage('${f}')" style="position:absolute;inset:0;border-radius:12px;"></div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative;z-index:1;">
+      <div onclick="goPage('${f}')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <div style="width:10px;height:10px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>
           <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${facadeLabel[f]}</div>
-          <button onclick="event.stopPropagation();showRenameFacadeModal('${f}')" title="Rename facade"
-            style="width:24px;height:24px;border:1px solid rgba(34,79,147,0.15);border-radius:5px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
-            onmouseover="this.style.background='#6d35d9';this.style.borderColor='#6d35d9'" onmouseout="this.style.background='#f0f4f9';this.style.borderColor='rgba(34,79,147,0.15)'">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
           <div style="font-size:18px;font-weight:800;color:${facadeColor[f]};">${pct}%</div>
         </div>
         <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
