@@ -179,6 +179,7 @@ function renderProjectScreen(){
   }).join('');
 
   // Custom projects
+  const isDev = (sbProfile?.role === 'developer');
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
     const isPendingDel = proj.deletionRequested;
@@ -201,7 +202,6 @@ function renderProjectScreen(){
   });
 
   // Show/hide action buttons for developers
-  const isDev = (sbProfile?.role === 'developer');
   const actionBtns = document.getElementById('proj-action-btns');
   if(actionBtns) actionBtns.style.display = isDev ? 'flex' : 'none';
 
