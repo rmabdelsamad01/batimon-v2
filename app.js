@@ -7726,7 +7726,100 @@ function cm(id){document.getElementById(id).classList.remove('open');if(id==='pm
 function updateTabs(){ZONES.forEach(z=>{const c=zC(z.id);const pct=c.total?Math.round(c.installed/c.total*100):0;const el=document.getElementById('tp-'+z.id);if(el)el.textContent=pct+'%';});}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
-function openDeliveryRateModal(){
+// ── Custom project rate helpers ───────────────────────────────────────────────
+async function _custLoadAllFacades(pid){
+  const cats=getProjectCategories(pid);
+  const allKeys=[];
+  cats.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>{
+    allKeys.push(cat.num===1?f:'c'+cat.num+'-'+f);
+  }));
+  const toLoad=allKeys.filter(k=>!_custFacadeCache[pid+'|'+k]);
+  if(toLoad.length){
+    const {data}=await sb.from('custom_project_facades').select('facade,cells').eq('project_id',pid).in('facade',toLoad);
+    (data||[]).forEach(r=>{_custFacadeCache[pid+'|'+r.facade]=r.cells||{};});
+  }
+}
+function _custCollectRateData(pid,dateField,statusCheck){
+  const cats=getProjectCategories(pid);
+  const dateMap={},facadeMap={NF:{},SF:{},EF:{},WF:{}};
+  let total=0,matched=0;
+  cats.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>{
+    const k=cat.num===1?f:'c'+cat.num+'-'+f;
+    const cells=_custFacadeCache[pid+'|'+k]||{};
+    Object.entries(cells).forEach(([ck,cell])=>{
+      if(ck==='__meta__') return;
+      const st=cell.status||'pending';
+      if(st!=='pending') total++;
+      if(statusCheck(st)){
+        matched++;
+        const date=cell[dateField];
+        if(date){
+          dateMap[date]=(dateMap[date]||0)+1;
+          facadeMap[f][date]=(facadeMap[f][date]||0)+1;
+        }
+      }
+    });
+  }));
+  return {dateMap,facadeMap,total,matched};
+}
+function _custFillRateTable(tbody,dateMap,facadeMap,total,accentColor,rowBg){
+  tbody.innerHTML='';
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const start=new Date('2024-01-01'),end=new Date('2028-12-31');
+  let cumulative=0,lastMonth='';
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.toISOString().split('T')[0];
+    const count=dateMap[key]||0;
+    cumulative+=count;
+    if(!count) continue;
+    const display=d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+    const month=key.slice(0,7);
+    if(month!==lastMonth){
+      lastMonth=month;
+      const mtr=document.createElement('tr');
+      mtr.innerHTML=`<td colspan="10" style="padding:10px 12px 4px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--surface2);border-top:2px solid var(--border2);">${display.slice(display.indexOf(' ')+1)}</td>`;
+      tbody.appendChild(mtr);
+    }
+    const pct=total?Math.round(cumulative/total*100):0;
+    const fmtZ=(n,c)=>n>0?`<span style="font-weight:700;color:${c};">+${n}</span>`:'<span style="color:var(--text3);">—</span>';
+    const tr=document.createElement('tr');
+    tr.style.background=rowBg;
+    tr.innerHTML=`
+      <td style="padding:5px 12px;font-size:11px;color:var(--text);font-family:var(--mono);border-bottom:1px solid var(--border);">${display}</td>
+      <td style="padding:5px 12px;text-align:center;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);">${days[d.getDay()]}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.NF[key]||0,'#2d65bd')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.SF[key]||0,'#1a9458')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.EF[key]||0,'#a07800')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.WF[key]||0,'#6d35d9')}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:${accentColor};border-bottom:1px solid var(--border);">+${count}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--text);border-bottom:1px solid var(--border);">${cumulative}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">${pct}%</td>
+      <td style="padding:5px 12px;border-bottom:1px solid var(--border);">
+        <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${Math.min(pct,100)}%;background:${accentColor};border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+  if(!Object.keys(dateMap).length){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td colspan="10" style="padding:24px;text-align:center;color:var(--text3);font-size:12px;">No data yet — open a cell in the monitoring sheet and set its fabrication date</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+async function openDeliveryRateModal(){
+  const pid=window._activeProjectId;
+  const isCustom=!!(pid&&pid!=='shift-tower');
+  if(isCustom){
+    await _custLoadAllFacades(pid);
+    const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'delDate',s=>s==='delivered'||s==='installed');
+    _custFillRateTable(document.getElementById('dr-tbody'),dateMap,facadeMap,total,'#a07800','rgba(160,120,0,0.06)');
+    document.getElementById('dr-summary').textContent=`${matched} / ${total} delivered`;
+    document.getElementById('drm').classList.add('open');
+    return;
+  }
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
   // A panel that progressed beyond 'delivered' (→ installed) still has deliveryDate and was delivered
@@ -7793,7 +7886,17 @@ function openDeliveryRateModal(){
   document.getElementById('drm').classList.add('open');
 }
 
-function openInstallRateModal(){
+async function openInstallRateModal(){
+  const pid=window._activeProjectId;
+  const isCustom=!!(pid&&pid!=='shift-tower');
+  if(isCustom){
+    await _custLoadAllFacades(pid);
+    const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'instDate',s=>s==='installed');
+    _custFillRateTable(document.getElementById('ir-tbody'),dateMap,facadeMap,total,'#1a9458','rgba(46,194,126,0.06)');
+    document.getElementById('ir-summary').textContent=`${matched} / ${total} installed`;
+    document.getElementById('irm').classList.add('open');
+    return;
+  }
   // Build date→count map from all facades
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
@@ -7886,6 +7989,14 @@ function allBracketPanelIds(){
 
 
 function openFabCountingModal(){
+  // Fabrication counting is Shift Tower-specific (uses typed panel zones)
+  const _fcPid=window._activeProjectId;
+  if(_fcPid&&_fcPid!=='shift-tower'){
+    const _fcM=document.getElementById('fcm');if(_fcM)_fcM.classList.add('open');
+    const _fcB=document.getElementById('fc-tbody');
+    if(_fcB)_fcB.innerHTML=`<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text3);font-size:12px;">Fabrication Counting uses Shift Tower panel types and is not available for custom projects.</td></tr>`;
+    return;
+  }
   // Collect type data across all UCW zones
   const typeMap={};
   ZONES.forEach(z=>{
@@ -8068,7 +8179,18 @@ function openBracketInstallRateModal(){
   document.getElementById('birm').classList.add('open');
 }
 
-function openFabRateModal(){
+async function openFabRateModal(){
+  const pid=window._activeProjectId;
+  const isCustom=!!(pid&&pid!=='shift-tower');
+  if(isCustom){
+    await _custLoadAllFacades(pid);
+    const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'fabDate',s=>s==='fabricated'||s==='delivered'||s==='installed');
+    _custFillRateTable(document.getElementById('fr-tbody'),dateMap,facadeMap,total,'#1a5fa8','rgba(74,144,217,0.06)');
+    document.getElementById('fr-summary').textContent=`${matched} / ${total} fabricated`;
+    const misEl=document.getElementById('fr-missing');if(misEl)misEl.style.display='none';
+    document.getElementById('frm').classList.add('open');
+    return;
+  }
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
   // A panel that progressed beyond 'fabricated' (→ delivered, installed) still has fabDate and was fabricated
