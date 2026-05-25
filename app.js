@@ -298,6 +298,11 @@ function activeFacadeNames(){
 function updateNavFacadeLabels(){
   const pid=window._activeProjectId;
   const isCustom=!!(pid&&pid!=='shift-tower');
+  // Hide % badges for custom projects, show for Shift Tower
+  ['NF','SF','EF','WF'].forEach(dir=>{
+    const pct=document.getElementById('tp-'+dir);
+    if(pct) pct.style.display=isCustom?'none':'';
+  });
   if(isCustom){
     const catNum=window._activeCatNum||1;
     const cats=getProjectCategories(pid);
@@ -674,24 +679,42 @@ function saveRenameCat(catNum){
 // ─────────────────────────────────────────────────────────────────────────────
 
 function showRenameFacadeModal(facadeId){
-  const modal=document.getElementById('rename-facade-modal');
-  if(!modal) return;
+  const pid=window._activeProjectId;
+  if(!pid||pid==='shift-tower') return;
   const names=activeFacadeNames()||{..._DEFAULT_FACADE_NAMES};
-  document.getElementById('rename-facade-id').value=facadeId;
-  document.getElementById('rename-facade-input').value=names[facadeId]||'';
-  document.getElementById('rename-facade-err').style.display='none';
-  modal.style.display='flex';
-  setTimeout(()=>document.getElementById('rename-facade-input').focus(),50);
+  const current=names[facadeId]||'';
+  document.getElementById('rename-facade-modal')?.remove?.();
+  const modal=document.createElement('div');
+  modal.id='rename-facade-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10020;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:24px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.22);font-family:'Barlow',sans-serif;" onclick="event.stopPropagation()">
+      <div style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:4px;">Rename Facade</div>
+      <div style="font-size:11px;color:#8099b0;margin-bottom:14px;">Base name — a number will be appended per category</div>
+      <input id="rename-facade-input" value="${current.replace(/"/g,'&quot;')}" maxlength="40"
+        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #dde6f0;border-radius:8px;font-size:14px;font-weight:700;font-family:'Barlow',sans-serif;color:#1a2a3a;outline:none;margin-bottom:6px;"
+        onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde6f0'"
+        onkeydown="if(event.key==='Enter')confirmRenameFacade('${facadeId}');if(event.key==='Escape')document.getElementById('rename-facade-modal').remove();">
+      <div id="rename-facade-err" style="display:none;font-size:11px;color:#c02020;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button onclick="document.getElementById('rename-facade-modal').remove()"
+          style="flex:1;padding:9px;border:1.5px solid #dde6f0;border-radius:8px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">
+          Cancel
+        </button>
+        <button onclick="confirmRenameFacade('${facadeId}')"
+          style="flex:1;padding:9px;border:none;border-radius:8px;background:#224F93;color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">
+          Save
+        </button>
+      </div>
+    </div>`;
+  modal.onclick=()=>modal.remove();
+  document.body.appendChild(modal);
+  setTimeout(()=>{ const inp=document.getElementById('rename-facade-input'); if(inp){inp.focus();inp.select();} },50);
 }
-function closeRenameFacadeModal(){
-  const modal=document.getElementById('rename-facade-modal');
-  if(modal) modal.style.display='none';
-}
-function confirmRenameFacade(){
-  const facadeId=document.getElementById('rename-facade-id').value;
-  const newName=(document.getElementById('rename-facade-input').value||'').trim();
+function confirmRenameFacade(facadeId){
+  const newName=(document.getElementById('rename-facade-input')?.value||'').trim();
   const err=document.getElementById('rename-facade-err');
-  if(!newName){ err.textContent='Please enter a name.'; err.style.display='block'; return; }
+  if(!newName){ if(err){err.textContent='Please enter a name.';err.style.display='block';} return; }
   const pid=window._activeProjectId;
   if(!pid||pid==='shift-tower') return;
   const names=getCustomFacadeNames(pid);
@@ -703,18 +726,11 @@ function confirmRenameFacade(){
     _rcats.forEach(cat=>{ cat.facadeNames[facadeId]=newName+' '+cat.num; });
     saveProjectCategories(pid,_rcats);
   }
-  closeRenameFacadeModal();
+  document.getElementById('rename-facade-modal')?.remove();
   updateNavFacadeLabels();
-  // Re-render: find which custom page is currently visible
-  const dashEl = document.getElementById('page-dashboard');
-  const isDashVisible = dashEl && (dashEl.style.display!=='none');
-  const isCustom = !!(window._activeProjectId && window._activeProjectId !== 'shift-tower');
-  if(isDashVisible){
-    if(isCustom){ renderAllCategoriesOverview(); } else { renderCustomDash(); }
-  } else {
-    const pageId = window._currentCustomPage || 'NF';
-    renderCustomMonitoring(pageId);
-  }
+  // Re-render current page
+  const pageId=location.hash.slice(1)||'dashboard';
+  renderCustomMonitoring(pageId);
 }
 
 async function load(){
@@ -1724,16 +1740,13 @@ async function renderCustomMonitoring(pageId){
   page.innerHTML=`
     <div class="fpw">${efSidebarHTML()}
       <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;font-family:'Barlow',sans-serif;">
-        <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
-          <div style="font-size:15px;font-weight:700;color:var(--text);">${label}</div>
-          <button onclick="showRenameFacadeModal('${facade}')" title="Rename"
-            style="width:24px;height:24px;border:1px solid rgba(34,79,147,0.18);border-radius:5px;background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
-            onmouseover="this.style.background='#6d35d9'" onmouseout="this.style.background='#f0f4f9'">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
+        <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;">
+          <div onclick="showRenameFacadeModal('${facade}')" title="Click to rename"
+            style="font-size:15px;font-weight:700;color:var(--text);cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
+            onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">${label}</div>
           <div id="facade-nick-display" onclick="editFacadeNick('${pid}','${facadeDir}',${catNum})"
             title="Click to edit nickname"
-            style="font-size:11px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:4px;transition:background 0.15s;"
+            style="font-size:11px;color:var(--text3);cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
             onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">(${nick})</div>
         </div>
         <div style="padding:7px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
