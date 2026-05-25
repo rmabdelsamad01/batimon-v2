@@ -322,7 +322,7 @@ function updateNavFacadeLabels(){
 window._projSbActive = 'projects';
 function projSidebarSelect(id){
   window._projSbActive = id;
-  // Reset all items to default style
+  // Update active state styling
   ['projects','travaux','affectation','suggestions','agenda','beta'].forEach(k=>{
     const el = document.getElementById('proj-sb-'+k);
     if(!el) return;
@@ -338,8 +338,144 @@ function projSidebarSelect(id){
       if(label) label.style.color = 'var(--text)';
     }
   });
-  // Content switching (projects is the only live one for now)
-  // Future: swap content area for other views
+  // Show/hide views
+  const views = ['projects','suggestions','beta'];
+  views.forEach(v=>{
+    const el = document.getElementById('proj-view-'+v);
+    if(el) el.style.display = (v===id) ? (v==='projects'?'block':'block') : 'none';
+  });
+  // Render content for the selected view
+  if(id==='suggestions') _renderProjSuggestions();
+  if(id==='beta') _renderProjBeta();
+  // Reset scroll
+  const mc = document.getElementById('proj-main-content');
+  if(mc) mc.scrollTop = 0;
+}
+
+function _renderProjSuggestions(){
+  const wrap = document.getElementById('proj-view-suggestions');
+  if(!wrap) return;
+  wrap.innerHTML=`
+    <div style="padding:22px 28px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:22px;">💡</span>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Suggestions</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px;">Share your ideas or feedback with the team</div>
+      </div>
+    </div>
+    <div style="padding:32px 28px;display:flex;justify-content:center;">
+      <div style="width:100%;max-width:680px;">
+        <div id="ps-sug-success" style="display:none;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:6px;">✅</div>
+          <div style="font-size:14px;font-weight:700;color:#2e7d32;">Suggestion envoyée avec succès !</div>
+          <div style="font-size:12px;color:#388e3c;margin-top:4px;">Votre message a été transmis à l'équipe.</div>
+        </div>
+        <div id="ps-sug-error" style="display:none;background:#fdecea;border:1px solid #ef9a9a;border-radius:10px;padding:20px 24px;margin-bottom:24px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:6px;">⚠️</div>
+          <div style="font-size:14px;font-weight:700;color:#c62828;" id="ps-sug-error-msg">Erreur lors de l'envoi.</div>
+        </div>
+        <div id="ps-sug-form-wrap" style="background:#fff;border:1px solid #dde3ee;border-radius:12px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+          <label style="display:block;font-size:12px;font-weight:700;color:#445;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px;">Votre suggestion</label>
+          <textarea id="ps-sug-text" maxlength="3000" placeholder="Décrivez votre idée ou retour ici…"
+            oninput="document.getElementById('ps-sug-count').textContent=(3000-this.value.length)+' caractères restants';document.getElementById('ps-sug-submit').disabled=this.value.trim().length===0;document.getElementById('ps-sug-submit').style.opacity=this.value.trim().length===0?'0.5':'1';"
+            style="width:100%;min-height:260px;padding:14px 16px;border:1.5px solid #ccd4e0;border-radius:8px;font-size:13px;line-height:1.6;color:#222;resize:vertical;outline:none;box-sizing:border-box;font-family:inherit;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#ccd4e0'"></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+            <span id="ps-sug-count" style="font-size:11px;color:#888;">3000 caractères restants</span>
+            <span style="font-size:11px;color:#aaa;">Envoyé à l'équipe Batimon</span>
+          </div>
+          <button id="ps-sug-submit" disabled onclick="_projSubmitSuggestion()"
+            style="margin-top:20px;width:100%;padding:13px;background:#1976d2;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.04em;transition:background 0.2s;opacity:0.5;"
+            onmouseenter="if(!this.disabled)this.style.background='#1565c0'" onmouseleave="this.style.background='#1976d2'">
+            ✉ Envoyer la suggestion
+          </button>
+        </div>
+        <div style="margin-top:16px;text-align:center;font-size:11px;color:#aaa;">
+          Les suggestions sont transmises directement par email à l'équipe de projet.
+        </div>
+      </div>
+    </div>`;
+}
+
+window._projSubmitSuggestion = async function(){
+  const ta = document.getElementById('ps-sug-text');
+  const btn = document.getElementById('ps-sug-submit');
+  const errDiv = document.getElementById('ps-sug-error');
+  const errMsg = document.getElementById('ps-sug-error-msg');
+  const successDiv = document.getElementById('ps-sug-success');
+  const text = ta.value.trim();
+  if(!text || text.length>3000) return;
+  btn.disabled=true; btn.textContent='Envoi en cours…'; btn.style.opacity='0.7';
+  errDiv.style.display='none';
+  const sender=(window.currentUser&&(window.currentUser.full_name||window.currentUser.email))||'Utilisateur';
+  try{
+    await sb.from('suggestions').insert({sender, message:text, created_at:new Date().toISOString()});
+    const subject=encodeURIComponent('Suggestion Batimon — '+new Date().toLocaleDateString('fr-FR'));
+    const body=encodeURIComponent('De : '+sender+'\n\n'+text);
+    const link=document.createElement('a');
+    link.href='mailto:'+SUGGESTION_TO_EMAIL+'?subject='+subject+'&body='+body;
+    link.click();
+    successDiv.style.display='block';
+    document.getElementById('ps-sug-form-wrap').style.display='none';
+  }catch(e){
+    errMsg.textContent='Erreur : '+(e.message||'Veuillez réessayer.');
+    errDiv.style.display='block';
+    btn.disabled=false; btn.textContent='✉ Envoyer la suggestion'; btn.style.opacity='1';
+  }
+};
+
+function _renderProjBeta(){
+  const wrap = document.getElementById('proj-view-beta');
+  if(!wrap) return;
+  const features=[
+    {icon:'🧊',label:'3D View',       color:'#0ea5e9',bg:'#e0f2fe',desc:'View the building model in interactive 3D',   action:`goPage('3d')`},
+    {icon:'🏗',label:'3D Builder',    color:'#f59e0b',bg:'#fef3c7',desc:'Build and arrange 3D shapes freely',           action:`goPage('builder')`},
+    {icon:'📸',label:'Site Pictures', color:'#f97316',bg:'#ffedd5',desc:'Photo gallery from the construction site',     action:`goPage('sitepictures')`},
+  ];
+  const cards=features.map(f=>`
+    <div onclick="${f.action}"
+      style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:22px 20px;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:all 0.18s;box-shadow:0 1px 4px rgba(0,0,0,0.05);"
+      onmouseover="this.style.borderColor='${f.color}';this.style.boxShadow='0 4px 18px ${f.color}28';this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.borderColor='#e5e7eb';this.style.boxShadow='0 1px 4px rgba(0,0,0,0.05)';this.style.transform='translateY(0)'">
+      <div style="width:46px;height:46px;border-radius:12px;background:${f.bg};display:flex;align-items:center;justify-content:center;font-size:22px;">${f.icon}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${f.label}</div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.45;">${f.desc}</div>
+      </div>
+      <div style="margin-top:auto;font-size:11px;font-weight:600;color:${f.color};">Open ›</div>
+    </div>`).join('');
+  wrap.innerHTML=`
+    <div style="padding:22px 28px 16px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;">
+      <span style="font-size:22px;">🧪</span>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;font-weight:700;color:var(--text);">Beta Features</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#fce7eb;color:#f43f5e;letter-spacing:.04em;">BETA</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Experimental and upcoming features — may change at any time</div>
+      </div>
+    </div>
+    <div style="padding:24px 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+      ${cards}
+      <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:22px 20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+        <div style="width:46px;height:46px;border-radius:12px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-size:22px;">👥</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">Human Resources</div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.45;">Time sheets and labor planning</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+          <button onclick="goPage('labor-curve')"
+            style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:11px;font-weight:600;color:#e53935;text-align:left;font-family:inherit;transition:all 0.15s;"
+            onmouseover="this.style.borderColor='#e53935';this.style.background='#fef2f2'"
+            onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fafafa'">📈 Labor Curve</button>
+          <button disabled
+            style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fafafa;font-size:11px;font-weight:600;color:#94a3b8;text-align:left;font-family:inherit;cursor:not-allowed;display:flex;align-items:center;justify-content:space-between;">
+            <span>🗓 Time Sheet</span>
+            <span style="font-size:9px;background:#f1f5f9;padding:1px 6px;border-radius:10px;">Soon</span>
+          </button>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ── Overview split-button dropdown ───────────────────────────────────────────
@@ -3521,11 +3657,9 @@ function efSidebarHTML(){
       'OF Logs (Fabrication Orders)',
     ]},
     {id:'cashflow', label:'Cash Flow',  icon:'💰', color:'#00796b', subs:['Cash-In','Cash-Out','Cash-Flow'], subSubs:{'Cash-Out':['Employees Cost','Material Cost','Other Costs']}},
-    {id:'suggestions', label:'Suggestions', icon:'💡', color:'#f59e0b', subs:[]},
     {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
     {id:'agenda', label:'Agenda', icon:'📅', color:'#10b981', subs:[]},
-    {id:'beta', label:'Beta Version', icon:'🧪', color:'#f43f5e', subs:[]},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
