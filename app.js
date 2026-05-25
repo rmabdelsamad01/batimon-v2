@@ -1328,14 +1328,18 @@ async function renderAllCategoriesOverview(){
   (rows||[]).forEach(r=>{ byKey[r.facade]=r.cells||{}; });
 
   const facadeColor = {NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
+  const _metaFromCells=cells=>{ const m=cells['__meta__']; return m||{rows:Array.from({length:10}),cols:Array.from({length:26})}; };
   const catCards = cats.map(cat=>{
     const catTotals={};_custStatuses.forEach(s=>catTotals[s]=0);
+    let totalCells=0;
     ['NF','SF','EF','WF'].forEach(f=>{
       const key=cat.num===1?f:'c'+cat.num+'-'+f;
-      Object.values(byKey[key]||{}).forEach(c=>{ const s=c.status||'pending';catTotals[s]=(catTotals[s]||0)+1; });
+      const facCells=byKey[key]||{};
+      Object.entries(facCells).forEach(([k,c])=>{ if(k==='__meta__')return; const s=c.status||'pending';catTotals[s]=(catTotals[s]||0)+1; });
+      const fm=_metaFromCells(facCells); totalCells+=fm.rows.length*fm.cols.length;
     });
+    if(!totalCells) totalCells=4*10*26;
     const active=_custStatuses.filter(s=>s!=='pending').reduce((a,s)=>a+catTotals[s],0);
-    const totalCells=4*10*26;
     const pct=Math.round(active/totalCells*100);
     const bars=_custStatuses.filter(s=>s!=='pending'&&catTotals[s]>0).map(s=>`<div title="${_custStLabel[s]}: ${catTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.max(Math.round(catTotals[s]/totalCells*100),1)}%;border-radius:2px;min-width:4px;"></div>`).join('');
     const facadeDots=['NF','SF','EF','WF'].map(f=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#8099b0;"><div style="width:6px;height:6px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>${cat.facadeNames[f]}</div>`).join('');
@@ -1398,9 +1402,10 @@ async function renderCustomCatOverview(catNum){
     const key=catNum===1?f:'c'+catNum+'-'+f;
     const cells=byKey[key]||{};
     const fTotals={};_custStatuses.forEach(s=>fTotals[s]=0);
-    Object.values(cells).forEach(c=>{const s=c.status||'pending';fTotals[s]=(fTotals[s]||0)+1;});
+    Object.entries(cells).forEach(([k,c])=>{if(k==='__meta__')return;const s=c.status||'pending';fTotals[s]=(fTotals[s]||0)+1;});
     const fActive=_custStatuses.filter(s=>s!=='pending').reduce((a,s)=>a+fTotals[s],0);
-    const fTotal=10*26;
+    const _fm=cells['__meta__'];const fMeta=_fm||{rows:Array.from({length:10}),cols:Array.from({length:26})};
+    const fTotal=fMeta.rows.length*fMeta.cols.length||10*26;
     const pct=Math.round(fActive/fTotal*100);
     const name=cat.facadeNames[f];
     const pageId=catNum===1?f:'c'+catNum+'-'+f;
