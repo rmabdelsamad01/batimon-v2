@@ -235,36 +235,42 @@
         <div class="sbl">Menu</div>
         <div style="display:flex;flex-direction:column;gap:5px;">
 
+          <!-- Projects -->
+          <div id="proj-sb-projects" onclick="projSidebarSelect('projects')" title="Projects" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid rgba(34,79,147,0.3);background:rgba(34,79,147,0.08);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.35)'" onmouseout="if(window._projSbActive==='projects'){this.style.background='rgba(34,79,147,0.08)';this.style.borderColor='rgba(34,79,147,0.3)'}else{this.style.background='var(--surface2)';this.style.borderColor='var(--border)'}">
+            <span style="font-size:15px;line-height:1;flex-shrink:0;">🏗️</span>
+            <span style="font-size:12px;font-weight:600;color:#224F93;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Projects</span>
+          </div>
+
           <!-- Bati-Travaux -->
-          <div onclick="" title="Bati-Travaux" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="this.style.background='var(--surface2)';this.style.borderColor='var(--border)'">
+          <div id="proj-sb-travaux" onclick="projSidebarSelect('travaux')" title="Bati-Travaux" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="if(window._projSbActive==='travaux'){this.style.background='rgba(34,79,147,0.08)';this.style.borderColor='rgba(34,79,147,0.3)'}else{this.style.background='var(--surface2)';this.style.borderColor='var(--border)'}">
             <span style="font-size:15px;line-height:1;flex-shrink:0;">🔧</span>
             <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Bati-Travaux</span>
             <span style="font-size:9px;font-weight:700;color:#8099b0;background:#eef2f8;border:1px solid #d0dae8;border-radius:10px;padding:1px 6px;flex-shrink:0;">Soon</span>
           </div>
 
           <!-- Affectation Projet -->
-          <div onclick="" title="Affectation Projet" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="this.style.background='var(--surface2)';this.style.borderColor='var(--border)'">
+          <div id="proj-sb-affectation" onclick="projSidebarSelect('affectation')" title="Affectation Projet" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="if(window._projSbActive==='affectation'){this.style.background='rgba(34,79,147,0.08)';this.style.borderColor='rgba(34,79,147,0.3)'}else{this.style.background='var(--surface2)';this.style.borderColor='var(--border)'}">
             <span style="font-size:15px;line-height:1;flex-shrink:0;">👥</span>
             <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Affectation Projet</span>
             <span style="font-size:9px;font-weight:700;color:#8099b0;background:#eef2f8;border:1px solid #d0dae8;border-radius:10px;padding:1px 6px;flex-shrink:0;">Soon</span>
           </div>
 
           <!-- Suggestions -->
-          <div onclick="" title="Suggestions" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="this.style.background='var(--surface2)';this.style.borderColor='var(--border)'">
+          <div id="proj-sb-suggestions" onclick="projSidebarSelect('suggestions')" title="Suggestions" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="if(window._projSbActive==='suggestions'){this.style.background='rgba(34,79,147,0.08)';this.style.borderColor='rgba(34,79,147,0.3)'}else{this.style.background='var(--surface2)';this.style.borderColor='var(--border)'}">
             <span style="font-size:15px;line-height:1;flex-shrink:0;">💡</span>
             <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Suggestions</span>
             <span style="width:8px;height:8px;border-radius:50%;background:#e0a800;flex-shrink:0;display:inline-block;"></span>
           </div>
 
           <!-- Agenda -->
-          <div onclick="" title="Agenda" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="this.style.background='var(--surface2)';this.style.borderColor='var(--border)'">
+          <div id="proj-sb-agenda" onclick="projSidebarSelect('agenda')" title="Agenda" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="if(window._projSbActive==='agenda'){this.style.background='rgba(34,79,147,0.08)';this.style.borderColor='rgba(34,79,147,0.3)'}else{this.style.background='var(--surface2)';this.style.borderColor='var(--border)'}">
             <span style="font-size:15px;line-height:1;flex-shrink:0;">📅</span>
             <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Agenda</span>
             <span style="width:8px;height:8px;border-radius:50%;background:#1a9458;flex-shrink:0;display:inline-block;"></span>
           </div>
 
           <!-- Beta Version -->
-          <div onclick="" title="Beta Version" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="this.style.background='var(--surface2)';this.style.borderColor='var(--border)'">
+          <div id="proj-sb-beta" onclick="projSidebarSelect('beta')" title="Beta Version" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="if(window._projSbActive==='beta'){this.style.background='rgba(34,79,147,0.08)';this.style.borderColor='rgba(34,79,147,0.3)'}else{this.style.background='var(--surface2)';this.style.borderColor='var(--border)'}">
             <span style="font-size:15px;line-height:1;flex-shrink:0;">🧪</span>
             <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Beta Version</span>
             <span style="width:8px;height:8px;border-radius:50%;background:#c02020;flex-shrink:0;display:inline-block;"></span>
@@ -1355,7 +1361,7 @@ if(typeof supabase === 'undefined'){
 <script src="bulk-admin.js?v=20260505b"></script>
 <script src="auth.js?v=20260505b"></script>
 <script src="project.js"></script>
-<script src="app.js?v=20260525j"></script>
+<script src="app.js?v=20260525k"></script>
 <script src="profile.js"></script>
 <script src="ncr.js"></script>
 

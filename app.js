@@ -318,6 +318,30 @@ function updateNavFacadeLabels(){
   });
 }
 
+// ── Project screen sidebar ────────────────────────────────────────────────────
+window._projSbActive = 'projects';
+function projSidebarSelect(id){
+  window._projSbActive = id;
+  // Reset all items to default style
+  ['projects','travaux','affectation','suggestions','agenda','beta'].forEach(k=>{
+    const el = document.getElementById('proj-sb-'+k);
+    if(!el) return;
+    if(k === id){
+      el.style.background = 'rgba(34,79,147,0.08)';
+      el.style.borderColor = 'rgba(34,79,147,0.3)';
+      const label = el.querySelector('span:nth-child(2)');
+      if(label) label.style.color = '#224F93';
+    } else {
+      el.style.background = 'var(--surface2)';
+      el.style.borderColor = 'var(--border)';
+      const label = el.querySelector('span:nth-child(2)');
+      if(label) label.style.color = 'var(--text)';
+    }
+  });
+  // Content switching (projects is the only live one for now)
+  // Future: swap content area for other views
+}
+
 // ── Overview split-button dropdown ───────────────────────────────────────────
 function toggleOverviewDropdown(e){
   e.stopPropagation();
