@@ -752,8 +752,14 @@ let facadeValMode='numbers'; // 'numbers' | 'percentages'
 
 function navGoFacade(facade){
   const bmMap={NF:'BM-NF',SF:'BM-SF',EF:'BM-EF',WF:'BM-WF'};
-  const target=navMode==='bracket'?bmMap[facade]:facade;
-  if(target) goPage(target);
+  if(navMode==='bracket'){ goPage(bmMap[facade]); return; }
+  const isCustom=!!(window._activeProjectId&&window._activeProjectId!=='shift-tower');
+  if(isCustom){
+    const catNum=window._activeCatNum||1;
+    goPage(catNum===1?facade:'c'+catNum+'-'+facade);
+    return;
+  }
+  goPage(facade);
 }
 // ── Hash-based router ─────────────────────────────────────────────
 function goPage(id){
@@ -797,7 +803,7 @@ function _renderPage(id){
   else if(id==='proj-bati-org')renderBatiOrg();
   else if(id==='proj-org')renderProjOrg();
   else if(id==='proj-financial')renderProjFinancial();
-  else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom){ renderAllCategoriesOverview(); } else { updateNavFacadeLabels(); renderDash(); } }
+  else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom){ window._activeCatNum=1; renderAllCategoriesOverview(); } else { updateNavFacadeLabels(); renderDash(); } }
   else if(id==='BM-dashboard')renderBMDashboard();
   else if(id==='BM-NF')renderBMNF();
   else if(id==='BM-SF')renderBMSF();
@@ -997,6 +1003,7 @@ async function renderAllCategoriesOverview(){
 
 // ── Single category overview ──────────────────────────────────────────────────
 async function renderCustomCatOverview(catNum){
+  window._activeCatNum = catNum;
   const projId = window._activeProjectId;
   if(!projId || projId === 'shift-tower') return;
   const projName = window._activeProjectName || projId || 'Project';
@@ -1289,6 +1296,7 @@ async function renderCustomMonitoring(pageId){
     const _leg={'NF':'NF','BM-NF':'NF','SF':'SF','BM-SF':'SF','EF':'EF','BM-EF':'EF','WF':'WF','BM-WF':'WF'};
     facade=_leg[pageId]||pageId; facadeDir=facade; catNum=1;
   }
+  window._activeCatNum = catNum;
   const _cats=getProjectCategories(pid);
   const _cat=_cats.find(c=>c.num===catNum);
   const label=_cat?(_cat.facadeNames[facadeDir]||facadeDir):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
