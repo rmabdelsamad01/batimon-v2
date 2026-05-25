@@ -305,6 +305,10 @@ function toggleOverviewDropdown(e){
   const dd=document.getElementById('overview-cat-dropdown');
   if(!dd) return;
   if(dd.style.display==='none'){
+    const wrap=document.getElementById('overview-split-wrap');
+    const rect=wrap.getBoundingClientRect();
+    dd.style.top=(rect.bottom+2)+'px';
+    dd.style.left=rect.left+'px';
     const cats=initProjectCategories(window._activeProjectId);
     dd.innerHTML=cats.map(cat=>`<div
       onclick="goPage('c${cat.num}-overview');closeOverviewDropdown()"
