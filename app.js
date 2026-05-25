@@ -1739,6 +1739,7 @@ async function renderCustomMonitoring(pageId){
   const _cat=_cats.find(c=>c.num===catNum);
   const label=_cat?(_cat.facadeNames[facadeDir]||facadeDir):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
   const nick=(_cat?.facadeNicks?.[facadeDir])||(facadeDir+catNum);
+  const catNick=(_cat?.nick)||('CAT'+catNum);
 
   const page = document.getElementById(`page-${pageId}`);
   if(!page) return;
@@ -1773,12 +1774,15 @@ async function renderCustomMonitoring(pageId){
         const rs=merge?merge.rowspan:1, cs=merge?merge.colspan:1;
         const key=`r${ri}_c${ci}`;
         const st=(cells[key]?.status)||'pending';
+        const cellRef=`${catNick}-${nick}-${row.label}-${col.label}`;
         return `<td id="cpcell-${ri}_${ci}" data-status="${st}"
           onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})"
           ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
-          title="${_custStLabel[st]}"
-          style="padding:4px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;user-select:none;"
-          >${st==='pending'?'':_custStLabel[st]}</td>`;
+          title="${cellRef} — ${_custStLabel[st]}"
+          style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;">
+          <div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cellRef}</div>
+          ${st!=='pending'?`<div style="font-size:8px;font-weight:700;line-height:1.2;margin-top:1px;">${_custStLabel[st]}</div>`:''}
+        </td>`;
       }).join('')}
     </tr>`).join('');
 
