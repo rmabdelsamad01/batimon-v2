@@ -1372,7 +1372,7 @@ if(typeof supabase === 'undefined'){
 <script src="bulk-admin.js?v=20260505b"></script>
 <script src="auth.js?v=20260505b"></script>
 <script src="project.js"></script>
-<script src="app.js?v=20260525ac"></script>
+<script src="app.js?v=20260525ad"></script>
 <script src="profile.js"></script>
 <script src="ncr.js"></script>
 
@@ -1380,22 +1380,51 @@ if(typeof supabase === 'undefined'){
 <div id="overview-cat-dropdown" style="display:none;position:fixed;min-width:190px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.14);border:1px solid rgba(34,79,147,0.12);z-index:9999;padding:4px 0;"></div>
 
 <!-- CUSTOM PROJECT CELL STATUS MODAL -->
-<div id="cust-status-modal" style="display:none;position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10010;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;width:360px;max-width:calc(100vw - 32px);padding:24px;box-shadow:0 20px 60px rgba(34,79,147,0.22);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-size:14px;font-weight:700;color:#1a2a3a;" id="cust-sm-title">Set Cell Status</div>
-      <button onclick="closeCustStatusModal()" style="width:28px;height:28px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.15);border-radius:6px;cursor:pointer;font-size:14px;color:#8099b0;display:flex;align-items:center;justify-content:center;">✕</button>
+<div class="mbk" id="cust-pm">
+  <div class="modal">
+    <div class="mh">
+      <div>
+        <div class="mt" id="cust-pm-ttl">Cell Status</div>
+        <div class="ms" id="cust-pm-sub"></div>
+      </div>
+      <button class="xb" onclick="closeCustStatusModal()">✕</button>
     </div>
-    <div id="cust-sm-sub" style="font-size:11px;color:#8099b0;margin-bottom:16px;font-family:'DM Mono',monospace;"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <button class="cust-st-btn" onclick="_custApplyStatus('installed')"   style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#00FF32;flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">Installed</span></button>
-      <button class="cust-st-btn" onclick="_custApplyStatus('delivered')"   style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#FFF000;flex-shrink:0;display:inline-block;border:1px solid #ccc;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">Delivered</span></button>
-      <button class="cust-st-btn" onclick="_custApplyStatus('fabricated')"  style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#002DFF;flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">Fabricated</span></button>
-      <button class="cust-st-btn" onclick="_custApplyStatus('cutting')"     style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#C98BCA;flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">CL Issued</span></button>
-      <button class="cust-st-btn" onclick="_custApplyStatus('cip')"         style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#A349A4;flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">CL In Prog</span></button>
-      <button class="cust-st-btn" onclick="_custApplyStatus('cl_not_issued')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#FFB3B3;flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">CL Not Issued</span></button>
-      <button class="cust-st-btn" onclick="_custApplyStatus('defect')"      style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#ED1C24;flex-shrink:0;display:inline-block;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">Defect</span></button>
-      <button class="cust-st-btn" onclick="_custApplyStatus('pending')"     style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;"><span style="width:12px;height:12px;border-radius:2px;background:#E8F0FB;flex-shrink:0;display:inline-block;border:1px solid #ccc;"></span><span style="font-size:11px;font-weight:600;color:#1a2a3a;">Clear / Pending</span></button>
+    <div class="pib" id="cust-pm-info"></div>
+    <div class="fg2" id="cust-pm-ref-wrap">
+      <label class="fl2">Panel Ref</label>
+      <input class="fi" type="text" id="cust-pm-ref" placeholder="e.g. P-001" style="width:100%;box-sizing:border-box;padding:7px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+    </div>
+    <div class="fg2" id="cust-pm-type-wrap">
+      <label class="fl2">Panel Type</label>
+      <input class="fi" type="text" id="cust-pm-type" placeholder="e.g. Unitized" style="width:100%;box-sizing:border-box;padding:7px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+    </div>
+    <div class="fg2"><label class="fl2">Status</label>
+      <div class="sr2">
+        <div class="so soi" onclick="custSetSt('installed',this)"><span class="si">✓</span>Installed</div>
+        <div class="so sod" onclick="custSetSt('delivered',this)"><span class="si">▣</span>Delivered</div>
+        <div class="so sof" onclick="custSetSt('fabricated',this)"><span class="si">⬡</span>Fabricated</div>
+        <div class="so soc" onclick="custSetSt('cutting',this)"><span class="si">✂</span>CL issued</div>
+        <div class="so socip" onclick="custSetSt('cip',this)"><span class="si">◑</span>CL in Progress</div>
+        <div class="so socni" onclick="custSetSt('cl_not_issued',this)"><span class="si">✗</span>CL not issued</div>
+        <div class="so sox" onclick="custSetSt('defect',this)"><span class="si">!</span>Defect</div>
+        <div class="so sop" onclick="custSetSt('pending',this)"><span class="si">○</span>Pending</div>
+      </div>
+    </div>
+    <div class="fg2" id="cust-pm-fab-wrap" style="display:none;">
+      <label class="fl2">Fabrication Date</label>
+      <input class="fi" type="date" id="cust-pm-fab-date" style="width:100%;padding:7px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+    </div>
+    <div class="fg2" id="cust-pm-del-wrap" style="display:none;">
+      <label class="fl2">Delivery Date</label>
+      <input class="fi" type="date" id="cust-pm-del-date" style="width:100%;padding:7px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+    </div>
+    <div class="fg2" id="cust-pm-inst-wrap" style="display:none;">
+      <label class="fl2">Installation Date</label>
+      <input class="fi" type="date" id="cust-pm-inst-date" style="width:100%;padding:7px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+    </div>
+    <div class="mf">
+      <button class="btn" style="background:transparent;color:var(--text2);border-color:var(--border2)" onclick="closeCustStatusModal()">Cancel</button>
+      <button class="btn btn-d" onclick="saveCustPanel()">Save</button>
     </div>
   </div>
 </div>

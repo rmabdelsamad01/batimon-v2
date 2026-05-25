@@ -247,6 +247,7 @@ let multiSelPanels=new Set();
 let _custMultiSel=new Set(); // cell keys "r2_c3"
 let _custMultiPid=null,_custMultiFacade=null;
 let _custCurPid=null,_custCurFacade=null,_custCurCellKey=null;
+let _custCurCellRef='';let _custCurSelStatus='pending';
 let assemblyPanelRefs=new Set(); // panel_ref values that have a panel-assembly QC checklist filled
 let prepInstPanelRefs=new Set();  // panel_ref values that have a panel-preparation QC checklist filled
 let _supaUnlocked=false; // true once the correct password has been entered this session
@@ -1625,69 +1626,125 @@ function custGridCellClick(e,pid,facade,r,c){
   });
   _custMultiSel.clear();
   const key=`r${r}_c${c}`;
-  const curSt=((_custFacadeCache[pid+'|'+facade]||{})[key]?.status)||'pending';
+  const cacheEntry=(_custFacadeCache[pid+'|'+facade]||{})[key]||{};
+  const curSt=cacheEntry.status||'pending';
   _custCurPid=pid;_custCurFacade=facade;_custCurCellKey=key;
-  openCustStatusModal(false,curSt);
+  // Compute cell ref for modal title
+  const _cm=_custGetMeta(pid,facade);
+  const _rLbl=_cm.rows[r]?.label||String(r+1);
+  const _cLbl=_cm.cols[c]?.label||String(c+1);
+  const _cats2=getProjectCategories(pid);
+  const _cpFM=(window._currentCustomPage||'').match(/^c(\d+)-(NF|SF|EF|WF)$/);
+  let _cCatNick,_cFacNick;
+  if(_cpFM){const _cNum=parseInt(_cpFM[1]);const _cDir=_cpFM[2];const _cCat=_cats2.find(x=>x.num===_cNum);_cCatNick=(_cCat?.nick)||('CAT'+_cNum);_cFacNick=(_cCat?.facadeNicks?.[_cDir])||(_cDir+_cNum);}
+  else{_cCatNick='CAT1';_cFacNick=facade;}
+  _custCurCellRef=`${_cCatNick}-${_cFacNick}-${_rLbl}-${_cLbl}`;
+  openCustStatusModal(false,curSt,cacheEntry);
 }
 
 // ── Custom project status modal (single cell + bulk) ─────────────────────────
-function openCustStatusModal(isBulk, currentStatus){
-  const modal=document.getElementById('cust-status-modal');
+function openCustStatusModal(isBulk, currentStatus, cacheEntry){
+  const modal=document.getElementById('cust-pm');
   if(!modal) return;
-  const title=document.getElementById('cust-sm-title');
-  const sub=document.getElementById('cust-sm-sub');
+  _custCurSelStatus=currentStatus||'pending';
+  const refWrap=document.getElementById('cust-pm-ref-wrap');
+  const typeWrap=document.getElementById('cust-pm-type-wrap');
+  const infoEl=document.getElementById('cust-pm-info');
   if(isBulk){
-    if(title) title.textContent='Update Cell Status';
-    if(sub) sub.textContent=_custMultiSel.size+' cell'+(_custMultiSel.size>1?'s':'')+' selected';
+    document.getElementById('cust-pm-ttl').textContent='Update Cell Status';
+    document.getElementById('cust-pm-sub').textContent=_custMultiSel.size+' cell'+(_custMultiSel.size>1?'s':'')+' selected';
+    if(infoEl) infoEl.textContent='';
+    if(refWrap) refWrap.style.display='none';
+    if(typeWrap) typeWrap.style.display='none';
   } else {
-    if(title) title.textContent='Set Cell Status';
-    if(sub) sub.textContent='Current: '+_custStLabel[currentStatus||'pending'];
+    document.getElementById('cust-pm-ttl').textContent=_custCurCellRef||'Cell Status';
+    document.getElementById('cust-pm-sub').textContent='';
+    if(infoEl) infoEl.textContent=_custCurCellRef;
+    if(refWrap) refWrap.style.display='';
+    if(typeWrap) typeWrap.style.display='';
+    document.getElementById('cust-pm-ref').value=(cacheEntry?.panelRef)||'';
+    document.getElementById('cust-pm-type').value=(cacheEntry?.panelType)||'';
+    document.getElementById('cust-pm-fab-date').value=(cacheEntry?.fabDate)||'';
+    document.getElementById('cust-pm-del-date').value=(cacheEntry?.delDate)||'';
+    document.getElementById('cust-pm-inst-date').value=(cacheEntry?.instDate)||'';
   }
-  // Highlight current status button (single mode only)
-  document.querySelectorAll('.cust-st-btn').forEach(b=>b.style.border='2px solid rgba(34,79,147,0.12)');
-  if(!isBulk&&currentStatus){
-    const statusOrder=['installed','delivered','fabricated','cutting','cip','cl_not_issued','defect','pending'];
-    const idx=statusOrder.indexOf(currentStatus);
-    const btns=document.querySelectorAll('.cust-st-btn');
-    if(idx>=0&&btns[idx]) btns[idx].style.border='2px solid #224F93';
+  custSetSt(_custCurSelStatus, null);
+  modal.classList.add('open');
+}
+function custSetSt(status, el){
+  _custCurSelStatus=status;
+  const modal=document.getElementById('cust-pm');
+  if(modal){
+    modal.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
+    if(el){el.classList.add('ss');}
+    else{
+      const _sm={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+      const _sc=_sm[status];if(_sc){const _sb=modal.querySelector('.so.'+_sc);if(_sb)_sb.classList.add('ss');}
+    }
   }
-  modal.style.display='flex';
+  const showFab=['fabricated','delivered','installed'].includes(status);
+  const showDel=['delivered','installed'].includes(status);
+  const showInst=status==='installed';
+  const fw=document.getElementById('cust-pm-fab-wrap');
+  const dw=document.getElementById('cust-pm-del-wrap');
+  const iw=document.getElementById('cust-pm-inst-wrap');
+  if(fw) fw.style.display=showFab?'':'none';
+  if(dw) dw.style.display=showDel?'':'none';
+  if(iw) iw.style.display=showInst?'':'none';
 }
 function closeCustStatusModal(){
-  const modal=document.getElementById('cust-status-modal');
-  if(modal) modal.style.display='none';
-  // Clear multi-sel highlights if closed without applying
+  const modal=document.getElementById('cust-pm');
+  if(modal) modal.classList.remove('open');
   _custMultiSel.forEach(k=>{
     const m=k.match(/^r(\d+)_c(\d+)$/);
     if(m){const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);if(td)td.style.outline='';}
   });
   _custMultiSel.clear();
 }
-function _custApplyStatus(status){
+function _custCellInnerHTML(ref, status){
+  return `<div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ref}</div>${status!=='pending'?`<div style="font-size:8px;font-weight:700;line-height:1.2;margin-top:1px;">${_custStLabel[status]}</div>`:''}`;
+}
+function saveCustPanel(){
+  const status=_custCurSelStatus;
   if(_custMultiSel.size>0){
-    // Bulk apply
+    // Bulk apply — only update status, preserve other fields
     const k=_custMultiPid+'|'+_custMultiFacade;
     if(!_custFacadeCache[k])_custFacadeCache[k]={};
     _custMultiSel.forEach(key=>{
-      _custFacadeCache[k][key]={status};
+      const existing=_custFacadeCache[k][key]||{};
+      _custFacadeCache[k][key]={...existing,status};
       const m=key.match(/^r(\d+)_c(\d+)$/);
       if(m){
         const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
-        if(td){td.style.outline='';td.style.background=_custStBg[status];td.style.color=_custStText[status];td.title=_custStLabel[status];td.dataset.status=status;td.textContent=status==='pending'?'':_custStLabel[status];}
+        if(td){
+          td.style.outline='';td.style.background=_custStBg[status];td.style.color=_custStText[status];td.dataset.status=status;
+          const existRef=td.querySelector('div')?.textContent||'';
+          td.innerHTML=_custCellInnerHTML(existRef,status);
+          td.title=`${existRef} — ${_custStLabel[status]}`;
+        }
       }
     });
     _custSaveFull(_custMultiPid,_custMultiFacade);
     _custMultiSel.clear();
   } else if(_custCurPid&&_custCurFacade&&_custCurCellKey){
-    // Single cell apply
+    // Single cell — save all fields
     const k=_custCurPid+'|'+_custCurFacade;
     if(!_custFacadeCache[k])_custFacadeCache[k]={};
-    _custFacadeCache[k][_custCurCellKey]={status};
+    const panelRef=(document.getElementById('cust-pm-ref')?.value||'').trim();
+    const panelType=(document.getElementById('cust-pm-type')?.value||'').trim();
+    const fabDate=document.getElementById('cust-pm-fab-date')?.value||'';
+    const delDate=document.getElementById('cust-pm-del-date')?.value||'';
+    const instDate=document.getElementById('cust-pm-inst-date')?.value||'';
+    _custFacadeCache[k][_custCurCellKey]={status,panelRef,panelType,fabDate,delDate,instDate};
     _custSaveFull(_custCurPid,_custCurFacade);
     const m=_custCurCellKey.match(/^r(\d+)_c(\d+)$/);
     if(m){
       const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
-      if(td){td.style.background=_custStBg[status];td.style.color=_custStText[status];td.title=_custStLabel[status];td.dataset.status=status;td.textContent=status==='pending'?'':_custStLabel[status];}
+      if(td){
+        td.style.background=_custStBg[status];td.style.color=_custStText[status];td.dataset.status=status;
+        td.innerHTML=_custCellInnerHTML(_custCurCellRef,status);
+        td.title=`${_custCurCellRef} — ${_custStLabel[status]}`;
+      }
     }
   }
   closeCustStatusModal();
