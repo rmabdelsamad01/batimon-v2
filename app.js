@@ -3526,8 +3526,6 @@ function efSidebarHTML(){
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
     {id:'agenda', label:'Agenda', icon:'📅', color:'#10b981', subs:[]},
     {id:'beta', label:'Beta Version', icon:'🧪', color:'#f43f5e', subs:[]},
-    {id:'batitravaux', label:'Bati-Travaux', icon:'🔧', color:'#64748b', subs:[], soon:true},
-    {id:'affectation', label:'Affectation Projet', icon:'👥', color:'#64748b', subs:[], soon:true},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
