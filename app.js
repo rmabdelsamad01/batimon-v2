@@ -424,13 +424,18 @@ window._projSubmitSuggestion = async function(){
   }
 };
 
+window._projBetaLaunch = async function(page){
+  await openProject('shift-tower');
+  goPage(page);
+};
+
 function _renderProjBeta(){
   const wrap = document.getElementById('proj-view-beta');
   if(!wrap) return;
   const features=[
-    {icon:'🧊',label:'3D View',       color:'#0ea5e9',bg:'#e0f2fe',desc:'View the building model in interactive 3D',   action:`goPage('3d')`},
-    {icon:'🏗',label:'3D Builder',    color:'#f59e0b',bg:'#fef3c7',desc:'Build and arrange 3D shapes freely',           action:`goPage('builder')`},
-    {icon:'📸',label:'Site Pictures', color:'#f97316',bg:'#ffedd5',desc:'Photo gallery from the construction site',     action:`goPage('sitepictures')`},
+    {icon:'🧊',label:'3D View',       color:'#0ea5e9',bg:'#e0f2fe',desc:'View the building model in interactive 3D',   action:`_projBetaLaunch('3d')`},
+    {icon:'🏗',label:'3D Builder',    color:'#f59e0b',bg:'#fef3c7',desc:'Build and arrange 3D shapes freely',           action:`_projBetaLaunch('builder')`},
+    {icon:'📸',label:'Site Pictures', color:'#f97316',bg:'#ffedd5',desc:'Photo gallery from the construction site',     action:`_projBetaLaunch('sitepictures')`},
   ];
   const cards=features.map(f=>`
     <div onclick="${f.action}"
@@ -464,7 +469,7 @@ function _renderProjBeta(){
           <div style="font-size:11px;color:var(--text3);line-height:1.45;">Time sheets and labor planning</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-          <button onclick="goPage('labor-curve')"
+          <button onclick="_projBetaLaunch('labor-curve')"
             style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fafafa;cursor:pointer;font-size:11px;font-weight:600;color:#e53935;text-align:left;font-family:inherit;transition:all 0.15s;"
             onmouseover="this.style.borderColor='#e53935';this.style.background='#fef2f2'"
             onmouseout="this.style.borderColor='#e5e7eb';this.style.background='#fafafa'">📈 Labor Curve</button>
