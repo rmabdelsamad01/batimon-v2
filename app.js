@@ -636,6 +636,53 @@ function editFacadeNick(pid, facadeDir, catNum){
   setTimeout(()=>document.getElementById('nick-edit-input')?.select(),50);
 }
 
+function editCatNick(catNum){
+  const projId=window._activeProjectId;
+  const cats=getProjectCategories(projId);
+  const cat=cats.find(c=>c.num===catNum);
+  if(!cat) return;
+  const current=cat.nick||('CAT'+catNum);
+  const modal=document.createElement('div');
+  modal.id='cat-nick-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10020;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:24px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.22);font-family:'Barlow',sans-serif;" onclick="event.stopPropagation()">
+      <div style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:4px;">Edit Category Nickname</div>
+      <div style="font-size:11px;color:#8099b0;margin-bottom:14px;">Short code for ${cat.name}</div>
+      <input id="cat-nick-input" value="${current}" maxlength="10"
+        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #dde6f0;border-radius:8px;font-size:14px;font-weight:700;font-family:'Barlow',sans-serif;color:#1a2a3a;outline:none;margin-bottom:16px;"
+        onfocus="this.style.borderColor='#6d35d9'" onblur="this.style.borderColor='#dde6f0'"
+        onkeydown="if(event.key==='Enter')saveCatNick(${catNum});if(event.key==='Escape')document.getElementById('cat-nick-modal').remove();">
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('cat-nick-modal').remove()"
+          style="flex:1;padding:9px;border:1.5px solid #dde6f0;border-radius:8px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
+        <button onclick="saveCatNick(${catNum})"
+          style="flex:1;padding:9px;border:none;border-radius:8px;background:#6d35d9;color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Save</button>
+      </div>
+    </div>`;
+  modal.onclick=()=>modal.remove();
+  document.body.appendChild(modal);
+  setTimeout(()=>{ const inp=document.getElementById('cat-nick-input'); if(inp){inp.focus();inp.select();} },50);
+}
+
+function saveCatNick(catNum){
+  const input=document.getElementById('cat-nick-input');
+  if(!input) return;
+  const newNick=input.value.trim();
+  if(!newNick) return;
+  const projId=window._activeProjectId;
+  const cats=getProjectCategories(projId);
+  const cat=cats.find(c=>c.num===catNum);
+  if(!cat) return;
+  cat.nick=newNick;
+  saveProjectCategories(projId,cats);
+  document.getElementById('cat-nick-modal')?.remove();
+  // Refresh current view
+  const pageId=location.hash.slice(1)||'dashboard';
+  if(pageId==='dashboard') renderAllCategoriesOverview();
+  else renderCustomCatOverview(catNum);
+}
+
 function saveFacadeNick(pid, facadeDir, catNum){
   const input=document.getElementById('nick-edit-input');
   if(!input) return;
@@ -1291,9 +1338,13 @@ async function renderAllCategoriesOverview(){
     const pct=Math.round(active/totalCells*100);
     const bars=_custStatuses.filter(s=>s!=='pending'&&catTotals[s]>0).map(s=>`<div title="${_custStLabel[s]}: ${catTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.max(Math.round(catTotals[s]/totalCells*100),1)}%;border-radius:2px;min-width:4px;"></div>`).join('');
     const facadeDots=['NF','SF','EF','WF'].map(f=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#8099b0;"><div style="width:6px;height:6px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>${cat.facadeNames[f]}</div>`).join('');
+    const catNick = cat.nick || ('CAT'+cat.num);
     return `<div onclick="goPage('c${cat.num}-overview')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${cat.name}</div>
+        <div onclick="event.stopPropagation();editCatNick(${cat.num})" title="Click to edit nickname"
+          style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:background 0.15s;"
+          onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'">${catNick}</div>
         <div style="font-size:18px;font-weight:800;color:#6d35d9;">${pct}%</div>
       </div>
       <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
@@ -1323,12 +1374,12 @@ async function renderCustomCatOverview(catNum){
   try{ _catSidebarHTML=efSidebarHTML(); }catch(e){ console.warn('sidebar error',e); }
   el.innerHTML = `<div class="fpw">${_catSidebarHTML}<div class="fpm"><div style="padding:20px;overflow-y:auto;flex:1;background:#f0f4f9;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-      <div id="cat-title-${catNum}" style="font-size:18px;font-weight:700;color:#1a2a3a;">${cat.name}</div>
-      <button onclick="startRenameCat(${catNum})" title="Rename category"
-        style="width:26px;height:26px;border:1px solid rgba(109,53,217,0.25);border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
-        onmouseover="this.style.background='rgba(109,53,217,0.08)'" onmouseout="this.style.background='#fff'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6d35d9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
+      <div id="cat-title-${catNum}" onclick="startRenameCat(${catNum})" title="Click to rename"
+        style="font-size:18px;font-weight:700;color:#1a2a3a;cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
+        onmouseover="this.style.background='rgba(109,53,217,0.07)'" onmouseout="this.style.background='transparent'">${cat.name}</div>
+      <div onclick="editCatNick(${catNum})" title="Click to edit nickname"
+        style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:background 0.15s;"
+        onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'">${cat.nick||('CAT'+catNum)}</div>
     </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">${projName}</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;" id="catov-cards-${catNum}">
