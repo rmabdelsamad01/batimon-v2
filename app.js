@@ -3654,10 +3654,10 @@ function efSidebarHTML(){
      },
      customSubHTML:_customMonHTML},
     {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['UCW Fabrication Rate','UCW Delivery Rate','UCW Installation Rate','Bracket Installation Rate','Fabrication Counting']},
+    {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
     {id:'plan', label:'Planning',     icon:'📅', color:'#e05c00', subs:[]},
-    {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
     {id:'logs', label:'Procurement Logs', icon:'📋', color:'#c02020', subs:[
       'CF Logs (PO)',
       'BR Logs (Aging Report)',
