@@ -288,12 +288,28 @@ function activeFacadeNames(){
   if(!pid||pid==='shift-tower') return null;
   return getCustomFacadeNames(pid);
 }
-// Update the nav-bar tab labels to reflect stored (or default) facade names
+// Update the nav-bar tab labels to reflect stored (or default) facade names.
+// For custom projects: shows per-category names (e.g. "Living A 2") when _activeCatNum is set.
 function updateNavFacadeLabels(){
-  const names = activeFacadeNames() || _DEFAULT_FACADE_NAMES;
+  const pid=window._activeProjectId;
+  const isCustom=!!(pid&&pid!=='shift-tower');
+  if(isCustom){
+    const catNum=window._activeCatNum||1;
+    const cats=getProjectCategories(pid);
+    const cat=cats.find(c=>c.num===catNum);
+    if(cat){
+      ['NF','SF','EF','WF'].forEach(dir=>{
+        const el=document.getElementById('nav-label-'+dir);
+        if(el) el.textContent=cat.facadeNames[dir]||dir;
+      });
+      return;
+    }
+  }
+  // Fallback: base names (Shift Tower or no category data)
+  const names=activeFacadeNames()||_DEFAULT_FACADE_NAMES;
   ['NF','SF','EF','WF'].forEach(id=>{
-    const el = document.getElementById('nav-label-'+id);
-    if(el) el.textContent = names[id] || _DEFAULT_FACADE_NAMES[id];
+    const el=document.getElementById('nav-label-'+id);
+    if(el) el.textContent=names[id]||_DEFAULT_FACADE_NAMES[id];
   });
 }
 
@@ -827,7 +843,7 @@ function _renderPage(id){
   else if(id==='beta')renderBetaPage();
   else if(id==='batidoc')openBatidocPage();
   else if(/^c\d+-(NF|SF|EF|WF)$/.test(id)&&window._activeProjectId&&window._activeProjectId!=='shift-tower'){
-    updateNavFacadeLabels(); renderCustomMonitoring(id);
+    renderCustomMonitoring(id);
   }
   else if(/^c\d+-overview$/.test(id)&&window._activeProjectId&&window._activeProjectId!=='shift-tower'){
     renderCustomCatOverview(parseInt(id.match(/^c(\d+)/)[1]));
@@ -837,7 +853,6 @@ function _renderPage(id){
     const isCustom = window._activeProjectId && window._activeProjectId !== 'shift-tower';
     const facadeIds = ['NF','SF','EF','WF','BM-NF','BM-SF','BM-EF','BM-WF'];
     if(isCustom && facadeIds.includes(id)){
-      updateNavFacadeLabels();
       renderCustomMonitoring(id);
     } else {
       const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);
@@ -1004,6 +1019,7 @@ async function renderAllCategoriesOverview(){
 // ── Single category overview ──────────────────────────────────────────────────
 async function renderCustomCatOverview(catNum){
   window._activeCatNum = catNum;
+  updateNavFacadeLabels();
   const projId = window._activeProjectId;
   if(!projId || projId === 'shift-tower') return;
   const projName = window._activeProjectName || projId || 'Project';
@@ -1297,6 +1313,7 @@ async function renderCustomMonitoring(pageId){
     facade=_leg[pageId]||pageId; facadeDir=facade; catNum=1;
   }
   window._activeCatNum = catNum;
+  updateNavFacadeLabels();
   const _cats=getProjectCategories(pid);
   const _cat=_cats.find(c=>c.num===catNum);
   const label=_cat?(_cat.facadeNames[facadeDir]||facadeDir):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
