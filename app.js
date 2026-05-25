@@ -3661,15 +3661,15 @@ function efSidebarHTML(){
       'Template Checklist':['Bracket Installation','Panel Assembly','Panel Prep et Inst'],
       'Signed Checklist':['Signed Bracket Installation','Signed Panel Assembly','Signed Panel Prep et Inst']
     }},
-    {id:'logs', label:'Logs',          icon:'📋', color:'#c02020', subs:[
+    {id:'logs', label:'Procurement Logs', icon:'📋', color:'#c02020', subs:[
       'CF Logs (PO)',
       'BR Logs (Aging Report)',
-      'OF Logs (Fabrication Orders)',
     ]},
     {id:'cashflow', label:'Cash Flow',  icon:'💰', color:'#00796b', subs:['Cash-In','Cash-Out','Cash-Flow'], subSubs:{'Cash-Out':['Employees Cost','Material Cost','Other Costs']}},
     {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
     {id:'agenda', label:'Agenda', icon:'📅', color:'#10b981', subs:[]},
+    {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
@@ -3679,7 +3679,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:${s.soon?'var(--surface)':'var(--surface2)'};cursor:${s.soon?'default':'pointer'};transition:border-color 0.15s,background 0.15s;${s.soon?'opacity:0.7;':''}"
              ${s.soon?'':`onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"`}
              ${s.soon?'':`onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"`}
-             ${s.soon?'':(s.subs.length||s.customSubHTML?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:'')}
+             ${s.soon?'':(s.subs.length||s.customSubHTML?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:s.id==='of-log'?`onclick="goPage('of-log')"`:'')}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
