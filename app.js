@@ -597,6 +597,56 @@ function confirmDeleteCategory(){
   if(cats.length>0) goPage('c'+cats[0].num+'-overview');
   else goPage('dashboard');
 }
+
+function editFacadeNick(pid, facadeDir, catNum){
+  const cats=getProjectCategories(pid);
+  const cat=cats.find(c=>c.num===catNum);
+  if(!cat) return;
+  const current=(cat.facadeNicks?.[facadeDir])||(facadeDir+catNum);
+
+  const modal=document.createElement('div');
+  modal.id='nick-edit-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10020;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:24px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.22);font-family:'Barlow',sans-serif;" onclick="event.stopPropagation()">
+      <div style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:4px;">Edit Nickname</div>
+      <div style="font-size:11px;color:#8099b0;margin-bottom:14px;">Short code shown next to the facade name</div>
+      <input id="nick-edit-input" value="${current}" maxlength="10"
+        style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #dde6f0;border-radius:8px;font-size:14px;font-weight:700;font-family:'Barlow',sans-serif;color:#1a2a3a;outline:none;margin-bottom:16px;"
+        onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde6f0'"
+        onkeydown="if(event.key==='Enter')saveFacadeNick('${pid}','${facadeDir}',${catNum});if(event.key==='Escape')document.getElementById('nick-edit-modal').remove();">
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('nick-edit-modal').remove()"
+          style="flex:1;padding:9px;border:1.5px solid #dde6f0;border-radius:8px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">
+          Cancel
+        </button>
+        <button onclick="saveFacadeNick('${pid}','${facadeDir}',${catNum})"
+          style="flex:1;padding:9px;border:none;border-radius:8px;background:#224F93;color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">
+          Save
+        </button>
+      </div>
+    </div>`;
+  modal.onclick=()=>modal.remove();
+  document.body.appendChild(modal);
+  setTimeout(()=>document.getElementById('nick-edit-input')?.select(),50);
+}
+
+function saveFacadeNick(pid, facadeDir, catNum){
+  const input=document.getElementById('nick-edit-input');
+  if(!input) return;
+  const newNick=input.value.trim();
+  if(!newNick) return;
+  const cats=getProjectCategories(pid);
+  const cat=cats.find(c=>c.num===catNum);
+  if(!cat) return;
+  if(!cat.facadeNicks) cat.facadeNicks={};
+  cat.facadeNicks[facadeDir]=newNick;
+  saveProjectCategories(pid,cats);
+  document.getElementById('nick-edit-modal')?.remove();
+  // Update display without full reload
+  const display=document.getElementById('facade-nick-display');
+  if(display) display.textContent='('+newNick+')';
+}
 function startRenameCat(catNum){
   const titleEl=document.getElementById('cat-title-'+catNum);
   if(!titleEl) return;
@@ -1621,7 +1671,7 @@ async function renderCustomMonitoring(pageId){
   const _cats=getProjectCategories(pid);
   const _cat=_cats.find(c=>c.num===catNum);
   const label=_cat?(_cat.facadeNames[facadeDir]||facadeDir):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
-  const projName = window._activeProjectName || pid || 'Project';
+  const nick=(_cat?.facadeNicks?.[facadeDir])||(facadeDir+catNum);
 
   const page = document.getElementById(`page-${pageId}`);
   if(!page) return;
@@ -1681,7 +1731,10 @@ async function renderCustomMonitoring(pageId){
             onmouseover="this.style.background='#6d35d9'" onmouseout="this.style.background='#f0f4f9'">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <div style="font-size:11px;color:var(--text3);">(${facadeDir}${catNum})</div>
+          <div id="facade-nick-display" onclick="editFacadeNick('${pid}','${facadeDir}',${catNum})"
+            title="Click to edit nickname"
+            style="font-size:11px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:4px;transition:background 0.15s;"
+            onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">(${nick})</div>
         </div>
         <div style="padding:7px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
