@@ -243,6 +243,10 @@ const SM={installed:{icon:'✓',label:'Installed',cls:'st-i'},delivered:{icon:'�
 const SMAP={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
 let panels={},issues=[],selPanel=null,selStat='pending',fFilters={};
 let multiSelPanels=new Set();
+// Custom project multi-select state
+let _custMultiSel=new Set(); // cell keys "r2_c3"
+let _custMultiPid=null,_custMultiFacade=null;
+let _custCurPid=null,_custCurFacade=null,_custCurCellKey=null;
 let assemblyPanelRefs=new Set(); // panel_ref values that have a panel-assembly QC checklist filled
 let prepInstPanelRefs=new Set();  // panel_ref values that have a panel-preparation QC checklist filled
 let _supaUnlocked=false; // true once the correct password has been entered this session
@@ -253,6 +257,7 @@ document.addEventListener('keyup',e=>{
   if(e.key==='Control'){
     ctrlHeld=false;
     if(multiSelPanels.size>0) openBulkStatusModal();
+    if(_custMultiSel.size>0) openCustStatusModal(true);
     // Demo: show picker when Ctrl is released
     const demoModal=document.getElementById('demo-modal');
     if(demoModal&&demoModal.classList.contains('open')&&_demoSelected.size>0){
@@ -1246,7 +1251,7 @@ function custGridUnmerge(pid,facade,r,c){
 }
 
 // Cell click handler
-function custGridCellClick(pid,facade,r,c){
+function custGridCellClick(e,pid,facade,r,c){
   if(_gridMode==='merge'){
     if(!_gridMergeStart){
       _gridMergeStart={r,c};
@@ -1261,15 +1266,94 @@ function custGridCellClick(pid,facade,r,c){
     return;
   }
   if(_gridMode==='unmerge'){ custGridUnmerge(pid,facade,r,c); custGridCancelMode(); return; }
-  // Normal: cycle status
-  const k=pid+'|'+facade; const key=`r${r}_c${c}`;
-  if(!_custFacadeCache[k])_custFacadeCache[k]={};
-  const cur=_custFacadeCache[k][key]?.status||'pending';
-  const next=_custStatuses[(_custStatuses.indexOf(cur)+1)%_custStatuses.length];
-  _custFacadeCache[k][key]={status:next};
-  _custSaveFull(pid,facade);
-  const td=document.getElementById(`cpcell-${r}_${c}`);
-  if(td){td.style.background=_custStBg[next];td.style.color=_custStText[next];td.title=_custStLabel[next];td.dataset.status=next;td.textContent=next==='pending'?'':_custStLabel[next];}
+  // Ctrl+click → multi-select
+  if(ctrlHeld||e.ctrlKey||e.metaKey){
+    e.stopPropagation();
+    const key=`r${r}_c${c}`;
+    if(_custMultiSel.size===0){_custMultiPid=pid;_custMultiFacade=facade;}
+    const td=document.getElementById(`cpcell-${r}_${c}`);
+    if(_custMultiSel.has(key)){
+      _custMultiSel.delete(key);
+      if(td)td.style.outline='';
+    } else {
+      _custMultiSel.add(key);
+      if(td)td.style.outline='3px solid #224F93';
+    }
+    return;
+  }
+  // Normal single click: clear any multi-sel, open status modal
+  _custMultiSel.forEach(k=>{
+    const m=k.match(/^r(\d+)_c(\d+)$/);
+    if(m){const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);if(td)td.style.outline='';}
+  });
+  _custMultiSel.clear();
+  const key=`r${r}_c${c}`;
+  const curSt=((_custFacadeCache[pid+'|'+facade]||{})[key]?.status)||'pending';
+  _custCurPid=pid;_custCurFacade=facade;_custCurCellKey=key;
+  openCustStatusModal(false,curSt);
+}
+
+// ── Custom project status modal (single cell + bulk) ─────────────────────────
+function openCustStatusModal(isBulk, currentStatus){
+  const modal=document.getElementById('cust-status-modal');
+  if(!modal) return;
+  const title=document.getElementById('cust-sm-title');
+  const sub=document.getElementById('cust-sm-sub');
+  if(isBulk){
+    if(title) title.textContent='Update Cell Status';
+    if(sub) sub.textContent=_custMultiSel.size+' cell'+(_custMultiSel.size>1?'s':'')+' selected';
+  } else {
+    if(title) title.textContent='Set Cell Status';
+    if(sub) sub.textContent='Current: '+_custStLabel[currentStatus||'pending'];
+  }
+  // Highlight current status button (single mode only)
+  document.querySelectorAll('.cust-st-btn').forEach(b=>b.style.border='2px solid rgba(34,79,147,0.12)');
+  if(!isBulk&&currentStatus){
+    const statusOrder=['installed','delivered','fabricated','cutting','cip','cl_not_issued','defect','pending'];
+    const idx=statusOrder.indexOf(currentStatus);
+    const btns=document.querySelectorAll('.cust-st-btn');
+    if(idx>=0&&btns[idx]) btns[idx].style.border='2px solid #224F93';
+  }
+  modal.style.display='flex';
+}
+function closeCustStatusModal(){
+  const modal=document.getElementById('cust-status-modal');
+  if(modal) modal.style.display='none';
+  // Clear multi-sel highlights if closed without applying
+  _custMultiSel.forEach(k=>{
+    const m=k.match(/^r(\d+)_c(\d+)$/);
+    if(m){const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);if(td)td.style.outline='';}
+  });
+  _custMultiSel.clear();
+}
+function _custApplyStatus(status){
+  if(_custMultiSel.size>0){
+    // Bulk apply
+    const k=_custMultiPid+'|'+_custMultiFacade;
+    if(!_custFacadeCache[k])_custFacadeCache[k]={};
+    _custMultiSel.forEach(key=>{
+      _custFacadeCache[k][key]={status};
+      const m=key.match(/^r(\d+)_c(\d+)$/);
+      if(m){
+        const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
+        if(td){td.style.outline='';td.style.background=_custStBg[status];td.style.color=_custStText[status];td.title=_custStLabel[status];td.dataset.status=status;td.textContent=status==='pending'?'':_custStLabel[status];}
+      }
+    });
+    _custSaveFull(_custMultiPid,_custMultiFacade);
+    _custMultiSel.clear();
+  } else if(_custCurPid&&_custCurFacade&&_custCurCellKey){
+    // Single cell apply
+    const k=_custCurPid+'|'+_custCurFacade;
+    if(!_custFacadeCache[k])_custFacadeCache[k]={};
+    _custFacadeCache[k][_custCurCellKey]={status};
+    _custSaveFull(_custCurPid,_custCurFacade);
+    const m=_custCurCellKey.match(/^r(\d+)_c(\d+)$/);
+    if(m){
+      const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
+      if(td){td.style.background=_custStBg[status];td.style.color=_custStText[status];td.title=_custStLabel[status];td.dataset.status=status;td.textContent=status==='pending'?'':_custStLabel[status];}
+    }
+  }
+  closeCustStatusModal();
 }
 
 // Right-click context menu on row/col headers
@@ -1353,7 +1437,7 @@ async function renderCustomMonitoring(pageId){
         const key=`r${ri}_c${ci}`;
         const st=(cells[key]?.status)||'pending';
         return `<td id="cpcell-${ri}_${ci}" data-status="${st}"
-          onclick="custGridCellClick('${pid}','${facade}',${ri},${ci})"
+          onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})"
           ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
           title="${_custStLabel[st]}"
           style="padding:4px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;user-select:none;"
