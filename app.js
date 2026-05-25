@@ -7729,11 +7729,12 @@ async function _custLoadAllFacades(pid){
     (data||[]).forEach(r=>{_custFacadeCache[pid+'|'+r.facade]=r.cells||{};});
   }
 }
-function _custCollectRateData(pid,dateField,statusCheck){
+function _custCollectRateData(pid,dateField,statusCheck,catFilter=null){
   const cats=getProjectCategories(pid);
+  const filtered=catFilter?cats.filter(c=>c.num===catFilter):cats;
   const dateMap={},facadeMap={NF:{},SF:{},EF:{},WF:{}};
   let total=0,matched=0;
-  cats.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>{
+  filtered.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>{
     const k=cat.num===1?f:'c'+cat.num+'-'+f;
     const cells=_custFacadeCache[pid+'|'+k]||{};
     Object.entries(cells).forEach(([ck,cell])=>{
@@ -7752,19 +7753,71 @@ function _custCollectRateData(pid,dateField,statusCheck){
   }));
   return {dateMap,facadeMap,total,matched};
 }
-function _updateRateHeaders(prefix){
+// ── Fabrication Rate category filter ─────────────────────────────────────────
+let _frCatFilter=null; // null = all categories
+function toggleFrCatDropdown(e){
+  e.stopPropagation();
+  const dd=document.getElementById('fr-cat-dropdown');
+  if(!dd) return;
+  if(dd.style.display==='none'||!dd.style.display){
+    const btn=document.getElementById('fr-cat-btn');
+    const rect=btn.getBoundingClientRect();
+    dd.style.top=(rect.bottom+4)+'px';
+    dd.style.left=rect.left+'px';
+    const pid=window._activeProjectId;
+    const cats=getProjectCategories(pid);
+    const itemStyle='padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+    const allActive=_frCatFilter===null;
+    dd.innerHTML=`<div onclick="applyFrCatFilter(null)"
+      style="${itemStyle}color:${allActive?'#224F93':'#1a2a3a'};background:${allActive?'rgba(34,79,147,0.07)':''};"
+      onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background='${allActive?'rgba(34,79,147,0.07)':''}'"
+      >All Categories</div>`+
+    cats.map(cat=>{
+      const active=_frCatFilter===cat.num;
+      return `<div onclick="applyFrCatFilter(${cat.num})"
+        style="${itemStyle}color:${active?'#224F93':'#1a2a3a'};background:${active?'rgba(34,79,147,0.07)':''};"
+        onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background='${active?'rgba(34,79,147,0.07)':''}'"
+        >${cat.nick||('CAT'+cat.num)} — ${cat.name}</div>`;
+    }).join('');
+    dd.style.display='block';
+    setTimeout(()=>document.addEventListener('click',_closeFrCatDropdown,{once:true}),10);
+  } else {
+    dd.style.display='none';
+  }
+}
+function _closeFrCatDropdown(){
+  const dd=document.getElementById('fr-cat-dropdown');
+  if(dd) dd.style.display='none';
+}
+async function applyFrCatFilter(catNum){
+  _closeFrCatDropdown();
+  _frCatFilter=catNum;
+  const pid=window._activeProjectId;
+  const cats=getProjectCategories(pid);
+  const cat=catNum?cats.find(c=>c.num===catNum):null;
+  // Update button label
+  const lbl=document.getElementById('fr-cat-label');
+  if(lbl) lbl.textContent=cat?(cat.nick||('CAT'+cat.num))+' — '+cat.name:'All Categories';
+  // Re-run data collection + render
+  const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'fabDate',s=>s==='fabricated'||s==='delivered'||s==='installed',catNum);
+  _custFillRateTable(document.getElementById('fr-tbody'),dateMap,facadeMap,total,'#1a5fa8','rgba(74,144,217,0.06)');
+  document.getElementById('fr-summary').textContent=`${matched} / ${total} fabricated`;
+  _updateRateHeaders('fr',catNum);
+}
+
+function _updateRateHeaders(prefix, catNum){
   const pid=window._activeProjectId;
   const isCustom=!!(pid&&pid!=='shift-tower');
   let names;
   if(isCustom){
     const cats=getProjectCategories(pid);
-    const cat1=cats.find(c=>c.num===1);
+    const cat=catNum?cats.find(c=>c.num===catNum):cats.find(c=>c.num===1);
     const base=getCustomFacadeNames(pid)||{};
     names={
-      NF:(cat1?.facadeNames?.NF)||base.NF||'North Facade',
-      SF:(cat1?.facadeNames?.SF)||base.SF||'South Facade',
-      EF:(cat1?.facadeNames?.EF)||base.EF||'East Facade',
-      WF:(cat1?.facadeNames?.WF)||base.WF||'West Facade'
+      NF:(cat?.facadeNames?.NF)||base.NF||'North Facade',
+      SF:(cat?.facadeNames?.SF)||base.SF||'South Facade',
+      EF:(cat?.facadeNames?.EF)||base.EF||'East Facade',
+      WF:(cat?.facadeNames?.WF)||base.WF||'West Facade'
     };
   } else {
     names=activeFacadeNames()||_DEFAULT_FACADE_NAMES;
@@ -8199,6 +8252,15 @@ async function openFabRateModal(){
   const pid=window._activeProjectId;
   const isCustom=!!(pid&&pid!=='shift-tower');
   if(isCustom){
+    // Reset filter + show filter bar
+    _frCatFilter=null;
+    const filterBar=document.getElementById('fr-filter-bar');
+    if(filterBar) filterBar.style.display='';
+    const lbl=document.getElementById('fr-cat-label');
+    if(lbl) lbl.textContent='All Categories';
+    const cats=getProjectCategories(pid);
+    // Hide filter bar when project has only 1 category
+    if(filterBar) filterBar.style.display=cats.length>1?'':'none';
     await _custLoadAllFacades(pid);
     const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'fabDate',s=>s==='fabricated'||s==='delivered'||s==='installed');
     _custFillRateTable(document.getElementById('fr-tbody'),dateMap,facadeMap,total,'#1a5fa8','rgba(74,144,217,0.06)');
@@ -8208,6 +8270,9 @@ async function openFabRateModal(){
     document.getElementById('frm').classList.add('open');
     return;
   }
+  // Shift Tower: hide filter bar
+  const _frBar=document.getElementById('fr-filter-bar');
+  if(_frBar) _frBar.style.display='none';
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
   // A panel that progressed beyond 'fabricated' (→ delivered, installed) still has fabDate and was fabricated
