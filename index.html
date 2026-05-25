@@ -407,6 +407,13 @@
         <button class="xb" onclick="cm('drm')" style="width:28px;height:28px;">✕</button>
       </div>
     </div>
+    <div id="dr-filter-bar" style="display:none;padding:8px 20px;border-bottom:1px solid var(--border2);flex-shrink:0;background:var(--surface2);">
+      <button id="dr-cat-btn" onclick="_toggleRateCatDropdown(event,'dr')"
+        style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:background 0.15s;"
+        onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background='#fff'">
+        <span id="dr-cat-label">All Categories</span><span style="font-size:9px;color:#8099b0;">▾</span>
+      </button>
+    </div>
     <div style="flex:1;overflow-y:auto;padding:16px 20px;">
       <table style="width:100%;border-collapse:collapse;">
         <thead>
@@ -428,6 +435,8 @@
     </div>
   </div>
 </div>
+<!-- DR category filter dropdown -->
+<div id="dr-cat-dropdown" style="display:none;position:fixed;min-width:180px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.14);border:1px solid rgba(34,79,147,0.12);z-index:10020;padding:4px 0;"></div>
 
 <!-- Demo Gate Modal -->
 <div class="mbk" id="demo-gate-modal" style="align-items:center;justify-content:center;">
@@ -682,6 +691,13 @@
         <button class="xb" onclick="cm('irm')" style="width:28px;height:28px;">✕</button>
       </div>
     </div>
+    <div id="ir-filter-bar" style="display:none;padding:8px 20px;border-bottom:1px solid var(--border2);flex-shrink:0;background:var(--surface2);">
+      <button id="ir-cat-btn" onclick="_toggleRateCatDropdown(event,'ir')"
+        style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:background 0.15s;"
+        onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background='#fff'">
+        <span id="ir-cat-label">All Categories</span><span style="font-size:9px;color:#8099b0;">▾</span>
+      </button>
+    </div>
     <!-- Table -->
     <div style="flex:1;overflow-y:auto;padding:16px 20px;">
       <table style="width:100%;border-collapse:collapse;" id="ir-table">
@@ -704,6 +720,8 @@
     </div>
   </div>
 </div>
+<!-- IR category filter dropdown -->
+<div id="ir-cat-dropdown" style="display:none;position:fixed;min-width:180px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.14);border:1px solid rgba(34,79,147,0.12);z-index:10020;padding:4px 0;"></div>
 
 <!-- FABRICATION RATE MODAL -->
 <div class="mbk" id="frm" style="align-items:stretch;justify-content:stretch;padding:0;">

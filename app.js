@@ -7753,57 +7753,61 @@ function _custCollectRateData(pid,dateField,statusCheck,catFilter=null){
   }));
   return {dateMap,facadeMap,total,matched};
 }
-// ── Fabrication Rate category filter ─────────────────────────────────────────
-let _frCatFilter=null; // null = all categories
-function toggleFrCatDropdown(e){
+// ── Rate modal category filter — shared generic system ────────────────────────
+const _RATE_CFG={
+  fr:{dateField:'fabDate', statusCheck:s=>['fabricated','delivered','installed'].includes(s), accent:'#1a5fa8', rowBg:'rgba(74,144,217,0.06)', label:'fabricated'},
+  dr:{dateField:'delDate',  statusCheck:s=>['delivered','installed'].includes(s),             accent:'#a07800', rowBg:'rgba(160,120,0,0.06)',   label:'delivered'},
+  ir:{dateField:'instDate', statusCheck:s=>s==='installed',                                   accent:'#1a9458', rowBg:'rgba(46,194,126,0.06)',  label:'installed'}
+};
+const _rateCatFilters={fr:null,dr:null,ir:null};
+function _toggleRateCatDropdown(e,prefix){
   e.stopPropagation();
-  const dd=document.getElementById('fr-cat-dropdown');
+  const dd=document.getElementById(prefix+'-cat-dropdown');
   if(!dd) return;
   if(dd.style.display==='none'||!dd.style.display){
-    const btn=document.getElementById('fr-cat-btn');
+    const btn=document.getElementById(prefix+'-cat-btn');
     const rect=btn.getBoundingClientRect();
     dd.style.top=(rect.bottom+4)+'px';
     dd.style.left=rect.left+'px';
     const pid=window._activeProjectId;
+    // Always read categories fresh so new ones appear automatically
     const cats=getProjectCategories(pid);
-    const itemStyle='padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
-    const allActive=_frCatFilter===null;
-    dd.innerHTML=`<div onclick="applyFrCatFilter(null)"
-      style="${itemStyle}color:${allActive?'#224F93':'#1a2a3a'};background:${allActive?'rgba(34,79,147,0.07)':''};"
-      onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background='${allActive?'rgba(34,79,147,0.07)':''}'"
-      >All Categories</div>`+
-    cats.map(cat=>{
-      const active=_frCatFilter===cat.num;
-      return `<div onclick="applyFrCatFilter(${cat.num})"
-        style="${itemStyle}color:${active?'#224F93':'#1a2a3a'};background:${active?'rgba(34,79,147,0.07)':''};"
-        onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background='${active?'rgba(34,79,147,0.07)':''}'"
-        >${cat.nick||('CAT'+cat.num)} — ${cat.name}</div>`;
-    }).join('');
+    const cur=_rateCatFilters[prefix];
+    const S='padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;';
+    const item=(label,num)=>{
+      const active=num===null?cur===null:cur===num;
+      const arg=num===null?'null':num;
+      return `<div onclick="_applyRateCatFilter('${prefix}',${arg})"
+        style="${S}color:${active?'#224F93':'#1a2a3a'};background:${active?'rgba(34,79,147,0.07)':''};"
+        onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background='${active?'rgba(34,79,147,0.07)':''}'">
+        ${label}</div>`;
+    };
+    dd.innerHTML=item('All Categories',null)+cats.map(cat=>item((cat.nick||('CAT'+cat.num))+' — '+cat.name,cat.num)).join('');
     dd.style.display='block';
-    setTimeout(()=>document.addEventListener('click',_closeFrCatDropdown,{once:true}),10);
+    setTimeout(()=>document.addEventListener('click',()=>{dd.style.display='none';},{once:true}),10);
   } else {
     dd.style.display='none';
   }
 }
-function _closeFrCatDropdown(){
-  const dd=document.getElementById('fr-cat-dropdown');
+// Keep old name working (FR used it before)
+window.toggleFrCatDropdown=(e)=>_toggleRateCatDropdown(e,'fr');
+async function _applyRateCatFilter(prefix,catNum){
+  const dd=document.getElementById(prefix+'-cat-dropdown');
   if(dd) dd.style.display='none';
-}
-async function applyFrCatFilter(catNum){
-  _closeFrCatDropdown();
-  _frCatFilter=catNum;
+  _rateCatFilters[prefix]=catNum;
   const pid=window._activeProjectId;
   const cats=getProjectCategories(pid);
   const cat=catNum?cats.find(c=>c.num===catNum):null;
-  // Update button label
-  const lbl=document.getElementById('fr-cat-label');
+  const lbl=document.getElementById(prefix+'-cat-label');
   if(lbl) lbl.textContent=cat?(cat.nick||('CAT'+cat.num))+' — '+cat.name:'All Categories';
-  // Re-run data collection + render
-  const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'fabDate',s=>s==='fabricated'||s==='delivered'||s==='installed',catNum);
-  _custFillRateTable(document.getElementById('fr-tbody'),dateMap,facadeMap,total,'#1a5fa8','rgba(74,144,217,0.06)');
-  document.getElementById('fr-summary').textContent=`${matched} / ${total} fabricated`;
-  _updateRateHeaders('fr',catNum);
+  const cfg=_RATE_CFG[prefix];
+  const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,cfg.dateField,cfg.statusCheck,catNum);
+  _custFillRateTable(document.getElementById(prefix+'-tbody'),dateMap,facadeMap,total,cfg.accent,cfg.rowBg);
+  document.getElementById(prefix+'-summary').textContent=`${matched} / ${total} ${cfg.label}`;
+  _updateRateHeaders(prefix,catNum);
 }
+// Keep old names working
+window.applyFrCatFilter=(n)=>_applyRateCatFilter('fr',n);
 
 function _updateRateHeaders(prefix, catNum){
   const pid=window._activeProjectId;
@@ -7878,6 +7882,12 @@ async function openDeliveryRateModal(){
   const pid=window._activeProjectId;
   const isCustom=!!(pid&&pid!=='shift-tower');
   if(isCustom){
+    _rateCatFilters.dr=null;
+    const cats=getProjectCategories(pid);
+    const drBar=document.getElementById('dr-filter-bar');
+    if(drBar) drBar.style.display=cats.length>1?'':'none';
+    const drLbl=document.getElementById('dr-cat-label');
+    if(drLbl) drLbl.textContent='All Categories';
     await _custLoadAllFacades(pid);
     const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'delDate',s=>s==='delivered'||s==='installed');
     _custFillRateTable(document.getElementById('dr-tbody'),dateMap,facadeMap,total,'#a07800','rgba(160,120,0,0.06)');
@@ -7886,6 +7896,8 @@ async function openDeliveryRateModal(){
     document.getElementById('drm').classList.add('open');
     return;
   }
+  const _drBar=document.getElementById('dr-filter-bar');
+  if(_drBar) _drBar.style.display='none';
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
   // A panel that progressed beyond 'delivered' (→ installed) still has deliveryDate and was delivered
@@ -7957,6 +7969,12 @@ async function openInstallRateModal(){
   const pid=window._activeProjectId;
   const isCustom=!!(pid&&pid!=='shift-tower');
   if(isCustom){
+    _rateCatFilters.ir=null;
+    const cats=getProjectCategories(pid);
+    const irBar=document.getElementById('ir-filter-bar');
+    if(irBar) irBar.style.display=cats.length>1?'':'none';
+    const irLbl=document.getElementById('ir-cat-label');
+    if(irLbl) irLbl.textContent='All Categories';
     await _custLoadAllFacades(pid);
     const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'instDate',s=>s==='installed');
     _custFillRateTable(document.getElementById('ir-tbody'),dateMap,facadeMap,total,'#1a9458','rgba(46,194,126,0.06)');
@@ -7965,6 +7983,8 @@ async function openInstallRateModal(){
     document.getElementById('irm').classList.add('open');
     return;
   }
+  const _irBar=document.getElementById('ir-filter-bar');
+  if(_irBar) _irBar.style.display='none';
   // Build date→count map from all facades
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
@@ -8253,14 +8273,12 @@ async function openFabRateModal(){
   const isCustom=!!(pid&&pid!=='shift-tower');
   if(isCustom){
     // Reset filter + show filter bar
-    _frCatFilter=null;
+    _rateCatFilters.fr=null;
+    const cats=getProjectCategories(pid);
     const filterBar=document.getElementById('fr-filter-bar');
-    if(filterBar) filterBar.style.display='';
+    if(filterBar) filterBar.style.display=cats.length>1?'':'none';
     const lbl=document.getElementById('fr-cat-label');
     if(lbl) lbl.textContent='All Categories';
-    const cats=getProjectCategories(pid);
-    // Hide filter bar when project has only 1 category
-    if(filterBar) filterBar.style.display=cats.length>1?'':'none';
     await _custLoadAllFacades(pid);
     const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'fabDate',s=>s==='fabricated'||s==='delivered'||s==='installed');
     _custFillRateTable(document.getElementById('fr-tbody'),dateMap,facadeMap,total,'#1a5fa8','rgba(74,144,217,0.06)');
