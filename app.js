@@ -3657,19 +3657,19 @@ function efSidebarHTML(){
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
     {id:'plan', label:'Planning',     icon:'📅', color:'#e05c00', subs:[]},
-    {id:'qc',   label:'Quality Control', icon:'✅', color:'#0097a7', subs:['Template Checklist','Signed Checklist','NCR'], subSubs:{
-      'Template Checklist':['Bracket Installation','Panel Assembly','Panel Prep et Inst'],
-      'Signed Checklist':['Signed Bracket Installation','Signed Panel Assembly','Signed Panel Prep et Inst']
-    }},
+    {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
     {id:'logs', label:'Procurement Logs', icon:'📋', color:'#c02020', subs:[
       'CF Logs (PO)',
       'BR Logs (Aging Report)',
     ]},
     {id:'cashflow', label:'Cash Flow',  icon:'💰', color:'#00796b', subs:['Cash-In','Cash-Out','Cash-Flow'], subSubs:{'Cash-Out':['Employees Cost','Material Cost','Other Costs']}},
-    {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
     {id:'demo', label:'Demo', icon:'🎬', color:'#a855f7', subs:[]},
     {id:'agenda', label:'Agenda', icon:'📅', color:'#10b981', subs:[]},
-    {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
+    {id:'qc',   label:'Quality Control', icon:'✅', color:'#0097a7', subs:['Template Checklist','Signed Checklist','NCR'], subSubs:{
+      'Template Checklist':['Bracket Installation','Panel Assembly','Panel Prep et Inst'],
+      'Signed Checklist':['Signed Bracket Installation','Signed Panel Assembly','Signed Panel Prep et Inst']
+    }},
+    {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
