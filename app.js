@@ -547,6 +547,56 @@ function addNewCategory(){
   saveProjectCategories(projId,cats);
   goPage('c'+n+'-overview');
 }
+
+function deleteCategory(){
+  const projId=window._activeProjectId;
+  if(!projId||projId==='shift-tower') return;
+  const cats=getProjectCategories(projId);
+  if(!cats||cats.length<=1){
+    alert('You must have at least one category. Cannot delete the last one.');
+    return;
+  }
+  // Build options for the modal
+  const options=cats.map(c=>`<option value="${c.num}">${c.name}</option>`).join('');
+  const modal=document.createElement('div');
+  modal.id='del-cat-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10020;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:28px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.22);font-family:'Barlow',sans-serif;">
+      <div style="font-size:15px;font-weight:700;color:#1a2a3a;margin-bottom:6px;">🗑 Delete Category</div>
+      <div style="font-size:12px;color:#8099b0;margin-bottom:18px;">Select the category to delete. This cannot be undone.</div>
+      <select id="del-cat-select" style="width:100%;padding:9px 12px;border:1.5px solid #dde6f0;border-radius:8px;font-size:13px;font-family:'Barlow',sans-serif;color:#1a2a3a;background:#f8fafc;margin-bottom:20px;outline:none;">
+        ${options}
+      </select>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('del-cat-modal').remove()"
+          style="flex:1;padding:10px;border:1.5px solid #dde6f0;border-radius:8px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">
+          Cancel
+        </button>
+        <button onclick="confirmDeleteCategory()"
+          style="flex:1;padding:10px;border:none;border-radius:8px;background:#c02020;color:#fff;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+          Delete
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function confirmDeleteCategory(){
+  const projId=window._activeProjectId;
+  const sel=document.getElementById('del-cat-select');
+  if(!sel) return;
+  const numToDelete=parseInt(sel.value);
+  let cats=getProjectCategories(projId);
+  cats=cats.filter(c=>c.num!==numToDelete);
+  // Re-number to keep sequence clean
+  cats.forEach((c,i)=>{ c.num=i+1; });
+  saveProjectCategories(projId,cats);
+  document.getElementById('del-cat-modal')?.remove();
+  // Navigate to first available category overview
+  if(cats.length>0) goPage('c'+cats[0].num+'-overview');
+  else goPage('dashboard');
+}
 function startRenameCat(catNum){
   const titleEl=document.getElementById('cat-title-'+catNum);
   if(!titleEl) return;
@@ -3641,8 +3691,9 @@ function efSidebarHTML(){
           </div>
         </div>`;
       }).join('')}
-      <div style="margin-top:7px;padding:0 2px;">
-        <button onclick="addNewCategory()" style="width:100%;padding:7px 8px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:11px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;">+ Add New Category</button>
+      <div style="margin-top:7px;padding:0 2px;display:flex;gap:5px;">
+        <button onclick="addNewCategory()" style="flex:1;padding:7px 6px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:10px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Add</button>
+        <button onclick="deleteCategory()" style="flex:1;padding:7px 6px;border-radius:6px;border:1.5px dashed #c0202060;background:transparent;color:#c02020;font-size:10px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">🗑 Delete</button>
       </div>`;
   }
 
