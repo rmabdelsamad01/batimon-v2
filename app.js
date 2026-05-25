@@ -2218,41 +2218,42 @@ async function renderProjFinancial(){
   await loadProjInfo();
   const cont=document.getElementById('page-proj-financial');
   const canEdit=sbProfile?.role!=='viewer';
+  const isCustom=!!(window._activeProjectId&&window._activeProjectId!=='shift-tower');
 
   const sections=[
     {
       title:'Contrat',
       rows:[
-        {key:'fin-marche-initial',   label:'Marché initial',              def:'45 000 000 MAD HT'},
-        {key:'fin-avance',           label:'Avance 10%',                  def:'4 500 000 MAD HT'},
+        {key:'fin-marche-initial',   label:'Marché initial',              def: isCustom?'':' 45 000 000 MAD HT'},
+        {key:'fin-avance',           label:'Avance 10%',                  def: isCustom?'':'4 500 000 MAD HT'},
       ]
     },
     {
       title:'Retenues',
       rows:[
-        {key:'fin-retenu-garantie',  label:'Retenue de garantie',         def:'10% plafonnée à 7%'},
-        {key:'fin-amortissement',    label:'Amortissement de l\'avance',  def:'10%'},
-        {key:'fin-retenue-trc',      label:'Retenue TRC',                 def:'0,09% — applicable une fois au premier décompte'},
+        {key:'fin-retenu-garantie',  label:'Retenue de garantie',         def: isCustom?'':'10% plafonnée à 7%'},
+        {key:'fin-amortissement',    label:'Amortissement de l\'avance',  def: isCustom?'':'10%'},
+        {key:'fin-retenue-trc',      label:'Retenue TRC',                 def: isCustom?'':'0,09% — applicable une fois au premier décompte'},
       ]
     },
     {
       title:'Retenue Prorata 2%',
       rows:[
-        {key:'fin-prorata-1',        label:'1ère partie',                 def:'1% du montant du marché + avenant — applicable une fois au premier décompte'},
-        {key:'fin-prorata-2',        label:'2ème partie',                 def:'1% du décompte provisoire'},
+        {key:'fin-prorata-1',        label:'1ère partie',                 def: isCustom?'':'1% du montant du marché + avenant — applicable une fois au premier décompte'},
+        {key:'fin-prorata-2',        label:'2ème partie',                 def: isCustom?'':'1% du décompte provisoire'},
       ]
     },
     {
       title:'Garanties Bancaires — Libération de l\'avance',
       rows:[
-        {key:'fin-caution-a',        label:'Cautions A',                  def:'8 cautions de 540 000 MAD'},
-        {key:'fin-caution-b',        label:'Cautions B',                  def:'4 cautions de 270 000 MAD'},
+        {key:'fin-caution-a',        label:'Cautions A',                  def: isCustom?'':'8 cautions de 540 000 MAD'},
+        {key:'fin-caution-b',        label:'Cautions B',                  def: isCustom?'':'4 cautions de 270 000 MAD'},
       ]
     },
   ];
 
-  // Seed defaults into projInfoData if not yet set
-  sections.forEach(s=>s.rows.forEach(r=>{ if(!projInfoData[r.key]) projInfoData[r.key]=r.def; }));
+  // Seed defaults into projInfoData only for Shift Tower (custom projects start empty)
+  sections.forEach(s=>s.rows.forEach(r=>{ if(!projInfoData[r.key] && !isCustom) projInfoData[r.key]=r.def; }));
 
   const editStyle=canEdit?'cursor:text;border-radius:4px;padding:3px 6px;margin:-3px -6px;transition:background 0.15s;':'padding:3px 0;';
 
@@ -2272,8 +2273,9 @@ async function renderProjFinancial(){
               onmouseover="if(document.activeElement!==this)this.style.background='var(--surface2)';"
               onmouseout="if(document.activeElement!==this)this.style.background='transparent';"
               `:''}
-              style="flex:1;outline:none;line-height:1.6;${editStyle}"
-            >${projInfoData[r.key]||r.def}</div>
+              style="flex:1;outline:none;line-height:1.6;${editStyle}${(!projInfoData[r.key]&&!r.def&&canEdit)?'color:var(--text3);font-style:italic;':''}"
+              ${canEdit&&!projInfoData[r.key]&&!r.def?`data-placeholder="Click to fill in…"`:``}
+            >${projInfoData[r.key]||r.def||''}</div>
             <span id="proj-save-${r.key}" style="font-size:10px;font-family:var(--mono);min-width:54px;text-align:right;flex-shrink:0;"></span>
           </div>
         </div>`).join('')}
