@@ -1769,7 +1769,6 @@ async function renderCustomMonitoring(pageId){
               <tbody>${bodyRows}</tbody>
             </table>
           </div>
-          <div style="margin-top:8px;font-size:10px;color:#aab5c5;">Click cell = cycle status &nbsp;·&nbsp; Right-click row/column header = resize, insert, delete &nbsp;·&nbsp; Esc = cancel mode</div>
         </div>
       </div>
     </div>`;
