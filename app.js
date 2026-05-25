@@ -329,6 +329,30 @@ function addNewCategory(){
   saveProjectCategories(projId,cats);
   goPage('c'+n+'-overview');
 }
+function startRenameCat(catNum){
+  const titleEl=document.getElementById('cat-title-'+catNum);
+  if(!titleEl) return;
+  const current=titleEl.textContent;
+  titleEl.innerHTML=`<input id="cat-rename-input-${catNum}" value="${current.replace(/"/g,'&quot;')}"
+    style="font-size:18px;font-weight:700;color:#1a2a3a;border:none;border-bottom:2px solid #6d35d9;background:transparent;outline:none;width:260px;font-family:'Barlow',sans-serif;"
+    onkeydown="if(event.key==='Enter'){saveRenameCat(${catNum});}if(event.key==='Escape'){renderCustomCatOverview(${catNum});}"
+    onblur="saveRenameCat(${catNum})">`;
+  const inp=document.getElementById('cat-rename-input-'+catNum);
+  if(inp){inp.focus();inp.select();}
+}
+function saveRenameCat(catNum){
+  const inp=document.getElementById('cat-rename-input-'+catNum);
+  if(!inp) return;
+  const newName=(inp.value||'').trim();
+  if(!newName){ renderCustomCatOverview(catNum); return; }
+  const projId=window._activeProjectId;
+  if(!projId||projId==='shift-tower') return;
+  const cats=getProjectCategories(projId);
+  const cat=cats.find(c=>c.num===catNum);
+  if(cat){ cat.name=newName; saveProjectCategories(projId,cats); }
+  // Re-render to reflect the new name everywhere (title + sidebar)
+  renderCustomCatOverview(catNum);
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 function showRenameFacadeModal(facadeId){
@@ -946,7 +970,14 @@ async function renderCustomCatOverview(catNum){
   let _catSidebarHTML='';
   try{ _catSidebarHTML=efSidebarHTML(); }catch(e){ console.warn('sidebar error',e); }
   el.innerHTML = `<div class="fpw">${_catSidebarHTML}<div class="fpm"><div style="padding:20px;overflow-y:auto;flex:1;background:#f0f4f9;">
-    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">${cat.name}</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <div id="cat-title-${catNum}" style="font-size:18px;font-weight:700;color:#1a2a3a;">${cat.name}</div>
+      <button onclick="startRenameCat(${catNum})" title="Rename category"
+        style="width:26px;height:26px;border:1px solid rgba(109,53,217,0.25);border-radius:6px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;"
+        onmouseover="this.style.background='rgba(109,53,217,0.08)'" onmouseout="this.style.background='#fff'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6d35d9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">${projName}</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;" id="catov-cards-${catNum}">
       <div style="color:#8099b0;font-size:12px;padding:8px 0;">Loading…</div>
