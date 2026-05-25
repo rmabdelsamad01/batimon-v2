@@ -379,6 +379,12 @@ function confirmRenameFacade(){
   const names=getCustomFacadeNames(pid);
   names[facadeId]=newName;
   saveCustomFacadeNames(pid, names);
+  // Also sync into every category's facadeNames (used by sidebar + grid page title)
+  const _rcats=getProjectCategories(pid);
+  if(_rcats.length){
+    _rcats.forEach(cat=>{ cat.facadeNames[facadeId]=newName+' '+cat.num; });
+    saveProjectCategories(pid,_rcats);
+  }
   closeRenameFacadeModal();
   updateNavFacadeLabels();
   // Re-render: find which custom page is currently visible
