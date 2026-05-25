@@ -360,8 +360,9 @@ function confirmRenameFacade(){
   // Re-render: find which custom page is currently visible
   const dashEl = document.getElementById('page-dashboard');
   const isDashVisible = dashEl && (dashEl.style.display!=='none');
+  const isCustom = !!(window._activeProjectId && window._activeProjectId !== 'shift-tower');
   if(isDashVisible){
-    renderCustomDash();
+    if(isCustom){ renderAllCategoriesOverview(); } else { renderCustomDash(); }
   } else {
     const pageId = window._currentCustomPage || 'NF';
     renderCustomMonitoring(pageId);
@@ -879,11 +880,18 @@ async function renderCustomDash(){
 // ── All Categories overview (combined view for custom projects) ───────────────
 async function renderAllCategoriesOverview(){
   const projId = window._activeProjectId;
+  if(!projId || projId === 'shift-tower') return; // guard: no custom project active
   const projName = window._activeProjectName || projId || 'Project';
   const cats = initProjectCategories(projId);
 
+  // If only one category exists, go straight to its overview (skip the extra click)
+  if(cats.length === 1){
+    goPage('c1-overview');
+    return;
+  }
+
   const wrap = document.getElementById('dash-sidebar-wrap');
-  if(wrap) wrap.innerHTML = efSidebarHTML();
+  if(wrap) try{ wrap.innerHTML = efSidebarHTML(); }catch(e){ console.warn('efSidebarHTML error',e); }
   const fg = document.getElementById('facades-grid');
   if(fg) fg.innerHTML = '';
   const el = document.getElementById('dash-cards');
@@ -928,13 +936,16 @@ async function renderAllCategoriesOverview(){
 // ── Single category overview ──────────────────────────────────────────────────
 async function renderCustomCatOverview(catNum){
   const projId = window._activeProjectId;
+  if(!projId || projId === 'shift-tower') return;
   const projName = window._activeProjectName || projId || 'Project';
   const cats = initProjectCategories(projId);
   const cat = cats.find(c=>c.num===catNum) || {num:catNum,name:'Category '+catNum,facadeNames:{NF:'North Facade '+catNum,SF:'South Facade '+catNum,EF:'East Facade '+catNum,WF:'West Facade '+catNum}};
   const el = document.getElementById('page-c'+catNum+'-overview');
   if(!el) return;
 
-  el.innerHTML = `<div class="fpw">${efSidebarHTML()}<div class="fpm"><div style="padding:20px;overflow-y:auto;flex:1;background:#f0f4f9;">
+  let _catSidebarHTML='';
+  try{ _catSidebarHTML=efSidebarHTML(); }catch(e){ console.warn('sidebar error',e); }
+  el.innerHTML = `<div class="fpw">${_catSidebarHTML}<div class="fpm"><div style="padding:20px;overflow-y:auto;flex:1;background:#f0f4f9;">
     <div style="font-size:18px;font-weight:700;margin-bottom:4px;">${cat.name}</div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">${projName}</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;" id="catov-cards-${catNum}">
