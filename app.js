@@ -3888,7 +3888,7 @@ function efSidebarHTML(){
        'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]
      },
      customSubHTML:_customMonHTML},
-    {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['UCW Fabrication Rate','UCW Delivery Rate','UCW Installation Rate','Bracket Installation Rate','Fabrication Counting']},
+    {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['Fabrication Rate','Delivery Rate','Installation Rate','Fabrication Counting']},
     {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
@@ -4035,7 +4035,7 @@ function efSidebarHTML(){
               </div>
             </div>`;
             }
-            if(sub==='UCW Fabrication Rate'){
+            if(sub==='Fabrication Rate'){
               return `<div style="margin-bottom:2px;">
               <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
                    onmouseover="this.style.background='${s.color}12'"
@@ -4045,7 +4045,7 @@ function efSidebarHTML(){
               </div>
             </div>`;
             }
-            if(sub==='UCW Delivery Rate'){
+            if(sub==='Delivery Rate'){
               return `<div style="margin-bottom:2px;">
               <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
                    onmouseover="this.style.background='${s.color}12'"
@@ -4055,22 +4055,12 @@ function efSidebarHTML(){
               </div>
             </div>`;
             }
-            if(sub==='UCW Installation Rate'){
+            if(sub==='Installation Rate'){
               return `<div style="margin-bottom:2px;">
               <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
                    onmouseover="this.style.background='${s.color}12'"
                    onmouseout="this.style.background='transparent'"
                    onclick="openInstallRateModal()">
-                <span style="flex:1;">${sub}</span>
-              </div>
-            </div>`;
-            }
-            if(sub==='Bracket Installation Rate'){
-              return `<div style="margin-bottom:2px;">
-              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
-                   onmouseover="this.style.background='${s.color}12'"
-                   onmouseout="this.style.background='transparent'"
-                   onclick="openBracketInstallRateModal()">
                 <span style="flex:1;">${sub}</span>
               </div>
             </div>`;
