@@ -13593,6 +13593,12 @@ function renderCashIn(){
 }
 
 async function renderOFLog(skipLoad=false){
+  const _ofPid=window._activeProjectId;
+  if(_ofPid&&_ofPid!=='shift-tower'){
+    const cont=document.getElementById('page-of-log');
+    if(cont) cont.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:220px;color:var(--text3);font-size:15px;flex-direction:column;gap:10px;"><span style="font-size:32px;opacity:0.3;">📋</span><span>No OF Logs for this project</span></div>`;
+    return;
+  }
   if(!skipLoad){
     await loadOFLogQtyOverrides();
     await loadOFLogCustomGroups();
