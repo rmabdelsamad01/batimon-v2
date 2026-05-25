@@ -980,6 +980,11 @@ function _renderPage(id){
     root.innerHTML=`<div class="page active" id="page-${id}"></div>`;
   }
 
+  // Hide nav bar for full-screen pages, show for everything else
+  const _noNavPages = ['3d','aaa','builder','sitepictures'];
+  const _navEl = document.querySelector('nav.nav-tabs');
+  if(_navEl) _navEl.style.display = _noNavPages.includes(id) ? 'none' : '';
+
   // Highlight active nav button
   document.querySelectorAll('.nt').forEach(t=>t.classList.toggle('active',t.dataset.page===id));
 
