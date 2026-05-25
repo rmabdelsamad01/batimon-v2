@@ -260,7 +260,11 @@
 
 
 <nav class="nav-tabs">
-  <button class="nt" style="width:210px;min-width:210px;justify-content:center;" onclick="goPage(navMode==='bracket'?'BM-dashboard':'dashboard')">Overview</button>
+  <div id="overview-split-wrap" style="position:relative;display:flex;width:210px;min-width:210px;flex-shrink:0;border-right:1px solid var(--border2);">
+    <button class="nt" style="flex:1;justify-content:center;border-right:1px solid var(--border2);" onclick="goPage(navMode==='bracket'?'BM-dashboard':'dashboard')">Overview</button>
+    <button class="nt" id="overview-arrow-btn" style="width:28px;flex-shrink:0;padding:0;justify-content:center;font-size:10px;" onclick="toggleOverviewDropdown(event)">▾</button>
+    <div id="overview-cat-dropdown" style="display:none;position:absolute;top:40px;left:0;min-width:190px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.14);border:1px solid rgba(34,79,147,0.12);z-index:9999;padding:4px 0;"></div>
+  </div>
   <button class="nt" id="nav-btn-NF" onclick="navGoFacade('NF')"><span class="tdot" style="background:#2d65bd"></span><span id="nav-label-NF">North Facade</span><span class="tpct" id="tp-NF">0%</span></button>
   <button class="nt" id="nav-btn-SF" onclick="navGoFacade('SF')"><span class="tdot" style="background:#1a9458"></span><span id="nav-label-SF">South Facade</span><span class="tpct" id="tp-SF">0%</span></button>
   <button class="nt" id="nav-btn-EF" onclick="navGoFacade('EF')"><span class="tdot" style="background:#a07800"></span><span id="nav-label-EF">East Facade</span><span class="tpct" id="tp-EF">0%</span></button>
@@ -1302,7 +1306,7 @@ if(typeof supabase === 'undefined'){
 <script src="bulk-admin.js?v=20260505b"></script>
 <script src="auth.js?v=20260505b"></script>
 <script src="project.js"></script>
-<script src="app.js?v=20260525c"></script>
+<script src="app.js?v=20260525d"></script>
 <script src="profile.js"></script>
 <script src="ncr.js"></script>
 

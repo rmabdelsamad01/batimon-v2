@@ -297,6 +297,34 @@ function updateNavFacadeLabels(){
   });
 }
 
+// ── Overview split-button dropdown ───────────────────────────────────────────
+function toggleOverviewDropdown(e){
+  e.stopPropagation();
+  const isCustom=!!(window._activeProjectId&&window._activeProjectId!=='shift-tower');
+  if(!isCustom) return;
+  const dd=document.getElementById('overview-cat-dropdown');
+  if(!dd) return;
+  if(dd.style.display==='none'){
+    const cats=initProjectCategories(window._activeProjectId);
+    dd.innerHTML=cats.map(cat=>`<div
+      onclick="goPage('c${cat.num}-overview');closeOverviewDropdown()"
+      style="padding:9px 16px;font-size:12px;font-weight:600;color:#1a2a3a;cursor:pointer;white-space:nowrap;"
+      onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background=''"
+      >${cat.name}</div>`).join('');
+    dd.style.display='block';
+  } else {
+    dd.style.display='none';
+  }
+}
+function closeOverviewDropdown(){
+  const dd=document.getElementById('overview-cat-dropdown');
+  if(dd) dd.style.display='none';
+}
+document.addEventListener('click',function(e){
+  const wrap=document.getElementById('overview-split-wrap');
+  if(wrap&&!wrap.contains(e.target)) closeOverviewDropdown();
+});
+
 // ── Multi-category management (custom projects only) ─────────────────────────
 function getProjectCategories(projId){
   try{ return JSON.parse(localStorage.getItem('bm_cats__'+projId)||'null')||[]; }catch(e){ return []; }
