@@ -7752,6 +7752,28 @@ function _custCollectRateData(pid,dateField,statusCheck){
   }));
   return {dateMap,facadeMap,total,matched};
 }
+function _updateRateHeaders(prefix){
+  const pid=window._activeProjectId;
+  const isCustom=!!(pid&&pid!=='shift-tower');
+  let names;
+  if(isCustom){
+    const cats=getProjectCategories(pid);
+    const cat1=cats.find(c=>c.num===1);
+    const base=getCustomFacadeNames(pid)||{};
+    names={
+      NF:(cat1?.facadeNames?.NF)||base.NF||'North Facade',
+      SF:(cat1?.facadeNames?.SF)||base.SF||'South Facade',
+      EF:(cat1?.facadeNames?.EF)||base.EF||'East Facade',
+      WF:(cat1?.facadeNames?.WF)||base.WF||'West Facade'
+    };
+  } else {
+    names=activeFacadeNames()||_DEFAULT_FACADE_NAMES;
+  }
+  ['NF','SF','EF','WF'].forEach(f=>{
+    const el=document.getElementById(prefix+'-th-'+f);
+    if(el) el.textContent=names[f]||f;
+  });
+}
 function _custFillRateTable(tbody,dateMap,facadeMap,total,accentColor,rowBg){
   tbody.innerHTML='';
   const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -7807,6 +7829,7 @@ async function openDeliveryRateModal(){
     const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'delDate',s=>s==='delivered'||s==='installed');
     _custFillRateTable(document.getElementById('dr-tbody'),dateMap,facadeMap,total,'#a07800','rgba(160,120,0,0.06)');
     document.getElementById('dr-summary').textContent=`${matched} / ${total} delivered`;
+    _updateRateHeaders('dr');
     document.getElementById('drm').classList.add('open');
     return;
   }
@@ -7873,6 +7896,7 @@ async function openDeliveryRateModal(){
     tbody.appendChild(tr);
   });
   document.getElementById('dr-summary').textContent=`${totalDelivered} / ${total} delivered`;
+  _updateRateHeaders('dr');
   document.getElementById('drm').classList.add('open');
 }
 
@@ -7884,6 +7908,7 @@ async function openInstallRateModal(){
     const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'instDate',s=>s==='installed');
     _custFillRateTable(document.getElementById('ir-tbody'),dateMap,facadeMap,total,'#1a9458','rgba(46,194,126,0.06)');
     document.getElementById('ir-summary').textContent=`${matched} / ${total} installed`;
+    _updateRateHeaders('ir');
     document.getElementById('irm').classList.add('open');
     return;
   }
@@ -7967,6 +7992,7 @@ async function openInstallRateModal(){
 
   // Summary
   document.getElementById('ir-summary').textContent=`${totalInstalled} / ${total} installed`;
+  _updateRateHeaders('ir');
   document.getElementById('irm').classList.add('open');
 }
 
@@ -8177,6 +8203,7 @@ async function openFabRateModal(){
     const {dateMap,facadeMap,total,matched}=_custCollectRateData(pid,'fabDate',s=>s==='fabricated'||s==='delivered'||s==='installed');
     _custFillRateTable(document.getElementById('fr-tbody'),dateMap,facadeMap,total,'#1a5fa8','rgba(74,144,217,0.06)');
     document.getElementById('fr-summary').textContent=`${matched} / ${total} fabricated`;
+    _updateRateHeaders('fr');
     const misEl=document.getElementById('fr-missing');if(misEl)misEl.style.display='none';
     document.getElementById('frm').classList.add('open');
     return;
@@ -8260,6 +8287,7 @@ async function openFabRateModal(){
       misEl.style.display='none';
     }
   }
+  _updateRateHeaders('fr');
   document.getElementById('frm').classList.add('open');
 }
 
