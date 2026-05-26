@@ -1940,7 +1940,11 @@ async function renderCustomMonitoring(pageId){
 
   // Count cells by status for legend totals
   const _stTotals={};
-  Object.values(cells).forEach(s=>{_stTotals[s]=(_stTotals[s]||0)+1;});
+  Object.entries(cells).forEach(([k,v])=>{
+    if(k==='__meta__') return;
+    const s=typeof v==='object'?v.status:v;
+    if(s&&s!=='pending') _stTotals[s]=(_stTotals[s]||0)+1;
+  });
   const _stClsMap={installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x'};
   const legend=_custStatuses.filter(s=>s!=='pending').map(s=>`
     <div style="display:flex;align-items:center;gap:6px;">
