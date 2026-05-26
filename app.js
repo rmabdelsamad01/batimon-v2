@@ -14048,10 +14048,6 @@ window.ofFilter=function(){
 };
 
 window.ofEditExec=function(key,currentVal){
-  // Check lock: key format is "OF26-100__item", sigKey is "OF26-100__revision"
-  const ofNum=key.split('__')[0];
-  const grpRow=document.querySelector(`#of-tbody tr.of-grp[data-of="${ofNum}"]`);
-  if(grpRow){const gidx=parseInt(grpRow.getAttribute('data-gidx')||'0');const g=(window._ofCurrentGroups||[])[gidx];if(g&&(ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{}).be&&(ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{}).cdp&&(ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{}).rp){toast('🔒 OF is locked — create a new revision to edit');return;}}
   const cell=document.getElementById(`of-exec-cell-${key}`);
   if(!cell) return;
   const input=document.createElement('input');
