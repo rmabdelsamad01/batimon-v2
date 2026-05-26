@@ -10228,71 +10228,78 @@ let ofLogCustomGroups=[];
 let ofLogTypeOverrides={};
 let ofLogDeletedOFs=[];
 
+function _ofPid(){return window._activeProjectId||'shift-tower';}
+function _ofLsKey(k){return `${_ofPid()}__${k}`;}
+
 async function loadOFLogQtyOverrides(){
+  ofLogQtyOverrides={};
   try{
-    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-qty-overrides');
-    if(data&&data.length>0) try{ofLogQtyOverrides=JSON.parse(data[0].value)||{};}catch(e){ofLogQtyOverrides={};}
+    const{data}=await sb.from('project_info').select('*').eq('project',_ofPid()).eq('key','of-log-qty-overrides');
+    if(data&&data.length>0) try{ofLogQtyOverrides=JSON.parse(data[0].value)||{};}catch(e){}
   }catch(e){}
-  try{const v=localStorage.getItem('of-log-qty-overrides');if(v&&Object.keys(ofLogQtyOverrides).length===0)ofLogQtyOverrides=JSON.parse(v)||{};}catch(e){}
+  try{const v=localStorage.getItem(_ofLsKey('of-log-qty-overrides'));if(v&&Object.keys(ofLogQtyOverrides).length===0)ofLogQtyOverrides=JSON.parse(v)||{};}catch(e){}
 }
 
 async function saveOFLogQtyOverrides(){
   const json=JSON.stringify(ofLogQtyOverrides);
-  try{localStorage.setItem('of-log-qty-overrides',json);}catch(e){}
+  try{localStorage.setItem(_ofLsKey('of-log-qty-overrides'),json);}catch(e){}
   try{
-    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-qty-overrides');
-    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-qty-overrides',value:json,updated_at:new Date().toISOString()});
+    await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-qty-overrides');
+    await sb.from('project_info').insert({project:_ofPid(),key:'of-log-qty-overrides',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
 async function loadOFLogCustomGroups(){
+  ofLogCustomGroups=[];
   try{
-    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-custom-groups');
-    if(data&&data.length>0) try{ofLogCustomGroups=JSON.parse(data[0].value)||[];}catch(e){ofLogCustomGroups=[];}
+    const{data}=await sb.from('project_info').select('*').eq('project',_ofPid()).eq('key','of-log-custom-groups');
+    if(data&&data.length>0) try{ofLogCustomGroups=JSON.parse(data[0].value)||[];}catch(e){}
   }catch(e){}
-  try{const v=localStorage.getItem('of-log-custom-groups');if(v&&ofLogCustomGroups.length===0)ofLogCustomGroups=JSON.parse(v)||[];}catch(e){}
+  try{const v=localStorage.getItem(_ofLsKey('of-log-custom-groups'));if(v&&ofLogCustomGroups.length===0)ofLogCustomGroups=JSON.parse(v)||[];}catch(e){}
 }
 
 async function saveOFLogCustomGroups(){
   const json=JSON.stringify(ofLogCustomGroups);
-  try{localStorage.setItem('of-log-custom-groups',json);}catch(e){}
+  try{localStorage.setItem(_ofLsKey('of-log-custom-groups'),json);}catch(e){}
   try{
-    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-custom-groups');
-    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-custom-groups',value:json,updated_at:new Date().toISOString()});
+    await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-custom-groups');
+    await sb.from('project_info').insert({project:_ofPid(),key:'of-log-custom-groups',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
 async function loadOFLogTypeOverrides(){
+  ofLogTypeOverrides={};
   try{
-    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-type-overrides');
-    if(data&&data.length>0) try{ofLogTypeOverrides=JSON.parse(data[0].value)||{};}catch(e){ofLogTypeOverrides={};}
+    const{data}=await sb.from('project_info').select('*').eq('project',_ofPid()).eq('key','of-log-type-overrides');
+    if(data&&data.length>0) try{ofLogTypeOverrides=JSON.parse(data[0].value)||{};}catch(e){}
   }catch(e){}
-  try{const v=localStorage.getItem('of-log-type-overrides');if(v&&Object.keys(ofLogTypeOverrides).length===0)ofLogTypeOverrides=JSON.parse(v)||{};}catch(e){}
+  try{const v=localStorage.getItem(_ofLsKey('of-log-type-overrides'));if(v&&Object.keys(ofLogTypeOverrides).length===0)ofLogTypeOverrides=JSON.parse(v)||{};}catch(e){}
 }
 
 async function saveOFLogTypeOverrides(){
   const json=JSON.stringify(ofLogTypeOverrides);
-  try{localStorage.setItem('of-log-type-overrides',json);}catch(e){}
+  try{localStorage.setItem(_ofLsKey('of-log-type-overrides'),json);}catch(e){}
   try{
-    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-type-overrides');
-    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-type-overrides',value:json,updated_at:new Date().toISOString()});
+    await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-type-overrides');
+    await sb.from('project_info').insert({project:_ofPid(),key:'of-log-type-overrides',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
 async function loadOFLogDeletedOFs(){
+  ofLogDeletedOFs=[];
   try{
-    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-deleted-ofs');
-    if(data&&data.length>0) try{ofLogDeletedOFs=JSON.parse(data[0].value)||[];}catch(e){ofLogDeletedOFs=[];}
+    const{data}=await sb.from('project_info').select('*').eq('project',_ofPid()).eq('key','of-log-deleted-ofs');
+    if(data&&data.length>0) try{ofLogDeletedOFs=JSON.parse(data[0].value)||[];}catch(e){}
   }catch(e){}
-  try{const v=localStorage.getItem('of-log-deleted-ofs');if(v&&ofLogDeletedOFs.length===0)ofLogDeletedOFs=JSON.parse(v)||[];}catch(e){}
+  try{const v=localStorage.getItem(_ofLsKey('of-log-deleted-ofs'));if(v&&ofLogDeletedOFs.length===0)ofLogDeletedOFs=JSON.parse(v)||[];}catch(e){}
 }
 
 async function saveOFLogDeletedOFs(){
   const json=JSON.stringify(ofLogDeletedOFs);
-  try{localStorage.setItem('of-log-deleted-ofs',json);}catch(e){}
+  try{localStorage.setItem(_ofLsKey('of-log-deleted-ofs'),json);}catch(e){}
   try{
-    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-deleted-ofs');
-    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-deleted-ofs',value:json,updated_at:new Date().toISOString()});
+    await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-deleted-ofs');
+    await sb.from('project_info').insert({project:_ofPid(),key:'of-log-deleted-ofs',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
