@@ -10225,6 +10225,7 @@ async function renderPOLog(){
 // ── OF LOG (FABRICATION ORDERS) ────────────────────────────────
 let ofLogQtyOverrides={};
 let ofLogCustomGroups=[];
+let ofLogTypeOverrides={};
 
 async function loadOFLogQtyOverrides(){
   try{
@@ -10257,6 +10258,23 @@ async function saveOFLogCustomGroups(){
   try{
     await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-custom-groups');
     await sb.from('project_info').insert({project:'shift-tower',key:'of-log-custom-groups',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadOFLogTypeOverrides(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-type-overrides');
+    if(data&&data.length>0) try{ofLogTypeOverrides=JSON.parse(data[0].value)||{};}catch(e){ofLogTypeOverrides={};}
+  }catch(e){}
+  try{const v=localStorage.getItem('of-log-type-overrides');if(v&&Object.keys(ofLogTypeOverrides).length===0)ofLogTypeOverrides=JSON.parse(v)||{};}catch(e){}
+}
+
+async function saveOFLogTypeOverrides(){
+  const json=JSON.stringify(ofLogTypeOverrides);
+  try{localStorage.setItem('of-log-type-overrides',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-type-overrides');
+    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-type-overrides',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
@@ -13650,6 +13668,7 @@ async function renderOFLog(skipLoad=false){
   if(!skipLoad){
     await loadOFLogQtyOverrides();
     await loadOFLogCustomGroups();
+    await loadOFLogTypeOverrides();
   }
   const cont=document.getElementById('page-of-log');
 
@@ -13796,7 +13815,8 @@ async function renderOFLog(skipLoad=false){
     });
     const sumQty=details.reduce((s,d)=>s+d.qty,0);
     const sumExec=details.reduce((s,d)=>s+d.exec,0);
-    return{...g,details,sumQty,sumExec};
+    const type=ofLogTypeOverrides[g.of]!==undefined?ofLogTypeOverrides[g.of]:g.type;
+    return{...g,details,sumQty,sumExec,type};
   });
 
   // Progress bar helper
@@ -13820,7 +13840,7 @@ async function renderOFLog(skipLoad=false){
     tableHTML+=`<tr class="of-grp" data-of="${g.of}">
       <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;white-space:nowrap;">${g.of}${g.isCustom?'<span style="color:#7fffb0;font-size:8px;margin-left:4px;">●</span>':''}</td>
       <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;white-space:nowrap;">${g.ref}</td>
-      <td style="padding:6px 10px;font-size:10px;font-weight:700;border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;">${g.type}</td>
+      <td id="of-type-cell-${g.of}" onclick="window.ofEditType('${g.of}','${g.type.replace(/'/g,"\\'")}')" title="Click to edit type" style="padding:6px 10px;font-size:10px;font-weight:700;border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;cursor:pointer;" onmouseover="this.style.background='#243f6e'" onmouseout="this.style.background='#1a3a6b'">${g.type}&nbsp;<span style="font-size:8px;opacity:0.5;">✎</span></td>
       <td style="padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:0.06em;border:1px solid #c8d8e8;background:#243f6e;color:#aac0e0;text-transform:uppercase;">SUMMARY</td>
       <td style="padding:6px 10px;font-size:10px;font-weight:700;border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;">Total</td>
       <td style="padding:6px 10px;font-size:10px;border:1px solid #c8d8e8;background:#1a3a6b;color:#aac0e0;">${g.details.length===1?g.details[0].loc:'—'}</td>
@@ -13968,6 +13988,38 @@ window.ofEditExec=function(key,currentVal){
     const p=document.querySelector('#page-of-log .fpm');
     if(p)p.scrollTop=st;
     saveOFLogQtyOverrides();
+  };
+  input.addEventListener('blur',commit);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){input.removeEventListener('blur',commit);renderOFLog(true);}});
+};
+
+window.ofEditType=function(ofNum,currentVal){
+  const cell=document.getElementById(`of-type-cell-${ofNum}`);
+  if(!cell) return;
+  const input=document.createElement('input');
+  input.type='text';
+  input.value=currentVal;
+  input.style.cssText='width:140px;padding:2px 6px;font-size:10px;font-weight:700;border:2px solid #4a9fd9;border-radius:4px;outline:none;background:#1a3a6b;color:#e0ecff;';
+  cell.innerHTML='';
+  cell.appendChild(input);
+  input.focus();
+  input.select();
+  const commit=async()=>{
+    const newVal=input.value.trim()||currentVal;
+    // Update custom group if it exists, else store override
+    const cg=ofLogCustomGroups.find(g=>g.of===ofNum);
+    if(cg){
+      cg.type=newVal;
+      saveOFLogCustomGroups();
+    } else {
+      ofLogTypeOverrides[ofNum]=newVal;
+      saveOFLogTypeOverrides();
+    }
+    const pane=document.querySelector('#page-of-log .fpm');
+    const st=pane?pane.scrollTop:0;
+    await renderOFLog(true);
+    const p=document.querySelector('#page-of-log .fpm');
+    if(p)p.scrollTop=st;
   };
   input.addEventListener('blur',commit);
   input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){input.removeEventListener('blur',commit);renderOFLog(true);}});
