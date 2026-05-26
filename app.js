@@ -14288,7 +14288,7 @@ window.openAddOFModal=function(){
           </div>
           <div>
             <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Revision</label>
-            <input id="aof-rev" placeholder="Rev A" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
+            <input id="aof-rev" value="00" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
           </div>
           <div>
             <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Reference</label>
