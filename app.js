@@ -1344,12 +1344,12 @@ async function renderAllCategoriesOverview(){
     const bars=_custStatuses.filter(s=>s!=='pending'&&catTotals[s]>0).map(s=>`<div title="${_custStLabel[s]}: ${catTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.max(Math.round(catTotals[s]/totalCells*100),1)}%;border-radius:2px;min-width:4px;"></div>`).join('');
     const facadeDots=['NF','SF','EF','WF'].map(f=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#8099b0;"><div style="width:6px;height:6px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>${cat.facadeNames[f]}</div>`).join('');
     const catNick = cat.nick || ('CAT'+cat.num);
+    const _catIsDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
     return `<div onclick="goPage('c${cat.num}-overview')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${cat.name}</div>
-        <div onclick="event.stopPropagation();editCatNick(${cat.num})" title="Click to edit nickname"
-          style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:background 0.15s;"
-          onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'">${catNick}</div>
+        <div ${_catIsDev?`onclick="event.stopPropagation();editCatNick(${cat.num})" title="Click to edit nickname" onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'"`:''}
+          style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;${_catIsDev?'cursor:pointer;':''}flex-shrink:0;transition:background 0.15s;">${catNick}</div>
         <div style="font-size:18px;font-weight:800;color:#6d35d9;">${pct}%</div>
       </div>
       <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
@@ -1378,14 +1378,12 @@ async function renderCustomCatOverview(catNum){
   let _catSidebarHTML='';
   try{ _catSidebarHTML=efSidebarHTML(); }catch(e){ console.warn('sidebar error',e); }
   el.innerHTML = `<div class="fpw">${_catSidebarHTML}<div class="fpm"><div style="padding:20px;overflow-y:auto;flex:1;background:#f0f4f9;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-      <div id="cat-title-${catNum}" onclick="startRenameCat(${catNum})" title="Click to rename"
-        style="font-size:18px;font-weight:700;color:#1a2a3a;cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
-        onmouseover="this.style.background='rgba(109,53,217,0.07)'" onmouseout="this.style.background='transparent'">${cat.name}</div>
-      <div onclick="editCatNick(${catNum})" title="Click to edit nickname"
-        style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:background 0.15s;"
-        onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'">${cat.nick||('CAT'+catNum)}</div>
-    </div>
+    ${(()=>{const _devOnly=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <div id="cat-title-${catNum}" ${_devOnly?`onclick="startRenameCat(${catNum})" title="Click to rename" onmouseover="this.style.background='rgba(109,53,217,0.07)'" onmouseout="this.style.background='transparent'"`:''}
+        style="font-size:18px;font-weight:700;color:#1a2a3a;${_devOnly?'cursor:pointer;':''}padding:3px 7px;border-radius:6px;transition:background 0.15s;">${cat.name}</div>
+      <div ${_devOnly?`onclick="editCatNick(${catNum})" title="Click to edit nickname" onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'"`:''}
+        style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;${_devOnly?'cursor:pointer;':''}flex-shrink:0;transition:background 0.15s;">${cat.nick||('CAT'+catNum)}</div>
+    </div>`;})()}
     <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">${projName}</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;" id="catov-cards-${catNum}">
       <div style="color:#8099b0;font-size:12px;padding:8px 0;">Loading…</div>
@@ -4006,10 +4004,10 @@ function efSidebarHTML(){
           </div>
         </div>`;
       }).join('')}
-      <div style="margin-top:7px;padding:0 2px;display:flex;gap:5px;">
+      ${(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer')?`<div style="margin-top:7px;padding:0 2px;display:flex;gap:5px;">
         <button onclick="addNewCategory()" style="flex:1;padding:7px 6px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:10px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Add</button>
         <button onclick="deleteCategory()" style="flex:1;padding:7px 6px;border-radius:6px;border:1.5px dashed #c0202060;background:transparent;color:#c02020;font-size:10px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">🗑 Delete</button>
-      </div>`;
+      </div>`:''}` ;
   }
 
   const sections=[
