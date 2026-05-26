@@ -1560,7 +1560,7 @@ async function _saveCustomFacadeCell(projectId, facade, cellKey, status){
 // Meta stored under cells['__meta__'] in Supabase
 
 const _DEFAULT_GRID_META = ()=>({
-  rows: Array.from({length:10},(_,i)=>({label:String(i+1),height:40})),
+  rows: Array.from({length:10},(_,i)=>({label:String(i+1).padStart(2,'0'),height:40})),
   cols: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>({label:c,width:80})),
   merges:[]
 });
@@ -1687,7 +1687,7 @@ function custGridAddRow(pid,facade,atIdx){
   const idx=atIdx!=null?atIdx:n;
   _custRemapCells(pid,facade,(r,c)=>r>=idx?`r${r+1}_c${c}`:`r${r}_c${c}`);
   meta.merges=meta.merges.map(m=>m.r>=idx?{...m,r:m.r+1}:(m.r<idx&&m.r+m.rowspan>idx?{...m,rowspan:m.rowspan+1}:m));
-  meta.rows.splice(idx,0,{label:String(n+1),height:40});
+  meta.rows.splice(idx,0,{label:String(n+1).padStart(2,'0'),height:40});
   _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
 function custGridDelRow(pid,facade,rowIdx){
