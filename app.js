@@ -13636,61 +13636,9 @@ function renderCashIn(){
 }
 
 async function renderOFLog(skipLoad=false){
-  const _ofPid=window._activeProjectId;
-  if(_ofPid&&_ofPid!=='shift-tower'){
-    const cont=document.getElementById('page-of-log');
-    const _ofMeta=window.PROJECT_META&&window.PROJECT_META[_ofPid];
-    const _ofProjName=_ofMeta?_ofMeta.name:_ofPid;
-    if(cont) cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
-      <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-        <div style="padding:14px 24px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
-          <span style="font-size:22px;">🔧</span>
-          <div>
-            <div style="font-size:15px;font-weight:700;color:var(--text);">OF Logs — Fabrication Orders</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:1px;">${_ofProjName} · 0 orders · 0 / 0 items executed · <span style="font-weight:700;color:#1a5fa8;">0%</span> overall</div>
-          </div>
-          <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
-            <input id="of-search" type="text" placeholder="Search OF#, type, item…" oninput="window.ofFilter&&window.ofFilter()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:11px;width:240px;outline:none;">
-            <select id="of-type-filter" onchange="window.ofFilter&&window.ofFilter()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;">
-              <option value="all">All Types</option>
-              <option value="Starter Brackets">Starter Brackets</option>
-              <option value="Starter Profiles">Starter Profiles</option>
-              <option value="Starter Panels">Starter Panels</option>
-              <option value="Typical Brackets">Typical Brackets</option>
-              <option value="Typical Panels">Typical Panels</option>
-            </select>
-            <button onclick="window.ofExpandAll&&window.ofExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
-            <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
-            <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','${_ofProjName}','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
-            <button onclick="window.openAddOFModal&&window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
-            <button onclick="window.openDeleteOFModal&&window.openDeleteOFModal()" style="padding:6px 12px;background:#8b1a1a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🗑 Delete OF</button>
-          </div>
-        </div>
-        <div style="flex:1;overflow:auto;padding:16px 24px;">
-          <table style="border-collapse:collapse;min-width:max-content;width:100%;" id="of-table">
-            <thead>
-              <tr style="position:sticky;top:0;z-index:10;background:#0d2244;color:#fff;">
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">OF Number</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Reference</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Type</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Row</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Item Ref</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Location</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Qty Total</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;text-align:right;">Qty Executed</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;min-width:160px;">Progress</th>
-                <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;"></th>
-              </tr>
-            </thead>
-            <tbody id="of-tbody">
-              <tr><td colspan="10" style="padding:40px;text-align:center;color:var(--text3);font-size:13px;">No fabrication orders for this project.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>`;
-    return;
-  }
+  const _isCustomOf=!!(window._activeProjectId&&window._activeProjectId!=='shift-tower');
+  const _ofMeta=window.PROJECT_META&&window.PROJECT_META[window._activeProjectId];
+  const _ofProjName=_isCustomOf?(_ofMeta?_ofMeta.name:window._activeProjectId):'Shift Tower';
   if(!skipLoad){
     await loadOFLogQtyOverrides();
     await loadOFLogCustomGroups();
@@ -13700,7 +13648,8 @@ async function renderOFLog(skipLoad=false){
   const cont=document.getElementById('page-of-log');
 
   // ── Master data (from Excel: Fabrication status) ──────────────
-  const OF_GROUPS=[
+  // Custom projects have no hardcoded base groups — only their own added OFs
+  const OF_GROUPS=_isCustomOf?[]:[
     {of:'OF26-100',ref:'STC-GB-01',type:'Starter Brackets',
      details:[{item:'GB-01',loc:'West Wing (R+03)',qty:78,exec:78}]},
     {of:'OF26-101',ref:'STC-GB-02',type:'Starter Brackets',
@@ -13832,6 +13781,7 @@ async function renderOFLog(skipLoad=false){
   ];
 
   // Merge base + custom groups then apply overrides (filter deleted)
+
   const ALL_GROUPS=[...OF_GROUPS,...ofLogCustomGroups.map(g=>({...g,isCustom:true}))].filter(g=>!ofLogDeletedOFs.includes(g.of));
 
   const groups=ALL_GROUPS.map(g=>{
@@ -13911,7 +13861,7 @@ async function renderOFLog(skipLoad=false){
         <span style="font-size:22px;">🔧</span>
         <div>
           <div style="font-size:15px;font-weight:700;color:var(--text);">OF Logs — Fabrication Orders</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:1px;">Shift Tower · ${groups.length} orders · ${grandExec} / ${grandQty} items executed · <span style="font-weight:700;color:#1a5fa8;">${grandPct}%</span> overall${ofLogCustomGroups.length>0?` <span style="color:#1a9458;">(+${ofLogCustomGroups.length} added)</span>`:''}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">${_ofProjName} · ${groups.length} orders · ${grandExec} / ${grandQty} items executed · <span style="font-weight:700;color:#1a5fa8;">${grandPct}%</span> overall${ofLogCustomGroups.length>0?` <span style="color:#1a9458;">(+${ofLogCustomGroups.length} added)</span>`:''}</div>
         </div>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
           <input id="of-search" type="text" placeholder="Search OF#, type, item…" oninput="window.ofFilter()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:11px;width:240px;outline:none;">
@@ -13925,7 +13875,7 @@ async function renderOFLog(skipLoad=false){
           </select>
           <button onclick="window.ofExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
           <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
-          <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','Shift Tower','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
+          <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','${_ofProjName}','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
           <button onclick="window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
           <button onclick="window.openDeleteOFModal()" style="padding:6px 12px;background:#8b1a1a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🗑 Delete OF</button>
         </div>
