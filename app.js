@@ -1099,6 +1099,7 @@ function gC(){const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_iss
 let curPage='welcome';
 let navMode=null; // 'bracket' | 'ucw' | null
 let facadeValMode='numbers'; // 'numbers' | 'percentages'
+let _custFacadeValMode='numbers'; // same toggle for custom projects
 
 function navGoFacade(facade){
   const bmMap={NF:'BM-NF',SF:'BM-SF',EF:'BM-EF',WF:'BM-WF'};
@@ -1355,19 +1356,24 @@ function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
   const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const activeTotal=statDefs.reduce((s,d)=>s+(totals[d.key]||0),0);
   const pct=activeTotal?Math.round((totals.installed||0)/activeTotal*100):0;
+  const _showPct=(_custFacadeValMode==='percentages');
   const breakdown=statDefs.map(s=>{
     const n=totals[s.key]||0;
     const idx=pipeline.indexOf(s.key);
     const cumul=idx>0?pipeline.slice(0,idx+1).reduce((sum,k)=>sum+(totals[k]||0),0):n;
     const hasCumul=s.cumulLabel&&idx>0;
+    const barPct=activeTotal?(n/activeTotal*100):0;
+    const cumulPct=activeTotal?(cumul/activeTotal*100):0;
     return`<div style="padding:4px 0 2px;border-bottom:1px solid var(--border);">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2px;gap:4px;">
         <span style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};white-space:nowrap;">${s.label}</span>
         ${hasCumul?`<span style="font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</span>`:''}
       </div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${n}</span>
-        ${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</span>`:''}
+        ${_showPct
+          ?`<span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${barPct.toFixed(1)}%</span>${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumulPct.toFixed(1)}%)</span>`:''}`
+          :`<span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${n}</span>${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</span>`:''}`
+        }
       </div>
     </div>`;
   }).join('');
@@ -1417,6 +1423,9 @@ async function renderAllCategoriesOverview(){
     }
     const btn = document.getElementById('cust-ov-mode-toggle');
     if(btn) btn.textContent = _custOvMode==='category'?'🏗 Building':'📋 Category';
+    // Sync % button label to current val mode
+    valBtn.textContent = _custFacadeValMode==='numbers'?'%':'#';
+    valBtn.title = _custFacadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';
     // Update section label text
     const labelSpan = valBtn.parentElement.querySelector('span');
     if(labelSpan) labelSpan.textContent = _custOvMode==='category'?'CATEGORIES':'BUILDINGS';
@@ -2124,8 +2133,13 @@ async function renderCustomMonitoring(pageId){
 }
 
 function toggleFacadeValMode(){
-  // Custom projects have their own overview — never touch Shift Tower renderer
-  if(window._activeProjectId && window._activeProjectId!=='shift-tower'){ renderAllCategoriesOverview(); return; }
+  if(window._activeProjectId && window._activeProjectId!=='shift-tower'){
+    _custFacadeValMode=_custFacadeValMode==='numbers'?'percentages':'numbers';
+    const btn=document.getElementById('facade-val-toggle');
+    if(btn){btn.textContent=_custFacadeValMode==='numbers'?'%':'#';btn.title=_custFacadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';}
+    renderAllCategoriesOverview();
+    return;
+  }
   facadeValMode=facadeValMode==='numbers'?'percentages':'numbers';
   const btn=document.getElementById('facade-val-toggle');
   if(btn){btn.textContent=facadeValMode==='numbers'?'%':'#';btn.title=facadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';}
