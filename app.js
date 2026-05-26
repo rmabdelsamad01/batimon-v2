@@ -2010,11 +2010,33 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
   // Shared styles
   const lbl=`display:block;font-size:9px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;`;
   const inp=`width:100%;box-sizing:border-box;padding:6px 9px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;outline:none;`;
+  const roInp=`width:100%;box-sizing:border-box;padding:6px 9px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;outline:none;`;
   const row=`margin-bottom:11px;`;
   const sec=`font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#224F93;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #224F9330;`;
 
   const v=f=>cellData[f]||'';
   const nv=f=>cellData[f]!=null?cellData[f]:'';
+
+  // Date display helpers
+  const fmtDate=d=>d?new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+  const showFab=['fabricated','delivered','installed'].includes(st);
+  const showDel=['delivered','installed'].includes(st);
+  const showInst=st==='installed';
+
+  // Date rows shown only when relevant to status
+  const dateRows=`
+    ${showFab?`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:10px;color:var(--text3);font-weight:600;">Fabrication</span>
+      <span style="font-size:11px;font-weight:700;color:#1a5fa8;font-family:var(--mono);">${fmtDate(cellData.fabDate)}</span>
+    </div>`:''}
+    ${showDel?`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:10px;color:var(--text3);font-weight:600;">Delivery</span>
+      <span style="font-size:11px;font-weight:700;color:#a07800;font-family:var(--mono);">${fmtDate(cellData.delDate)}</span>
+    </div>`:''}
+    ${showInst?`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;">
+      <span style="font-size:10px;color:var(--text3);font-weight:600;">Installation</span>
+      <span style="font-size:11px;font-weight:700;color:#1a9458;font-family:var(--mono);">${fmtDate(cellData.instDate)}</span>
+    </div>`:''}`;
 
   // Auto-calc surface when largeur/hauteur change
   const calcSurface=`
@@ -2030,12 +2052,28 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
       <span style="${lbl}">Cell Reference</span>
       <div style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--mono);background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);">${cellRef}</div>
     </div>
-    <!-- Status -->
+
+    <!-- Panel Ref + Panel Type -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;${row}">
+      <div>
+        <span style="${lbl}">Panel Ref</span>
+        <div style="font-size:12px;font-weight:700;color:var(--text);background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);min-height:32px;">${v('panelRef')||'<span style="color:var(--text3);font-weight:400;">—</span>'}</div>
+      </div>
+      <div>
+        <span style="${lbl}">Panel Type</span>
+        <div style="font-size:12px;font-weight:700;color:var(--text);background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);min-height:32px;">${v('panelType')||'<span style="color:var(--text3);font-weight:400;">—</span>'}</div>
+      </div>
+    </div>
+
+    <!-- Status + dates -->
     <div style="${row}">
       <span style="${lbl}">Status</span>
-      <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);">
-        <div style="width:10px;height:10px;border-radius:2px;background:${stColor[st]};flex-shrink:0;"></div>
-        <span style="font-size:12px;font-weight:700;color:${stColor[st]};">${_custStLabel[st]||'Pending'}</span>
+      <div style="background:var(--surface2);border-radius:6px;border:1px solid var(--border);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;${(showFab||showDel||showInst)?'border-bottom:1px solid var(--border);':''}">
+          <div style="width:10px;height:10px;border-radius:2px;background:${stColor[st]};flex-shrink:0;"></div>
+          <span style="font-size:12px;font-weight:700;color:${stColor[st]};">${_custStLabel[st]||'Pending'}</span>
+        </div>
+        ${(showFab||showDel||showInst)?`<div style="padding:0 9px;">${dateRows}</div>`:''}
       </div>
     </div>
 
