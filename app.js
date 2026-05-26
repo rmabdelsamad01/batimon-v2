@@ -1903,8 +1903,9 @@ function closeCustStatusModal(){
   });
   _custMultiSel.clear();
 }
-function _custCellInnerHTML(ref, status){
-  return `<div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ref}</div>`;
+function _custCellInnerHTML(ref, status, panelRef){
+  const display=panelRef||ref;
+  return `<div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${display}</div>`;
 }
 function saveCustPanel(){
   const status=_custCurSelStatus;
@@ -1920,8 +1921,9 @@ function saveCustPanel(){
         const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
         if(td){
           td.style.outline='';td.style.background=_custStBg[status];td.style.color=_custStText[status];td.dataset.status=status;
-          const existRef=td.querySelector('div')?.textContent||'';
-          td.innerHTML=_custCellInnerHTML(existRef,status);
+          const existRef=td.dataset.cellref||td.querySelector('div')?.textContent||'';
+          const existPRef=(_custFacadeCache[_custMultiPid+'|'+_custMultiFacade]||{})[key]?.panelRef||'';
+          td.innerHTML=_custCellInnerHTML(existRef,status,existPRef);
           td.title=`${existRef} — ${_custStLabel[status]}`;
         }
       }
@@ -1943,8 +1945,9 @@ function saveCustPanel(){
     if(m){
       const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
       if(td){
+        const _savedPRef=(_custFacadeCache[_custCurPid+'|'+_custCurFacade]||{})[_custCurCellKey]?.panelRef||'';
         td.style.background=_custStBg[status];td.style.color=_custStText[status];td.dataset.status=status;
-        td.innerHTML=_custCellInnerHTML(_custCurCellRef,status);
+        td.innerHTML=_custCellInnerHTML(_custCurCellRef,status,_savedPRef);
         td.title=`${_custCurCellRef} — ${_custStLabel[status]}`;
       }
     }
@@ -2174,6 +2177,18 @@ async function custCellSavePanel(){
     surface:            gn('cp-surface'),
   });
 
+  // Refresh the cell display in the grid (panelRef may have changed)
+  const _m=key.match(/^r(\d+)_c(\d+)$/);
+  if(_m){
+    const td=document.getElementById(`cpcell-${_m[1]}_${_m[2]}`);
+    if(td){
+      const cellRef=td.dataset.cellref||'';
+      const newPRef=_custFacadeCache[k][key]?.panelRef||'';
+      const curSt=_custFacadeCache[k][key]?.status||'pending';
+      td.innerHTML=_custCellInnerHTML(cellRef,curSt,newPRef);
+    }
+  }
+
   try{
     await sb.from('custom_project_facades').upsert({
       project_id:pid, facade, cells:_custFacadeCache[k], updated_at:new Date().toISOString()
@@ -2238,13 +2253,14 @@ async function renderCustomMonitoring(pageId){
         const key=`r${ri}_c${ci}`;
         const st=(cells[key]?.status)||'pending';
         const cellRef=`${catNick}-${nick}-${row.label}-${col.label}`;
+        const displayRef=(cells[key]?.panelRef)||cellRef;
         return `<td id="cpcell-${ri}_${ci}" data-status="${st}" data-key="${key}" data-cellref="${cellRef}"
           onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})"
           oncontextmenu="custCellOpenPanel(event,'${pid}','${facade}','${key}','${cellRef}');return false;"
           ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
           title="${cellRef} — ${_custStLabel[st]}"
           style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;">
-          <div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cellRef}</div>
+          <div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayRef}</div>
         </td>`;
       }).join('')}
     </tr>`).join('');
