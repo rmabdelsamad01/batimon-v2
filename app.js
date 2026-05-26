@@ -13873,6 +13873,9 @@ async function renderOFLog(skipLoad=false){
     });
   });
 
+  // Store current groups for revise modal access
+  window._ofCurrentGroups=groups;
+
   // Grand total
   const grandQty=groups.reduce((s,g)=>s+g.sumQty,0);
   const grandExec=groups.reduce((s,g)=>s+g.sumExec,0);
@@ -13900,6 +13903,7 @@ async function renderOFLog(skipLoad=false){
           <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
           <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','${_ofProjName}','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
           <button onclick="window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
+          <button onclick="window.openReviseOFModal()" style="padding:6px 12px;background:#6a3a00;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🔄 Revise OF</button>
           <button onclick="window.openDeleteOFModal()" style="padding:6px 12px;background:#8b1a1a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🗑 Delete OF</button>
         </div>
       </div>
@@ -14052,6 +14056,139 @@ window.ofEditRevision=function(ofNum,currentVal){
   };
   input.addEventListener('blur',commit);
   input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){input.removeEventListener('blur',commit);renderOFLog(true);}});
+};
+
+// ── REVISE OF ──────────────────────────────────────────────────
+function _incrementRevision(rev){
+  if(!rev||!rev.trim()) return 'Rev .01';
+  // Match trailing .XX number, e.g. "Rev .00" → "Rev .01", "Rev .09" → "Rev .10"
+  const m=rev.match(/^(.*\.)(\d+)$/);
+  if(m){
+    const next=parseInt(m[2])+1;
+    return m[1]+String(next).padStart(m[2].length,'0');
+  }
+  // No dot-number pattern — append .01
+  return rev+'.01';
+}
+
+window.openReviseOFModal=function(){
+  const existing=document.getElementById('revise-of-modal');
+  if(existing){existing.remove();return;}
+  const groups=window._ofCurrentGroups||[];
+  if(!groups.length){toast('No fabrication orders to revise');return;}
+
+  const rows=groups.map(g=>`
+    <div onclick="window._selectOFForRevision('${g.of}')" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;background:${g.isCustom?'rgba(26,148,88,0.06)':'#f5f8fd'};margin-bottom:4px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#e8f0fb'" onmouseout="this.style.background='${g.isCustom?'rgba(26,148,88,0.06)':'#f5f8fd'}'">
+      <div style="flex:1;min-width:0;">
+        <span style="font-size:10px;font-weight:700;font-family:var(--mono);color:#1a3a6b;">${g.of}</span>
+        ${g.revision?`<span style="font-size:10px;font-family:var(--mono);color:#6a3a00;margin-left:8px;">${g.revision}</span>`:''}
+        <span style="font-size:10px;color:#8099b0;margin-left:8px;">${g.ref}</span>
+        <span style="font-size:10px;color:var(--text3);margin-left:6px;">· ${g.type}</span>
+      </div>
+      <span style="font-size:10px;color:#1a5fa8;font-weight:600;">Select →</span>
+    </div>`).join('');
+
+  const div=document.createElement('div');
+  div.id='revise-of-modal';
+  div.style.cssText='position:fixed;inset:0;z-index:10500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);';
+  div.innerHTML=`
+    <div style="background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.22);width:540px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">🔄 Revise Fabrication Order</div>
+        <button onclick="document.getElementById('revise-of-modal').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1;">✕</button>
+      </div>
+      <div style="padding:10px 14px 6px;font-size:11px;color:var(--text3);">Select the OF to revise — a clone will open pre-filled with an incremented revision.</div>
+      <div style="padding:8px 16px 14px;overflow-y:auto;flex:1;">${rows}</div>
+    </div>`;
+  div.addEventListener('click',e=>{if(e.target===div)div.remove();});
+  document.body.appendChild(div);
+};
+
+window._selectOFForRevision=function(ofNum){
+  const groups=window._ofCurrentGroups||[];
+  const g=groups.find(x=>x.of===ofNum);
+  if(!g) return;
+  document.getElementById('revise-of-modal')?.remove();
+  // Build pre-filled Add OF modal
+  const newRev=_incrementRevision(g.revision||'');
+  const existing=document.getElementById('add-of-modal');
+  if(existing) existing.remove();
+  const modal=document.createElement('div');
+  modal.id='add-of-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(20,40,80,0.45);z-index:10002;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`
+    <div style="background:var(--surface);border-radius:14px;width:680px;max-width:calc(100vw - 32px);padding:28px;box-shadow:0 20px 60px rgba(34,79,147,0.2);max-height:calc(100vh - 60px);overflow-y:auto;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">🔄 Revise — ${g.of}</div>
+        <button onclick="document.getElementById('add-of-modal').remove()" style="width:28px;height:28px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.15);border-radius:6px;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <div style="background:#f0f4fa;border-radius:8px;padding:14px;margin-bottom:18px;">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">Order Info</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">OF Number</label>
+            <input id="aof-of" value="${g.of}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Revision <span style="color:#6a3a00;">(auto-incremented)</span></label>
+            <input id="aof-rev" value="${newRev}" style="width:100%;padding:8px 10px;border:1px solid #c08040;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);background:#fffbf0;">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Reference</label>
+            <input id="aof-ref" value="${g.ref}" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Type</label>
+            <input id="aof-type" value="${g.type}" list="aof-type-list" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;">
+            <datalist id="aof-type-list">
+              <option value="Starter Brackets"><option value="Starter Profiles"><option value="Starter Panels">
+              <option value="Typical Brackets"><option value="Typical Panels">
+            </datalist>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Detail Rows</div>
+      <div id="aof-details-wrap"></div>
+      <button onclick="window.aofAddDetailRow()" style="margin-top:8px;padding:6px 14px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;">＋ Add Detail Row</button>
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button onclick="document.getElementById('add-of-modal').remove()" style="flex:1;padding:10px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="window.saveNewOF()" style="flex:2;padding:10px;background:#6a3a00;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Save Revised Order</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  // Pre-fill detail rows from cloned group
+  window._aofRowCount=0;
+  g.details.forEach(d=>{
+    window._aofRowCount=(window._aofRowCount||0)+1;
+    const id=window._aofRowCount;
+    const wrap=document.getElementById('aof-details-wrap');
+    if(!wrap) return;
+    const row=document.createElement('div');
+    row.id=`aof-drow-${id}`;
+    row.style.cssText='display:grid;grid-template-columns:1fr 2fr 80px 80px 28px;gap:8px;align-items:end;margin-bottom:8px;';
+    row.innerHTML=`
+      <div>
+        ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Item Ref</label>':''}
+        <input value="${d.item||''}" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;font-family:var(--mono);" data-field="item">
+      </div>
+      <div>
+        ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Location</label>':''}
+        <input value="${(d.loc||'').replace(/"/g,'&quot;')}" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;" data-field="loc">
+      </div>
+      <div>
+        ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Qty Total</label>':''}
+        <input type="number" min="0" value="${d.qty||0}" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;text-align:right;" data-field="qty">
+      </div>
+      <div>
+        ${id===1?'<label style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;display:block;margin-bottom:4px;">Qty Exec</label>':''}
+        <input type="number" min="0" value="${d.exec||0}" style="width:100%;padding:7px 8px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;box-sizing:border-box;text-align:right;" data-field="exec">
+      </div>
+      <div style="padding-bottom:1px;">
+        ${id===1?'<div style="height:18px;"></div>':''}
+        <button onclick="document.getElementById('aof-drow-${id}').remove()" style="width:28px;height:28px;background:#fee;border:1px solid #fcc;border-radius:6px;cursor:pointer;font-size:13px;color:#c02020;">✕</button>
+      </div>`;
+    wrap.appendChild(row);
+  });
 };
 
 // ── DELETE OF MODAL ────────────────────────────────────────────
