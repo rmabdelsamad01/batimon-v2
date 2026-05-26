@@ -2005,32 +2005,109 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
   const k = pid+'|'+facade;
   const cellData = (_custFacadeCache[k]||{})[key] || {};
   const st = cellData.status || 'pending';
-  const _stClsMap={installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x',pending:''};
   const stColor={installed:'#1a9458',delivered:'#a07800',fabricated:'#1a5fa8',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FF6666',defect:'#c02020',pending:'#8099b0'};
 
+  // Shared styles
+  const lbl=`display:block;font-size:9px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;`;
+  const inp=`width:100%;box-sizing:border-box;padding:6px 9px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;outline:none;`;
+  const row=`margin-bottom:11px;`;
+  const sec=`font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#224F93;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid #224F9330;`;
+
+  const v=f=>cellData[f]||'';
+  const nv=f=>cellData[f]!=null?cellData[f]:'';
+
+  // Auto-calc surface when largeur/hauteur change
+  const calcSurface=`
+    (function(){
+      const l=parseFloat(document.getElementById('cp-largeur').value)||0;
+      const h=parseFloat(document.getElementById('cp-hauteur').value)||0;
+      document.getElementById('cp-surface').value=l&&h?(l*h).toFixed(3):'';
+    })()`;
+
   body.innerHTML=`
-    <!-- Cell ID -->
-    <div style="margin-bottom:14px;">
-      <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;">Cell Reference</div>
-      <div style="font-size:14px;font-weight:700;color:var(--text);font-family:var(--mono);background:var(--surface2);border-radius:6px;padding:7px 10px;border:1px solid var(--border);">${cellRef}</div>
+    <!-- Cell Reference -->
+    <div style="${row}">
+      <span style="${lbl}">Cell Reference</span>
+      <div style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--mono);background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);">${cellRef}</div>
     </div>
     <!-- Status -->
-    <div style="margin-bottom:18px;">
-      <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;">Status</div>
-      <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:6px;padding:7px 10px;border:1px solid var(--border);">
-        <div style="width:12px;height:12px;border-radius:3px;background:${stColor[st]};flex-shrink:0;"></div>
+    <div style="${row}">
+      <span style="${lbl}">Status</span>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);">
+        <div style="width:10px;height:10px;border-radius:2px;background:${stColor[st]};flex-shrink:0;"></div>
         <span style="font-size:12px;font-weight:700;color:${stColor[st]};">${_custStLabel[st]||'Pending'}</span>
       </div>
     </div>
-    <!-- Properties placeholder — fields will be added here -->
-    <div id="cg-panel-fields">
-      <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Properties</div>
-      <div style="font-size:11px;color:var(--text3);font-style:italic;padding:10px 0;">Fields coming soon…</div>
+
+    <!-- PROPERTIES -->
+    <div style="${sec}">Properties</div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-designation">Désignation</label>
+      <input id="cp-designation" style="${inp}" value="${v('designation')}" placeholder="—">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-type-composition">Type / Composition</label>
+      <input id="cp-type-composition" style="${inp}" value="${v('type_composition')}" placeholder="—">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-ouvrants-type">Ouvrants Type</label>
+      <input id="cp-ouvrants-type" style="${inp}" value="${v('ouvrants_type')}" placeholder="—">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-ouvrants-nombre">Ouvrants Nombre</label>
+      <input id="cp-ouvrants-nombre" type="number" min="0" style="${inp}" value="${nv('ouvrants_nombre')}" placeholder="0">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-type-vitrage">Type Vitrage</label>
+      <input id="cp-type-vitrage" style="${inp}" value="${v('type_vitrage')}" placeholder="—">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-gamme">Gamme</label>
+      <input id="cp-gamme" style="${inp}" value="${v('gamme')}" placeholder="—">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-traitement-surface">Traitement Surface</label>
+      <input id="cp-traitement-surface" style="${inp}" value="${v('traitement_surface')}" placeholder="—">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-finition">Finition</label>
+      <input id="cp-finition" style="${inp}" value="${v('finition')}" placeholder="—">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-couleur">Couleur</label>
+      <input id="cp-couleur" style="${inp}" value="${v('couleur')}" placeholder="—">
+    </div>
+
+    <!-- DIMENSIONS -->
+    <div style="${sec}">Dimensions</div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-largeur">Largeur (mm)</label>
+      <input id="cp-largeur" type="number" min="0" style="${inp}" value="${nv('largeur')}" placeholder="0" oninput="${calcSurface}">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-hauteur">Hauteur (mm)</label>
+      <input id="cp-hauteur" type="number" min="0" style="${inp}" value="${nv('hauteur')}" placeholder="0" oninput="${calcSurface}">
+    </div>
+
+    <div style="${row}">
+      <label style="${lbl}" for="cp-surface">Surface (m²)</label>
+      <input id="cp-surface" type="number" style="${inp}background:var(--surface2);color:var(--text3);" value="${nv('surface')}" placeholder="auto" readonly title="Auto-calculated from Largeur × Hauteur">
     </div>`;
 
-  // Show footer save button once there are fields
+  // Show save button
   const footer = document.getElementById('cg-right-panel-footer');
-  if(footer) footer.style.display = 'none';
+  if(footer) footer.style.display = 'block';
 }
 
 async function custCellSavePanel(){
@@ -2038,8 +2115,26 @@ async function custCellSavePanel(){
   const {pid, facade, key} = _cgPanelCtx;
   const k = pid+'|'+facade;
   if(!_custFacadeCache[k]) _custFacadeCache[k]={};
-  if(!_custFacadeCache[k][key]) _custFacadeCache[k][key]={};
-  // Fields will be saved here when added
+  if(!_custFacadeCache[k][key]) _custFacadeCache[k][key]={status:'pending'};
+
+  const g=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+  const gn=id=>{ const el=document.getElementById(id); return el&&el.value!==''?parseFloat(el.value):null; };
+
+  Object.assign(_custFacadeCache[k][key], {
+    designation:        g('cp-designation'),
+    type_composition:   g('cp-type-composition'),
+    ouvrants_type:      g('cp-ouvrants-type'),
+    ouvrants_nombre:    gn('cp-ouvrants-nombre'),
+    type_vitrage:       g('cp-type-vitrage'),
+    gamme:              g('cp-gamme'),
+    traitement_surface: g('cp-traitement-surface'),
+    finition:           g('cp-finition'),
+    couleur:            g('cp-couleur'),
+    largeur:            gn('cp-largeur'),
+    hauteur:            gn('cp-hauteur'),
+    surface:            gn('cp-surface'),
+  });
+
   try{
     await sb.from('custom_project_facades').upsert({
       project_id:pid, facade, cells:_custFacadeCache[k], updated_at:new Date().toISOString()
