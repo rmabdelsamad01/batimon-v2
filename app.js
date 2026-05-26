@@ -13900,7 +13900,7 @@ async function renderOFLog(skipLoad=false){
             <option value="Typical Brackets">Typical Brackets</option>
             <option value="Typical Panels">Typical Panels</option>
           </select>
-          <button id="of-expand-btn" onclick="window.ofToggleExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
+          <button id="of-expand-btn" onclick="window.ofToggleExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand</button>
           <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
           <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','${_ofProjName}','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
           <button onclick="window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
@@ -13962,7 +13962,7 @@ window.ofToggleExpandAll=function(){
       if(icon) icon.textContent='▲';
     });
     window._ofExpanded=true;
-    if(btn) btn.innerHTML='⊟ Collapse All';
+    if(btn) btn.innerHTML='⊟ Collapse';
   } else {
     // Collapse all visible groups
     document.querySelectorAll('#of-tbody tr.of-grp').forEach(tr=>{
@@ -13973,7 +13973,7 @@ window.ofToggleExpandAll=function(){
       if(icon) icon.textContent='▼';
     });
     window._ofExpanded=false;
-    if(btn) btn.innerHTML='⊞ Expand All';
+    if(btn) btn.innerHTML='⊞ Expand';
   }
 };
 window.ofExpandAll=window.ofToggleExpandAll;
