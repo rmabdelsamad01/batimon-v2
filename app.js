@@ -1371,7 +1371,7 @@ function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
       </div>
     </div>`;
   }).join('');
-  return`<div class="fc" onclick="goPage('${navTarget}')" style="cursor:pointer;">
+  return(navTarget?`<div class="fc" onclick="goPage('${navTarget}')" style="cursor:pointer;">`:`<div class="fc" style="cursor:default;">`)+`
     <div style="display:flex;align-items:center;">
       <div class="fcdot" style="background:${color}"></div>
       <div class="fcn" style="flex:1;">${name}</div>
@@ -1385,18 +1385,16 @@ function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
     <div style="margin-top:8px;padding-top:6px;border-top:2px solid ${color}30;">${breakdown}</div>
   </div>`;
 }
+let _custOvMode='category'; // 'category' | 'building'
+function _stripTrailingNum(str){return(str||'').replace(/\s*\d+$/,'').trim();}
 // ── All Categories overview (combined view for custom projects) ───────────────
 async function renderAllCategoriesOverview(){
   const projId = window._activeProjectId;
-  if(!projId || projId === 'shift-tower') return; // guard: no custom project active
+  if(!projId || projId === 'shift-tower') return;
   const projName = window._activeProjectName || projId || 'Project';
   const cats = initProjectCategories(projId);
 
-  // If only one category exists, go straight to its overview (skip the extra click)
-  if(cats.length === 1){
-    goPage('c1-overview');
-    return;
-  }
+  if(cats.length === 1){ goPage('c1-overview'); return; }
 
   const wrap = document.getElementById('dash-sidebar-wrap');
   if(wrap) try{ wrap.innerHTML = efSidebarHTML(); }catch(e){ console.warn('efSidebarHTML error',e); }
@@ -1405,6 +1403,24 @@ async function renderAllCategoriesOverview(){
   const el = document.getElementById('dash-cards');
   if(!el) return;
   el.innerHTML = `<div style="font-size:12px;color:#8099b0;padding:8px 0;">Loading…</div>`;
+
+  // Add or update the mode toggle button next to the % button
+  const valBtn = document.getElementById('facade-val-toggle');
+  if(valBtn){
+    const existingToggle = document.getElementById('cust-ov-mode-toggle');
+    if(!existingToggle){
+      const modeBtn = document.createElement('button');
+      modeBtn.id = 'cust-ov-mode-toggle';
+      modeBtn.style.cssText = 'font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;';
+      modeBtn.onclick = ()=>{ _custOvMode=_custOvMode==='category'?'building':'category'; renderAllCategoriesOverview(); };
+      valBtn.parentElement.appendChild(modeBtn);
+    }
+    const btn = document.getElementById('cust-ov-mode-toggle');
+    if(btn) btn.textContent = _custOvMode==='category'?'🏗 Building':'📋 Category';
+    // Update section label text
+    const labelSpan = valBtn.parentElement.querySelector('span');
+    if(labelSpan) labelSpan.textContent = _custOvMode==='category'?'CATEGORIES':'BUILDINGS';
+  }
 
   const allKeys = [];
   cats.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>allKeys.push(cat.num===1?f:'c'+cat.num+'-'+f)));
@@ -1417,23 +1433,38 @@ async function renderAllCategoriesOverview(){
   allKeys.forEach(k=>{const t=_custTotalsFromCells(byKey[k]||{});Object.keys(globalTotals).forEach(s=>globalTotals[s]+=(t[s]||0));});
   el.innerHTML = _custStatCardsHTML(globalTotals);
 
-  const catColors=['#2d65bd','#1a9458','#e05c00','#7c3aed','#a07800','#c02020','#0a7a5a','#6d35d9'];
-  const catCards = cats.map((cat,i)=>{
-    const catTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
-    ['NF','SF','EF','WF'].forEach(f=>{
-      const key=cat.num===1?f:'c'+cat.num+'-'+f;
-      const t=_custTotalsFromCells(byKey[key]||{});
-      Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));
-    });
-    const color=catColors[i%catColors.length];
-    return _custFacadeCardHTML(cat.name,color,catTotals,'c'+cat.num+'-overview',cat.nick||('CAT'+cat.num));
-  }).join('');
+  const fgEl = document.getElementById('facades-grid');
+  if(!fgEl) return;
 
-  const fgEl=document.getElementById('facades-grid');
-  if(fgEl){
-    const title=document.querySelector('.dash>div:nth-child(3)');
-    if(title){title.querySelector('span')&&(title.querySelector('span').textContent='CATEGORIES');}
+  if(_custOvMode==='category'){
+    const catColors=['#2d65bd','#1a9458','#e05c00','#7c3aed','#a07800','#c02020','#0a7a5a','#6d35d9'];
+    const catCards=cats.map((cat,i)=>{
+      const catTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+      ['NF','SF','EF','WF'].forEach(f=>{
+        const key=cat.num===1?f:'c'+cat.num+'-'+f;
+        const t=_custTotalsFromCells(byKey[key]||{});
+        Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));
+      });
+      const color=catColors[i%catColors.length];
+      return _custFacadeCardHTML(cat.name,color,catTotals,'c'+cat.num+'-overview',cat.nick||('CAT'+cat.num));
+    }).join('');
     fgEl.innerHTML=catCards||'<div style="color:#8099b0;font-size:12px;">No categories yet.</div>';
+  } else {
+    // Building mode: aggregate NF / SF / EF / WF across all categories
+    const facadeColor={NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
+    const cat1=cats[0];
+    const buildingCards=['NF','SF','EF','WF'].map(f=>{
+      const bldTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+      cats.forEach(cat=>{
+        const key=cat.num===1?f:'c'+cat.num+'-'+f;
+        const t=_custTotalsFromCells(byKey[key]||{});
+        Object.keys(bldTotals).forEach(s=>bldTotals[s]+=(t[s]||0));
+      });
+      const rawName=(cat1.facadeNames&&cat1.facadeNames[f])||f;
+      const name=_stripTrailingNum(rawName);
+      return _custFacadeCardHTML(name,facadeColor[f],bldTotals,null,null);
+    }).join('');
+    fgEl.innerHTML=buildingCards;
   }
 }
 
