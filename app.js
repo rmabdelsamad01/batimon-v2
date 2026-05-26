@@ -1941,14 +1941,13 @@ async function renderCustomMonitoring(pageId){
   // Count cells by status for legend totals
   const _stTotals={};
   Object.values(cells).forEach(s=>{_stTotals[s]=(_stTotals[s]||0)+1;});
-  const legend=_custStatuses.filter(s=>s!=='pending').map(s=>{
-    const cnt=_stTotals[s]||0;
-    return`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:${cnt>0?_custStBg[s]+'22':'var(--surface2)'};border:1px solid ${cnt>0?_custStBg[s]+'55':'var(--border)'};">
-      <span style="width:12px;height:12px;border-radius:3px;background:${_custStBg[s]};display:inline-block;flex-shrink:0;"></span>
-      <span style="font-size:10px;font-weight:600;color:#1a2a3a;white-space:nowrap;">${_custStLabel[s]}</span>
-      <span style="font-size:11px;font-weight:700;color:${_custStText[s]||'#1a2a3a'};background:${_custStBg[s]};padding:1px 7px;border-radius:10px;font-family:var(--mono);min-width:24px;text-align:center;">${cnt}</span>
-    </div>`;
-  }).join('');
+  const _stClsMap={installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x'};
+  const legend=_custStatuses.filter(s=>s!=='pending').map(s=>`
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="wfc ${_stClsMap[s]||''}" style="width:18px;height:18px;border-radius:3px;min-width:18px;flex-shrink:0;"></div>
+      <span style="font-size:11px;color:var(--text2);">${_custStLabel[s]}</span>
+      <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--surface2);border-radius:4px;padding:1px 5px;">${_stTotals[s]||0}</span>
+    </div>`).join('');
 
   const _isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
   const _fbStyle='padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;';
@@ -1997,9 +1996,11 @@ async function renderCustomMonitoring(pageId){
             </table>
           </div>
         </div>
-        <div style="padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);">
-          <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-right:4px;">Legend</span>
-          ${legend}
+        <div style="padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);">
+          <div style="display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
+            ${legend}
+          </div>
         </div>
       </div>
     </div>`;
