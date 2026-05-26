@@ -2056,12 +2056,12 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
     <!-- Panel Ref + Panel Type -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;${row}">
       <div>
-        <span style="${lbl}">Panel Ref</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text);background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);min-height:32px;">${v('panelRef')||'<span style="color:var(--text3);font-weight:400;">—</span>'}</div>
+        <label style="${lbl}" for="cp-panel-ref">Panel Ref</label>
+        <input id="cp-panel-ref" style="${inp}" value="${v('panelRef')}" placeholder="—">
       </div>
       <div>
-        <span style="${lbl}">Panel Type</span>
-        <div style="font-size:12px;font-weight:700;color:var(--text);background:var(--surface2);border-radius:6px;padding:6px 9px;border:1px solid var(--border);min-height:32px;">${v('panelType')||'<span style="color:var(--text3);font-weight:400;">—</span>'}</div>
+        <label style="${lbl}" for="cp-panel-type">Panel Type</label>
+        <input id="cp-panel-type" style="${inp}" value="${v('panelType')}" placeholder="—">
       </div>
     </div>
 
@@ -2159,6 +2159,8 @@ async function custCellSavePanel(){
   const gn=id=>{ const el=document.getElementById(id); return el&&el.value!==''?parseFloat(el.value):null; };
 
   Object.assign(_custFacadeCache[k][key], {
+    panelRef:           g('cp-panel-ref'),
+    panelType:          g('cp-panel-type'),
     designation:        g('cp-designation'),
     type_composition:   g('cp-type-composition'),
     ouvrants_type:      g('cp-ouvrants-type'),
