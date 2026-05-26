@@ -13875,6 +13875,7 @@ async function renderOFLog(skipLoad=false){
 
   // Store current groups for revise modal access
   window._ofCurrentGroups=groups;
+  window._ofExpanded=false;
 
   // Grand total
   const grandQty=groups.reduce((s,g)=>s+g.sumQty,0);
@@ -13899,7 +13900,7 @@ async function renderOFLog(skipLoad=false){
             <option value="Typical Brackets">Typical Brackets</option>
             <option value="Typical Panels">Typical Panels</option>
           </select>
-          <button onclick="window.ofExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
+          <button id="of-expand-btn" onclick="window.ofToggleExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
           <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
           <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','${_ofProjName}','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
           <button onclick="window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
@@ -13948,16 +13949,34 @@ window.ofToggleGroup=function(ofNum){
   if(icon) icon.textContent=isOpen?'▼':'▲';
 };
 
-window.ofExpandAll=function(){
-  // Only expand groups that are currently visible (respects active filter)
-  document.querySelectorAll('#of-tbody tr.of-grp').forEach(tr=>{
-    if(tr.style.display==='none') return;
-    const ofNum=tr.getAttribute('data-of');
-    document.querySelectorAll(`.of-detail-${ofNum}`).forEach(r=>r.style.display='');
-    const icon=document.getElementById(`of-toggle-${ofNum}`);
-    if(icon) icon.textContent='▲';
-  });
+window._ofExpanded=false;
+window.ofToggleExpandAll=function(){
+  const btn=document.getElementById('of-expand-btn');
+  if(!window._ofExpanded){
+    // Expand all visible groups
+    document.querySelectorAll('#of-tbody tr.of-grp').forEach(tr=>{
+      if(tr.style.display==='none') return;
+      const ofNum=tr.getAttribute('data-of');
+      document.querySelectorAll(`.of-detail-${ofNum}`).forEach(r=>r.style.display='');
+      const icon=document.getElementById(`of-toggle-${ofNum}`);
+      if(icon) icon.textContent='▲';
+    });
+    window._ofExpanded=true;
+    if(btn) btn.innerHTML='⊟ Collapse All';
+  } else {
+    // Collapse all visible groups
+    document.querySelectorAll('#of-tbody tr.of-grp').forEach(tr=>{
+      if(tr.style.display==='none') return;
+      const ofNum=tr.getAttribute('data-of');
+      document.querySelectorAll(`.of-detail-${ofNum}`).forEach(r=>r.style.display='none');
+      const icon=document.getElementById(`of-toggle-${ofNum}`);
+      if(icon) icon.textContent='▼';
+    });
+    window._ofExpanded=false;
+    if(btn) btn.innerHTML='⊞ Expand All';
+  }
 };
+window.ofExpandAll=window.ofToggleExpandAll;
 
 window.ofFilter=function(){
   const q=(document.getElementById('of-search').value||'').toLowerCase();
