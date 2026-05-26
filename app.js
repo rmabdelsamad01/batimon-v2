@@ -13610,11 +13610,16 @@ async function renderOFLog(skipLoad=false){
             <input id="of-search" type="text" placeholder="Search OF#, type, item…" oninput="window.ofFilter&&window.ofFilter()" style="padding:6px 12px;border:1px solid var(--border2);border-radius:6px;font-size:11px;width:240px;outline:none;">
             <select id="of-type-filter" onchange="window.ofFilter&&window.ofFilter()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:11px;outline:none;">
               <option value="all">All Types</option>
+              <option value="Starter Brackets">Starter Brackets</option>
+              <option value="Starter Profiles">Starter Profiles</option>
+              <option value="Starter Panels">Starter Panels</option>
+              <option value="Typical Brackets">Typical Brackets</option>
+              <option value="Typical Panels">Typical Panels</option>
             </select>
-            <button style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
-            <button style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
-            <button style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
-            <button style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
+            <button onclick="window.ofExpandAll&&window.ofExpandAll()" style="padding:6px 12px;background:#f0f4f9;border:1px solid var(--border2);border-radius:6px;font-size:11px;cursor:pointer;">⊞ Expand All</button>
+            <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
+            <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','${_ofProjName}','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
+            <button onclick="window.openAddOFModal&&window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
           </div>
         </div>
         <div style="flex:1;overflow:auto;padding:16px 24px;">
