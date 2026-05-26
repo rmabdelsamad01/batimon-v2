@@ -10227,6 +10227,7 @@ let ofLogQtyOverrides={};
 let ofLogCustomGroups=[];
 let ofLogTypeOverrides={};
 let ofLogDeletedOFs=[];
+let ofLogRevisionOverrides={};
 
 function _ofPid(){return window._activeProjectId||'shift-tower';}
 function _ofLsKey(k){return `${_ofPid()}__${k}`;}
@@ -10300,6 +10301,24 @@ async function saveOFLogDeletedOFs(){
   try{
     await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-deleted-ofs');
     await sb.from('project_info').insert({project:_ofPid(),key:'of-log-deleted-ofs',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadOFLogRevisionOverrides(){
+  ofLogRevisionOverrides={};
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project',_ofPid()).eq('key','of-log-revision-overrides');
+    if(data&&data.length>0) try{ofLogRevisionOverrides=JSON.parse(data[0].value)||{};}catch(e){}
+  }catch(e){}
+  try{const v=localStorage.getItem(_ofLsKey('of-log-revision-overrides'));if(v&&Object.keys(ofLogRevisionOverrides).length===0)ofLogRevisionOverrides=JSON.parse(v)||{};}catch(e){}
+}
+
+async function saveOFLogRevisionOverrides(){
+  const json=JSON.stringify(ofLogRevisionOverrides);
+  try{localStorage.setItem(_ofLsKey('of-log-revision-overrides'),json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-revision-overrides');
+    await sb.from('project_info').insert({project:_ofPid(),key:'of-log-revision-overrides',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
@@ -13644,6 +13663,7 @@ async function renderOFLog(skipLoad=false){
     await loadOFLogCustomGroups();
     await loadOFLogTypeOverrides();
     await loadOFLogDeletedOFs();
+    await loadOFLogRevisionOverrides();
   }
   const cont=document.getElementById('page-of-log');
 
@@ -13793,7 +13813,8 @@ async function renderOFLog(skipLoad=false){
     const sumQty=details.reduce((s,d)=>s+d.qty,0);
     const sumExec=details.reduce((s,d)=>s+d.exec,0);
     const type=ofLogTypeOverrides[g.of]!==undefined?ofLogTypeOverrides[g.of]:g.type;
-    return{...g,details,sumQty,sumExec,type};
+    const revision=ofLogRevisionOverrides[g.of]!==undefined?ofLogRevisionOverrides[g.of]:(g.revision||'');
+    return{...g,details,sumQty,sumExec,type,revision};
   });
 
   // Progress bar helper
@@ -13816,6 +13837,7 @@ async function renderOFLog(skipLoad=false){
     // Summary row
     tableHTML+=`<tr class="of-grp" data-of="${g.of}">
       <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;white-space:nowrap;">${g.of}${g.isCustom?'<span style="color:#7fffb0;font-size:8px;margin-left:4px;">●</span>':''}</td>
+      <td id="of-rev-cell-${g.of}" onclick="window.ofEditRevision('${g.of}','${(g.revision||'').replace(/'/g,"\\'")}')" title="Click to edit revision" style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#243f6e'" onmouseout="this.style.background='#1a3a6b'">${g.revision||'<span style="opacity:0.3;font-size:9px;">—</span>'}&nbsp;<span style="font-size:8px;opacity:0.5;">✎</span></td>
       <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;white-space:nowrap;">${g.ref}</td>
       <td id="of-type-cell-${g.of}" onclick="window.ofEditType('${g.of}','${g.type.replace(/'/g,"\\'")}')" title="Click to edit type" style="padding:6px 10px;font-size:10px;font-weight:700;border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;cursor:pointer;" onmouseover="this.style.background='#243f6e'" onmouseout="this.style.background='#1a3a6b'">${g.type}&nbsp;<span style="font-size:8px;opacity:0.5;">✎</span></td>
       <td style="padding:6px 10px;font-size:9px;font-weight:700;letter-spacing:0.06em;border:1px solid #c8d8e8;background:#243f6e;color:#aac0e0;text-transform:uppercase;">SUMMARY</td>
@@ -13833,6 +13855,7 @@ async function renderOFLog(skipLoad=false){
       const dPct=d.qty>0?Math.min(100,Math.round(d.exec/d.qty*100)):0;
       const dCol=dPct>=100?'#1a9458':dPct>=50?'#1a5fa8':'#a07800';
       tableHTML+=`<tr class="of-detail of-detail-${g.of}" style="display:none;">
+        <td style="padding:4px 10px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;color:#8099b0;background:#f5f8fd;"></td>
         <td style="padding:4px 10px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;color:#8099b0;background:#f5f8fd;"></td>
         <td style="padding:4px 10px;font-size:10px;font-family:var(--mono);border:1px solid #dee2e6;color:#8099b0;background:#f5f8fd;"></td>
         <td style="padding:4px 10px;font-size:10px;border:1px solid #dee2e6;color:#8099b0;background:#f5f8fd;"></td>
@@ -13885,6 +13908,7 @@ async function renderOFLog(skipLoad=false){
           <thead>
             <tr style="position:sticky;top:0;z-index:10;background:#0d2244;color:#fff;">
               <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">OF Number</th>
+              <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Revision</th>
               <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Reference</th>
               <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Type</th>
               <th style="padding:7px 10px;font-size:9.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;border:1px solid #0a1a36;">Row</th>
@@ -13899,7 +13923,7 @@ async function renderOFLog(skipLoad=false){
           <tbody id="of-tbody">${tableHTML}</tbody>
           <tfoot>
             <tr style="background:#0d2244;color:#fff;font-weight:700;">
-              <td colspan="6" style="padding:7px 10px;font-size:10px;border:1px solid #0a1a36;text-align:right;letter-spacing:0.05em;">GRAND TOTAL</td>
+              <td colspan="7" style="padding:7px 10px;font-size:10px;border:1px solid #0a1a36;text-align:right;letter-spacing:0.05em;">GRAND TOTAL</td>
               <td style="padding:7px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0a1a36;">${grandQty}</td>
               <td style="padding:7px 10px;font-size:10px;text-align:right;font-family:var(--mono);border:1px solid #0a1a36;">${grandExec}</td>
               <td style="padding:7px 10px;border:1px solid #0a1a36;min-width:160px;">${pBar(grandExec,grandQty)}</td>
@@ -13993,6 +14017,33 @@ window.ofEditType=function(ofNum,currentVal){
       ofLogTypeOverrides[ofNum]=newVal;
       saveOFLogTypeOverrides();
     }
+    const pane=document.querySelector('#page-of-log .fpm');
+    const st=pane?pane.scrollTop:0;
+    await renderOFLog(true);
+    const p=document.querySelector('#page-of-log .fpm');
+    if(p)p.scrollTop=st;
+  };
+  input.addEventListener('blur',commit);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){input.removeEventListener('blur',commit);renderOFLog(true);}});
+};
+
+window.ofEditRevision=function(ofNum,currentVal){
+  const cell=document.getElementById(`of-rev-cell-${ofNum}`);
+  if(!cell) return;
+  const input=document.createElement('input');
+  input.type='text';
+  input.value=currentVal;
+  input.placeholder='e.g. Rev A';
+  input.style.cssText='width:90px;padding:2px 6px;font-size:10px;font-weight:700;font-family:var(--mono);border:2px solid #4a9fd9;border-radius:4px;outline:none;background:#1a3a6b;color:#e0ecff;';
+  cell.innerHTML='';
+  cell.appendChild(input);
+  input.focus();
+  input.select();
+  const commit=async()=>{
+    const newVal=input.value.trim();
+    const cg=ofLogCustomGroups.find(g=>g.of===ofNum);
+    if(cg){cg.revision=newVal;saveOFLogCustomGroups();}
+    else{ofLogRevisionOverrides[ofNum]=newVal;saveOFLogRevisionOverrides();}
     const pane=document.querySelector('#page-of-log .fpm');
     const st=pane?pane.scrollTop:0;
     await renderOFLog(true);
@@ -14099,6 +14150,10 @@ window.openAddOFModal=function(){
             <input id="aof-of" placeholder="OF26-110" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
           </div>
           <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Revision</label>
+            <input id="aof-rev" placeholder="Rev A" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
+          </div>
+          <div>
             <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Reference</label>
             <input id="aof-ref" placeholder="STC-XX-01" style="width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;font-family:var(--mono);">
           </div>
@@ -14166,6 +14221,7 @@ window.aofAddDetailRow=function(){
 
 window.saveNewOF=async function(){
   const ofNum=document.getElementById('aof-of').value.trim();
+  const revision=document.getElementById('aof-rev').value.trim();
   const ref=document.getElementById('aof-ref').value.trim();
   const type=document.getElementById('aof-type').value.trim();
 
@@ -14185,7 +14241,7 @@ window.saveNewOF=async function(){
 
   if(details.length===0){toast('Add at least one detail row');return;}
 
-  ofLogCustomGroups.push({of:ofNum,ref,type,details});
+  ofLogCustomGroups.push({of:ofNum,revision,ref,type,details});
   document.getElementById('add-of-modal').remove();
   window._aofRowCount=0;
   toast('Fabrication Order added ✓');
