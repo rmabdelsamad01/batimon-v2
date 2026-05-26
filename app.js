@@ -10226,6 +10226,7 @@ async function renderPOLog(){
 let ofLogQtyOverrides={};
 let ofLogCustomGroups=[];
 let ofLogTypeOverrides={};
+let ofLogDeletedOFs=[];
 
 async function loadOFLogQtyOverrides(){
   try{
@@ -10275,6 +10276,23 @@ async function saveOFLogTypeOverrides(){
   try{
     await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-type-overrides');
     await sb.from('project_info').insert({project:'shift-tower',key:'of-log-type-overrides',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadOFLogDeletedOFs(){
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project','shift-tower').eq('key','of-log-deleted-ofs');
+    if(data&&data.length>0) try{ofLogDeletedOFs=JSON.parse(data[0].value)||[];}catch(e){ofLogDeletedOFs=[];}
+  }catch(e){}
+  try{const v=localStorage.getItem('of-log-deleted-ofs');if(v&&ofLogDeletedOFs.length===0)ofLogDeletedOFs=JSON.parse(v)||[];}catch(e){}
+}
+
+async function saveOFLogDeletedOFs(){
+  const json=JSON.stringify(ofLogDeletedOFs);
+  try{localStorage.setItem('of-log-deleted-ofs',json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project','shift-tower').eq('key','of-log-deleted-ofs');
+    await sb.from('project_info').insert({project:'shift-tower',key:'of-log-deleted-ofs',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
@@ -13638,6 +13656,7 @@ async function renderOFLog(skipLoad=false){
             <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
             <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','${_ofProjName}','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
             <button onclick="window.openAddOFModal&&window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
+            <button onclick="window.openDeleteOFModal&&window.openDeleteOFModal()" style="padding:6px 12px;background:#8b1a1a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🗑 Delete OF</button>
           </div>
         </div>
         <div style="flex:1;overflow:auto;padding:16px 24px;">
@@ -13669,6 +13688,7 @@ async function renderOFLog(skipLoad=false){
     await loadOFLogQtyOverrides();
     await loadOFLogCustomGroups();
     await loadOFLogTypeOverrides();
+    await loadOFLogDeletedOFs();
   }
   const cont=document.getElementById('page-of-log');
 
@@ -13804,8 +13824,8 @@ async function renderOFLog(skipLoad=false){
      ]},
   ];
 
-  // Merge base + custom groups then apply overrides
-  const ALL_GROUPS=[...OF_GROUPS,...ofLogCustomGroups.map(g=>({...g,isCustom:true}))];
+  // Merge base + custom groups then apply overrides (filter deleted)
+  const ALL_GROUPS=[...OF_GROUPS,...ofLogCustomGroups.map(g=>({...g,isCustom:true}))].filter(g=>!ofLogDeletedOFs.includes(g.of));
 
   const groups=ALL_GROUPS.map(g=>{
     const details=g.details.map(d=>{
@@ -13900,6 +13920,7 @@ async function renderOFLog(skipLoad=false){
           <button onclick="_exportTableCSV('of-table','OF_Logs_FabricationOrders')" style="padding:6px 12px;background:#1a7a3a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ Excel</button>
           <button onclick="_exportTablePDF('of-table','OF Logs — Fabrication Orders','Shift Tower','')" style="padding:6px 12px;background:#1565c0;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">🖨 PDF</button>
           <button onclick="window.openAddOFModal()" style="padding:6px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">＋ Add OF</button>
+          <button onclick="window.openDeleteOFModal()" style="padding:6px 12px;background:#8b1a1a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🗑 Delete OF</button>
         </div>
       </div>
       <div style="flex:1;overflow:auto;padding:16px 24px;">
@@ -14023,6 +14044,74 @@ window.ofEditType=function(ofNum,currentVal){
   };
   input.addEventListener('blur',commit);
   input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){input.removeEventListener('blur',commit);renderOFLog(true);}});
+};
+
+// ── DELETE OF MODAL ────────────────────────────────────────────
+window.openDeleteOFModal=function(){
+  const existing=document.getElementById('delete-of-modal');
+  if(existing){existing.remove();return;}
+  // Build list of all current (non-deleted) OFs
+  const allOFs=[
+    {of:'OF26-100',ref:'STC-GB-01',type:'Starter Brackets'},
+    {of:'OF26-101',ref:'STC-GB-02',type:'Starter Brackets'},
+    {of:'OF26-102',ref:'STC-GB-03',type:'Starter Brackets'},
+    {of:'OF26-103',ref:'STC-SP-01',type:'Starter Profiles'},
+    {of:'OF26-104',ref:'STC-SP-02',type:'Starter Profiles'},
+    {of:'OF26-105',ref:'STC-SP-03',type:'Starter Profiles'},
+    {of:'OF26-106',ref:'STC-R300-01',type:'Starter Panels'},
+    {of:'OF26-107',ref:'STC-R200-01',type:'Starter Panels'},
+    {of:'OF26-108',ref:'STC-R000-01',type:'Starter Panels'},
+    {of:'OF25-XXX',ref:'STC-TB-01',type:'Typical Brackets'},
+    {of:'OF26-109',ref:'STC-TP-01',type:'Typical Panels'},
+    ...ofLogCustomGroups.map(g=>({of:g.of,ref:g.ref,type:g.type,isCustom:true}))
+  ].filter(g=>!ofLogDeletedOFs.includes(g.of));
+
+  const rows=allOFs.map(g=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;background:${g.isCustom?'rgba(26,148,88,0.06)':'#f5f8fd'};margin-bottom:4px;">
+      <div style="flex:1;min-width:0;">
+        <span style="font-size:10px;font-weight:700;font-family:var(--mono);color:#1a3a6b;">${g.of}</span>
+        <span style="font-size:10px;color:#8099b0;margin-left:8px;">${g.ref}</span>
+        <span style="font-size:10px;color:var(--text3);margin-left:6px;">· ${ofLogTypeOverrides[g.of]||g.type}</span>
+        ${g.isCustom?'<span style="font-size:8px;color:#1a9458;margin-left:4px;">● custom</span>':''}
+      </div>
+      <button onclick="window.ofDeleteGroup('${g.of}')" style="padding:3px 9px;background:#c0392b;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;">✕ Delete</button>
+    </div>`).join('');
+
+  const div=document.createElement('div');
+  div.id='delete-of-modal';
+  div.style.cssText='position:fixed;inset:0;z-index:10500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);';
+  div.innerHTML=`
+    <div style="background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.22);width:520px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;">
+      <div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">🗑 Delete Fabrication Order</div>
+        <button onclick="document.getElementById('delete-of-modal').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1;">✕</button>
+      </div>
+      <div style="padding:14px 16px;overflow-y:auto;flex:1;">
+        ${allOFs.length===0?'<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px;">No fabrication orders to delete.</div>':rows}
+      </div>
+    </div>`;
+  div.addEventListener('click',e=>{if(e.target===div)div.remove();});
+  document.body.appendChild(div);
+};
+
+window.ofDeleteGroup=async function(ofNum){
+  if(!confirm(`Delete fabrication order ${ofNum}? This cannot be undone.`)) return;
+  // Remove from custom groups if present
+  const custIdx=ofLogCustomGroups.findIndex(g=>g.of===ofNum);
+  if(custIdx>=0){
+    ofLogCustomGroups.splice(custIdx,1);
+    saveOFLogCustomGroups();
+  } else {
+    // Base group — add to deleted list
+    if(!ofLogDeletedOFs.includes(ofNum)) ofLogDeletedOFs.push(ofNum);
+    saveOFLogDeletedOFs();
+  }
+  // Also clean up overrides for this OF
+  delete ofLogTypeOverrides[ofNum];
+  saveOFLogTypeOverrides();
+  const modal=document.getElementById('delete-of-modal');
+  if(modal) modal.remove();
+  await renderOFLog(true);
 };
 
 // ── ADD NEW OF MODAL ───────────────────────────────────────────
