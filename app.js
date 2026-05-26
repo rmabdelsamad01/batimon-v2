@@ -1905,7 +1905,8 @@ function closeCustStatusModal(){
 }
 function _custCellInnerHTML(ref, status, panelRef){
   const display=panelRef||ref;
-  return `<div style="font-size:15px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${display}</div>`;
+  const fs=panelRef?'15px':'7px';
+  return `<div style="font-size:${fs};font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${display}</div>`;
 }
 function saveCustPanel(){
   const status=_custCurSelStatus;
@@ -2260,7 +2261,7 @@ async function renderCustomMonitoring(pageId){
           ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
           title="${cellRef} — ${_custStLabel[st]}"
           style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;">
-          <div style="font-size:15px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayRef}</div>
+          <div style="font-size:${cells[key]?.panelRef?'15px':'7px'};font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayRef}</div>
         </td>`;
       }).join('')}
     </tr>`).join('');
