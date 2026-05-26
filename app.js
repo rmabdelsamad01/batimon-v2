@@ -1496,12 +1496,81 @@ function _cgApplyZoom(){
 }
 function _cgSetFilter(status,btn){
   _cgFilterStatus=status;
-  document.querySelectorAll('.cg-fb').forEach(b=>b.classList.remove('af'));
-  if(btn) btn.classList.add('af');
+  document.querySelectorAll('.cg-fb').forEach(b=>{b.classList.remove('af');b.style.background='';b.style.color='';b.style.borderColor='';});
+  if(btn){btn.classList.add('af');btn.style.background='#224F93';btn.style.color='#fff';btn.style.borderColor='#224F93';}
   document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
     if(status==='all'||td.dataset.status===status){td.style.opacity='';td.style.outline='';}
     else{td.style.opacity='0.15';td.style.outline='';}
   });
+}
+function _cgPrint(){
+  const wrap=document.getElementById('cg-grid-wrap');
+  if(!wrap) return;
+  const origZoom=wrap.style.zoom;
+  wrap.style.zoom=1;
+  const tableW=wrap.scrollWidth;
+  const tableH=wrap.scrollHeight;
+  const allCSS=Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+  const printDate=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoEl=document.querySelector('header img[alt="BATIMON"]');
+  const logoSrc=logoEl?logoEl.src:'';
+  const projName=(window.PROJECT_META&&window._activeProjectId&&window.PROJECT_META[window._activeProjectId])?window.PROJECT_META[window._activeProjectId].name:(window._activeProjectId||'Project');
+  wrap.style.zoom=origZoom;
+  const headerH=60;
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <style>
+    @page{size:auto;margin:0;}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+    html,body{width:100%;background:#fff !important;overflow:hidden;}
+    body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+    .ph{width:100%;height:${headerH}px;background:#224F93;display:flex;align-items:center;justify-content:space-between;padding:0 25px;border-bottom:4px solid #1a3d72;flex-shrink:0;}
+    .ph-left{display:flex;align-items:center;gap:20px;}
+    .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+    .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+    .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .ph-project{font-size:12px;font-weight:700;color:#fff;}
+    .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:monospace;}
+    .table-wrap{transform-origin:top left;}
+    ${allCSS}
+    @media print{html,body{overflow:hidden !important;}.table-wrap{page-break-inside:avoid;break-inside:avoid;}}
+  </style>
+  <script>
+    window.onload=function(){
+      var pageW=window.innerWidth;
+      var pageH=window.innerHeight;
+      var availH=pageH-${headerH};
+      var scaleX=pageW/${tableW};
+      var scaleY=availH/${tableH};
+      var scale=Math.min(scaleX,scaleY);
+      var tw=document.querySelector('.table-wrap');
+      tw.style.transform='scale('+scale+')';
+      tw.style.transformOrigin='top left';
+      tw.style.width='${tableW}px';
+      document.body.style.height=(${headerH}+Math.ceil(${tableH}*scale))+'px';
+      document.body.style.overflow='hidden';
+      setTimeout(function(){window.focus();window.print();},800);
+    };
+  <\/script>
+  </head><body>
+  <div class="ph">
+    <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+    <div class="ph-center"><div class="ph-title">Monitoring Sheet</div></div>
+    <div class="ph-right">
+      <div class="ph-project">${projName}</div>
+      <div class="ph-date">${printDate}</div>
+    </div>
+  </div>
+  <div class="table-wrap">${wrap.outerHTML}</div>
+  </body></html>`;
+  const iframe=document.createElement('iframe');
+  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.onafterprint=()=>{document.body.removeChild(iframe);};
+  setTimeout(()=>{iframe.contentWindow.focus();iframe.contentWindow.print();},800);
 }
 
 // Add / Delete rows & columns
@@ -1882,7 +1951,7 @@ async function renderCustomMonitoring(pageId){
     return`<button class="cg-fb${_cgFilterStatus===f?' af':''}" onclick="_cgSetFilter('${f}',this)" style="${_fbStyle}${_cgFilterStatus===f?'background:#224F93;color:#fff;border-color:#224F93;':''}">${lbl}</button>`;
   }).join('');
   const _zoomControls=`<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="_cgZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="cg-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(_CG_ZOOM_LEVELS[_cgZoomIdx]*100)}%</span><button onclick="_cgZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="_cgZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div>`;
-  const _printBtn=`<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="window.print()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div>`;
+  const _printBtn=`<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="_cgPrint()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div>`;
 
   page.innerHTML=`
     <div class="fpw">${efSidebarHTML()}
