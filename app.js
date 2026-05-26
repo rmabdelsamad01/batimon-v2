@@ -14007,8 +14007,9 @@ window.ofEditType=function(ofNum,currentVal){
 window.openDeleteOFModal=function(){
   const existing=document.getElementById('delete-of-modal');
   if(existing){existing.remove();return;}
-  // Build list of all current (non-deleted) OFs
-  const allOFs=[
+  // Build list of all current (non-deleted) OFs for this project
+  const _isCustom=!!(window._activeProjectId&&window._activeProjectId!=='shift-tower');
+  const baseOFs=_isCustom?[]:[
     {of:'OF26-100',ref:'STC-GB-01',type:'Starter Brackets'},
     {of:'OF26-101',ref:'STC-GB-02',type:'Starter Brackets'},
     {of:'OF26-102',ref:'STC-GB-03',type:'Starter Brackets'},
@@ -14020,6 +14021,9 @@ window.openDeleteOFModal=function(){
     {of:'OF26-108',ref:'STC-R000-01',type:'Starter Panels'},
     {of:'OF25-XXX',ref:'STC-TB-01',type:'Typical Brackets'},
     {of:'OF26-109',ref:'STC-TP-01',type:'Typical Panels'},
+  ];
+  const allOFs=[
+    ...baseOFs,
     ...ofLogCustomGroups.map(g=>({of:g.of,ref:g.ref,type:g.type,isCustom:true}))
   ].filter(g=>!ofLogDeletedOFs.includes(g.of));
 
