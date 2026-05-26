@@ -13903,8 +13903,9 @@ async function renderOFLog(skipLoad=false){
       const s=sigs[field];
       return s
         ?`<div style="flex:1;border:2px solid #1a9458;border-radius:8px;padding:10px 12px;text-align:center;background:#f0fdf4;">
-            <div style="font-size:9px;font-weight:700;color:#1a9458;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${label}</div>
-            <div style="font-size:12px;font-weight:700;color:#1a3a6b;margin-bottom:2px;">✓ ${s.name}</div>
+            <div style="font-size:9px;font-weight:700;color:#1a9458;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">${label}</div>
+            ${s.data?`<img src="${s.data}" style="max-width:100%;height:50px;object-fit:contain;display:block;margin:0 auto 3px;" alt="signature">`:''}
+            <div style="font-size:11px;font-weight:700;color:#1a3a6b;margin-bottom:2px;">✓ ${s.name}</div>
             <div style="font-size:9px;color:#8099b0;">${_fmtSigDate(s.date)}</div>
           </div>`
         :`<div style="flex:1;border:1px dashed #c8d8e8;border-radius:8px;padding:10px 12px;text-align:center;background:#f8faff;">
@@ -14119,26 +14120,60 @@ window.ofSign=function(sigKey,field){
   div.id='of-sign-modal';
   div.style.cssText='position:fixed;inset:0;z-index:10600;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);';
   div.innerHTML=`
-    <div style="background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.22);width:380px;max-width:95vw;padding:28px;">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">✍ Signature</div>
+    <div style="background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.22);width:440px;max-width:95vw;padding:28px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">✍ Signature</div>
       <div style="font-size:11px;color:#1a3a6b;font-weight:600;margin-bottom:18px;">${labels[field]}</div>
-      <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:6px;">Full Name</label>
-      <input id="of-sign-name" value="${defaultName}" placeholder="Enter your full name…" style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:20px;">
+      <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Nom complet</label>
+      <input id="of-sign-name" value="${defaultName}" placeholder="Entrez votre nom…" style="width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:7px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:14px;">
+      <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:5px;">Signature <span style="font-weight:400;color:#aaa;text-transform:none;">(dessinez ci-dessous)</span></label>
+      <div style="position:relative;border:1.5px solid #c8d8e8;border-radius:8px;background:#f9fbfe;overflow:hidden;margin-bottom:6px;">
+        <canvas id="of-sign-canvas" width="380" height="120" style="display:block;width:100%;cursor:crosshair;touch-action:none;"></canvas>
+      </div>
+      <button onclick="_ofSigClear()" style="font-size:10px;font-weight:600;padding:4px 12px;border:1px solid #d0dae8;border-radius:5px;background:#fff;color:#8099b0;cursor:pointer;margin-bottom:18px;">Effacer</button>
       <div style="display:flex;gap:10px;">
-        <button onclick="document.getElementById('of-sign-modal').remove()" style="flex:1;padding:9px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
-        <button onclick="window._confirmSign('${sigKey}','${field}')" style="flex:2;padding:9px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Confirm Signature</button>
+        <button onclick="document.getElementById('of-sign-modal').remove()" style="flex:1;padding:9px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Annuler</button>
+        <button onclick="window._confirmSign('${sigKey}','${field}')" style="flex:2;padding:9px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Confirmer la signature</button>
       </div>
     </div>`;
   div.addEventListener('click',e=>{if(e.target===div)div.remove();});
   document.body.appendChild(div);
-  setTimeout(()=>document.getElementById('of-sign-name')?.focus(),50);
+  // Init drawing pad
+  setTimeout(()=>{
+    document.getElementById('of-sign-name')?.focus();
+    const canvas=document.getElementById('of-sign-canvas');
+    if(!canvas) return;
+    const ctx=canvas.getContext('2d');
+    ctx.strokeStyle='#1a3a6b';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
+    let drawing=false;
+    function getXY(e){
+      const r=canvas.getBoundingClientRect();
+      const sx=canvas.width/r.width,sy=canvas.height/r.height;
+      if(e.touches) return[(e.touches[0].clientX-r.left)*sx,(e.touches[0].clientY-r.top)*sy];
+      return[(e.clientX-r.left)*sx,(e.clientY-r.top)*sy];
+    }
+    canvas.addEventListener('pointerdown',e=>{e.preventDefault();drawing=true;const[x,y]=getXY(e);ctx.beginPath();ctx.moveTo(x,y);});
+    canvas.addEventListener('pointermove',e=>{e.preventDefault();if(!drawing)return;const[x,y]=getXY(e);ctx.lineTo(x,y);ctx.stroke();});
+    canvas.addEventListener('pointerup',e=>{e.preventDefault();drawing=false;});
+    canvas.addEventListener('pointerleave',()=>{drawing=false;});
+    canvas.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+    canvas.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+  },60);
+};
+
+window._ofSigClear=function(){
+  const c=document.getElementById('of-sign-canvas');
+  if(c) c.getContext('2d').clearRect(0,0,c.width,c.height);
 };
 
 window._confirmSign=async function(sigKey,field){
   const name=(document.getElementById('of-sign-name')?.value||'').trim();
-  if(!name){toast('Please enter your name');return;}
+  if(!name){toast('Veuillez entrer votre nom');return;}
+  const canvas=document.getElementById('of-sign-canvas');
+  const isEmpty=canvas?(()=>{const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;for(let i=3;i<d.length;i+=4){if(d[i]>10)return false;}return true;})():true;
+  if(isEmpty){toast('Veuillez dessiner votre signature');return;}
+  const sigData=canvas.toDataURL('image/png');
   if(!ofLogSignatures[sigKey]) ofLogSignatures[sigKey]={};
-  ofLogSignatures[sigKey][field]={name,date:new Date().toISOString()};
+  ofLogSignatures[sigKey][field]={name,data:sigData,date:new Date().toISOString()};
   document.getElementById('of-sign-modal')?.remove();
   const pane=document.querySelector('#page-of-log .fpm');
   const st=pane?pane.scrollTop:0;
@@ -14151,7 +14186,7 @@ window._confirmSign=async function(sigKey,field){
   saveOFLogSignatures();
   const allSigned=ofLogSignatures[sigKey]?.be&&ofLogSignatures[sigKey]?.cdp&&ofLogSignatures[sigKey]?.rp;
   if(allSigned) toast('✅ All signatures collected — OF is now locked');
-  else toast('Signature saved ✓');
+  else toast('Signature enregistrée ✓');
 };
 
 window.ofEditRevision=function(ofNum,currentVal){
