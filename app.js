@@ -13812,8 +13812,8 @@ async function renderOFLog(skipLoad=false){
     });
     const sumQty=details.reduce((s,d)=>s+d.qty,0);
     const sumExec=details.reduce((s,d)=>s+d.exec,0);
-    const type=ofLogTypeOverrides[g.of]!==undefined?ofLogTypeOverrides[g.of]:g.type;
-    const revision=ofLogRevisionOverrides[g.of]!==undefined?ofLogRevisionOverrides[g.of]:(g.revision||'');
+    const type=g.isCustom?g.type:(ofLogTypeOverrides[g.of]!==undefined?ofLogTypeOverrides[g.of]:g.type);
+    const revision=g.isCustom?(g.revision||''):(ofLogRevisionOverrides[g.of]!==undefined?ofLogRevisionOverrides[g.of]:(g.revision||''));
     return{...g,details,sumQty,sumExec,type,revision};
   });
 
@@ -14060,15 +14060,15 @@ window.ofEditRevision=function(ofNum,currentVal){
 
 // ── REVISE OF ──────────────────────────────────────────────────
 function _incrementRevision(rev){
-  if(!rev||!rev.trim()) return 'Rev .01';
-  // Match trailing .XX number, e.g. "Rev .00" → "Rev .01", "Rev .09" → "Rev .10"
+  if(!rev||!rev.trim()) return '01';
+  // Pure number e.g. "00" → "01", "09" → "10"
+  const n=rev.match(/^(\d+)$/);
+  if(n){const next=parseInt(n[1])+1;return String(next).padStart(n[1].length,'0');}
+  // Trailing .XX e.g. "Rev .00" → "Rev .01"
   const m=rev.match(/^(.*\.)(\d+)$/);
-  if(m){
-    const next=parseInt(m[2])+1;
-    return m[1]+String(next).padStart(m[2].length,'0');
-  }
-  // No dot-number pattern — append .01
-  return rev+'.01';
+  if(m){const next=parseInt(m[2])+1;return m[1]+String(next).padStart(m[2].length,'0');}
+  // Fallback — append 01
+  return rev+'01';
 }
 
 window.openReviseOFModal=function(){
