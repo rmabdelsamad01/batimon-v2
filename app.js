@@ -1904,7 +1904,7 @@ function closeCustStatusModal(){
   _custMultiSel.clear();
 }
 function _custCellInnerHTML(ref, status){
-  return `<div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ref}</div>${status!=='pending'?`<div style="font-size:8px;font-weight:700;line-height:1.2;margin-top:1px;">${_custStLabel[status]}</div>`:''}`;
+  return `<div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ref}</div>`;
 }
 function saveCustPanel(){
   const status=_custCurSelStatus;
@@ -2245,7 +2245,6 @@ async function renderCustomMonitoring(pageId){
           title="${cellRef} — ${_custStLabel[st]}"
           style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;">
           <div style="font-size:7px;font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cellRef}</div>
-          ${st!=='pending'?`<div style="font-size:8px;font-weight:700;line-height:1.2;margin-top:1px;">${_custStLabel[st]}</div>`:''}
         </td>`;
       }).join('')}
     </tr>`).join('');
