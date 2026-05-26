@@ -1980,6 +1980,75 @@ function custGridCtx(e,pid,facade,type,idx){
 }
 function _custHideCtx(){ if(_cgCtxMenu){_cgCtxMenu.remove();_cgCtxMenu=null;} document.removeEventListener('click',_custHideCtx); }
 
+// ── Cell right-click detail panel ─────────────────────────────────────────────
+let _cgPanelCtx = null; // {pid, facade, key, cellRef}
+
+function custCellOpenPanel(e, pid, facade, key, cellRef){
+  e.preventDefault();
+  _custHideCtx();
+  _cgPanelCtx = {pid, facade, key, cellRef};
+  const panel = document.getElementById('cg-right-panel');
+  if(!panel) return;
+  panel.style.transform = 'translateX(0)';
+  _cgRenderPanelBody(pid, facade, key, cellRef);
+}
+
+function custCellClosePanel(){
+  const panel = document.getElementById('cg-right-panel');
+  if(panel) panel.style.transform = 'translateX(100%)';
+  _cgPanelCtx = null;
+}
+
+function _cgRenderPanelBody(pid, facade, key, cellRef){
+  const body = document.getElementById('cg-right-panel-body');
+  if(!body) return;
+  const k = pid+'|'+facade;
+  const cellData = (_custFacadeCache[k]||{})[key] || {};
+  const st = cellData.status || 'pending';
+  const _stClsMap={installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x',pending:''};
+  const stColor={installed:'#1a9458',delivered:'#a07800',fabricated:'#1a5fa8',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FF6666',defect:'#c02020',pending:'#8099b0'};
+
+  body.innerHTML=`
+    <!-- Cell ID -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;">Cell Reference</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);font-family:var(--mono);background:var(--surface2);border-radius:6px;padding:7px 10px;border:1px solid var(--border);">${cellRef}</div>
+    </div>
+    <!-- Status -->
+    <div style="margin-bottom:18px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;">Status</div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:6px;padding:7px 10px;border:1px solid var(--border);">
+        <div style="width:12px;height:12px;border-radius:3px;background:${stColor[st]};flex-shrink:0;"></div>
+        <span style="font-size:12px;font-weight:700;color:${stColor[st]};">${_custStLabel[st]||'Pending'}</span>
+      </div>
+    </div>
+    <!-- Properties placeholder — fields will be added here -->
+    <div id="cg-panel-fields">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Properties</div>
+      <div style="font-size:11px;color:var(--text3);font-style:italic;padding:10px 0;">Fields coming soon…</div>
+    </div>`;
+
+  // Show footer save button once there are fields
+  const footer = document.getElementById('cg-right-panel-footer');
+  if(footer) footer.style.display = 'none';
+}
+
+async function custCellSavePanel(){
+  if(!_cgPanelCtx) return;
+  const {pid, facade, key} = _cgPanelCtx;
+  const k = pid+'|'+facade;
+  if(!_custFacadeCache[k]) _custFacadeCache[k]={};
+  if(!_custFacadeCache[k][key]) _custFacadeCache[k][key]={};
+  // Fields will be saved here when added
+  try{
+    await sb.from('custom_project_facades').upsert({
+      project_id:pid, facade, cells:_custFacadeCache[k], updated_at:new Date().toISOString()
+    },{onConflict:'project_id,facade'});
+    toast('Saved ✓');
+  }catch(e){ toast('Save failed'); }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function renderCustomMonitoring(pageId){
   window._currentCustomPage = pageId;
   const pid = window._activeProjectId;
@@ -2035,8 +2104,9 @@ async function renderCustomMonitoring(pageId){
         const key=`r${ri}_c${ci}`;
         const st=(cells[key]?.status)||'pending';
         const cellRef=`${catNick}-${nick}-${row.label}-${col.label}`;
-        return `<td id="cpcell-${ri}_${ci}" data-status="${st}"
+        return `<td id="cpcell-${ri}_${ci}" data-status="${st}" data-key="${key}" data-cellref="${cellRef}"
           onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})"
+          oncontextmenu="custCellOpenPanel(event,'${pid}','${facade}','${key}','${cellRef}');return false;"
           ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
           title="${cellRef} — ${_custStLabel[st]}"
           style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;">
@@ -2072,7 +2142,7 @@ async function renderCustomMonitoring(pageId){
 
   page.innerHTML=`
     <div class="fpw">${efSidebarHTML()}
-      <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;font-family:'Barlow',sans-serif;">
+      <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;font-family:'Barlow',sans-serif;position:relative;">
         <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;">
           <div ${_isDev?`onclick="showRenameFacadeModal('${facade}')" title="Click to rename" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'"`:''}
             style="font-size:15px;font-weight:700;color:var(--text);${_isDev?'cursor:pointer;':''}padding:3px 7px;border-radius:6px;transition:background 0.15s;">${label}</div>
@@ -2112,6 +2182,17 @@ async function renderCustomMonitoring(pageId){
           <div style="display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
             <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
             ${legend}
+          </div>
+        </div>
+        <!-- Right cell-detail panel -->
+        <div id="cg-right-panel" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:var(--surface);border-left:2px solid #224F93;box-shadow:-4px 0 18px rgba(34,79,147,0.13);display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.22s cubic-bezier(0.4,0,0.2,1);z-index:50;font-family:'Barlow',sans-serif;">
+          <div style="padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#224F93;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#fff;">Cell Details</div>
+            <button onclick="custCellClosePanel()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:15px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;" title="Close">×</button>
+          </div>
+          <div id="cg-right-panel-body" style="flex:1;overflow-y:auto;padding:14px;"></div>
+          <div id="cg-right-panel-footer" style="padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0;display:none;">
+            <button onclick="custCellSavePanel()" style="width:100%;padding:8px;background:#224F93;color:#fff;border:none;border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.04em;">Save</button>
           </div>
         </div>
       </div>
