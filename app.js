@@ -1299,6 +1299,92 @@ async function renderCustomDash(){
   if(fg) fg.innerHTML='';
 }
 
+// ── Helpers for custom project dashboard-style rendering ─────────────────────
+function _custTotalsFromCells(cells){
+  const t={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+  Object.entries(cells).forEach(([k,v])=>{if(k==='__meta__')return;const s=typeof v==='object'?v.status:v;if(s&&t[s]!==undefined)t[s]++;});
+  return t;
+}
+function _custStatCardsHTML(totals){
+  const ss=[
+    {key:'installed',    label:'Installed',    color:'#1a9458',cumulLabel:'T. installed'},
+    {key:'delivered',    label:'Delivered',    color:'#a07800',cumulLabel:'T. delivered'},
+    {key:'fabricated',   label:'Fabricated',   color:'#1a5fa8',cumulLabel:'T. fabricated'},
+    {key:'cutting',      label:'CL issued',    color:'#C98BCA',cumulLabel:'T. CL issued'},
+    {key:'cip',          label:'CL in Prog',   color:'#A349A4',cumulLabel:'T. CL in Prog'},
+    {key:'cl_not_issued',label:'CL not issued',color:'#FF6666',cumulLabel:'T. CL not issued'},
+    {key:'defect',       label:'Defect',       color:'#c02020',cumulLabel:''},
+  ];
+  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const activeTotal=ss.reduce((s,d)=>s+(totals[d.key]||0),0);
+  return ss.map(s=>{
+    const n=totals[s.key]||0;
+    const idx=pipeline.indexOf(s.key);
+    const cumul=idx>0?pipeline.slice(0,idx+1).reduce((sum,k)=>sum+(totals[k]||0),0):n;
+    const pct=activeTotal?(cumul/activeTotal*100):0;
+    const hasCumul=s.cumulLabel&&idx>0;
+    return`<div class="sc">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:4px;margin-bottom:4px;min-width:0;">
+        <div class="scl" style="margin-bottom:0;font-size:8px;letter-spacing:0.05em;white-space:nowrap;">${s.label}</div>
+        ${hasCumul?`<div style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</div>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div class="scn" style="color:${s.color};">${n}</div>
+        ${hasCumul?`<div style="font-size:18px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</div>`:''}
+      </div>
+      <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:${pct.toFixed(1)}%;background:${s.color}"></div></div>
+      <div style="font-size:10px;color:${s.color};font-family:var(--mono);text-align:right;margin-top:3px;">${pct.toFixed(1)}%</div>
+    </div>`;
+  }).join('')+`<div class="sc">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;"><div class="scl" style="margin-bottom:0;">Total</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;"><div class="scn" style="color:#1a2a3a;">${activeTotal}</div></div>
+    <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:100%;background:#1a2a3a"></div></div>
+    <div style="font-size:10px;color:#1a2a3a;font-family:var(--mono);text-align:right;margin-top:3px;">100%</div>
+  </div>`;
+}
+function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
+  const statDefs=[
+    {key:'installed',    label:'Installed',    color:'#1a9458',cumulLabel:'T. installed'},
+    {key:'delivered',    label:'Delivered',    color:'#a07800',cumulLabel:'T. delivered'},
+    {key:'fabricated',   label:'Fabricated',   color:'#1a5fa8',cumulLabel:'T. fabricated'},
+    {key:'cutting',      label:'CL issued',    color:'#C98BCA',cumulLabel:'T. CL issued'},
+    {key:'cip',          label:'CL in Prog',   color:'#A349A4',cumulLabel:'T. CL in Prog'},
+    {key:'cl_not_issued',label:'CL not issued',color:'#FF6666',cumulLabel:'T. CL not issued'},
+    {key:'defect',       label:'Defect',       color:'#c02020',cumulLabel:''},
+  ];
+  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const activeTotal=statDefs.reduce((s,d)=>s+(totals[d.key]||0),0);
+  const pct=activeTotal?Math.round((totals.installed||0)/activeTotal*100):0;
+  const breakdown=statDefs.map(s=>{
+    const n=totals[s.key]||0;
+    const idx=pipeline.indexOf(s.key);
+    const cumul=idx>0?pipeline.slice(0,idx+1).reduce((sum,k)=>sum+(totals[k]||0),0):n;
+    const hasCumul=s.cumulLabel&&idx>0;
+    return`<div style="padding:4px 0 2px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2px;gap:4px;">
+        <span style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};white-space:nowrap;">${s.label}</span>
+        ${hasCumul?`<span style="font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</span>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${n}</span>
+        ${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  return`<div class="fc" onclick="goPage('${navTarget}')" style="cursor:pointer;">
+    <div style="display:flex;align-items:center;">
+      <div class="fcdot" style="background:${color}"></div>
+      <div class="fcn" style="flex:1;">${name}</div>
+    </div>
+    <div class="fcs">${subtitle||activeTotal+' cells'}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+      <span style="font-size:9px;color:var(--text3);">Installation</span>
+      <span class="fcp" style="color:${color};">${pct}%</span>
+    </div>
+    <div class="fcp-bar"><div class="fcp-fill" style="width:${pct}%;background:${color}"></div></div>
+    <div style="margin-top:8px;padding-top:6px;border-top:2px solid ${color}30;">${breakdown}</div>
+  </div>`;
+}
 // ── All Categories overview (combined view for custom projects) ───────────────
 async function renderAllCategoriesOverview(){
   const projId = window._activeProjectId;
@@ -1320,47 +1406,35 @@ async function renderAllCategoriesOverview(){
   if(!el) return;
   el.innerHTML = `<div style="font-size:12px;color:#8099b0;padding:8px 0;">Loading…</div>`;
 
-  // Load all facade data for every category
   const allKeys = [];
   cats.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>allKeys.push(cat.num===1?f:'c'+cat.num+'-'+f)));
   const {data:rows} = await sb.from('custom_project_facades').select('facade,cells').eq('project_id',projId).in('facade',allKeys);
   const byKey = {};
   (rows||[]).forEach(r=>{ byKey[r.facade]=r.cells||{}; });
 
-  const facadeColor = {NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
-  const _metaFromCells=cells=>{ const m=cells['__meta__']; return m||{rows:Array.from({length:10}),cols:Array.from({length:26})}; };
-  const catCards = cats.map(cat=>{
-    const catTotals={};_custStatuses.forEach(s=>catTotals[s]=0);
-    let totalCells=0;
+  // Global totals across all cats
+  const globalTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+  allKeys.forEach(k=>{const t=_custTotalsFromCells(byKey[k]||{});Object.keys(globalTotals).forEach(s=>globalTotals[s]+=(t[s]||0));});
+  el.innerHTML = _custStatCardsHTML(globalTotals);
+
+  const catColors=['#2d65bd','#1a9458','#e05c00','#7c3aed','#a07800','#c02020','#0a7a5a','#6d35d9'];
+  const catCards = cats.map((cat,i)=>{
+    const catTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
     ['NF','SF','EF','WF'].forEach(f=>{
       const key=cat.num===1?f:'c'+cat.num+'-'+f;
-      const facCells=byKey[key]||{};
-      Object.entries(facCells).forEach(([k,c])=>{ if(k==='__meta__')return; const s=c.status||'pending';catTotals[s]=(catTotals[s]||0)+1; });
-      const fm=_metaFromCells(facCells); totalCells+=fm.rows.length*fm.cols.length;
+      const t=_custTotalsFromCells(byKey[key]||{});
+      Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));
     });
-    if(!totalCells) totalCells=4*10*26;
-    const active=_custStatuses.filter(s=>s!=='pending').reduce((a,s)=>a+catTotals[s],0);
-    const pct=Math.round(active/totalCells*100);
-    const bars=_custStatuses.filter(s=>s!=='pending'&&catTotals[s]>0).map(s=>`<div title="${_custStLabel[s]}: ${catTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.max(Math.round(catTotals[s]/totalCells*100),1)}%;border-radius:2px;min-width:4px;"></div>`).join('');
-    const facadeDots=['NF','SF','EF','WF'].map(f=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#8099b0;"><div style="width:6px;height:6px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>${cat.facadeNames[f]}</div>`).join('');
-    const catNick = cat.nick || ('CAT'+cat.num);
-    const _catIsDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
-    return `<div onclick="goPage('c${cat.num}-overview')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${cat.name}</div>
-        <div ${_catIsDev?`onclick="event.stopPropagation();editCatNick(${cat.num})" title="Click to edit nickname" onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'"`:''}
-          style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;${_catIsDev?'cursor:pointer;':''}flex-shrink:0;transition:background 0.15s;">${catNick}</div>
-        <div style="font-size:18px;font-weight:800;color:#6d35d9;">${pct}%</div>
-      </div>
-      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">${facadeDots}</div>
-      <div style="font-size:10px;color:#8099b0;">${active} / ${totalCells} cells active</div>
-    </div>`;
+    const color=catColors[i%catColors.length];
+    return _custFacadeCardHTML(cat.name,color,catTotals,'c'+cat.num+'-overview',cat.nick||('CAT'+cat.num));
   }).join('');
-  el.innerHTML = `<div style="font-family:'Barlow',sans-serif;">
-    <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:12px;">All Categories</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;">${catCards||'<div style="color:#8099b0;font-size:12px;">No categories yet.</div>'}</div>
-  </div>`;
+
+  const fgEl=document.getElementById('facades-grid');
+  if(fgEl){
+    const title=document.querySelector('.dash>div:nth-child(3)');
+    if(title){title.querySelector('span')&&(title.querySelector('span').textContent='CATEGORIES');}
+    fgEl.innerHTML=catCards||'<div style="color:#8099b0;font-size:12px;">No categories yet.</div>';
+  }
 }
 
 // ── Single category overview ──────────────────────────────────────────────────
@@ -1377,46 +1451,42 @@ async function renderCustomCatOverview(catNum){
 
   let _catSidebarHTML='';
   try{ _catSidebarHTML=efSidebarHTML(); }catch(e){ console.warn('sidebar error',e); }
-  el.innerHTML = `<div class="fpw">${_catSidebarHTML}<div class="fpm"><div style="padding:20px;overflow-y:auto;flex:1;background:#f0f4f9;">
-    ${(()=>{const _devOnly=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');return`<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-      <div id="cat-title-${catNum}" ${_devOnly?`onclick="startRenameCat(${catNum})" title="Click to rename" onmouseover="this.style.background='rgba(109,53,217,0.07)'" onmouseout="this.style.background='transparent'"`:''}
-        style="font-size:18px;font-weight:700;color:#1a2a3a;${_devOnly?'cursor:pointer;':''}padding:3px 7px;border-radius:6px;transition:background 0.15s;">${cat.name}</div>
-      <div ${_devOnly?`onclick="editCatNick(${catNum})" title="Click to edit nickname" onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'"`:''}
-        style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;${_devOnly?'cursor:pointer;':''}flex-shrink:0;transition:background 0.15s;">${cat.nick||('CAT'+catNum)}</div>
-    </div>`;})()}
-    <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">${projName}</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;" id="catov-cards-${catNum}">
-      <div style="color:#8099b0;font-size:12px;padding:8px 0;">Loading…</div>
+  const _devOnly=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  el.innerHTML = `<div class="fpw">${_catSidebarHTML}
+    <div class="dash" style="flex:1;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;">
+        <div id="cat-title-${catNum}" ${_devOnly?`onclick="startRenameCat(${catNum})" title="Click to rename" onmouseover="this.style.background='rgba(109,53,217,0.07)'" onmouseout="this.style.background='transparent'"`:''}
+          style="font-size:18px;font-weight:700;color:var(--text);${_devOnly?'cursor:pointer;':''}padding:3px 7px;border-radius:6px;transition:background 0.15s;">${cat.name}</div>
+        <div ${_devOnly?`onclick="editCatNick(${catNum})" title="Click to edit nickname" onmouseover="this.style.background='#e8d8ff'" onmouseout="this.style.background='#f3eeff'"`:''}
+          style="font-size:10px;font-weight:700;color:#6d35d9;background:#f3eeff;border:1px solid #d4b8ff;border-radius:6px;padding:2px 8px;${_devOnly?'cursor:pointer;':''}flex-shrink:0;">${cat.nick||('CAT'+catNum)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:18px;">${projName}</div>
+      <div class="cr" id="catov-statcards-${catNum}"><div style="font-size:12px;color:#8099b0;">Loading…</div></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;">
+        <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span>
+      </div>
+      <div class="fg" id="catov-cards-${catNum}"></div>
     </div>
-  </div></div></div>`;
+  </div>`;
 
   const facadeKeys=['NF','SF','EF','WF'].map(f=>catNum===1?f:'c'+catNum+'-'+f);
   const {data:rows} = await sb.from('custom_project_facades').select('facade,cells').eq('project_id',projId).in('facade',facadeKeys);
   const byKey={};
   (rows||[]).forEach(r=>{byKey[r.facade]=r.cells||{};});
 
+  // Cat-level totals (all 4 facades combined)
+  const catTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+  facadeKeys.forEach(k=>{const t=_custTotalsFromCells(byKey[k]||{});Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));});
+  const statEl=document.getElementById('catov-statcards-'+catNum);
+  if(statEl) statEl.innerHTML=_custStatCardsHTML(catTotals);
+
   const facadeColor={NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
   const cards=['NF','SF','EF','WF'].map(f=>{
     const key=catNum===1?f:'c'+catNum+'-'+f;
-    const cells=byKey[key]||{};
-    const fTotals={};_custStatuses.forEach(s=>fTotals[s]=0);
-    Object.entries(cells).forEach(([k,c])=>{if(k==='__meta__')return;const s=c.status||'pending';fTotals[s]=(fTotals[s]||0)+1;});
-    const fActive=_custStatuses.filter(s=>s!=='pending').reduce((a,s)=>a+fTotals[s],0);
-    const _fm=cells['__meta__'];const fMeta=_fm||{rows:Array.from({length:10}),cols:Array.from({length:26})};
-    const fTotal=fMeta.rows.length*fMeta.cols.length||10*26;
-    const pct=Math.round(fActive/fTotal*100);
+    const fTotals=_custTotalsFromCells(byKey[key]||{});
     const name=cat.facadeNames[f];
     const pageId=catNum===1?f:'c'+catNum+'-'+f;
-    const bars=_custStatuses.filter(s=>s!=='pending'&&fTotals[s]>0).map(s=>`<div title="${_custStLabel[s]}: ${fTotals[s]}" style="height:8px;background:${_custStBg[s]};width:${Math.max(Math.round(fTotals[s]/fTotal*100),1)}%;border-radius:2px;min-width:3px;"></div>`).join('');
-    return `<div onclick="goPage('${pageId}')" style="background:#fff;border-radius:12px;padding:16px 20px;border:1px solid rgba(34,79,147,0.1);cursor:pointer;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 16px rgba(34,79,147,0.12)'" onmouseout="this.style.boxShadow=''">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <div style="width:10px;height:10px;border-radius:50%;background:${facadeColor[f]};flex-shrink:0;"></div>
-        <div style="font-size:13px;font-weight:700;color:#1a2a3a;flex:1;">${name}</div>
-        <div style="font-size:18px;font-weight:800;color:${facadeColor[f]};">${pct}%</div>
-      </div>
-      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">${bars||'<div style="height:8px;background:#f0f4f9;border-radius:2px;width:100%;"></div>'}</div>
-      <div style="font-size:10px;color:#8099b0;">${fActive} / ${fTotal} cells active</div>
-    </div>`;
+    return _custFacadeCardHTML(name,facadeColor[f],fTotals,pageId);
   }).join('');
   const cont=document.getElementById('catov-cards-'+catNum);
   if(cont) cont.innerHTML=cards;
