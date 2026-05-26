@@ -1851,22 +1851,23 @@ function openCustStatusModal(isBulk, currentStatus, cacheEntry){
   if(!modal) return;
   _custCurSelStatus=currentStatus||'pending';
   const refWrap=document.getElementById('cust-pm-ref-wrap');
-  const typeWrap=document.getElementById('cust-pm-type-wrap');
   const infoEl=document.getElementById('cust-pm-info');
   if(isBulk){
     document.getElementById('cust-pm-ttl').textContent='Update Cell Status';
     document.getElementById('cust-pm-sub').textContent=_custMultiSel.size+' cell'+(_custMultiSel.size>1?'s':'')+' selected';
     if(infoEl) infoEl.textContent='';
     if(refWrap) refWrap.style.display='none';
-    if(typeWrap) typeWrap.style.display='none';
   } else {
     document.getElementById('cust-pm-ttl').textContent=_custCurCellRef||'Cell Status';
     document.getElementById('cust-pm-sub').textContent='';
     if(infoEl) infoEl.textContent=_custCurCellRef;
     if(refWrap) refWrap.style.display='';
-    if(typeWrap) typeWrap.style.display='';
-    document.getElementById('cust-pm-ref').value=(cacheEntry?.panelRef)||'';
-    document.getElementById('cust-pm-type').value=(cacheEntry?.panelType)||'';
+    const _rv=document.getElementById('cust-pm-ref-val');
+    const _tv=document.getElementById('cust-pm-type-val');
+    const _nv=document.getElementById('cust-pm-name-val');
+    if(_rv) _rv.textContent=(cacheEntry?.panelRef)||'—';
+    if(_tv) _tv.textContent=(cacheEntry?.panelType)||'—';
+    if(_nv) _nv.textContent=(cacheEntry?.designation)||'—';
     document.getElementById('cust-pm-fab-date').value=(cacheEntry?.fabDate)||'';
     document.getElementById('cust-pm-del-date').value=(cacheEntry?.delDate)||'';
     document.getElementById('cust-pm-inst-date').value=(cacheEntry?.instDate)||'';
@@ -1933,12 +1934,12 @@ function saveCustPanel(){
     // Single cell — save all fields
     const k=_custCurPid+'|'+_custCurFacade;
     if(!_custFacadeCache[k])_custFacadeCache[k]={};
-    const panelRef=(document.getElementById('cust-pm-ref')?.value||'').trim();
-    const panelType=(document.getElementById('cust-pm-type')?.value||'').trim();
     const fabDate=document.getElementById('cust-pm-fab-date')?.value||'';
     const delDate=document.getElementById('cust-pm-del-date')?.value||'';
     const instDate=document.getElementById('cust-pm-inst-date')?.value||'';
-    _custFacadeCache[k][_custCurCellKey]={status,panelRef,panelType,fabDate,delDate,instDate};
+    // Preserve all existing cell data (panelRef, panelType, designation, etc.) — only update status + dates
+    const existing=_custFacadeCache[k][_custCurCellKey]||{};
+    _custFacadeCache[k][_custCurCellKey]={...existing,status,fabDate,delDate,instDate};
     _custSaveFull(_custCurPid,_custCurFacade);
     const m=_custCurCellKey.match(/^r(\d+)_c(\d+)$/);
     if(m){
