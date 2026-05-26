@@ -10228,6 +10228,7 @@ let ofLogCustomGroups=[];
 let ofLogTypeOverrides={};
 let ofLogDeletedOFs=[];
 let ofLogRevisionOverrides={};
+let ofLogSignatures={};
 
 function _ofPid(){return window._activeProjectId||'shift-tower';}
 function _ofLsKey(k){return `${_ofPid()}__${k}`;}
@@ -10319,6 +10320,24 @@ async function saveOFLogRevisionOverrides(){
   try{
     await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-revision-overrides');
     await sb.from('project_info').insert({project:_ofPid(),key:'of-log-revision-overrides',value:json,updated_at:new Date().toISOString()});
+  }catch(e){}
+}
+
+async function loadOFLogSignatures(){
+  ofLogSignatures={};
+  try{
+    const{data}=await sb.from('project_info').select('*').eq('project',_ofPid()).eq('key','of-log-signatures');
+    if(data&&data.length>0) try{ofLogSignatures=JSON.parse(data[0].value)||{};}catch(e){}
+  }catch(e){}
+  try{const v=localStorage.getItem(_ofLsKey('of-log-signatures'));if(v&&Object.keys(ofLogSignatures).length===0)ofLogSignatures=JSON.parse(v)||{};}catch(e){}
+}
+
+async function saveOFLogSignatures(){
+  const json=JSON.stringify(ofLogSignatures);
+  try{localStorage.setItem(_ofLsKey('of-log-signatures'),json);}catch(e){}
+  try{
+    await sb.from('project_info').delete().eq('project',_ofPid()).eq('key','of-log-signatures');
+    await sb.from('project_info').insert({project:_ofPid(),key:'of-log-signatures',value:json,updated_at:new Date().toISOString()});
   }catch(e){}
 }
 
@@ -13664,6 +13683,7 @@ async function renderOFLog(skipLoad=false){
     await loadOFLogTypeOverrides();
     await loadOFLogDeletedOFs();
     await loadOFLogRevisionOverrides();
+    await loadOFLogSignatures();
   }
   const cont=document.getElementById('page-of-log');
 
@@ -13818,6 +13838,10 @@ async function renderOFLog(skipLoad=false){
   });
 
   // Progress bar helper
+  function _sigKey(g){return`${g.of}__${g.revision||'00'}`;}
+  function _isLocked(g){const s=ofLogSignatures[_sigKey(g)]||{};return!!(s.be&&s.cdp&&s.rp);}
+  function _fmtSigDate(iso){if(!iso)return'';const d=new Date(iso);return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'});}
+
   function pBar(exec,qty){
     const pct=qty>0?Math.min(100,Math.round(exec/qty*100)):0;
     const col=pct>=100?'#1a9458':pct>=50?'#1a5fa8':'#a07800';
@@ -13831,12 +13855,12 @@ async function renderOFLog(skipLoad=false){
 
   // Build table rows HTML
   let tableHTML='';
-  groups.forEach(g=>{
+  groups.forEach((g,gIdx)=>{
     const gPct=g.sumQty>0?Math.min(100,Math.round(g.sumExec/g.sumQty*100)):0;
     const gCol=gPct>=100?'#1a9458':gPct>=50?'#1a5fa8':'#a07800';
     // Summary row
-    tableHTML+=`<tr class="of-grp" data-of="${g.of}">
-      <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;white-space:nowrap;">${g.of}${g.isCustom?'<span style="color:#7fffb0;font-size:8px;margin-left:4px;">●</span>':''}</td>
+    tableHTML+=`<tr class="of-grp" data-of="${g.of}" data-gidx="${gIdx}">
+      <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#fff;white-space:nowrap;">${g.of}${g.isCustom?'<span style="color:#7fffb0;font-size:8px;margin-left:4px;">●</span>':''}${_isLocked(g)?'<span style="font-size:11px;margin-left:5px;" title="Locked — create a new revision to edit">🔒</span>':''}</td>
       <td id="of-rev-cell-${g.of}" onclick="window.ofEditRevision('${g.of}','${(g.revision||'').replace(/'/g,"\\'")}')" title="Click to edit revision" style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#243f6e'" onmouseout="this.style.background='#1a3a6b'">${g.revision||'<span style="opacity:0.3;font-size:9px;">—</span>'}&nbsp;<span style="font-size:8px;opacity:0.5;">✎</span></td>
       <td style="padding:6px 10px;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;white-space:nowrap;">${g.ref}</td>
       <td id="of-type-cell-${g.of}" onclick="window.ofEditType('${g.of}','${g.type.replace(/'/g,"\\'")}')" title="Click to edit type" style="padding:6px 10px;font-size:10px;font-weight:700;border:1px solid #c8d8e8;background:#1a3a6b;color:#e0ecff;cursor:pointer;" onmouseover="this.style.background='#243f6e'" onmouseout="this.style.background='#1a3a6b'">${g.type}&nbsp;<span style="font-size:8px;opacity:0.5;">✎</span></td>
@@ -13871,6 +13895,36 @@ async function renderOFLog(skipLoad=false){
         <td style="border:1px solid #dee2e6;background:#f5f8fd;"></td>
       </tr>`;
     });
+    // Signature row
+    const sk=_sigKey(g);
+    const sigs=ofLogSignatures[sk]||{};
+    const locked=_isLocked(g);
+    const sigBox=(role,label,field)=>{
+      const s=sigs[field];
+      return s
+        ?`<div style="flex:1;border:2px solid #1a9458;border-radius:8px;padding:10px 12px;text-align:center;background:#f0fdf4;">
+            <div style="font-size:9px;font-weight:700;color:#1a9458;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">${label}</div>
+            <div style="font-size:12px;font-weight:700;color:#1a3a6b;margin-bottom:2px;">✓ ${s.name}</div>
+            <div style="font-size:9px;color:#8099b0;">${_fmtSigDate(s.date)}</div>
+          </div>`
+        :`<div style="flex:1;border:1px dashed #c8d8e8;border-radius:8px;padding:10px 12px;text-align:center;background:#f8faff;">
+            <div style="font-size:9px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">${label}</div>
+            <button onclick="window.ofSign('${sk}','${field}')" style="padding:5px 14px;background:#1a3a6b;color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;">✍ Sign</button>
+          </div>`;
+    };
+    tableHTML+=`<tr class="of-detail of-detail-${g.of}" style="display:none;">
+      <td colspan="11" style="padding:10px 16px;border:1px solid #dee2e6;background:#f0f4fa;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:9px;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:0.08em;">Signatures</span>
+          ${locked?'<span style="font-size:10px;font-weight:700;color:#1a9458;">🔒 Locked — create a new revision to modify</span>':''}
+        </div>
+        <div style="display:flex;gap:10px;">
+          ${sigBox('be',"Bureau d'etude",'be')}
+          ${sigBox('cdp','Chef / Directeur Projet','cdp')}
+          ${sigBox('rp','Responsable Production','rp')}
+        </div>
+      </td>
+    </tr>`;
   });
 
   // Store current groups for revise modal access
@@ -13993,6 +14047,10 @@ window.ofFilter=function(){
 };
 
 window.ofEditExec=function(key,currentVal){
+  // Check lock: key format is "OF26-100__item", sigKey is "OF26-100__revision"
+  const ofNum=key.split('__')[0];
+  const grpRow=document.querySelector(`#of-tbody tr.of-grp[data-of="${ofNum}"]`);
+  if(grpRow){const gidx=parseInt(grpRow.getAttribute('data-gidx')||'0');const g=(window._ofCurrentGroups||[])[gidx];if(g&&(ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{}).be&&(ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{}).cdp&&(ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{}).rp){toast('🔒 OF is locked — create a new revision to edit');return;}}
   const cell=document.getElementById(`of-exec-cell-${key}`);
   if(!cell) return;
   const input=document.createElement('input');
@@ -14019,6 +14077,8 @@ window.ofEditExec=function(key,currentVal){
 };
 
 window.ofEditType=function(ofNum,currentVal){
+  const grpRow=document.querySelector(`#of-tbody tr.of-grp[data-of="${ofNum}"]`);
+  if(grpRow){const gidx=parseInt(grpRow.getAttribute('data-gidx')||'0');const g=(window._ofCurrentGroups||[])[gidx];if(g){const s=ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{};if(s.be&&s.cdp&&s.rp){toast('🔒 OF is locked — create a new revision to edit');return;}}}
   const cell=document.getElementById(`of-type-cell-${ofNum}`);
   if(!cell) return;
   const input=document.createElement('input');
@@ -14050,7 +14110,53 @@ window.ofEditType=function(ofNum,currentVal){
   input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){input.removeEventListener('blur',commit);renderOFLog(true);}});
 };
 
+window.ofSign=function(sigKey,field){
+  const labels={be:"Bureau d'etude",cdp:'Chef / Directeur Projet',rp:'Responsable Production'};
+  const existing=document.getElementById('of-sign-modal');
+  if(existing) existing.remove();
+  const defaultName=(window.sbProfile&&(window.sbProfile.full_name||window.sbProfile.email))||'';
+  const div=document.createElement('div');
+  div.id='of-sign-modal';
+  div.style.cssText='position:fixed;inset:0;z-index:10600;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);';
+  div.innerHTML=`
+    <div style="background:#fff;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.22);width:380px;max-width:95vw;padding:28px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">✍ Signature</div>
+      <div style="font-size:11px;color:#1a3a6b;font-weight:600;margin-bottom:18px;">${labels[field]}</div>
+      <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:6px;">Full Name</label>
+      <input id="of-sign-name" value="${defaultName}" placeholder="Enter your full name…" style="width:100%;padding:9px 12px;border:1px solid var(--border2);border-radius:7px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:20px;">
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('of-sign-modal').remove()" style="flex:1;padding:9px;background:#f0f4f9;border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;">Cancel</button>
+        <button onclick="window._confirmSign('${sigKey}','${field}')" style="flex:2;padding:9px;background:#1a3a6b;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;">Confirm Signature</button>
+      </div>
+    </div>`;
+  div.addEventListener('click',e=>{if(e.target===div)div.remove();});
+  document.body.appendChild(div);
+  setTimeout(()=>document.getElementById('of-sign-name')?.focus(),50);
+};
+
+window._confirmSign=async function(sigKey,field){
+  const name=(document.getElementById('of-sign-name')?.value||'').trim();
+  if(!name){toast('Please enter your name');return;}
+  if(!ofLogSignatures[sigKey]) ofLogSignatures[sigKey]={};
+  ofLogSignatures[sigKey][field]={name,date:new Date().toISOString()};
+  document.getElementById('of-sign-modal')?.remove();
+  const pane=document.querySelector('#page-of-log .fpm');
+  const st=pane?pane.scrollTop:0;
+  await renderOFLog(true);
+  const p=document.querySelector('#page-of-log .fpm');
+  if(p)p.scrollTop=st;
+  // Re-expand the group so signature row stays visible
+  const grp=document.querySelector(`#of-tbody tr.of-grp[data-of="${sigKey.split('__')[0]}"]`);
+  if(grp){const ofNum=grp.getAttribute('data-of');document.querySelectorAll(`.of-detail-${ofNum}`).forEach(r=>r.style.display='');const icon=document.getElementById(`of-toggle-${ofNum}`);if(icon)icon.textContent='▲';}
+  saveOFLogSignatures();
+  const allSigned=ofLogSignatures[sigKey]?.be&&ofLogSignatures[sigKey]?.cdp&&ofLogSignatures[sigKey]?.rp;
+  if(allSigned) toast('✅ All signatures collected — OF is now locked');
+  else toast('Signature saved ✓');
+};
+
 window.ofEditRevision=function(ofNum,currentVal){
+  const grpRow=document.querySelector(`#of-tbody tr.of-grp[data-of="${ofNum}"]`);
+  if(grpRow){const gidx=parseInt(grpRow.getAttribute('data-gidx')||'0');const g=(window._ofCurrentGroups||[])[gidx];if(g){const s=ofLogSignatures[`${g.of}__${g.revision||'00'}`]||{};if(s.be&&s.cdp&&s.rp){toast('🔒 OF is locked — create a new revision to edit');return;}}}
   const cell=document.getElementById(`of-rev-cell-${ofNum}`);
   if(!cell) return;
   const input=document.createElement('input');
