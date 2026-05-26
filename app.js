@@ -1938,11 +1938,17 @@ async function renderCustomMonitoring(pageId){
       }).join('')}
     </tr>`).join('');
 
-  const legend=_custStatuses.filter(s=>s!=='pending').map(s=>`
-    <span style="display:inline-flex;align-items:center;gap:4px;">
-      <span style="width:10px;height:10px;border-radius:2px;background:${_custStBg[s]};display:inline-block;flex-shrink:0;"></span>
-      <span style="font-size:10px;color:#1a2a3a;white-space:nowrap;">${_custStLabel[s]}</span>
-    </span>`).join('');
+  // Count cells by status for legend totals
+  const _stTotals={};
+  Object.values(cells).forEach(s=>{_stTotals[s]=(_stTotals[s]||0)+1;});
+  const legend=_custStatuses.filter(s=>s!=='pending').map(s=>{
+    const cnt=_stTotals[s]||0;
+    return`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:${cnt>0?_custStBg[s]+'22':'var(--surface2)'};border:1px solid ${cnt>0?_custStBg[s]+'55':'var(--border)'};">
+      <span style="width:12px;height:12px;border-radius:3px;background:${_custStBg[s]};display:inline-block;flex-shrink:0;"></span>
+      <span style="font-size:10px;font-weight:600;color:#1a2a3a;white-space:nowrap;">${_custStLabel[s]}</span>
+      <span style="font-size:11px;font-weight:700;color:${_custStText[s]||'#1a2a3a'};background:${_custStBg[s]};padding:1px 7px;border-radius:10px;font-family:var(--mono);min-width:24px;text-align:center;">${cnt}</span>
+    </div>`;
+  }).join('');
 
   const _isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
   const _fbStyle='padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;';
@@ -1979,7 +1985,6 @@ async function renderCustomMonitoring(pageId){
             ${_zoomControls}
             ${_printBtn}
           `}
-          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${legend}</div>
         </div>
         <div style="flex:1;overflow:auto;padding:14px 20px;">
           <div id="cg-grid-wrap" style="overflow:auto;border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);display:inline-block;">
@@ -1991,6 +1996,10 @@ async function renderCustomMonitoring(pageId){
               <tbody>${bodyRows}</tbody>
             </table>
           </div>
+        </div>
+        <div style="padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);">
+          <span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-right:4px;">Legend</span>
+          ${legend}
         </div>
       </div>
     </div>`;
