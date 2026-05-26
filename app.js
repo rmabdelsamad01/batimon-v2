@@ -1482,6 +1482,27 @@ function _custRemapCells(pid,facade,mapFn){
 }
 
 let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null;
+let _cgZoomIdx=5; const _CG_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2];
+let _cgFilterStatus='all';
+function _cgZoomIn(){_cgZoomIdx=Math.min(_CG_ZOOM_LEVELS.length-1,_cgZoomIdx+1);_cgApplyZoom();}
+function _cgZoomOut(){_cgZoomIdx=Math.max(0,_cgZoomIdx-1);_cgApplyZoom();}
+function _cgZoomReset(){_cgZoomIdx=5;_cgApplyZoom();}
+function _cgApplyZoom(){
+  const z=_CG_ZOOM_LEVELS[_cgZoomIdx];
+  const wrap=document.getElementById('cg-grid-wrap');
+  if(wrap) wrap.style.zoom=z;
+  const lbl=document.getElementById('cg-zoom-label');
+  if(lbl) lbl.textContent=Math.round(z*100)+'%';
+}
+function _cgSetFilter(status,btn){
+  _cgFilterStatus=status;
+  document.querySelectorAll('.cg-fb').forEach(b=>b.classList.remove('af'));
+  if(btn) btn.classList.add('af');
+  document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
+    if(status==='all'||td.dataset.status===status){td.style.opacity='';td.style.outline='';}
+    else{td.style.opacity='0.15';td.style.outline='';}
+  });
+}
 
 // Add / Delete rows & columns
 function custGridAddRow(pid,facade,atIdx){
@@ -1854,30 +1875,45 @@ async function renderCustomMonitoring(pageId){
       <span style="font-size:10px;color:#1a2a3a;white-space:nowrap;">${_custStLabel[s]}</span>
     </span>`).join('');
 
+  const _isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  const _fbStyle='padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;';
+  const _filterBtns=['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'].map(f=>{
+    const lbl=f==='all'?'All':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1);
+    return`<button class="cg-fb${_cgFilterStatus===f?' af':''}" onclick="_cgSetFilter('${f}',this)" style="${_fbStyle}${_cgFilterStatus===f?'background:#224F93;color:#fff;border-color:#224F93;':''}">${lbl}</button>`;
+  }).join('');
+  const _zoomControls=`<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="_cgZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="cg-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(_CG_ZOOM_LEVELS[_cgZoomIdx]*100)}%</span><button onclick="_cgZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="_cgZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div>`;
+  const _printBtn=`<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="window.print()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div>`;
+
   page.innerHTML=`
     <div class="fpw">${efSidebarHTML()}
       <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;font-family:'Barlow',sans-serif;">
         <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;">
-          <div onclick="showRenameFacadeModal('${facade}')" title="Click to rename"
-            style="font-size:15px;font-weight:700;color:var(--text);cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
-            onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">${label}</div>
-          <div id="facade-nick-display" onclick="editFacadeNick('${pid}','${facadeDir}',${catNum})"
+          <div ${_isDev?`onclick="showRenameFacadeModal('${facade}')" title="Click to rename" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'"`:''}
+            style="font-size:15px;font-weight:700;color:var(--text);${_isDev?'cursor:pointer;':''}padding:3px 7px;border-radius:6px;transition:background 0.15s;">${label}</div>
+          ${_isDev?`<div id="facade-nick-display" onclick="editFacadeNick('${pid}','${facadeDir}',${catNum})"
             title="Click to edit nickname"
             style="font-size:11px;color:var(--text3);cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
-            onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">(${nick})</div>
+            onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">(${nick})</div>`:''}
         </div>
         <div style="padding:7px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
-          <button onclick="custGridAddCol('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Column</button>
-          <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
-          <button id="cg-merge-btn" onclick="custGridStartMerge()" style="${bs}" title="Click two cells to merge them" onmouseover="this.style.background='#e0e8f5'" onmouseout="if(_gridMode!=='merge')this.style.background='#f0f4f9'">⊞ Merge</button>
-          <button id="cg-unmerge-btn" onclick="custGridStartUnmerge()" style="${bs}" title="Click a merged cell to split it" onmouseover="this.style.background='#fff0f0'" onmouseout="if(_gridMode!=='unmerge')this.style.background='#f0f4f9'">⊟ Unmerge</button>
-          <button onclick="custGridCancelMode()" style="${bs}color:#8099b0;" title="Cancel current mode (Esc)">✕</button>
-          <span id="cg-hint" style="font-size:11px;color:#224F93;font-style:italic;"></span>
+          ${_isDev?`
+            <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
+            <button onclick="custGridAddCol('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Column</button>
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
+            <button id="cg-merge-btn" onclick="custGridStartMerge()" style="${bs}" title="Click two cells to merge them" onmouseover="this.style.background='#e0e8f5'" onmouseout="if(_gridMode!=='merge')this.style.background='#f0f4f9'">⊞ Merge</button>
+            <button id="cg-unmerge-btn" onclick="custGridStartUnmerge()" style="${bs}" title="Click a merged cell to split it" onmouseover="this.style.background='#fff0f0'" onmouseout="if(_gridMode!=='unmerge')this.style.background='#f0f4f9'">⊟ Unmerge</button>
+            <button onclick="custGridCancelMode()" style="${bs}color:#8099b0;" title="Cancel current mode (Esc)">✕</button>
+            <span id="cg-hint" style="font-size:11px;color:#224F93;font-style:italic;"></span>
+          `:`
+            <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
+            ${_filterBtns}
+            ${_zoomControls}
+            ${_printBtn}
+          `}
           <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${legend}</div>
         </div>
         <div style="flex:1;overflow:auto;padding:14px 20px;">
-          <div style="overflow:auto;border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);display:inline-block;">
+          <div id="cg-grid-wrap" style="overflow:auto;border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);display:inline-block;">
             <table style="border-collapse:collapse;">
               <thead><tr>
                 <th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>
@@ -1890,6 +1926,17 @@ async function renderCustomMonitoring(pageId){
       </div>
     </div>`;
 
+  // Apply current zoom immediately
+  setTimeout(()=>{
+    const wrap=document.getElementById('cg-grid-wrap');
+    if(wrap) wrap.style.zoom=_CG_ZOOM_LEVELS[_cgZoomIdx];
+    // Re-apply active filter if any
+    if(_cgFilterStatus!=='all'){
+      document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
+        td.style.opacity=td.dataset.status===_cgFilterStatus?'':'0.15';
+      });
+    }
+  },0);
   // Escape cancels merge/unmerge mode
   document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
 }
