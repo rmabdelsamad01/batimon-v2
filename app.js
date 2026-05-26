@@ -3035,9 +3035,12 @@ async function renderProjGeneral(){
 
 function renderWelcome(){
   const cont=document.getElementById('page-welcome');
+  const _isCustom=!!(window._activeProjectId&&window._activeProjectId!=='shift-tower');
+  const bgContent=_isCustom
+    ?`<div style="display:flex;align-items:center;justify-content:center;height:100%;"><img src="Logo.png" alt="Batimon" style="max-width:40%;max-height:40%;object-fit:contain;opacity:0.5;"></div>`
+    :`<div style="position:absolute;inset:0;background:url('shift-tower-bg.jpg') center/50% auto no-repeat;opacity:0.5;"></div>`;
   cont.innerHTML=`<div class="fpw">${efSidebarHTML()}<div style="flex:1;position:relative;overflow:hidden;">
-    <!-- Background image at 50% opacity -->
-    <div style="position:absolute;inset:0;background:url('shift-tower-bg.jpg') center/50% auto no-repeat;opacity:0.5;"></div>
+    ${bgContent}
   </div></div>`;
 }
 
