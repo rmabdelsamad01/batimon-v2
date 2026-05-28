@@ -1182,7 +1182,7 @@ function _renderPage(id){
   else if(id==='agenda')renderAgendaPage();
   else if(id==='beta')renderBetaPage();
   else if(id==='batidoc')openBatidocPage();
-  else if(/^c\d+-(NF|SF|EF|WF)$/.test(id)&&window._activeProjectId&&window._activeProjectId!=='shift-tower'){
+  else if(/^c\d+-[A-Z]+$/.test(id)&&window._activeProjectId&&window._activeProjectId!=='shift-tower'){
     renderCustomMonitoring(id);
   }
   else if(/^c\d+-overview$/.test(id)&&window._activeProjectId&&window._activeProjectId!=='shift-tower'){
@@ -1208,6 +1208,50 @@ const _custStatuses = ['pending','installed','delivered','fabricated','cutting',
 
 // In-memory cache: { 'projId|facade': { '1-A': {status,notes}, ... } }
 const _custFacadeCache = {};
+
+// Extra facades (X→Y→Z→AA→AB…) per project, stored in project_info key 'extra_facades'
+const _custExtraFacadesCache = {};
+const _custExtraFacadeColors = ['#a07800','#c02020','#0a7a5a','#0097a7','#e65100','#2d6a8f','#10b981','#b45309','#0369a1','#7c3aed'];
+function _nextExtraFacadeId(existing){
+  for(const l of ['X','Y','Z']){if(!existing.includes(l))return l;}
+  for(let a=0;a<26;a++)for(let b=0;b<26;b++){const id=String.fromCharCode(65+a)+String.fromCharCode(65+b);if(!existing.includes(id))return id;}
+  return null;
+}
+async function _loadExtraFacades(pid){
+  if(_custExtraFacadesCache[pid]!==undefined)return _custExtraFacadesCache[pid];
+  try{const{data}=await sb.from('project_info').select('value').eq('project',pid).eq('key','extra_facades').single();_custExtraFacadesCache[pid]=data?JSON.parse(data.value):[];}catch(e){_custExtraFacadesCache[pid]=[];}
+  return _custExtraFacadesCache[pid];
+}
+async function _saveExtraFacades(pid){
+  try{await sb.from('project_info').upsert({project:pid,key:'extra_facades',value:JSON.stringify(_custExtraFacadesCache[pid]||[]),updated_at:new Date().toISOString()},{onConflict:'project,key'});}catch(e){}
+}
+async function custAddExtraFacade(pid){
+  const arr=await _loadExtraFacades(pid);
+  const next=_nextExtraFacadeId(arr);
+  if(!next){alert('Maximum facades reached.');return;}
+  arr.push(next);
+  await _saveExtraFacades(pid);
+  const cur=(window.location.hash||'#dashboard').slice(1)||'dashboard';
+  _renderPage(cur);
+}
+async function custDeleteExtraFacade(pid,facadeId,ev){
+  if(ev){ev.stopPropagation();}
+  if(!confirm('Delete Facade '+facadeId+'? All cell data will be permanently lost.'))return;
+  const arr=_custExtraFacadesCache[pid]||[];
+  const idx=arr.indexOf(facadeId);
+  if(idx===-1)return;
+  arr.splice(idx,1);
+  await _saveExtraFacades(pid);
+  const cats=getProjectCategories(pid);
+  for(const cat of cats){
+    const facKey=cat.num===1?facadeId:'c'+cat.num+'-'+facadeId;
+    try{await sb.from('custom_project_facades').delete().eq('project_id',pid).eq('facade',facKey);}catch(e){}
+    delete _custFacadeCache[pid+'|'+facKey];
+  }
+  const cur=(window.location.hash||'#dashboard').slice(1)||'dashboard';
+  if(cur.endsWith('-'+facadeId)||cur===facadeId)goPage('dashboard');
+  else _renderPage(cur);
+}
 
 async function renderCustomDash(){
   const projectId = window._activeProjectId;
@@ -1431,8 +1475,12 @@ async function renderAllCategoriesOverview(){
     if(labelSpan) labelSpan.textContent = _custOvMode==='category'?'CATEGORIES':'BUILDINGS';
   }
 
+  const _extraFacades=await _loadExtraFacades(projId);
   const allKeys = [];
-  cats.forEach(cat=>['NF','SF','EF','WF'].forEach(f=>allKeys.push(cat.num===1?f:'c'+cat.num+'-'+f)));
+  cats.forEach(cat=>{
+    ['NF','SF','EF','WF'].forEach(f=>allKeys.push(cat.num===1?f:'c'+cat.num+'-'+f));
+    _extraFacades.forEach(xf=>allKeys.push(cat.num===1?xf:'c'+cat.num+'-'+xf));
+  });
   const {data:rows} = await sb.from('custom_project_facades').select('facade,cells').eq('project_id',projId).in('facade',allKeys);
   const byKey = {};
   (rows||[]).forEach(r=>{ byKey[r.facade]=r.cells||{}; });
@@ -1454,12 +1502,17 @@ async function renderAllCategoriesOverview(){
         const t=_custTotalsFromCells(byKey[key]||{});
         Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));
       });
+      _extraFacades.forEach(xf=>{
+        const key=cat.num===1?xf:'c'+cat.num+'-'+xf;
+        const t=_custTotalsFromCells(byKey[key]||{});
+        Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));
+      });
       const color=catColors[i%catColors.length];
       return _custFacadeCardHTML(cat.name,color,catTotals,'c'+cat.num+'-overview',cat.nick||('CAT'+cat.num));
     }).join('');
     fgEl.innerHTML=catCards||'<div style="color:#8099b0;font-size:12px;">No categories yet.</div>';
   } else {
-    // Building mode: aggregate NF / SF / EF / WF across all categories
+    // Building mode: aggregate NF / SF / EF / WF (+ extras) across all categories
     const facadeColor={NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
     const cat1=cats[0];
     const buildingCards=['NF','SF','EF','WF'].map(f=>{
@@ -1473,7 +1526,16 @@ async function renderAllCategoriesOverview(){
       const name=_stripTrailingNum(rawName);
       return _custFacadeCardHTML(name,facadeColor[f],bldTotals,null,null);
     }).join('');
-    fgEl.innerHTML=buildingCards;
+    const extraBuildingCards=_extraFacades.map((xf,i)=>{
+      const bldTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+      cats.forEach(cat=>{
+        const key=cat.num===1?xf:'c'+cat.num+'-'+xf;
+        const t=_custTotalsFromCells(byKey[key]||{});
+        Object.keys(bldTotals).forEach(s=>bldTotals[s]+=(t[s]||0));
+      });
+      return _custFacadeCardHTML('Facade '+xf,_custExtraFacadeColors[i%_custExtraFacadeColors.length],bldTotals,null,null);
+    }).join('');
+    fgEl.innerHTML=buildingCards+extraBuildingCards;
   }
 }
 
@@ -1488,6 +1550,7 @@ async function renderCustomCatOverview(catNum){
   const cat = cats.find(c=>c.num===catNum) || {num:catNum,name:'Category '+catNum,facadeNames:{NF:'North Facade '+catNum,SF:'South Facade '+catNum,EF:'East Facade '+catNum,WF:'West Facade '+catNum}};
   const el = document.getElementById('page-c'+catNum+'-overview');
   if(!el) return;
+  const _extraFacadesCatOv=await _loadExtraFacades(projId);
 
   let _catSidebarHTML='';
   try{ _catSidebarHTML=efSidebarHTML(); }catch(e){ console.warn('sidebar error',e); }
@@ -1509,27 +1572,34 @@ async function renderCustomCatOverview(catNum){
     </div>
   </div>`;
 
-  const facadeKeys=['NF','SF','EF','WF'].map(f=>catNum===1?f:'c'+catNum+'-'+f);
+  const _stdFacadeKeys=['NF','SF','EF','WF'].map(f=>catNum===1?f:'c'+catNum+'-'+f);
+  const _extraFacadeKeys=_extraFacadesCatOv.map(xf=>catNum===1?xf:'c'+catNum+'-'+xf);
+  const facadeKeys=[..._stdFacadeKeys,..._extraFacadeKeys];
   const {data:rows} = await sb.from('custom_project_facades').select('facade,cells').eq('project_id',projId).in('facade',facadeKeys);
   const byKey={};
   (rows||[]).forEach(r=>{byKey[r.facade]=r.cells||{};});
 
-  // Cat-level totals (all 4 facades combined)
+  // Cat-level totals (all facades combined)
   const catTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
   facadeKeys.forEach(k=>{const t=_custTotalsFromCells(byKey[k]||{});Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));});
   const statEl=document.getElementById('catov-statcards-'+catNum);
   if(statEl) statEl.innerHTML=_custStatCardsHTML(catTotals);
 
   const facadeColor={NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
-  const cards=['NF','SF','EF','WF'].map(f=>{
+  const stdCards=['NF','SF','EF','WF'].map(f=>{
     const key=catNum===1?f:'c'+catNum+'-'+f;
     const fTotals=_custTotalsFromCells(byKey[key]||{});
     const name=cat.facadeNames[f];
-    const pageId=catNum===1?f:'c'+catNum+'-'+f;
+    const pageId='c'+catNum+'-'+f;
     return _custFacadeCardHTML(name,facadeColor[f],fTotals,pageId);
-  }).join('');
+  });
+  const extraCards=_extraFacadesCatOv.map((xf,i)=>{
+    const key=catNum===1?xf:'c'+catNum+'-'+xf;
+    const fTotals=_custTotalsFromCells(byKey[key]||{});
+    return _custFacadeCardHTML('Facade '+xf,_custExtraFacadeColors[i%_custExtraFacadeColors.length],fTotals,'c'+catNum+'-'+xf);
+  });
   const cont=document.getElementById('catov-cards-'+catNum);
-  if(cont) cont.innerHTML=cards;
+  if(cont) cont.innerHTML=[...stdCards,...extraCards].join('');
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1837,7 +1907,7 @@ function custGridCellClick(e,pid,facade,r,c){
   const _rLbl=_cm.rows[r]?.label||String(r+1);
   const _cLbl=_cm.cols[c]?.label||String(c+1);
   const _cats2=getProjectCategories(pid);
-  const _cpFM=(window._currentCustomPage||'').match(/^c(\d+)-(NF|SF|EF|WF)$/);
+  const _cpFM=(window._currentCustomPage||'').match(/^c(\d+)-([A-Z]+)$/);
   let _cCatNick,_cFacNick;
   if(_cpFM){const _cNum=parseInt(_cpFM[1]);const _cDir=_cpFM[2];const _cCat=_cats2.find(x=>x.num===_cNum);_cCatNick=(_cCat?.nick)||('CAT'+_cNum);_cFacNick=(_cCat?.facadeNicks?.[_cDir])||(_cDir+_cNum);}
   else{_cCatNick='CAT1';_cFacNick=facade;}
@@ -2202,9 +2272,10 @@ async function custCellSavePanel(){
 async function renderCustomMonitoring(pageId){
   window._currentCustomPage = pageId;
   const pid = window._activeProjectId;
+  await _loadExtraFacades(pid);
   // Resolve facade Supabase key and display label
   let facade,facadeDir,catNum;
-  const _catFM=pageId.match(/^c(\d+)-(NF|SF|EF|WF)$/);
+  const _catFM=pageId.match(/^c(\d+)-([A-Z]+)$/);
   if(_catFM){
     catNum=parseInt(_catFM[1]); facadeDir=_catFM[2];
     facade=catNum===1?facadeDir:pageId; // Cat1→'NF', Cat2→'c2-NF'
@@ -2216,7 +2287,9 @@ async function renderCustomMonitoring(pageId){
   updateNavFacadeLabels();
   const _cats=getProjectCategories(pid);
   const _cat=_cats.find(c=>c.num===catNum);
-  const label=_cat?(_cat.facadeNames[facadeDir]||facadeDir):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
+  const _stdFacades=['NF','SF','EF','WF'];
+  const _isExtraFacade=!_stdFacades.includes(facadeDir);
+  const label=_cat?(_cat.facadeNames[facadeDir]||(_isExtraFacade?'Facade '+facadeDir:facadeDir)):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
   const nick=(_cat?.facadeNicks?.[facadeDir])||(facadeDir+catNum);
   const catNick=(_cat?.nick)||('CAT'+catNum);
 
@@ -4347,12 +4420,18 @@ function efSidebarHTML(){
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-SF')">${_cat.facadeNames.SF}</div>
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-EF')">${_cat.facadeNames.EF}</div>
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-WF')">${_cat.facadeNames.WF}</div>
+            ${(_custExtraFacadesCache[_pid]||[]).map(xf=>`
+            <div style="display:flex;align-items:center;padding:4px 8px;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'">
+              <span style="flex:1;font-size:10px;color:var(--text3);cursor:pointer;" onclick="goPage('c${_cat.num}-${xf}')">Facade ${xf}</span>
+              ${(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer')?`<button onclick="custDeleteExtraFacade('${_pid}','${xf}',event)" title="Delete Facade ${xf}" style="background:none;border:none;color:#c02020;font-size:12px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;">×</button>`:''}
+            </div>`).join('')}
           </div>
         </div>`;
       }).join('')}
-      ${(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer')?`<div style="margin-top:7px;padding:0 2px;display:flex;gap:5px;">
-        <button onclick="addNewCategory()" style="flex:1;padding:7px 6px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:10px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Add</button>
-        <button onclick="deleteCategory()" style="flex:1;padding:7px 6px;border-radius:6px;border:1.5px dashed #c0202060;background:transparent;color:#c02020;font-size:10px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">🗑 Delete</button>
+      ${(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer')?`<div style="margin-top:7px;padding:0 2px;display:flex;gap:5px;flex-wrap:wrap;">
+        <button onclick="addNewCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Category</button>
+        <button onclick="custAddExtraFacade('${_pid}')" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #a0780060;background:transparent;color:#a07800;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Facade</button>
+        <button onclick="deleteCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #c0202060;background:transparent;color:#c02020;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">🗑 Cat</button>
       </div>`:''}` ;
   }
 
