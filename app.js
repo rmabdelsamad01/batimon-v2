@@ -1175,7 +1175,7 @@ function _renderPage(id){
   else if(id==='cash-flow')renderCashFlow();
   else if(id==='suggestions')renderSuggestions();
   else if(id==='labor-curve')renderLaborCurve();
-  else if(id==='planning')renderPlanning();
+  else if(id==='planning'){const _isCustProj=window._activeProjectId&&window._activeProjectId!=='shift-tower';if(_isCustProj)renderCustomPlanning();else renderPlanning();}
   else if(id==='3d')render3DPage();
   else if(id==='aaa')renderAAAPage();
   else if(id==='builder')renderBuilderPage();
@@ -11348,6 +11348,332 @@ ${legend}
     </div>
   </div>`;
 }
+
+// ══════════════════════════════════════════════════════════
+//  CUSTOM PROJECT PLANNING (PCO & other custom projects)
+// ══════════════════════════════════════════════════════════
+
+let _custPlanRows = [];
+let _custPlanPid  = null;
+
+const _PLAN_SECTIONS = [
+  {num:1, label:'ENGINEERING'},
+  {num:2, label:'PROCUREMENT'},
+  {num:3, label:'FABRICATION'},
+  {num:4, label:'INSTALLATION'},
+];
+
+async function _loadCustPlanData(pid){
+  _custPlanPid = pid;
+  try{
+    const {data} = await sb.from('project_info').select('value').eq('project',pid).eq('key','planning_rows').single();
+    _custPlanRows = data?.value ? JSON.parse(data.value) : [];
+  }catch(e){ _custPlanRows = []; }
+}
+
+async function _saveCustPlanData(){
+  if(!_custPlanPid) return;
+  try{
+    await sb.from('project_info').upsert(
+      {project:_custPlanPid, key:'planning_rows', value:JSON.stringify(_custPlanRows), updated_at:new Date().toISOString()},
+      {onConflict:'project,key'}
+    );
+  }catch(e){ toast('Save failed'); }
+}
+
+async function renderCustomPlanning(){
+  const pid = window._activeProjectId;
+  const projName = window._activeProjectName || pid || 'Project';
+  const cont = document.getElementById('page-planning');
+  if(!cont) return;
+  cont.innerHTML = `<div class="fpw">${efSidebarHTML()}<div class="fpm" style="flex:1;display:flex;align-items:center;justify-content:center;color:#8099b0;font-size:12px;">Loading…</div></div>`;
+  await _loadCustPlanData(pid);
+  _renderCustPlanHTML(pid, projName, cont);
+}
+
+function _renderCustPlanHTML(pid, projName, cont){
+  const _isDev = sbProfile?.role === 'developer';
+  const MS_DAY = 86400000;
+  const COL_W  = 38;
+  const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const dash = '<span style="color:var(--text3);font-style:italic;">—</span>';
+
+  function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+  function fmt(d){ if(!d) return null; const dt=typeof d==='string'?new Date(d):d; return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2)+'/'+String(dt.getFullYear()).slice(-2); }
+  function weekLabel(d){ const e=addDays(d,6); return d.getDate()+'-'+e.getDate(); }
+
+  // Timeline bounds: derived from all row dates
+  let tlMin=null, tlMax=null;
+  _custPlanRows.forEach(r=>{
+    [r.date_debut,r.date_fin,r.debut_propose,r.fin_propose,r.debut_actuel,r.fin_actuel].forEach(d=>{
+      if(!d) return;
+      const dt=new Date(d);
+      if(!tlMin||dt<tlMin) tlMin=dt;
+      if(!tlMax||dt>tlMax) tlMax=dt;
+    });
+  });
+  const today = new Date();
+  if(!tlMin) tlMin = addDays(today,-90);
+  if(!tlMax) tlMax = addDays(today,180);
+  const tlStart = addDays(tlMin,-14);
+  const tlEnd   = addDays(tlMax, 28);
+
+  // Weekly columns
+  const weeks=[];
+  let c=new Date(tlStart);
+  while(c<=tlEnd){ weeks.push(new Date(c)); c=addDays(c,7); }
+  const totalCols=weeks.length;
+  const ganttTotalW=totalCols*COL_W;
+
+  // Month groups
+  const monthGroups=[];
+  weeks.forEach(d=>{
+    const mk=d.getFullYear()*100+d.getMonth();
+    const last=monthGroups[monthGroups.length-1];
+    if(!last||last.mk!==mk) monthGroups.push({mk,label:MONTHS_FR[d.getMonth()]+' '+d.getFullYear(),count:1});
+    else last.count++;
+  });
+
+  const todayLeft=((today-tlStart)/MS_DAY/7*COL_W).toFixed(1);
+
+  function barGeom(s,e){
+    if(!s||!e) return null;
+    const sd=new Date(s),ed=new Date(e);
+    return {left:((sd-tlStart)/MS_DAY/7*COL_W).toFixed(1)+'px', width:Math.max(4,((ed-sd)/MS_DAY/7*COL_W)).toFixed(1)+'px'};
+  }
+
+  // Legend (identical to Shift Tower)
+  const legendHTML=`<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+    <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);"><span style="width:22px;height:16px;border-radius:3px;background:#1565c0;opacity:0.28;display:inline-block;flex-shrink:0;"></span>Théorique</span>
+    <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);"><span style="width:22px;height:10px;border-radius:2px;background:#1565c0;opacity:0.85;display:inline-block;flex-shrink:0;"></span>Proposé</span>
+    <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);"><span style="width:22px;height:8px;border-radius:2px;background:#00FF32;opacity:0.95;display:inline-block;flex-shrink:0;"></span>Actuel</span>
+    <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);"><span style="width:2px;height:16px;background:#e74c3c;display:inline-block;flex-shrink:0;"></span>Aujourd'hui</span>
+  </div>`;
+
+  const CELL_TH='padding:10px 5px;font-size:10px;font-weight:700;color:var(--text2);text-align:left;border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:var(--surface2);white-space:nowrap;';
+  const monthsHTML=monthGroups.map(m=>`<th colspan="${m.count}" style="min-width:${m.count*COL_W}px;padding:4px 0;text-align:center;font-size:10px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);background:var(--surface2);">${m.label}</th>`).join('');
+  const weeksHTML=weeks.map(d=>`<th style="min-width:${COL_W}px;width:${COL_W}px;padding:3px 1px;text-align:center;font-size:8px;color:var(--text3);border-right:1px solid var(--border);white-space:nowrap;background:var(--surface2);">${weekLabel(d)}</th>`).join('');
+
+  // Build table rows
+  let rowsHTML='';
+  _PLAN_SECTIONS.forEach(sec=>{
+    // Section header
+    rowsHTML+=`<tr>
+      <td colspan="10" style="padding:5px 10px;background:#1565c0;color:#fff;font-size:11px;font-weight:700;letter-spacing:0.5px;">${sec.num} — ${sec.label}</td>
+      <td style="padding:0;background:#1565c0;" colspan="${totalCols}">
+        <div style="position:relative;width:${ganttTotalW}px;height:26px;">
+          <div style="position:absolute;top:0;bottom:0;left:${todayLeft}px;width:2px;background:rgba(255,255,255,0.4);"></div>
+        </div>
+      </td>
+    </tr>`;
+
+    // Data rows
+    const secRows=_custPlanRows.filter(r=>r.section===sec.num).sort((a,b)=>a.order_idx-b.order_idx);
+    secRows.forEach((r,ri)=>{
+      const bg=ri%2===0?'var(--surface)':'var(--surface2)';
+      const jrs=r.date_debut&&r.date_fin?Math.round((new Date(r.date_fin)-new Date(r.date_debut))/MS_DAY):'—';
+      let retardStr;
+      if(r.debut_propose&&r.date_debut){
+        const diff=Math.round((new Date(r.debut_propose)-new Date(r.date_debut))/MS_DAY);
+        retardStr=diff===0?`<span style="color:var(--text3);">0j</span>`:diff<0?`<span style="color:#1a9458;font-weight:600;">${diff}j</span>`:`<span style="color:#c0392b;font-weight:600;">+${diff}j</span>`;
+      } else { retardStr=dash; }
+      const gTheo=barGeom(r.date_debut,r.date_fin);
+      const gProp=barGeom(r.debut_propose,r.fin_propose);
+      const gAct =barGeom(r.debut_actuel,r.fin_actuel);
+      const safeId=r.id.replace(/\./g,'_');
+      const devAttr=(field)=>_isDev?` ondblclick="custPlanDevEdit('${pid}','${r.id}','${field}',this)" title="Double-click to edit" style="cursor:text;"`:' style=""';
+
+      rowsHTML+=`<tr style="background:${bg};">
+        <td style="padding:2px 6px;font-size:10px;font-weight:700;color:#1565c0;white-space:nowrap;border-right:1px solid var(--border);min-width:36px;">
+          ${r.id}${_isDev?`<button onclick="custPlanDeleteRow('${pid}','${r.id}')" style="margin-left:3px;background:none;border:none;color:#c02020;cursor:pointer;font-size:9px;opacity:0.4;padding:0;" title="Delete">✕</button>`:''}
+        </td>
+        <td style="padding:2px 6px;font-size:10px;color:var(--text);min-width:200px;max-width:260px;border-right:1px solid var(--border);"${devAttr('description')}>${r.description||''}</td>
+        <td style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;background:#bbdefb28;text-align:center;"${devAttr('date_debut')}>${r.date_debut?fmt(new Date(r.date_debut)):dash}</td>
+        <td style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;background:#bbdefb28;text-align:center;"${devAttr('date_fin')}>${r.date_fin?fmt(new Date(r.date_fin)):dash}</td>
+        <td style="padding:2px 4px;font-size:10px;color:var(--text2);text-align:right;border-right:1px solid var(--border);min-width:28px;">${jrs}</td>
+        <td style="padding:2px 4px;font-size:10px;text-align:right;border-right:1px solid var(--border);min-width:36px;">${retardStr}</td>
+        <td onclick="custPlanEditDate('${pid}','${r.id}','debut_propose',this)" style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:66px;cursor:pointer;background:#1565c014;text-align:center;" title="Click to edit">${r.debut_propose?fmt(new Date(r.debut_propose)):dash}</td>
+        <td onclick="custPlanEditDate('${pid}','${r.id}','fin_propose',this)" style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;cursor:pointer;background:#1565c014;text-align:center;" title="Click to edit">${r.fin_propose?fmt(new Date(r.fin_propose)):dash}</td>
+        <td onclick="custPlanEditDate('${pid}','${r.id}','debut_actuel',this)" style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:66px;cursor:pointer;background:#1b5e2014;text-align:center;" title="Click to edit">${r.debut_actuel?fmt(new Date(r.debut_actuel)):dash}</td>
+        <td onclick="custPlanEditDate('${pid}','${r.id}','fin_actuel',this)" style="padding:2px 4px;font-size:10px;color:var(--text2);white-space:nowrap;border-right:1px solid var(--border);min-width:60px;cursor:pointer;background:#1b5e2014;text-align:center;" title="Click to edit">${r.fin_actuel?fmt(new Date(r.fin_actuel)):dash}</td>
+        <td style="padding:0;position:relative;border-right:1px solid var(--border);" colspan="${totalCols}">
+          <div id="cplan-bar-${safeId}" style="position:relative;width:${ganttTotalW}px;height:28px;overflow:hidden;">
+            ${gTheo?`<div class="plan-bar-theo" style="position:absolute;top:6px;height:16px;border-radius:3px;background:#1565c0;opacity:0.28;left:${gTheo.left};width:${gTheo.width};z-index:1;" title="Théorique: ${fmt(new Date(r.date_debut))} → ${fmt(new Date(r.date_fin))} | ${jrs}j"></div>`:''}
+            ${gProp?`<div class="plan-bar-prop" style="position:absolute;top:9px;height:10px;border-radius:2px;background:#1565c0;opacity:0.85;left:${gProp.left};width:${gProp.width};z-index:2;" title="Proposé: ${fmt(new Date(r.debut_propose))} → ${fmt(new Date(r.fin_propose))}"></div>`:''}
+            ${gAct?`<div class="plan-bar-act" style="position:absolute;top:4px;height:8px;border-radius:2px;background:#00FF32;opacity:0.95;left:${gAct.left};width:${gAct.width};z-index:3;" title="Actuel: ${fmt(new Date(r.debut_actuel))} → ${fmt(new Date(r.fin_actuel))}"></div>`:''}
+            <div style="position:absolute;top:0;bottom:0;left:${todayLeft}px;width:2px;background:#e74c3c;opacity:0.8;z-index:4;"></div>
+          </div>
+        </td>
+      </tr>`;
+    });
+
+    // + Add Row button (developer only)
+    if(_isDev){
+      rowsHTML+=`<tr>
+        <td colspan="10" style="padding:3px 10px;border-top:1px dashed rgba(21,101,192,0.3);">
+          <button onclick="custPlanShowAddRow('${pid}',${sec.num})" style="font-size:10px;font-weight:600;color:#1565c0;background:transparent;border:1px dashed #1565c0;border-radius:4px;padding:2px 12px;cursor:pointer;font-family:'Barlow',sans-serif;">+ Add Row</button>
+        </td>
+        <td colspan="${totalCols}" style="border-top:1px dashed rgba(21,101,192,0.3);"></td>
+      </tr>`;
+    }
+  });
+
+  const btnS='padding:5px 12px;border-radius:5px;border:none;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:\'Barlow\',sans-serif;';
+  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
+    <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:10px 20px 9px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span style="font-size:22px;">📅</span>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Planning Général</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px;">${projName} — Programme des travaux de façade</div>
+        </div>
+        ${legendHTML}
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+          <button onclick="custPlanExportCSV()" style="${btnS}background:#1a7a3a;color:#fff;">⬇ Excel / CSV</button>
+          <button onclick="custPlanExportPDF()" style="${btnS}background:#1565c0;color:#fff;">🖨 PDF</button>
+        </div>
+      </div>
+      <div style="flex:1;overflow:auto;">
+        <table style="border-collapse:collapse;min-width:100%;font-family:'Barlow',sans-serif;">
+          <thead style="position:sticky;top:0;z-index:10;">
+            <tr>
+              <th colspan="10" style="background:var(--surface2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);"></th>
+              ${monthsHTML}
+            </tr>
+            <tr>
+              <th style="${CELL_TH}min-width:36px;">Réf</th>
+              <th style="${CELL_TH}min-width:200px;">Description</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#bbdefb50;">Date<br>début</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#bbdefb50;">Date<br>fin</th>
+              <th style="${CELL_TH}min-width:28px;text-align:right;">Jrs</th>
+              <th style="${CELL_TH}min-width:36px;text-align:right;">Retard</th>
+              <th style="${CELL_TH}min-width:66px;white-space:normal;text-align:center;background:#1565c028;">Début<br>Proposé</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#1565c028;">Fin<br>Proposé</th>
+              <th style="${CELL_TH}min-width:66px;white-space:normal;text-align:center;background:#1b5e2028;">Début<br>Actuel</th>
+              <th style="${CELL_TH}min-width:60px;white-space:normal;text-align:center;background:#1b5e2028;">Fin<br>Actuel</th>
+              ${weeksHTML}
+            </tr>
+          </thead>
+          <tbody>${rowsHTML}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Inline date edit — all users
+window.custPlanEditDate = function(pid, rowId, field, cell){
+  const row=_custPlanRows.find(r=>r.id===rowId); if(!row) return;
+  const cur=row[field]||'';
+  const fmt=d=>{ if(!d) return null; const dt=new Date(d); return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2)+'/'+String(dt.getFullYear()).slice(-2); };
+  const dash='<span style="color:var(--text3);font-style:italic;">—</span>';
+  cell.innerHTML=`<input type="date" value="${cur}" style="width:90px;border:1px solid #1565c0;border-radius:3px;font-size:10px;padding:1px 2px;background:var(--surface);color:var(--text);outline:none;">`;
+  const inp=cell.querySelector('input'); inp.focus();
+  let saved=false;
+  function commit(){
+    if(saved) return; saved=true;
+    row[field]=inp.value||null;
+    cell.innerHTML=row[field]?fmt(new Date(row[field])):dash;
+    _saveCustPlanData();
+    setTimeout(()=>renderCustomPlanning(),150);
+  }
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') inp.blur(); if(e.key==='Escape'){saved=true;cell.innerHTML=cur?fmt(new Date(cur)):dash;} });
+};
+
+// Developer: inline edit description / baseline dates
+window.custPlanDevEdit = function(pid, rowId, field, cell){
+  const row=_custPlanRows.find(r=>r.id===rowId); if(!row) return;
+  const cur=row[field]||'';
+  const isDate=field==='date_debut'||field==='date_fin';
+  const fmt=d=>{ if(!d) return null; const dt=new Date(d); return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2)+'/'+String(dt.getFullYear()).slice(-2); };
+  const dash='<span style="color:var(--text3);font-style:italic;">—</span>';
+  cell.innerHTML=isDate
+    ?`<input type="date" value="${cur}" style="width:90px;border:1px solid #224F93;border-radius:3px;font-size:10px;padding:1px 2px;background:var(--surface);color:var(--text);outline:none;">`
+    :`<input type="text" value="${cur}" style="width:200px;border:1px solid #224F93;border-radius:3px;font-size:10px;padding:2px 4px;background:var(--surface);color:var(--text);outline:none;">`;
+  const inp=cell.querySelector('input'); inp.focus(); if(!isDate) inp.select();
+  let saved=false;
+  function commit(){
+    if(saved) return; saved=true;
+    row[field]=inp.value||null;
+    _saveCustPlanData();
+    setTimeout(()=>renderCustomPlanning(),150);
+  }
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') inp.blur(); if(e.key==='Escape'){saved=true;renderCustomPlanning();} });
+};
+
+// Developer: show add-row modal
+window.custPlanShowAddRow = function(pid, section){
+  document.getElementById('cplan-add-modal')?.remove();
+  const secLabel=_PLAN_SECTIONS.find(s=>s.num===section)?.label||'';
+  const secRows=_custPlanRows.filter(r=>r.section===section);
+  const nextRef=`${section}.${secRows.length+1}`;
+  const m=document.createElement('div');
+  m.id='cplan-add-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  m.innerHTML=`<div style="background:var(--surface);border-radius:12px;padding:24px;width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.25);font-family:'Barlow',sans-serif;">
+    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Add Row — ${section} ${secLabel}</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px;">Réf: <b>${nextRef}</b></div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:4px;">Description</label>
+      <input id="cpar-desc" type="text" style="width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:12px;color:var(--text);background:var(--surface);outline:none;" placeholder="Task description…">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div>
+        <label style="display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:4px;">Date Début</label>
+        <input id="cpar-debut" type="date" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:12px;color:var(--text);background:var(--surface);outline:none;">
+      </div>
+      <div>
+        <label style="display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:4px;">Date Fin</label>
+        <input id="cpar-fin" type="date" style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:12px;color:var(--text);background:var(--surface);outline:none;">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="document.getElementById('cplan-add-modal').remove()" style="padding:7px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text2);font-family:'Barlow',sans-serif;font-size:12px;cursor:pointer;">Cancel</button>
+      <button onclick="custPlanConfirmAdd('${pid}',${section},'${nextRef}')" style="padding:7px 16px;border:none;border-radius:6px;background:#1565c0;color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Add Row</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  setTimeout(()=>document.getElementById('cpar-desc')?.focus(),50);
+};
+
+window.custPlanConfirmAdd = function(pid, section, ref){
+  const desc=(document.getElementById('cpar-desc')?.value||'').trim();
+  const debut=document.getElementById('cpar-debut')?.value||null;
+  const fin=document.getElementById('cpar-fin')?.value||null;
+  _custPlanRows.push({id:ref,section,description:desc,date_debut:debut,date_fin:fin,debut_propose:null,fin_propose:null,debut_actuel:null,fin_actuel:null,order_idx:_custPlanRows.filter(r=>r.section===section).length});
+  _saveCustPlanData();
+  document.getElementById('cplan-add-modal')?.remove();
+  renderCustomPlanning();
+};
+
+window.custPlanDeleteRow = function(pid, rowId){
+  if(!confirm('Delete row '+rowId+'?')) return;
+  const section=parseInt(rowId.split('.')[0]);
+  _custPlanRows=_custPlanRows.filter(r=>r.id!==rowId);
+  _custPlanRows.filter(r=>r.section===section).sort((a,b)=>a.order_idx-b.order_idx).forEach((r,i)=>{ r.id=`${section}.${i+1}`; r.order_idx=i; });
+  _saveCustPlanData();
+  renderCustomPlanning();
+};
+
+window.custPlanExportCSV = function(){
+  const MS=86400000;
+  const fmt=d=>{ if(!d) return ''; const dt=new Date(d); return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2)+'/'+dt.getFullYear(); };
+  const lines=[['Réf','Description','Date Début','Date Fin','Jrs','Retard','Début Proposé','Fin Proposé','Début Actuel','Fin Actuel'].join(';')];
+  _PLAN_SECTIONS.forEach(sec=>{
+    lines.push(`${sec.num} — ${sec.label}`);
+    _custPlanRows.filter(r=>r.section===sec.num).sort((a,b)=>a.order_idx-b.order_idx).forEach(r=>{
+      const jrs=r.date_debut&&r.date_fin?Math.round((new Date(r.date_fin)-new Date(r.date_debut))/MS):'';
+      const retard=r.debut_propose&&r.date_debut?'+'+Math.round((new Date(r.debut_propose)-new Date(r.date_debut))/MS)+'j':'';
+      lines.push([r.id,r.description||'',fmt(r.date_debut),fmt(r.date_fin),jrs,retard,fmt(r.debut_propose),fmt(r.fin_propose),fmt(r.debut_actuel),fmt(r.fin_actuel)].join(';'));
+    });
+  });
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='planning.csv'; a.click();
+};
+
+window.custPlanExportPDF = function(){ window.print(); };
 
 // ═══════════════════════════════════════════════════════════
 //  SUGGESTIONS
