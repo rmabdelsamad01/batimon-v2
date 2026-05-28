@@ -313,15 +313,38 @@ function updateNavFacadeLabels(){
         const el=document.getElementById('nav-label-'+dir);
         if(el) el.textContent=cat.facadeNames[dir]||dir;
       });
-      return;
+    } else {
+      const names=activeFacadeNames()||_DEFAULT_FACADE_NAMES;
+      ['NF','SF','EF','WF'].forEach(id=>{
+        const el=document.getElementById('nav-label-'+id);
+        if(el) el.textContent=names[id]||_DEFAULT_FACADE_NAMES[id];
+      });
     }
+    // Render extra facade nav buttons (from cache, synchronous)
+    const _isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+    const _extras=_custExtraFacadesCache[pid]||[];
+    const wrap=document.getElementById('nav-extra-facades-wrap');
+    if(wrap){
+      wrap.innerHTML=_extras.map((xf,i)=>{
+        const color=_custExtraFacadeColors[i%_custExtraFacadeColors.length];
+        return `<button class="nt" id="nav-btn-xf-${xf}" onclick="navGoExtraFacade('${xf}')" style=""><span class="tdot" style="background:${color}"></span><span>Facade ${xf}</span></button>`;
+      }).join('')+(_isDev?`<button class="nt" onclick="custAddExtraFacade('${pid}')" style="color:#a07800;font-weight:700;letter-spacing:0.02em;border-left:1px solid var(--border2);" title="Add new facade">+ Facade</button>`:'');
+    }
+    return;
   }
+  // Shift Tower: clear extra facades area
+  const wrap=document.getElementById('nav-extra-facades-wrap');
+  if(wrap) wrap.innerHTML='';
   // Fallback: base names (Shift Tower or no category data)
   const names=activeFacadeNames()||_DEFAULT_FACADE_NAMES;
   ['NF','SF','EF','WF'].forEach(id=>{
     const el=document.getElementById('nav-label-'+id);
     if(el) el.textContent=names[id]||_DEFAULT_FACADE_NAMES[id];
   });
+}
+function navGoExtraFacade(facadeId){
+  const catNum=window._activeCatNum||1;
+  goPage('c'+catNum+'-'+facadeId);
 }
 
 // ── Project screen sidebar ────────────────────────────────────────────────────
