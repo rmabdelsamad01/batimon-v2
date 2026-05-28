@@ -397,10 +397,15 @@ function _renderTypesTable(pid,isDev){
   const cont=document.getElementById('types-table-container');
   if(!cont)return;
   const thS='padding:8px 6px;background:#1a3d72;color:#fff;font-size:10px;font-weight:700;text-align:left;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:2;';
-  const headers=_TYPE_COLS.map(c=>`<th style="${thS}width:${c.w}px;min-width:${c.w}px;">${c.label}</th>`).join('')+(isDev?`<th style="${thS}width:36px;min-width:36px;"></th>`:'');
+  const sqnTh=`<th style="${thS}width:58px;min-width:58px;text-align:center;">SQN</th>`;
+  const chkTh=`<th style="${thS}width:36px;min-width:36px;text-align:center;"><input type="checkbox" id="types-chk-all" onchange="_typesSelectAll(this.checked)" style="cursor:pointer;width:14px;height:14px;" title="Select all"></th>`;
+  const headers=sqnTh+chkTh+_TYPE_COLS.map(c=>`<th style="${thS}width:${c.w}px;min-width:${c.w}px;">${c.label}</th>`).join('')+(isDev?`<th style="${thS}width:36px;min-width:36px;"></th>`:'');
   const inS='width:100%;border:none;background:transparent;font-family:"Barlow",sans-serif;font-size:11px;color:var(--text);padding:3px 5px;outline:none;box-sizing:border-box;';
   const roS='font-size:11px;color:var(--text);padding:3px 5px;';
+  const fixedCellS='padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;font-weight:700;color:var(--text3);text-align:center;font-family:var(--mono);';
   const rows=types.map((t,i)=>{
+    const sqnCell=`<td style="${fixedCellS}">${String(i).padStart(4,'0')}</td>`;
+    const chkCell=`<td style="padding:4px;border:1px solid var(--border);text-align:center;"><input type="checkbox" class="types-row-chk" data-idx="${i}" style="cursor:pointer;width:14px;height:14px;"></td>`;
     const cells=_TYPE_COLS.map(c=>{
       const val=(t[c.key]||'').toString();
       if(c.calc){
@@ -415,12 +420,15 @@ function _renderTypesTable(pid,isDev){
       return `<td style="padding:4px 6px;border:1px solid var(--border);${align}"><span style="${roS}">${val||'—'}</span></td>`;
     }).join('');
     const delBtn=isDev?`<td style="padding:4px;border:1px solid var(--border);text-align:center;"><button onclick="_typesDeleteRow('${pid}',${i})" title="Delete" style="background:none;border:none;color:#c02020;cursor:pointer;font-size:13px;padding:0;">✕</button></td>`:'';
-    return `<tr style="background:${i%2?'var(--surface2)':'var(--surface)'}">${cells}${delBtn}</tr>`;
+    return `<tr style="background:${i%2?'var(--surface2)':'var(--surface)'}">${sqnCell}${chkCell}${cells}${delBtn}</tr>`;
   }).join('');
   const emptyMsg=isDev?'No types yet. Click <strong>+ Add Type</strong> to create one.':'No types defined for this project yet.';
   cont.innerHTML=types.length
     ?`<table style="border-collapse:collapse;table-layout:fixed;width:max-content;"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`
     :`<div style="color:var(--text3);font-size:13px;padding:30px 0;">${emptyMsg}</div>`;
+}
+function _typesSelectAll(checked){
+  document.querySelectorAll('.types-row-chk').forEach(cb=>{cb.checked=checked;});
 }
 function _typesCalcSurf(i){
   const l=parseFloat(document.getElementById('ti-'+i+'-largeur')?.value)||0;
@@ -477,9 +485,9 @@ async function _typesSave(pid){
 function _typesExportExcel(pid){
   const types=_custTypesCache[pid]||[];
   if(!types.length){alert('No types to export.');return;}
-  const headers=['Panel Type','Désignation','Type / Composition','Ouvrants Type','Ouvrants Nombre','Type vitrage','Gamme','Traitement surface','Finition','Couleur','Largeur (mm)','Hauteur (mm)','Surface (m²)'];
+  const headers=['SQN','Panel Type','Désignation','Type / Composition','Ouvrants Type','Ouvrants Nombre','Type vitrage','Gamme','Traitement surface','Finition','Couleur','Largeur (mm)','Hauteur (mm)','Surface (m²)'];
   const keys=['panelType','designation','type_composition','ouvrants_type','ouvrants_nombre','type_vitrage','gamme','traitement_surface','finition','couleur','largeur','hauteur','surface'];
-  const wsData=[headers,...types.map(t=>keys.map(k=>t[k]!=null?t[k]:''))];
+  const wsData=[headers,...types.map((t,i)=>[String(i).padStart(4,'0'),...keys.map(k=>t[k]!=null?t[k]:'')])];
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet(wsData);
   // Column widths
