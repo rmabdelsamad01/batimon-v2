@@ -382,7 +382,9 @@ function openTypesPanel(){
     <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:#224F93;border-radius:14px 14px 0 0;">
       <div style="font-size:15px;font-weight:700;color:#fff;flex:1;">Panel Types Library</div>
       ${isDev?`<button onclick="_typesAddRow('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ Add Type</button>
-      <button onclick="_typesSave('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:#1a9458;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>`:''}
+      <button onclick="_typesSave('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:#1a9458;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+      <label style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin:0;">Import Excel<input type="file" accept=".xlsx,.xls" onchange="_typesImportExcel(event,'${pid}')" style="display:none;"></label>`:''}
+      <button onclick="_typesExportExcel('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Export Excel</button>
       <button onclick="document.getElementById('types-overlay').remove()" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">✕ Close</button>
     </div>
     <div style="flex:1;overflow:auto;padding:16px 20px;" id="types-table-container"><div style="color:var(--text3);font-size:12px;">Loading…</div></div>
@@ -471,6 +473,46 @@ async function _typesSave(pid){
   _custTypesCache[pid]=updated;
   await _saveProjectTypes(pid);
   _renderTypesTable(pid);
+}
+function _typesExportExcel(pid){
+  const types=_custTypesCache[pid]||[];
+  if(!types.length){alert('No types to export.');return;}
+  const headers=['Panel Type','Désignation','Type / Composition','Ouvrants Type','Ouvrants Nombre','Type vitrage','Gamme','Traitement surface','Finition','Couleur','Largeur (mm)','Hauteur (mm)','Surface (m²)'];
+  const keys=['panelType','designation','type_composition','ouvrants_type','ouvrants_nombre','type_vitrage','gamme','traitement_surface','finition','couleur','largeur','hauteur','surface'];
+  const wsData=[headers,...types.map(t=>keys.map(k=>t[k]!=null?t[k]:''))];
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  // Column widths
+  ws['!cols']=[{wch:20},{wch:18},{wch:22},{wch:16},{wch:16},{wch:16},{wch:14},{wch:20},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws,'Panel Types');
+  XLSX.writeFile(wb,'panel_types_'+pid+'.xlsx');
+}
+function _typesImportExcel(ev,pid){
+  const file=ev.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){alert('No data found in the file.');return;}
+      // Map Excel columns (flexible — match by header name case-insensitive)
+      const colMap={'panel type':'panelType','désignation':'designation','designation':'designation','type / composition':'type_composition','type/composition':'type_composition','ouvrants type':'ouvrants_type','ouvrants nombre':'ouvrants_nombre','type vitrage':'type_vitrage','gamme':'gamme','traitement surface':'traitement_surface','finition':'finition','couleur':'couleur','largeur (mm)':'largeur','largeur':'largeur','hauteur (mm)':'hauteur','hauteur':'hauteur','surface (m²)':'surface','surface':'surface'};
+      const imported=rows.map(r=>{
+        const t={id:'imp-'+Date.now()+'-'+Math.random().toString(36).slice(2),_isNew:true};
+        Object.entries(r).forEach(([col,val])=>{const mapped=colMap[col.toLowerCase().trim()];if(mapped)t[mapped]=val!=null?String(val):'';});
+        // Auto-calc surface if missing
+        if((!t.surface||t.surface==='')&&t.largeur&&t.hauteur){const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;if(l&&h)t.surface=(l*h/1e6).toFixed(3);}
+        return t;
+      });
+      if(!_custTypesCache[pid])_custTypesCache[pid]=[];
+      _custTypesCache[pid].push(...imported);
+      _renderTypesTable(pid,true);
+      ev.target.value=''; // reset file input
+    }catch(err){alert('Failed to read Excel file: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
 }
 async function custDeleteFacadeFromToolbar(pid){
   const extras=_custExtraFacadesCache[pid]||[];
