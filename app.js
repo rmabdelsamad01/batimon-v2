@@ -383,6 +383,7 @@ function openTypesPanel(){
       <div style="font-size:15px;font-weight:700;color:#fff;flex:1;">Panel Types Library</div>
       ${isDev?`<button onclick="_typesAddRow('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ Add Type</button>
       <button onclick="_typesSave('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:#1a9458;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+      <button onclick="_typesDeleteSelected('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:#c02020;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>
       <label style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;margin:0;">Import Excel<input type="file" accept=".xlsx,.xls" onchange="_typesImportExcel(event,'${pid}')" style="display:none;"></label>`:''}
       <button onclick="_typesExportExcel('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Export Excel</button>
       <button onclick="document.getElementById('types-overlay').remove()" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">✕ Close</button>
@@ -399,7 +400,7 @@ function _renderTypesTable(pid,isDev){
   const thS='padding:8px 6px;background:#1a3d72;color:#fff;font-size:10px;font-weight:700;text-align:left;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:2;';
   const sqnTh=`<th style="${thS}width:58px;min-width:58px;text-align:center;">SQN</th>`;
   const chkTh=`<th style="${thS}width:36px;min-width:36px;text-align:center;"><input type="checkbox" id="types-chk-all" onchange="_typesSelectAll(this.checked)" style="cursor:pointer;width:14px;height:14px;" title="Select all"></th>`;
-  const headers=sqnTh+chkTh+_TYPE_COLS.map(c=>`<th style="${thS}width:${c.w}px;min-width:${c.w}px;">${c.label}</th>`).join('')+(isDev?`<th style="${thS}width:36px;min-width:36px;"></th>`:'');
+  const headers=sqnTh+chkTh+_TYPE_COLS.map(c=>`<th style="${thS}width:${c.w}px;min-width:${c.w}px;">${c.label}</th>`).join('');
   const inS='width:100%;border:none;background:transparent;font-family:"Barlow",sans-serif;font-size:11px;color:var(--text);padding:3px 5px;outline:none;box-sizing:border-box;';
   const roS='font-size:11px;color:var(--text);padding:3px 5px;';
   const fixedCellS='padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;font-weight:700;color:var(--text3);text-align:center;font-family:var(--mono);';
@@ -419,8 +420,7 @@ function _renderTypesTable(pid,isDev){
       }
       return `<td style="padding:4px 6px;border:1px solid var(--border);${align}"><span style="${roS}">${val||'—'}</span></td>`;
     }).join('');
-    const delBtn=isDev?`<td style="padding:4px;border:1px solid var(--border);text-align:center;"><button onclick="_typesDeleteRow('${pid}',${i})" title="Delete" style="background:none;border:none;color:#c02020;cursor:pointer;font-size:13px;padding:0;">✕</button></td>`:'';
-    return `<tr style="background:${i%2?'var(--surface2)':'var(--surface)'}">${sqnCell}${chkCell}${cells}${delBtn}</tr>`;
+    return `<tr style="background:${i%2?'var(--surface2)':'var(--surface)'}">${sqnCell}${chkCell}${cells}</tr>`;
   }).join('');
   const emptyMsg=isDev?'No types yet. Click <strong>+ Add Type</strong> to create one.':'No types defined for this project yet.';
   cont.innerHTML=types.length
@@ -436,10 +436,13 @@ function _typesCalcSurf(i){
   const c=document.getElementById('types-surf-'+i);
   if(c)c.textContent=l&&h?(l*h).toFixed(3):'';
 }
-function _typesDeleteRow(pid,idx){
-  if(!confirm('Remove this type?'))return;
-  (_custTypesCache[pid]||[]).splice(idx,1);
-  _renderTypesTable(pid);
+function _typesDeleteSelected(pid){
+  const checked=[...document.querySelectorAll('.types-row-chk:checked')].map(cb=>parseInt(cb.dataset.idx));
+  if(!checked.length){alert('No rows selected. Tick the checkboxes of the rows you want to delete.');return;}
+  if(!confirm(`Delete ${checked.length} selected row${checked.length>1?'s':''}?`))return;
+  const types=_custTypesCache[pid]||[];
+  _custTypesCache[pid]=types.filter((_,i)=>!checked.includes(i));
+  _renderTypesTable(pid,true);
 }
 function _typesAddRow(pid){
   if(!_custTypesCache[pid])_custTypesCache[pid]=[];
