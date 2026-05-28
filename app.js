@@ -328,7 +328,7 @@ function updateNavFacadeLabels(){
       wrap.innerHTML=_extras.map((xf,i)=>{
         const color=_custExtraFacadeColors[i%_custExtraFacadeColors.length];
         return `<button class="nt" id="nav-btn-xf-${xf}" onclick="navGoExtraFacade('${xf}')" style=""><span class="tdot" style="background:${color}"></span><span>Facade ${xf}</span></button>`;
-      }).join('')+(_isDev?`<button class="nt" onclick="custAddExtraFacade('${pid}')" style="color:#a07800;font-weight:700;letter-spacing:0.02em;border-left:1px solid var(--border2);" title="Add new facade">+ Facade</button>`:'');
+      }).join('')+(_isDev?`<span style="display:inline-flex;align-items:stretch;border-left:1px solid var(--border2);"><button class="nt" onclick="custAddExtraFacade('${pid}')" style="color:#a07800;font-weight:700;" title="Add new facade">+ Facade</button><button class="nt" onclick="custDeleteFacadeFromToolbar('${pid}')" style="color:#c02020;font-weight:700;" title="Delete a facade">🗑</button></span>`:'');
     }
     return;
   }
@@ -345,6 +345,26 @@ function updateNavFacadeLabels(){
 function navGoExtraFacade(facadeId){
   const catNum=window._activeCatNum||1;
   goPage('c'+catNum+'-'+facadeId);
+}
+async function custDeleteFacadeFromToolbar(pid){
+  const extras=_custExtraFacadesCache[pid]||[];
+  if(!extras.length){alert('No extra facades to delete.');return;}
+  // If currently viewing an extra facade, pre-select it
+  const cur=(window.location.hash||'').slice(1);
+  const curMatch=cur.match(/^c\d+-([A-Z]+)$/);
+  const curExtra=curMatch&&extras.includes(curMatch[1])?curMatch[1]:null;
+  let target=curExtra;
+  if(!target){
+    // Ask which one to delete
+    const opts=extras.map((xf,i)=>`${i+1}. Facade ${xf}`).join('\n');
+    const ans=prompt('Which facade do you want to delete?\n'+opts+'\n\nType the number or the facade ID (e.g. X):');
+    if(!ans)return;
+    const byNum=extras[parseInt(ans)-1];
+    const byId=extras.find(xf=>xf.toUpperCase()===ans.trim().toUpperCase());
+    target=byNum||byId||null;
+    if(!target){alert('Facade not found.');return;}
+  }
+  await custDeleteExtraFacade(pid,target,null);
 }
 
 // ── Project screen sidebar ────────────────────────────────────────────────────
@@ -4446,16 +4466,12 @@ function efSidebarHTML(){
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-EF')">${_cat.facadeNames.EF}</div>
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-WF')">${_cat.facadeNames.WF}</div>
             ${(_custExtraFacadesCache[_pid]||[]).map(xf=>`
-            <div style="display:flex;align-items:center;padding:4px 8px;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'">
-              <span style="flex:1;font-size:10px;color:var(--text3);cursor:pointer;" onclick="goPage('c${_cat.num}-${xf}')">Facade ${xf}</span>
-              ${(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer')?`<button onclick="custDeleteExtraFacade('${_pid}','${xf}',event)" title="Delete Facade ${xf}" style="background:none;border:none;color:#c02020;font-size:12px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;">×</button>`:''}
-            </div>`).join('')}
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-${xf}')">Facade ${xf}</div>`).join('')}
           </div>
         </div>`;
       }).join('')}
       ${(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer')?`<div style="margin-top:7px;padding:0 2px;display:flex;gap:5px;flex-wrap:wrap;">
         <button onclick="addNewCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Category</button>
-        <button onclick="custAddExtraFacade('${_pid}')" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #a0780060;background:transparent;color:#a07800;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Facade</button>
         <button onclick="deleteCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #c0202060;background:transparent;color:#c02020;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">🗑 Cat</button>
       </div>`:''}` ;
   }
