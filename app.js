@@ -359,8 +359,8 @@ const _TYPE_COLS = [
   {key:'traitement_surface', label:'Traitement surface',  w:140},
   {key:'finition',           label:'Finition',            w:100},
   {key:'couleur',            label:'Couleur',             w:100},
-  {key:'largeur',            label:'Largeur (mm)',        w:90, dim:true},
-  {key:'hauteur',            label:'Hauteur (mm)',        w:90, dim:true},
+  {key:'largeur',            label:'Largeur (m)',         w:90, dim:true},
+  {key:'hauteur',            label:'Hauteur (m)',         w:90, dim:true},
   {key:'surface',            label:'Surface (m²)',        w:90, calc:true},
 ];
 async function _loadProjectTypes(pid){
@@ -410,7 +410,7 @@ function _renderTypesTable(pid,isDev){
       const val=(t[c.key]||'').toString();
       if(c.calc){
         const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;
-        return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;color:var(--text3);text-align:center;">${l&&h?(l*h/1e6).toFixed(3):''}</td>`;
+        return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;color:var(--text3);text-align:center;">${l&&h?(l*h).toFixed(3):''}</td>`;
       }
       const align=c.dim?'text-align:right;':'';
       if(isDev){
@@ -434,7 +434,7 @@ function _typesCalcSurf(i){
   const l=parseFloat(document.getElementById('ti-'+i+'-largeur')?.value)||0;
   const h=parseFloat(document.getElementById('ti-'+i+'-hauteur')?.value)||0;
   const c=document.getElementById('types-surf-'+i);
-  if(c)c.textContent=l&&h?(l*h/1e6).toFixed(3):'';
+  if(c)c.textContent=l&&h?(l*h).toFixed(3):'';
 }
 function _typesDeleteRow(pid,idx){
   if(!confirm('Remove this type?'))return;
@@ -485,7 +485,7 @@ async function _typesSave(pid){
 function _typesExportExcel(pid){
   const types=_custTypesCache[pid]||[];
   if(!types.length){alert('No types to export.');return;}
-  const headers=['SQN','Panel Type','Désignation','Type / Composition','Ouvrants Type','Ouvrants Nombre','Type vitrage','Gamme','Traitement surface','Finition','Couleur','Largeur (mm)','Hauteur (mm)','Surface (m²)'];
+  const headers=['SQN','Panel Type','Désignation','Type / Composition','Ouvrants Type','Ouvrants Nombre','Type vitrage','Gamme','Traitement surface','Finition','Couleur','Largeur (m)','Hauteur (m)','Surface (m²)'];
   const keys=['panelType','designation','type_composition','ouvrants_type','ouvrants_nombre','type_vitrage','gamme','traitement_surface','finition','couleur','largeur','hauteur','surface'];
   const wsData=[headers,...types.map((t,i)=>[String(i).padStart(4,'0'),...keys.map(k=>t[k]!=null?t[k]:'')])];
   const wb=XLSX.utils.book_new();
@@ -511,7 +511,7 @@ function _typesImportExcel(ev,pid){
         const t={id:'imp-'+Date.now()+'-'+Math.random().toString(36).slice(2),_isNew:true};
         Object.entries(r).forEach(([col,val])=>{const mapped=colMap[col.toLowerCase().trim()];if(mapped)t[mapped]=val!=null?String(val):'';});
         // Auto-calc surface if missing
-        if((!t.surface||t.surface==='')&&t.largeur&&t.hauteur){const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;if(l&&h)t.surface=(l*h/1e6).toFixed(3);}
+        if((!t.surface||t.surface==='')&&t.largeur&&t.hauteur){const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;if(l&&h)t.surface=(l*h).toFixed(3);}
         return t;
       });
       if(!_custTypesCache[pid])_custTypesCache[pid]=[];
