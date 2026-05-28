@@ -1486,6 +1486,9 @@ async function renderCustomDash(){
   const projName  = window._activeProjectName || projectId || 'Project';
   const el = document.getElementById('dash-cards');
   if(!el) return;
+  window._activeCatNum = window._activeCatNum || 1;
+  await _loadExtraFacades(projectId);
+  updateNavFacadeLabels();
 
   el.innerHTML = `<div style="font-size:12px;color:#8099b0;padding:8px 0;">Loading overview…</div>`;
 
@@ -1671,6 +1674,9 @@ async function renderAllCategoriesOverview(){
   if(!projId || projId === 'shift-tower') return;
   const projName = window._activeProjectName || projId || 'Project';
   const cats = initProjectCategories(projId);
+  window._activeCatNum = window._activeCatNum || 1;
+  await _loadExtraFacades(projId);
+  updateNavFacadeLabels();
 
   if(cats.length === 1){ goPage('c1-overview'); return; }
 
