@@ -346,8 +346,123 @@ function navGoExtraFacade(facadeId){
   const catNum=window._activeCatNum||1;
   goPage('c'+catNum+'-'+facadeId);
 }
+// ── Panel Types Library ───────────────────────────────────────────────────────
+const _custTypesCache = {};   // pid → saved array of type objects
+const _TYPE_COLS = [
+  {key:'panelType',          label:'Panel Type',          w:150},
+  {key:'designation',        label:'Désignation',         w:130},
+  {key:'type_composition',   label:'Type / Composition',  w:150},
+  {key:'ouvrants_type',      label:'Ouvrants Type',       w:120},
+  {key:'ouvrants_nombre',    label:'Ouvrants Nombre',     w:110},
+  {key:'type_vitrage',       label:'Type vitrage',        w:110},
+  {key:'gamme',              label:'Gamme',               w:100},
+  {key:'traitement_surface', label:'Traitement surface',  w:140},
+  {key:'finition',           label:'Finition',            w:100},
+  {key:'couleur',            label:'Couleur',             w:100},
+  {key:'largeur',            label:'Largeur (mm)',        w:90, dim:true},
+  {key:'hauteur',            label:'Hauteur (mm)',        w:90, dim:true},
+  {key:'surface',            label:'Surface (m²)',        w:90, calc:true},
+];
+async function _loadProjectTypes(pid){
+  if(_custTypesCache[pid]!==undefined)return _custTypesCache[pid];
+  try{const{data}=await sb.from('project_info').select('value').eq('project',pid).eq('key','panel_types').single();_custTypesCache[pid]=data?JSON.parse(data.value):[];}catch(e){_custTypesCache[pid]=[];}
+  return _custTypesCache[pid];
+}
+async function _saveProjectTypes(pid){
+  try{await sb.from('project_info').upsert({project:pid,key:'panel_types',value:JSON.stringify(_custTypesCache[pid]||[]),updated_at:new Date().toISOString()},{onConflict:'project,key'});}catch(e){}
+}
 function openTypesPanel(){
-  // TODO: implement Types panel
+  const pid=window._activeProjectId;
+  if(!pid||pid==='shift-tower')return;
+  if(!(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer'))return;
+  let ov=document.getElementById('types-overlay');
+  if(!ov){ov=document.createElement('div');ov.id='types-overlay';document.body.appendChild(ov);}
+  ov.style.cssText='position:fixed;inset:0;background:rgba(10,20,40,0.6);z-index:2000;display:flex;align-items:center;justify-content:center;font-family:"Barlow",sans-serif;';
+  ov.innerHTML=`<div style="background:var(--surface);border-radius:14px;box-shadow:0 8px 40px rgba(10,20,40,0.3);width:96vw;max-width:1500px;height:88vh;display:flex;flex-direction:column;">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:#224F93;border-radius:14px 14px 0 0;">
+      <div style="font-size:15px;font-weight:700;color:#fff;flex:1;">Panel Types Library</div>
+      <button onclick="_typesAddRow('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ Add Type</button>
+      <button onclick="_typesSave('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:#1a9458;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+      <button onclick="document.getElementById('types-overlay').remove()" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">✕ Close</button>
+    </div>
+    <div style="flex:1;overflow:auto;padding:16px 20px;" id="types-table-container"><div style="color:var(--text3);font-size:12px;">Loading…</div></div>
+  </div>`;
+  _loadProjectTypes(pid).then(()=>_renderTypesTable(pid));
+}
+function _renderTypesTable(pid){
+  const types=_custTypesCache[pid]||[];
+  const cont=document.getElementById('types-table-container');
+  if(!cont)return;
+  const thS='padding:8px 6px;background:#1a3d72;color:#fff;font-size:10px;font-weight:700;text-align:left;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:2;';
+  const headers=_TYPE_COLS.map(c=>`<th style="${thS}width:${c.w}px;min-width:${c.w}px;">${c.label}</th>`).join('')+`<th style="${thS}width:36px;min-width:36px;"></th>`;
+  const inS='width:100%;border:none;background:transparent;font-family:"Barlow",sans-serif;font-size:11px;color:var(--text);padding:3px 5px;outline:none;box-sizing:border-box;';
+  const rows=types.map((t,i)=>{
+    const cells=_TYPE_COLS.map(c=>{
+      if(c.calc){
+        const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;
+        return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;color:var(--text3);text-align:center;">${l&&h?(l*h/1e6).toFixed(3):''}</td>`;
+      }
+      const align=c.dim?'text-align:right;':'';
+      const onInput=c.key==='largeur'||c.key==='hauteur'?`oninput="_typesCalcSurf(${i})"`:'' ;
+      return `<td style="padding:2px 4px;border:1px solid var(--border);${align}"><input id="ti-${i}-${c.key}" value="${(t[c.key]||'').toString().replace(/"/g,'&quot;')}" ${onInput} style="${inS}${align}"></td>`;
+    }).join('');
+    return `<tr style="background:${i%2?'var(--surface2)':'var(--surface)'}">${cells}<td style="padding:4px;border:1px solid var(--border);text-align:center;"><button onclick="_typesDeleteRow('${pid}',${i})" title="Delete" style="background:none;border:none;color:#c02020;cursor:pointer;font-size:13px;padding:0;">✕</button></td></tr>`;
+  }).join('');
+  cont.innerHTML=types.length
+    ?`<table style="border-collapse:collapse;table-layout:fixed;width:max-content;"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`
+    :'<div style="color:var(--text3);font-size:13px;padding:30px 0;">No types yet. Click <strong>+ Add Type</strong> to create one.</div>';
+}
+function _typesCalcSurf(i){
+  const l=parseFloat(document.getElementById('ti-'+i+'-largeur')?.value)||0;
+  const h=parseFloat(document.getElementById('ti-'+i+'-hauteur')?.value)||0;
+  const c=document.getElementById('types-surf-'+i);
+  if(c)c.textContent=l&&h?(l*h/1e6).toFixed(3):'';
+}
+function _typesDeleteRow(pid,idx){
+  if(!confirm('Remove this type?'))return;
+  (_custTypesCache[pid]||[]).splice(idx,1);
+  _renderTypesTable(pid);
+}
+function _typesAddRow(pid){
+  if(!_custTypesCache[pid])_custTypesCache[pid]=[];
+  _custTypesCache[pid].push({id:'new-'+Date.now(),panelType:'',designation:'',type_composition:'',ouvrants_type:'',ouvrants_nombre:'',type_vitrage:'',gamme:'',traitement_surface:'',finition:'',couleur:'',largeur:'',hauteur:'',surface:'',_isNew:true});
+  _renderTypesTable(pid);
+  setTimeout(()=>{const el=document.getElementById('ti-'+(_custTypesCache[pid].length-1)+'-panelType');if(el)el.focus();},40);
+}
+function _typesNextRevName(types,base){
+  const stripped=(base||'').replace(/\s+Rev\.\d+$/,'').trim();
+  let max=0;
+  const esc=stripped.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  types.forEach(t=>{const m=(t.panelType||'').match(new RegExp(`^${esc}\\s+Rev\\.(\\d+)$`));if(m)max=Math.max(max,parseInt(m[1]));});
+  return `${stripped} Rev.${String(max+1).padStart(2,'0')}`;
+}
+async function _typesSave(pid){
+  const types=_custTypesCache[pid]||[];
+  const read=(i,key)=>document.getElementById(`ti-${i}-${key}`)?.value||'';
+  const readN=(i,key)=>{ const v=document.getElementById(`ti-${i}-${key}`)?.value; return v!==undefined&&v!==''?v:''; };
+  const updated=[];
+  types.forEach((t,i)=>{
+    const l=readN(i,'largeur'),h=readN(i,'hauteur');
+    const sf=l&&h?((parseFloat(l)||0)*(parseFloat(h)||0)/1e6).toFixed(3):'';
+    const cur={panelType:read(i,'panelType'),designation:read(i,'designation'),type_composition:read(i,'type_composition'),ouvrants_type:read(i,'ouvrants_type'),ouvrants_nombre:readN(i,'ouvrants_nombre'),type_vitrage:read(i,'type_vitrage'),gamme:read(i,'gamme'),traitement_surface:read(i,'traitement_surface'),finition:read(i,'finition'),couleur:read(i,'couleur'),largeur:l,hauteur:h,surface:sf};
+    if(t._isNew){
+      updated.push({...cur,id:'typ-'+Date.now()+'-'+i});
+    } else {
+      const changed=_TYPE_COLS.filter(c=>!c.calc).some(c=>(cur[c.key]||'')!==(String(t[c.key]||'')));
+      if(changed){
+        // Keep original, create revision
+        const orig={...t};delete orig._isNew;
+        updated.push(orig);
+        updated.push({...cur,id:'typ-rev-'+Date.now()+'-'+i,panelType:_typesNextRevName([...types,...updated],t.panelType)});
+      } else {
+        const orig={...t};delete orig._isNew;
+        updated.push(orig);
+      }
+    }
+  });
+  _custTypesCache[pid]=updated;
+  await _saveProjectTypes(pid);
+  _renderTypesTable(pid);
 }
 async function custDeleteFacadeFromToolbar(pid){
   const extras=_custExtraFacadesCache[pid]||[];
@@ -2104,13 +2219,14 @@ function _custHideCtx(){ if(_cgCtxMenu){_cgCtxMenu.remove();_cgCtxMenu=null;} do
 // ── Cell right-click detail panel ─────────────────────────────────────────────
 let _cgPanelCtx = null; // {pid, facade, key, cellRef}
 
-function custCellOpenPanel(e, pid, facade, key, cellRef){
+async function custCellOpenPanel(e, pid, facade, key, cellRef){
   e.preventDefault();
   _custHideCtx();
   _cgPanelCtx = {pid, facade, key, cellRef};
   const panel = document.getElementById('cg-right-panel');
   if(!panel) return;
   panel.style.transform = 'translateX(0)';
+  await _loadProjectTypes(pid);
   _cgRenderPanelBody(pid, facade, key, cellRef);
 }
 
@@ -2182,7 +2298,10 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
       </div>
       <div>
         <label style="${lbl}" for="cp-panel-type">Panel Type</label>
-        <input id="cp-panel-type" style="${inp}" value="${v('panelType')}" placeholder="—">
+        <select id="cp-panel-type" onchange="_cpTypeAutoFill(this.value,'${pid}')" style="${inp}cursor:pointer;">
+          <option value="">— Select type —</option>
+          ${(_custTypesCache[pid]||[]).map(t=>`<option value="${(t.panelType||'').replace(/"/g,'&quot;')}" ${v('panelType')===t.panelType?'selected':''}>${t.panelType||'(unnamed)'}</option>`).join('')}
+        </select>
       </div>
     </div>
 
@@ -2267,6 +2386,25 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
   // Show save button
   const footer = document.getElementById('cg-right-panel-footer');
   if(footer) footer.style.display = 'block';
+}
+
+function _cpTypeAutoFill(typeName, pid){
+  if(!typeName) return;
+  const t=(_custTypesCache[pid]||[]).find(x=>x.panelType===typeName);
+  if(!t) return;
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el&&val!=null&&val!=='') el.value=val; };
+  set('cp-designation',       t.designation);
+  set('cp-type-composition',  t.type_composition);
+  set('cp-ouvrants-type',     t.ouvrants_type);
+  set('cp-ouvrants-nombre',   t.ouvrants_nombre);
+  set('cp-type-vitrage',      t.type_vitrage);
+  set('cp-gamme',             t.gamme);
+  set('cp-traitement-surface',t.traitement_surface);
+  set('cp-finition',          t.finition);
+  set('cp-couleur',           t.couleur);
+  set('cp-largeur',           t.largeur);
+  set('cp-hauteur',           t.hauteur);
+  set('cp-surface',           t.surface);
 }
 
 async function custCellSavePanel(){
