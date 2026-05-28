@@ -328,7 +328,7 @@ function updateNavFacadeLabels(){
       wrap.innerHTML=_extras.map((xf,i)=>{
         const color=_custExtraFacadeColors[i%_custExtraFacadeColors.length];
         return `<button class="nt" id="nav-btn-xf-${xf}" onclick="navGoExtraFacade('${xf}')" style=""><span class="tdot" style="background:${color}"></span><span>Facade ${xf}</span></button>`;
-      }).join('')+(_isDev?`<span style="display:inline-flex;align-items:stretch;border-left:1px solid var(--border2);"><button class="nt" onclick="custAddExtraFacade('${pid}')" style="color:#a07800;font-weight:700;" title="Add new facade">+ Facade</button><button class="nt" onclick="custDeleteFacadeFromToolbar('${pid}')" style="color:#c02020;font-weight:700;" title="Delete a facade">🗑</button></span>`:'');
+      }).join('')+(_isDev?`<span style="display:inline-flex;align-items:stretch;border-left:1px solid var(--border2);"><button class="nt" onclick="custAddExtraFacade('${pid}')" style="color:#a07800;font-weight:700;" title="Add new facade">Add Facade</button><button class="nt" onclick="custDeleteFacadeFromToolbar('${pid}')" style="color:#c02020;font-weight:700;" title="Delete a facade">Delete Facade</button></span>`:'');
     }
     return;
   }
