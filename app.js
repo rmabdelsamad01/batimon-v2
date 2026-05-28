@@ -327,8 +327,8 @@ function updateNavFacadeLabels(){
     if(wrap){
       wrap.innerHTML=_extras.map((xf,i)=>{
         const color=_custExtraFacadeColors[i%_custExtraFacadeColors.length];
-        const rawName=(cat?.facadeNames?.[xf])||('Facade '+xf);
-        const displayName=_stripTrailingNum(rawName)||('Facade '+xf);
+        const rawName=(cat?.facadeNames?.[xf])||(('Facade '+xf)+'     ('+catNum+')');
+        const displayName=_fmtFacadeDisplay(rawName)||('Facade '+xf+'     ('+catNum+')');
         return `<button class="nt" id="nav-btn-xf-${xf}" onclick="navGoExtraFacade('${xf}')" style=""><span class="tdot" style="background:${color}"></span><span>${displayName}</span></button>`;
       }).join('')+(_isDev?`<span style="display:inline-flex;align-items:stretch;border-left:1px solid var(--border2);"><button class="nt" onclick="custAddExtraFacade('${pid}')" style="color:#a07800;font-weight:700;" title="Add new facade">Add Facade</button><button class="nt" onclick="custDeleteFacadeFromToolbar('${pid}')" style="color:#c02020;font-weight:700;" title="Delete a facade">Delete Facade</button></span>`:'');
     }
@@ -1856,8 +1856,8 @@ async function renderCustomCatOverview(catNum){
   const extraCards=_extraFacadesCatOv.map((xf,i)=>{
     const key=catNum===1?xf:'c'+catNum+'-'+xf;
     const fTotals=_custTotalsFromCells(byKey[key]||{});
-    const rawXName=(cat?.facadeNames?.[xf])||('Facade '+xf);
-    const xName=_stripTrailingNum(rawXName)||('Facade '+xf);
+    const rawXName=(cat?.facadeNames?.[xf])||(('Facade '+xf)+'     ('+catNum+')');
+    const xName=_fmtFacadeDisplay(rawXName)||('Facade '+xf+'     ('+catNum+')');
     return _custFacadeCardHTML(xName,_custExtraFacadeColors[i%_custExtraFacadeColors.length],fTotals,'c'+catNum+'-'+xf);
   });
   const cont=document.getElementById('catov-cards-'+catNum);
@@ -4705,8 +4705,7 @@ function efSidebarHTML(){
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-SF')">${_fmtFacadeDisplay(_cat.facadeNames.SF)}</div>
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-EF')">${_fmtFacadeDisplay(_cat.facadeNames.EF)}</div>
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-WF')">${_fmtFacadeDisplay(_cat.facadeNames.WF)}</div>
-            ${(_custExtraFacadesCache[_pid]||[]).map(xf=>`
-            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-${xf}')">Facade ${xf}</div>`).join('')}
+            ${(_custExtraFacadesCache[_pid]||[]).map(xf=>{const _rn=(_cat.facadeNames&&_cat.facadeNames[xf])||(('Facade '+xf)+'     ('+_cat.num+')');return`<div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-${xf}')">${_fmtFacadeDisplay(_rn)}</div>`;}).join('')}
           </div>
         </div>`;
       }).join('')}
