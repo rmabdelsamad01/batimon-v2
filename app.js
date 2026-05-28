@@ -311,13 +311,13 @@ function updateNavFacadeLabels(){
     if(cat){
       ['NF','SF','EF','WF'].forEach(dir=>{
         const el=document.getElementById('nav-label-'+dir);
-        if(el) el.textContent=cat.facadeNames[dir]||dir;
+        if(el) el.textContent=_fmtFacadeDisplay(cat.facadeNames[dir])||dir;
       });
     } else {
       const names=activeFacadeNames()||_DEFAULT_FACADE_NAMES;
       ['NF','SF','EF','WF'].forEach(id=>{
         const el=document.getElementById('nav-label-'+id);
-        if(el) el.textContent=names[id]||_DEFAULT_FACADE_NAMES[id];
+        if(el) el.textContent=_fmtFacadeDisplay(names[id])||_DEFAULT_FACADE_NAMES[id];
       });
     }
     // Render extra facade nav buttons (from cache, synchronous)
@@ -327,7 +327,9 @@ function updateNavFacadeLabels(){
     if(wrap){
       wrap.innerHTML=_extras.map((xf,i)=>{
         const color=_custExtraFacadeColors[i%_custExtraFacadeColors.length];
-        return `<button class="nt" id="nav-btn-xf-${xf}" onclick="navGoExtraFacade('${xf}')" style=""><span class="tdot" style="background:${color}"></span><span>Facade ${xf}</span></button>`;
+        const rawName=(cat?.facadeNames?.[xf])||('Facade '+xf);
+        const displayName=_stripTrailingNum(rawName)||('Facade '+xf);
+        return `<button class="nt" id="nav-btn-xf-${xf}" onclick="navGoExtraFacade('${xf}')" style=""><span class="tdot" style="background:${color}"></span><span>${displayName}</span></button>`;
       }).join('')+(_isDev?`<span style="display:inline-flex;align-items:stretch;border-left:1px solid var(--border2);"><button class="nt" onclick="custAddExtraFacade('${pid}')" style="color:#a07800;font-weight:700;" title="Add new facade">Add Facade</button><button class="nt" onclick="custDeleteFacadeFromToolbar('${pid}')" style="color:#c02020;font-weight:700;" title="Delete a facade">Delete Facade</button></span>`:'');
     }
     return;
@@ -755,12 +757,25 @@ function initProjectCategories(projId){
   if(!cats.length){
     const n=getCustomFacadeNames(projId);
     cats=[{num:1,name:'Category 1',facadeNames:{
-      NF:(n.NF||'North Facade')+' 1',
-      SF:(n.SF||'South Facade')+' 1',
-      EF:(n.EF||'East Facade')+' 1',
-      WF:(n.WF||'West Facade')+' 1'
+      NF:(n.NF||'North Facade')+'     (1)',
+      SF:(n.SF||'South Facade')+'     (1)',
+      EF:(n.EF||'East Facade')+'     (1)',
+      WF:(n.WF||'West Facade')+'     (1)'
     }}];
     saveProjectCategories(projId,cats);
+  } else {
+    // Migrate stored names from old format "Base 1" → new format "Base     (1)"
+    let changed=false;
+    cats.forEach(cat=>{
+      if(!cat.facadeNames) return;
+      Object.keys(cat.facadeNames).forEach(k=>{
+        const orig=cat.facadeNames[k];
+        if(!orig||/\s{2,}\(\d+\)$/.test(orig)) return; // already new format
+        const m=orig.match(/^(.*?)\s+(\d+)$/);
+        if(m){cat.facadeNames[k]=m[1]+'     ('+m[2]+')';changed=true;}
+      });
+    });
+    if(changed) saveProjectCategories(projId,cats);
   }
   return cats;
 }
@@ -771,10 +786,10 @@ function addNewCategory(){
   const n=cats.length+1;
   const _base=getCustomFacadeNames(projId)||_DEFAULT_FACADE_NAMES;
   cats.push({num:n,name:'Category '+n,facadeNames:{
-    NF:(_base.NF||'North Facade')+' '+n,
-    SF:(_base.SF||'South Facade')+' '+n,
-    EF:(_base.EF||'East Facade')+' '+n,
-    WF:(_base.WF||'West Facade')+' '+n
+    NF:(_base.NF||'North Facade')+'     ('+n+')',
+    SF:(_base.SF||'South Facade')+'     ('+n+')',
+    EF:(_base.EF||'East Facade')+'     ('+n+')',
+    WF:(_base.WF||'West Facade')+'     ('+n+')'
   }});
   saveProjectCategories(projId,cats);
   goPage('c'+n+'-overview');
@@ -997,7 +1012,7 @@ function confirmRenameFacade(facadeId){
   // Also sync into every category's facadeNames (used by sidebar + grid page title)
   const _rcats=getProjectCategories(pid);
   if(_rcats.length){
-    _rcats.forEach(cat=>{ cat.facadeNames[facadeId]=newName+' '+cat.num; });
+    _rcats.forEach(cat=>{ cat.facadeNames[facadeId]=newName+'     ('+cat.num+')'; });
     saveProjectCategories(pid,_rcats);
   }
   document.getElementById('rename-facade-modal')?.remove();
@@ -1667,7 +1682,18 @@ function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
   </div>`;
 }
 let _custOvMode='category'; // 'category' | 'building'
-function _stripTrailingNum(str){return(str||'').replace(/\s*\d+$/,'').trim();}
+function _stripTrailingNum(str){return(str||'').replace(/\s*\(\d+\)$|\s*\d+$/,'').trim();}
+// Formats stored facade name to display format: "Bloc 01 1" → "Bloc 01     (1)"
+function _fmtFacadeDisplay(name){
+  if(!name)return name;
+  // Already new format: "Bloc 01     (1)"
+  const already=name.match(/^(.*?)\s{2,}\((\d+)\)$/);
+  if(already)return already[1].trimEnd()+'     ('+already[2]+')';
+  // Old format: "Bloc 01 1"
+  const old=name.match(/^(.*?)\s+(\d+)$/);
+  if(old)return old[1]+'     ('+old[2]+')';
+  return name;
+}
 // ── All Categories overview (combined view for custom projects) ───────────────
 async function renderAllCategoriesOverview(){
   const projId = window._activeProjectId;
@@ -1781,7 +1807,7 @@ async function renderCustomCatOverview(catNum){
   if(!projId || projId === 'shift-tower') return;
   const projName = window._activeProjectName || projId || 'Project';
   const cats = initProjectCategories(projId);
-  const cat = cats.find(c=>c.num===catNum) || {num:catNum,name:'Category '+catNum,facadeNames:{NF:'North Facade '+catNum,SF:'South Facade '+catNum,EF:'East Facade '+catNum,WF:'West Facade '+catNum}};
+  const cat = cats.find(c=>c.num===catNum) || {num:catNum,name:'Category '+catNum,facadeNames:{NF:'North Facade     ('+catNum+')',SF:'South Facade     ('+catNum+')',EF:'East Facade     ('+catNum+')',WF:'West Facade     ('+catNum+')'}};
   const el = document.getElementById('page-c'+catNum+'-overview');
   if(!el) return;
   const _extraFacadesCatOv=await _loadExtraFacades(projId);
@@ -1823,14 +1849,16 @@ async function renderCustomCatOverview(catNum){
   const stdCards=['NF','SF','EF','WF'].map(f=>{
     const key=catNum===1?f:'c'+catNum+'-'+f;
     const fTotals=_custTotalsFromCells(byKey[key]||{});
-    const name=cat.facadeNames[f];
+    const name=_fmtFacadeDisplay(cat.facadeNames[f]);
     const pageId='c'+catNum+'-'+f;
     return _custFacadeCardHTML(name,facadeColor[f],fTotals,pageId);
   });
   const extraCards=_extraFacadesCatOv.map((xf,i)=>{
     const key=catNum===1?xf:'c'+catNum+'-'+xf;
     const fTotals=_custTotalsFromCells(byKey[key]||{});
-    return _custFacadeCardHTML('Facade '+xf,_custExtraFacadeColors[i%_custExtraFacadeColors.length],fTotals,'c'+catNum+'-'+xf);
+    const rawXName=(cat?.facadeNames?.[xf])||('Facade '+xf);
+    const xName=_stripTrailingNum(rawXName)||('Facade '+xf);
+    return _custFacadeCardHTML(xName,_custExtraFacadeColors[i%_custExtraFacadeColors.length],fTotals,'c'+catNum+'-'+xf);
   });
   const cont=document.getElementById('catov-cards-'+catNum);
   if(cont) cont.innerHTML=[...stdCards,...extraCards].join('');
@@ -2546,7 +2574,7 @@ async function renderCustomMonitoring(pageId){
   const _cat=_cats.find(c=>c.num===catNum);
   const _stdFacades=['NF','SF','EF','WF'];
   const _isExtraFacade=!_stdFacades.includes(facadeDir);
-  const label=_cat?(_cat.facadeNames[facadeDir]||(_isExtraFacade?'Facade '+facadeDir:facadeDir)):((getCustomFacadeNames(pid)||{})[facadeDir]||facadeDir);
+  const label=_cat?(_fmtFacadeDisplay(_cat.facadeNames[facadeDir])||(_isExtraFacade?'Facade '+facadeDir:facadeDir)):(_fmtFacadeDisplay((getCustomFacadeNames(pid)||{})[facadeDir])||facadeDir);
   const nick=(_cat?.facadeNicks?.[facadeDir])||(facadeDir+catNum);
   const catNick=(_cat?.nick)||('CAT'+catNum);
 
@@ -4673,10 +4701,10 @@ function efSidebarHTML(){
           </div>
           <div id="ef-sub-${_sid}" style="display:none;padding-left:10px;border-left:2px solid #6d35d918;">
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-overview')">Overview ${_cat.num}</div>
-            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-NF')">${_cat.facadeNames.NF}</div>
-            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-SF')">${_cat.facadeNames.SF}</div>
-            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-EF')">${_cat.facadeNames.EF}</div>
-            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-WF')">${_cat.facadeNames.WF}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-NF')">${_fmtFacadeDisplay(_cat.facadeNames.NF)}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-SF')">${_fmtFacadeDisplay(_cat.facadeNames.SF)}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-EF')">${_fmtFacadeDisplay(_cat.facadeNames.EF)}</div>
+            <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-WF')">${_fmtFacadeDisplay(_cat.facadeNames.WF)}</div>
             ${(_custExtraFacadesCache[_pid]||[]).map(xf=>`
             <div style="padding:4px 8px;font-size:10px;color:var(--text3);cursor:pointer;border-radius:4px;transition:background 0.12s;" onmouseover="this.style.background='#6d35d90f'" onmouseout="this.style.background='transparent'" onclick="goPage('c${_cat.num}-${xf}')">Facade ${xf}</div>`).join('')}
           </div>
