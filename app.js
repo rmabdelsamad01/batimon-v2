@@ -374,43 +374,51 @@ async function _saveProjectTypes(pid){
 function openTypesPanel(){
   const pid=window._activeProjectId;
   if(!pid||pid==='shift-tower')return;
-  if(!(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer'))return;
+  const isDev=typeof sbProfile!=='undefined'&&sbProfile?.role==='developer';
   let ov=document.getElementById('types-overlay');
   if(!ov){ov=document.createElement('div');ov.id='types-overlay';document.body.appendChild(ov);}
   ov.style.cssText='position:fixed;inset:0;background:rgba(10,20,40,0.6);z-index:2000;display:flex;align-items:center;justify-content:center;font-family:"Barlow",sans-serif;';
   ov.innerHTML=`<div style="background:var(--surface);border-radius:14px;box-shadow:0 8px 40px rgba(10,20,40,0.3);width:96vw;max-width:1500px;height:88vh;display:flex;flex-direction:column;">
     <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:#224F93;border-radius:14px 14px 0 0;">
       <div style="font-size:15px;font-weight:700;color:#fff;flex:1;">Panel Types Library</div>
-      <button onclick="_typesAddRow('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ Add Type</button>
-      <button onclick="_typesSave('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:#1a9458;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+      ${isDev?`<button onclick="_typesAddRow('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.2);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">+ Add Type</button>
+      <button onclick="_typesSave('${pid}')" style="padding:6px 14px;border-radius:6px;border:none;background:#1a9458;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>`:''}
       <button onclick="document.getElementById('types-overlay').remove()" style="padding:6px 14px;border-radius:6px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">✕ Close</button>
     </div>
     <div style="flex:1;overflow:auto;padding:16px 20px;" id="types-table-container"><div style="color:var(--text3);font-size:12px;">Loading…</div></div>
   </div>`;
-  _loadProjectTypes(pid).then(()=>_renderTypesTable(pid));
+  _loadProjectTypes(pid).then(()=>_renderTypesTable(pid,isDev));
 }
-function _renderTypesTable(pid){
+function _renderTypesTable(pid,isDev){
+  isDev=isDev!=null?isDev:(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
   const types=_custTypesCache[pid]||[];
   const cont=document.getElementById('types-table-container');
   if(!cont)return;
   const thS='padding:8px 6px;background:#1a3d72;color:#fff;font-size:10px;font-weight:700;text-align:left;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:2;';
-  const headers=_TYPE_COLS.map(c=>`<th style="${thS}width:${c.w}px;min-width:${c.w}px;">${c.label}</th>`).join('')+`<th style="${thS}width:36px;min-width:36px;"></th>`;
+  const headers=_TYPE_COLS.map(c=>`<th style="${thS}width:${c.w}px;min-width:${c.w}px;">${c.label}</th>`).join('')+(isDev?`<th style="${thS}width:36px;min-width:36px;"></th>`:'');
   const inS='width:100%;border:none;background:transparent;font-family:"Barlow",sans-serif;font-size:11px;color:var(--text);padding:3px 5px;outline:none;box-sizing:border-box;';
+  const roS='font-size:11px;color:var(--text);padding:3px 5px;';
   const rows=types.map((t,i)=>{
     const cells=_TYPE_COLS.map(c=>{
+      const val=(t[c.key]||'').toString();
       if(c.calc){
         const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;
         return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;color:var(--text3);text-align:center;">${l&&h?(l*h/1e6).toFixed(3):''}</td>`;
       }
       const align=c.dim?'text-align:right;':'';
-      const onInput=c.key==='largeur'||c.key==='hauteur'?`oninput="_typesCalcSurf(${i})"`:'' ;
-      return `<td style="padding:2px 4px;border:1px solid var(--border);${align}"><input id="ti-${i}-${c.key}" value="${(t[c.key]||'').toString().replace(/"/g,'&quot;')}" ${onInput} style="${inS}${align}"></td>`;
+      if(isDev){
+        const onInput=c.key==='largeur'||c.key==='hauteur'?`oninput="_typesCalcSurf(${i})"`:'' ;
+        return `<td style="padding:2px 4px;border:1px solid var(--border);${align}"><input id="ti-${i}-${c.key}" value="${val.replace(/"/g,'&quot;')}" ${onInput} style="${inS}${align}"></td>`;
+      }
+      return `<td style="padding:4px 6px;border:1px solid var(--border);${align}"><span style="${roS}">${val||'—'}</span></td>`;
     }).join('');
-    return `<tr style="background:${i%2?'var(--surface2)':'var(--surface)'}">${cells}<td style="padding:4px;border:1px solid var(--border);text-align:center;"><button onclick="_typesDeleteRow('${pid}',${i})" title="Delete" style="background:none;border:none;color:#c02020;cursor:pointer;font-size:13px;padding:0;">✕</button></td></tr>`;
+    const delBtn=isDev?`<td style="padding:4px;border:1px solid var(--border);text-align:center;"><button onclick="_typesDeleteRow('${pid}',${i})" title="Delete" style="background:none;border:none;color:#c02020;cursor:pointer;font-size:13px;padding:0;">✕</button></td>`:'';
+    return `<tr style="background:${i%2?'var(--surface2)':'var(--surface)'}">${cells}${delBtn}</tr>`;
   }).join('');
+  const emptyMsg=isDev?'No types yet. Click <strong>+ Add Type</strong> to create one.':'No types defined for this project yet.';
   cont.innerHTML=types.length
     ?`<table style="border-collapse:collapse;table-layout:fixed;width:max-content;"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`
-    :'<div style="color:var(--text3);font-size:13px;padding:30px 0;">No types yet. Click <strong>+ Add Type</strong> to create one.</div>';
+    :`<div style="color:var(--text3);font-size:13px;padding:30px 0;">${emptyMsg}</div>`;
 }
 function _typesCalcSurf(i){
   const l=parseFloat(document.getElementById('ti-'+i+'-largeur')?.value)||0;
