@@ -346,6 +346,9 @@ function navGoExtraFacade(facadeId){
   const catNum=window._activeCatNum||1;
   goPage('c'+catNum+'-'+facadeId);
 }
+function openTypesPanel(){
+  // TODO: implement Types panel
+}
 async function custDeleteFacadeFromToolbar(pid){
   const extras=_custExtraFacadesCache[pid]||[];
   if(!extras.length){alert('No extra facades to delete.');return;}
