@@ -4710,8 +4710,8 @@ function efSidebarHTML(){
         </div>`;
       }).join('')}
       ${(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer')?`<div style="margin-top:7px;padding:0 2px;display:flex;gap:5px;flex-wrap:wrap;">
-        <button onclick="addNewCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">+ Category</button>
-        <button onclick="deleteCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #c0202060;background:transparent;color:#c02020;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">🗑 Cat</button>
+        <button onclick="addNewCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #6d35d960;background:transparent;color:#6d35d9;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">Add Cat</button>
+        <button onclick="deleteCategory()" style="flex:1;padding:6px 4px;border-radius:6px;border:1.5px dashed #c0202060;background:transparent;color:#c02020;font-size:9px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;white-space:nowrap;">Del Cat</button>
       </div>`:''}` ;
   }
 
