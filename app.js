@@ -1254,6 +1254,7 @@ async function custAddExtraFacade(pid){
   if(!next){alert('Maximum facades reached.');return;}
   arr.push(next);
   await _saveExtraFacades(pid);
+  updateNavFacadeLabels();
   const cur=(window.location.hash||'#dashboard').slice(1)||'dashboard';
   _renderPage(cur);
 }
@@ -1265,6 +1266,7 @@ async function custDeleteExtraFacade(pid,facadeId,ev){
   if(idx===-1)return;
   arr.splice(idx,1);
   await _saveExtraFacades(pid);
+  updateNavFacadeLabels();
   const cats=getProjectCategories(pid);
   for(const cat of cats){
     const facKey=cat.num===1?facadeId:'c'+cat.num+'-'+facadeId;
