@@ -769,8 +769,12 @@ function addNewCategory(){
   if(!projId||projId==='shift-tower') return;
   const cats=initProjectCategories(projId);
   const n=cats.length+1;
+  const _base=getCustomFacadeNames(projId)||_DEFAULT_FACADE_NAMES;
   cats.push({num:n,name:'Category '+n,facadeNames:{
-    NF:'North Facade '+n,SF:'South Facade '+n,EF:'East Facade '+n,WF:'West Facade '+n
+    NF:(_base.NF||'North Facade')+' '+n,
+    SF:(_base.SF||'South Facade')+' '+n,
+    EF:(_base.EF||'East Facade')+' '+n,
+    WF:(_base.WF||'West Facade')+' '+n
   }});
   saveProjectCategories(projId,cats);
   goPage('c'+n+'-overview');
@@ -2614,7 +2618,7 @@ async function renderCustomMonitoring(pageId){
     <div class="fpw">${efSidebarHTML()}
       <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;font-family:'Barlow',sans-serif;position:relative;">
         <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px;">
-          <div ${_isDev?`onclick="showRenameFacadeModal('${facade}')" title="Click to rename" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'"`:''}
+          <div ${_isDev?`onclick="showRenameFacadeModal('${facadeDir}')" title="Click to rename" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'"`:''}
             style="font-size:15px;font-weight:700;color:var(--text);${_isDev?'cursor:pointer;':''}padding:3px 7px;border-radius:6px;transition:background 0.15s;">${label}</div>
           ${_isDev?`<div id="facade-nick-display" onclick="editFacadeNick('${pid}','${facadeDir}',${catNum})"
             title="Click to edit nickname"
