@@ -22,7 +22,7 @@ function _btUser() {
 }
 
 // ─── Supabase shorthand ─────────────────────────────────────────────────────────
-function _btSb() { return window.sb; }
+function _btSb() { return (typeof sb !== 'undefined') ? sb : window.sb; }
 
 // ─── Utils ──────────────────────────────────────────────────────────────────────
 function _btH(s) {
