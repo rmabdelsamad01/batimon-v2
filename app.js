@@ -282,11 +282,31 @@ function projKey(base){
 
 // ── Custom facade name storage ─────────────────────────────────────────────
 const _DEFAULT_FACADE_NAMES = {NF:'North Facade', SF:'South Facade', EF:'East Facade', WF:'West Facade'};
+// In-memory caches for Supabase-stored project metadata (shared across computers)
+const _sbCatsCache = {};
+const _sbFacadeNamesCache = {};
+async function _loadProjectMetaFromSB(projId){
+  if(!projId||projId==='shift-tower') return;
+  try{
+    const {data}=await sb.from('project_info').select('key,value').eq('project',projId).in('key',['categories','facade_names']);
+    if(!data) return;
+    for(const row of data){
+      try{
+        const parsed=JSON.parse(row.value);
+        if(row.key==='categories'){ _sbCatsCache[projId]=parsed; lsS('bm_cats__'+projId,row.value); }
+        else if(row.key==='facade_names'){ _sbFacadeNamesCache[projId]=parsed; lsS('bm_facade_names__'+projId,row.value); }
+      }catch(e){}
+    }
+  }catch(e){}
+}
 function getCustomFacadeNames(projId){
+  if(_sbFacadeNamesCache[projId]) return _sbFacadeNamesCache[projId];
   try{ return JSON.parse(localStorage.getItem('bm_facade_names__'+projId)||'null')||{..._DEFAULT_FACADE_NAMES}; }catch(e){ return {..._DEFAULT_FACADE_NAMES}; }
 }
 function saveCustomFacadeNames(projId, names){
+  _sbFacadeNamesCache[projId]=names;
   try{ localStorage.setItem('bm_facade_names__'+projId, JSON.stringify(names)); }catch(e){}
+  if(projId&&projId!=='shift-tower') sb.from('project_info').upsert({project:projId,key:'facade_names',value:JSON.stringify(names),updated_at:new Date().toISOString()},{onConflict:'project,key'}).catch(()=>{});
 }
 // Returns facade names for the active project (null for Shift Tower — uses fixed labels)
 function activeFacadeNames(){
@@ -747,10 +767,13 @@ document.addEventListener('click',function(e){
 
 // ── Multi-category management (custom projects only) ─────────────────────────
 function getProjectCategories(projId){
+  if(_sbCatsCache[projId]) return _sbCatsCache[projId];
   try{ return JSON.parse(localStorage.getItem('bm_cats__'+projId)||'null')||[]; }catch(e){ return []; }
 }
 function saveProjectCategories(projId,cats){
+  _sbCatsCache[projId]=cats;
   localStorage.setItem('bm_cats__'+projId,JSON.stringify(cats));
+  if(projId&&projId!=='shift-tower') sb.from('project_info').upsert({project:projId,key:'categories',value:JSON.stringify(cats),updated_at:new Date().toISOString()},{onConflict:'project,key'}).catch(()=>{});
 }
 function initProjectCategories(projId){
   let cats=getProjectCategories(projId);
@@ -1699,6 +1722,7 @@ async function renderAllCategoriesOverview(){
   const projId = window._activeProjectId;
   if(!projId || projId === 'shift-tower') return;
   const projName = window._activeProjectName || projId || 'Project';
+  await _loadProjectMetaFromSB(projId);
   const cats = initProjectCategories(projId);
   window._activeCatNum = window._activeCatNum || 1;
   await _loadExtraFacades(projId);

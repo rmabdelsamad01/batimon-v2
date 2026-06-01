@@ -188,8 +188,11 @@ function renderProjectScreen(){
 
   // Custom projects
   const isDev = (sbProfile?.role === 'developer');
+  const userAssignedProjects = Array.isArray(profile.projects) ? profile.projects : [];
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
+    // Access control: developers see all custom projects; others need explicit assignment
+    if(!isDev && !userAssignedProjects.includes(proj.id)) return;
     const isPendingDel = proj.deletion_requested;
     const editBtn = isDev
       ? `<button onclick="event.stopPropagation();showRenameProjectModal('${proj.id}','${proj.name.replace(/'/g,"\\'")}')"
@@ -222,6 +225,8 @@ async function openProject(id){
   window._activeProjectName = customProj ? customProj.name : (PROJECT_META[id]?.name||id);
   document.getElementById('project-screen').style.display='none';
   if(sbProfile) updateUserChip(sbProfile.full_name||sbProfile.username||sbUser?.email||'');
+  // Load project metadata (categories + facade names) from Supabase before rendering
+  if(typeof _loadProjectMetaFromSB==='function') await _loadProjectMetaFromSB(id);
   await load();
   goPage('dashboard');
 }

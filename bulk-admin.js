@@ -30,6 +30,8 @@ async function showAdminScreen(){
 async function adminRefresh(){
   document.getElementById('admin-list-pending').innerHTML='<div style="text-align:center;padding:20px;color:#8099b0;font-size:12px;">Loading…</div>';
   document.getElementById('admin-list-all').innerHTML='<div style="text-align:center;padding:20px;color:#8099b0;font-size:12px;">Loading…</div>';
+  // Load custom projects so their names show in user cards
+  if(typeof loadCustomProjects==='function') await loadCustomProjects();
   try{
     const {data,error}=await sb.from('profiles').select('*').order('updated_at',{ascending:false});
     if(error) throw error;
@@ -124,7 +126,11 @@ function adminUserCard(u){
   const roleColor = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'}[u.role]||'#8099b0';
   const roleLabel = {admin:'Admin', user:'User', viewer:'Viewer', batidoc_user:'Batidoc Only', phone_only:'Phone Only', developer:'Developer'}[u.role]||u.role||'Viewer';
   const projects = (u.projects||[]);
-  const projStr = projects.length ? projects.map(p=>PROJECT_META[p]?.name||p).join(', ') : '—';
+  const projStr = projects.length ? projects.map(p=>{
+    if(PROJECT_META[p]) return PROJECT_META[p].name;
+    const cp = (typeof getCustomProjects==='function'?getCustomProjects():[]).find(c=>c.id===p);
+    return cp ? cp.name : p;
+  }).join(', ') : '—';
   const isSelf = sbUser && u.id === sbUser.id;
 
   const safeName = (u.full_name||u.username||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -249,7 +255,7 @@ function openAdminEdit(userId){
     b.style.color = active ? '#224F93' : '#1a2a3a';
   });
 
-  // Set project checkboxes
+  // Set project checkboxes (static)
   document.querySelectorAll('#aem-projects input[type=checkbox]').forEach(cb=>{
     cb.checked = aemProjects.includes(cb.value);
     const lbl = cb.closest('label');
@@ -258,8 +264,33 @@ function openAdminEdit(userId){
       lbl.style.background = cb.checked ? 'rgba(34,79,147,0.07)' : '#f4f8fd';
     }
   });
+  // Inject custom project checkboxes dynamically
+  const customProjWrap = document.getElementById('aem-custom-projects');
+  const customProjects = typeof getCustomProjects==='function' ? getCustomProjects() : [];
+  if(customProjWrap){
+    if(customProjects.length){
+      customProjWrap.style.display='block';
+      customProjWrap.innerHTML = `<div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#1a9458;margin:12px 0 8px;">Custom Projects</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${customProjects.map(p=>{
+            const checked = aemProjects.includes(p.id);
+            const borderColor = checked ? '#1a9458' : 'rgba(26,148,88,0.2)';
+            const bg = checked ? 'rgba(26,148,88,0.07)' : '#f4faf7';
+            return `<label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid ${borderColor};background:${bg};cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
+              <input type="checkbox" value="${p.id}" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#1a9458;cursor:pointer;" ${checked?'checked':''}>
+              <span>${p.name}</span>
+            </label>`;
+          }).join('')}
+        </div>`;
+    } else {
+      customProjWrap.style.display='none';
+      customProjWrap.innerHTML='';
+    }
+  }
   // Sync Select All button label
-  const allChecked = ALL_PROJECTS.every(p=>aemProjects.includes(p));
+  const allCustomIds = customProjects.map(p=>p.id);
+  const allProjIds = [...ALL_PROJECTS, ...allCustomIds];
+  const allChecked = allProjIds.every(p=>aemProjects.includes(p));
   const allBtn = document.getElementById('aem-all-btn');
   if(allBtn) allBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
 
@@ -310,24 +341,29 @@ function aemToggleProject(cb){
 }
 
 function aemToggleAllProjects(){
-  const allChecked = ALL_PROJECTS.every(p=>aemProjects.includes(p));
+  const customIds = (typeof getCustomProjects==='function' ? getCustomProjects() : []).map(p=>p.id);
+  const allProjIds = [...ALL_PROJECTS, ...customIds];
+  const allChecked = allProjIds.every(p=>aemProjects.includes(p));
   if(allChecked){
-    // Deselect all
     aemProjects = [];
-    document.querySelectorAll('#aem-projects input[type=checkbox]').forEach(cb=>{
+    document.querySelectorAll('#aem-projects input[type=checkbox], #aem-custom-projects input[type=checkbox]').forEach(cb=>{
       cb.checked = false;
       const lbl = cb.closest('label');
-      if(lbl){ lbl.style.borderColor='rgba(34,79,147,0.15)'; lbl.style.background='#f4f8fd'; }
+      if(lbl){ lbl.style.borderColor=customIds.includes(cb.value)?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)'; lbl.style.background=customIds.includes(cb.value)?'#f4faf7':'#f4f8fd'; }
     });
     const btn = document.getElementById('aem-all-btn');
     if(btn) btn.textContent = 'Select All';
   } else {
-    // Select all
-    aemProjects = [...ALL_PROJECTS];
+    aemProjects = [...allProjIds];
     document.querySelectorAll('#aem-projects input[type=checkbox]').forEach(cb=>{
       cb.checked = true;
       const lbl = cb.closest('label');
       if(lbl){ lbl.style.borderColor='#224F93'; lbl.style.background='rgba(34,79,147,0.07)'; }
+    });
+    document.querySelectorAll('#aem-custom-projects input[type=checkbox]').forEach(cb=>{
+      cb.checked = true;
+      const lbl = cb.closest('label');
+      if(lbl){ lbl.style.borderColor='#1a9458'; lbl.style.background='rgba(26,148,88,0.07)'; }
     });
     const btn = document.getElementById('aem-all-btn');
     if(btn) btn.textContent = 'Deselect All';
