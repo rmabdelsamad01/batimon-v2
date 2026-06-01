@@ -1055,7 +1055,7 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
       const av = _btCalcAv(p);
       const avClass = av>=100?'full':(av<20?'low':'');
       return `<tr data-id="${p.id}">
-        <td class="sticky-col">${p.numLigne||(idx+1)}</td>
+        <td class="sticky-col">${idx+1}</td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','numAff')">${_btH(p.numAff||'—')}</span></td>
         <td class="sticky-col-2"><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','projet')" style="font-weight:600;">${_btH(p.projet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','directeurProjet')" ${isVide(p.directeurProjet)?'style="color:#8099b0;font-style:italic;"':''}>${_btH(p.directeurProjet||'—')}</span></td>
