@@ -4,6 +4,9 @@
 // Uses Batimon's window.sb client and window.sbProfile for auth
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ─── Fixed directeur list ───────────────────────────────────────────────────────
+const BT_DIRECTORS = ['Raed','Anas','Nabil G','Youssef Chbihi'];
+
 // ─── State ──────────────────────────────────────────────────────────────────────
 let _btReports      = [];
 let _btAffectation  = [];
@@ -983,7 +986,6 @@ window._btRefreshAff = async function() {
 };
 
 function _btRenderAffectation() {
-  const dirs = [...new Set(_btAffectation.map(p=>p.directeurProjet).filter(v=>v&&v!=='VIDE'))].sort();
   const cps  = [...new Set(_btAffectation.map(p=>p.chefProjet).filter(v=>v&&v!=='VIDE'))].sort();
   const ccs  = [...new Set(_btAffectation.map(p=>p.chefChantier).filter(v=>v&&v!=='VIDE'))].sort();
   const fillSel = (id, items) => {
@@ -993,7 +995,14 @@ function _btRenderAffectation() {
     sel.innerHTML = sel.options[0].outerHTML + items.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
     sel.value = cur;
   };
-  fillSel('bt-aff-dir', dirs);
+  // Directeur filter: always use the fixed list
+  const dirSel = document.getElementById('bt-aff-dir');
+  if (dirSel) {
+    const cur = dirSel.value;
+    dirSel.innerHTML = `<option value="">Tous directeurs</option>` +
+      BT_DIRECTORS.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
+    dirSel.value = cur;
+  }
   fillSel('bt-aff-cp', cps);
   fillSel('bt-aff-cc', ccs);
   _btApplyAffFilters();
@@ -1087,6 +1096,32 @@ window._btEditAffCell = function(cellSpan, projectId, field, type) {
   const oldHtml = cellSpan.innerHTML;
   const oldValue = project[field] !== undefined ? project[field] : '';
   cellSpan.classList.add('editing');
+
+  // Directeur: dropdown from fixed list only
+  if (field === 'directeurProjet') {
+    const sel = document.createElement('select');
+    sel.style.cssText = 'width:100%;border:1.5px solid #224F93;border-radius:4px;padding:3px 6px;font-family:Barlow,sans-serif;font-size:12px;outline:none;';
+    sel.innerHTML = `<option value="">—</option>` +
+      BT_DIRECTORS.map(v=>`<option value="${_btA(v)}"${v===oldValue?' selected':''}>${_btH(v)}</option>`).join('');
+    cellSpan.innerHTML = ''; cellSpan.appendChild(sel);
+    sel.focus();
+    const commitSel = async () => {
+      const newVal = sel.value;
+      cellSpan.classList.remove('editing');
+      if (newVal === oldValue) { cellSpan.innerHTML=oldHtml; return; }
+      project[field] = newVal;
+      await _btSaveAffRow(project, oldValue, field, newVal);
+      _btApplyAffFilters();
+      _btToast('Modifié ✓');
+    };
+    sel.addEventListener('change', commitSel);
+    sel.addEventListener('blur', commitSel);
+    sel.addEventListener('keydown', e => {
+      if (e.key==='Escape') { cellSpan.classList.remove('editing'); cellSpan.innerHTML=oldHtml; }
+    });
+    return;
+  }
+
   let inp;
   if (type==='number') { inp = document.createElement('input'); inp.type='number'; inp.step='0.01'; inp.value=oldValue; }
   else { inp = document.createElement('input'); inp.type='text'; inp.value=oldValue; }
