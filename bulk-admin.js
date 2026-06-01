@@ -70,6 +70,12 @@ function renderDelRequests(reqs){
 
 async function approveDelRequest(reqId, projectId){
   await sb.from('project_delete_requests').update({status:'approved'}).eq('id',reqId);
+  // Immediately delete the project and all its data from Supabase
+  if(projectId){
+    await sb.from('custom_projects').delete().eq('id',projectId);
+    await sb.from('custom_project_facades').delete().eq('project_id',projectId);
+    await sb.from('project_info').delete().eq('project',projectId);
+  }
   await adminRefresh();
 }
 
