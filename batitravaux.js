@@ -4,8 +4,29 @@
 // Uses Batimon's window.sb client and window.sbProfile for auth
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─── Fixed directeur list ───────────────────────────────────────────────────────
-const BT_DIRECTORS = ['Raed','Anas','Nabil G','Youssef Chbihi'];
+// ─── Fixed dropdown lists ───────────────────────────────────────────────────────
+const BT_DIRECTORS      = ['Raed','Anas','Nabil G','Youssef Chbihi'];
+const BT_CHEF_PROJETS   = ['ANAS','BENBATI','CHEBIHI YOUSSEF','EZZAHIA','IMANE','KHADIJA','LARBI BKS','MEHDI BENMADANI','NABIL FT','OTMANE IMMA','OUSSAMA','SAAD','SAFAA','SAMY','SBYK','SIHAM'];
+const BT_CHEF_CHANTIERS = ['ABDELHAK','ABDELLAH','BAHLOUL','BENOMAR MOHAMED','EL OUAFI','JEDDA','KOUIDER','MOUFADAL','OUTMAN','SABATY','ZOUINE'];
+
+// Returns true when the logged-in user is the developer (username R1)
+function _btIsDeveloper() {
+  return (typeof sbProfile !== 'undefined' && sbProfile) &&
+         (sbProfile.username || '').toLowerCase() === 'r1';
+}
+
+// Returns the effective cumul attaché for an affectation row.
+// Looks up the most recent bt_reports entry with matching numAff.
+// Returns { value, linked } — linked=true when pulled from a report.
+function _btLinkedCa(p) {
+  if (p.numAff && _btReports.length > 0) {
+    const match = _btReports
+      .filter(r => r.numAff && r.numAff.trim() === p.numAff.trim())
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+    if (match) return { value: parseFloat(match.cumulAttache) || 0, linked: true };
+  }
+  return { value: parseFloat(p.cumulAttache) || 0, linked: false };
+}
 
 // ─── State ──────────────────────────────────────────────────────────────────────
 let _btReports      = [];
@@ -155,6 +176,9 @@ function _btInjectCss() {
 .bt-mini-prog .pct { font-size:10px; font-weight:700; color:#445; white-space:nowrap; }
 .bt-del-btn { background:none; border:none; color:#c02020; cursor:pointer; font-size:14px; padding:2px 5px; }
 .bt-del-btn:hover { background:#fdf0f0; border-radius:4px; }
+.bt-aff-locked { cursor:default !important; color:#8099b0; }
+.bt-aff-locked:hover { background:none !important; }
+.bt-aff-linked-ca { cursor:default; border-radius:4px; padding:1px 3px; }
 .bt-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
 .bt-filters input,.bt-filters select { padding:6px 10px; border:1.5px solid #dde3ee; border-radius:7px; font-family:'Barlow',sans-serif; font-size:12px; color:var(--text,#1a2a3a); outline:none; background:#fff; }
 .bt-filters input:focus,.bt-filters select:focus { border-color:#224F93; }
@@ -204,6 +228,7 @@ async function _btLoadReports() {
       if (!r.ofs) r.ofs = [];
       if (!r.demandes) r.demandes = [];
       if (!r.blocages) r.blocages = [];
+      if (r.numAff === undefined) r.numAff = '';
     });
     if (_btReports.length === 0) {
       _btReports = BT_REPORTS_SEED.map(r => ({...r}));
@@ -514,6 +539,7 @@ function _btRenderForm(body) {
       <div class="bt-form-body">
         <div class="bt-field-grid">
           <div class="bt-field"><label>Projet *</label><input name="projet" required placeholder="Nom du projet"></div>
+          <div class="bt-field"><label>N° Affectation</label><input name="numAff" placeholder="Ex: AF25-49" style="font-family:monospace;"></div>
           <div class="bt-field"><label>Client</label><input name="client" placeholder="Nom du client"></div>
           <div class="bt-field"><label>Lot</label><input name="lot" placeholder="Ex: Menuiserie Aluminium"></div>
           <div class="bt-field"><label>Chef de projet</label><input name="cp" value="${_btH(currentCp)}" readonly></div>
@@ -725,7 +751,8 @@ window.btSubmitReport = async function(e) {
   const report = {
     id: 'r-'+Date.now(),
     createdAt: new Date().toISOString(),
-    projet: data.projet, client: data.client, lot: data.lot, cp: data.cp,
+    projet: data.projet, numAff: (data.numAff||'').trim(),
+    client: data.client, lot: data.lot, cp: data.cp,
     dateReporting: data.dateReporting, effectif: parseInt(data.effectif)||0,
     montantMarche: mm, cumulAttache: ca, cumulFacture: cf,
     avancement, facturation, pctFactAtt,
@@ -975,36 +1002,29 @@ window.btInitAffectation = async function() {
       </div>
     </div>
   </div>`;
+  if (_btReports.length === 0) await _btLoadReports();
   await _btLoadAffectation();
   _btRenderAffectation();
 };
 
 window._btRefreshAff = async function() {
-  await _btLoadAffectation();
+  await Promise.all([_btLoadReports(), _btLoadAffectation()]);
   _btRenderAffectation();
   _btToast('Actualisé ✓');
 };
 
 function _btRenderAffectation() {
-  const cps  = [...new Set(_btAffectation.map(p=>p.chefProjet).filter(v=>v&&v!=='VIDE'))].sort();
-  const ccs  = [...new Set(_btAffectation.map(p=>p.chefChantier).filter(v=>v&&v!=='VIDE'))].sort();
-  const fillSel = (id, items) => {
+  const fixedFill = (id, list) => {
     const sel = document.getElementById(id);
     if (!sel) return;
     const cur = sel.value;
-    sel.innerHTML = sel.options[0].outerHTML + items.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
+    sel.innerHTML = sel.options[0].outerHTML +
+      list.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
     sel.value = cur;
   };
-  // Directeur filter: always use the fixed list
-  const dirSel = document.getElementById('bt-aff-dir');
-  if (dirSel) {
-    const cur = dirSel.value;
-    dirSel.innerHTML = `<option value="">Tous directeurs</option>` +
-      BT_DIRECTORS.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
-    dirSel.value = cur;
-  }
-  fillSel('bt-aff-cp', cps);
-  fillSel('bt-aff-cc', ccs);
+  fixedFill('bt-aff-dir', BT_DIRECTORS);
+  fixedFill('bt-aff-cp',  BT_CHEF_PROJETS);
+  fixedFill('bt-aff-cc',  BT_CHEF_CHANTIERS);
   _btApplyAffFilters();
 }
 
@@ -1034,12 +1054,14 @@ window._btApplyAffFilters = function() {
     return true;
   });
 
-  // KPIs
+  // KPIs — use linked cumul attaché when available
   let totMm=0, totCa=0, totW=0, done=0;
   filtered.forEach(p => {
-    const mm=parseFloat(p.montantMarche)||0, ca=parseFloat(p.cumulAttache)||0;
-    totMm+=mm; totCa+=ca; totW+=_btCalcAv(p)*mm;
-    if (_btCalcAv(p)>=100) done++;
+    const mm = parseFloat(p.montantMarche)||0;
+    const ca = _btLinkedCa(p).value;
+    const av = mm>0 ? Math.min(100,Math.max(0,ca/mm*100)) : 0;
+    totMm+=mm; totCa+=ca; totW+=av*mm;
+    if (av>=100) done++;
   });
   const avgAv = totMm>0 ? totW/totMm : 0;
   const kpis = document.getElementById('bt-aff-kpis');
@@ -1061,8 +1083,11 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
   tbody.innerHTML = rows.length===0 ?
     `<tr><td colspan="16" style="text-align:center;padding:40px;color:#8099b0;font-style:italic;">Aucun projet ne correspond aux filtres</td></tr>` :
     rows.map((p, idx) => {
-      const av = _btCalcAv(p);
+      const caInfo = _btLinkedCa(p);
+      const mm = parseFloat(p.montantMarche)||0;
+      const av = mm>0 ? Math.min(100,Math.max(0,caInfo.value/mm*100)) : 0;
       const avClass = av>=100?'full':(av<20?'low':'');
+      const isDev = _btIsDeveloper();
       return `<tr data-id="${p.id}">
         <td class="sticky-col">${idx+1}</td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','numAff')">${_btH(p.numAff||'—')}</span></td>
@@ -1071,8 +1096,8 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefProjet')" ${isVide(p.chefProjet)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefProjet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefChantier')" ${isVide(p.chefChantier)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefChantier||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','effectif','number')">${p.effectif||'—'}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','montantMarche','number')" style="display:block;text-align:right;">${p.montantMarche?_btFmtMoneyShort(p.montantMarche):'—'}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','cumulAttache','number')" style="display:block;text-align:right;color:#224F93;font-weight:600;">${p.cumulAttache?_btFmtMoneyShort(p.cumulAttache):'0'}</span></td>
+        <td><span class="bt-aff-cell${isDev?'':' bt-aff-locked'}" ${isDev?`onclick="_btEditAffCell(this,'${p.id}','montantMarche','number')"`:''} style="display:block;text-align:right;">${p.montantMarche?_btFmtMoneyShort(p.montantMarche):'—'}${isDev?'':' <span style="opacity:.5;font-size:10px;">🔒</span>'}</span></td>
+        <td><span class="bt-aff-linked-ca" title="${caInfo.linked?'Lié au rapport Suivi Travaux (N° Aff)':'Valeur stockée — aucun rapport lié'}" style="display:block;text-align:right;color:#224F93;font-weight:600;">${caInfo.value?_btFmtMoneyShort(caInfo.value):'0'}${caInfo.linked?' <span style="font-size:10px;color:#1a9458;">🔗</span>':''}</span></td>
         <td><div class="bt-mini-prog"><div class="bar"><div class="fill ${avClass}" style="width:${av}%"></div></div><span class="pct">${av.toFixed(1)}%</span></div></td>
         <td><button class="bt-del-btn" onclick="_btDeleteAff('${p.id}')" title="Supprimer">×</button></td>
       </tr>`;
@@ -1091,18 +1116,30 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
 
 window._btEditAffCell = function(cellSpan, projectId, field, type) {
   if (cellSpan.classList.contains('editing')) return;
+  // Cumul attaché is always read-only
+  if (field === 'cumulAttache') return;
+  // Montant marché locked for non-developers
+  if (field === 'montantMarche' && !_btIsDeveloper()) {
+    _btToast('Montant marché verrouillé 🔒', false);
+    return;
+  }
   const project = _btAffectation.find(p=>p.id===projectId);
   if (!project) return;
   const oldHtml = cellSpan.innerHTML;
   const oldValue = project[field] !== undefined ? project[field] : '';
   cellSpan.classList.add('editing');
 
-  // Directeur: dropdown from fixed list only
-  if (field === 'directeurProjet') {
+  // Dropdown fields
+  const dropdownLists = {
+    directeurProjet: BT_DIRECTORS,
+    chefProjet:      BT_CHEF_PROJETS,
+    chefChantier:    BT_CHEF_CHANTIERS
+  };
+  if (field in dropdownLists) {
     const sel = document.createElement('select');
     sel.style.cssText = 'width:100%;border:1.5px solid #224F93;border-radius:4px;padding:3px 6px;font-family:Barlow,sans-serif;font-size:12px;outline:none;';
     sel.innerHTML = `<option value="">—</option>` +
-      BT_DIRECTORS.map(v=>`<option value="${_btA(v)}"${v===oldValue?' selected':''}>${_btH(v)}</option>`).join('');
+      dropdownLists[field].map(v=>`<option value="${_btA(v)}"${v===oldValue?' selected':''}>${_btH(v)}</option>`).join('');
     cellSpan.innerHTML = ''; cellSpan.appendChild(sel);
     sel.focus();
     const commitSel = async () => {
