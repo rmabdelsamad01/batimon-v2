@@ -958,20 +958,15 @@ window.btInitAffectation = async function() {
             <th style="min-width:100px;text-align:right;">Montant marché</th>
             <th style="min-width:100px;text-align:right;">Cumul attaché</th>
             <th style="min-width:120px;">Avancement</th>
-            <th style="min-width:60px;">BET</th>
-            <th style="min-width:60px;">Achat</th>
-            <th style="min-width:80px;">Production</th>
-            <th style="min-width:60px;">Pose</th>
-            <th style="min-width:120px;">Observations</th>
             <th style="min-width:36px;"></th>
           </tr></thead>
-          <tbody id="bt-aff-tbody"><tr><td colspan="16" style="text-align:center;padding:30px;color:#8099b0;">Chargement…</td></tr></tbody>
+          <tbody id="bt-aff-tbody"><tr><td colspan="11" style="text-align:center;padding:30px;color:#8099b0;">Chargement…</td></tr></tbody>
           <tfoot><tr class="bt-tot-row">
             <td colspan="7" id="bt-aff-tot-label" style="font-weight:700;text-align:right;">TOTAL</td>
             <td id="bt-aff-tot-marche" style="text-align:right;font-size:11px;"></td>
             <td id="bt-aff-tot-attache" style="text-align:right;font-size:11px;color:#224F93;"></td>
             <td id="bt-aff-tot-av" style="font-size:11px;font-weight:700;"></td>
-            <td colspan="6"></td>
+            <td colspan="1"></td>
           </tr></tfoot>
         </table>
       </div>
@@ -1070,11 +1065,6 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','montantMarche','number')" style="display:block;text-align:right;">${p.montantMarche?_btFmtMoneyShort(p.montantMarche):'—'}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','cumulAttache','number')" style="display:block;text-align:right;color:#224F93;font-weight:600;">${p.cumulAttache?_btFmtMoneyShort(p.cumulAttache):'0'}</span></td>
         <td><div class="bt-mini-prog"><div class="bar"><div class="fill ${avClass}" style="width:${av}%"></div></div><span class="pct">${av.toFixed(1)}%</span></div></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','bet')">${_btH(p.bet||'—')}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','achat')">${_btH(p.achat||'—')}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','production')">${_btH(p.production||'—')}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','pose')">${_btH(p.pose||'—')}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','observations')">${_btH(p.observations||'—')}</span></td>
         <td><button class="bt-del-btn" onclick="_btDeleteAff('${p.id}')" title="Supprimer">×</button></td>
       </tr>`;
     }).join('');
@@ -1149,11 +1139,11 @@ window._btDeleteAff = async function(id) {
 };
 
 window._btExportAff = function() {
-  const headers = ['#','N° Aff','Projet','Directeur','Chef Projet','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement','BET','Achat','Production','Pose','Observations'];
+  const headers = ['#','N° Aff','Projet','Directeur','Chef Projet','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
   const rows = _btAffectation.map((p,i) => [
     p.numLigne||(i+1), p.numAff, p.projet, p.directeurProjet, p.chefProjet,
     p.chefChantier, p.effectif, p.montantMarche, p.cumulAttache,
-    _btCalcAv(p).toFixed(2)+'%', p.bet, p.achat, p.production, p.pose, p.observations
+    _btCalcAv(p).toFixed(2)+'%'
   ]);
   const csv = [headers,...rows].map(r=>r.map(c=>{
     const s=(c==null)?'':String(c);
