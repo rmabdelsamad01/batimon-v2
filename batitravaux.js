@@ -139,7 +139,8 @@ function _btInjectCss() {
 .bt-aff-table td { padding:7px 8px; border-bottom:1px solid #f0f2f5; vertical-align:middle; }
 .bt-aff-table tbody tr:hover td { background:#f7f9fc; }
 .bt-aff-table .sticky-col { position:sticky; left:0; background:#f0f4f9; z-index:1; font-weight:600; font-size:11px; color:#445; min-width:36px; text-align:center; }
-.bt-aff-table .sticky-col-2 { position:sticky; left:80px; background:#fff; z-index:1; min-width:200px; font-weight:600; }
+.bt-aff-table td.sticky-col-2 { position:sticky; left:80px; background:#fff; z-index:1; min-width:200px; font-weight:600; color:#1a2a3a; }
+.bt-aff-table th.sticky-col-2 { position:sticky; left:80px; background:#224F93; z-index:3; min-width:200px; }
 .bt-aff-cell { cursor:pointer; display:block; border-radius:4px; padding:1px 3px; }
 .bt-aff-cell:hover { background:#dde7f5; }
 .bt-aff-cell input { width:100%; border:1.5px solid #224F93; border-radius:4px; padding:3px 6px; font-family:'Barlow',sans-serif; font-size:12px; outline:none; }
