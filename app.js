@@ -589,12 +589,14 @@ function projSidebarSelect(id){
     }
   });
   // Show/hide views
-  const views = ['projects','suggestions','beta'];
+  const views = ['projects','travaux','affectation','suggestions','beta'];
   views.forEach(v=>{
     const el = document.getElementById('proj-view-'+v);
-    if(el) el.style.display = (v===id) ? (v==='projects'?'block':'block') : 'none';
+    if(el) el.style.display = (v===id) ? 'block' : 'none';
   });
   // Render content for the selected view
+  if(id==='travaux' && typeof btInitTravaux==='function') btInitTravaux();
+  if(id==='affectation' && typeof btInitAffectation==='function') btInitAffectation();
   if(id==='suggestions') _renderProjSuggestions();
   if(id==='beta') _renderProjBeta();
   // Reset scroll
