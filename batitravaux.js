@@ -958,7 +958,10 @@ window.btInitAffectation = async function() {
       </div>
     </div>
     <div style="padding:14px 24px 0;background:#fff;border-bottom:1px solid var(--border,#dde3ee);">
-      <div class="bt-kpi-row" id="bt-aff-kpis" style="margin-bottom:14px;"></div>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;">
+        <div class="bt-kpi-row" id="bt-aff-kpis" style="flex:1;margin-bottom:0;"></div>
+        <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="_btShowAffDashboard()" style="white-space:nowrap;align-self:center;padding:8px 16px;font-size:12px;">📊 Dashboard</button>
+      </div>
       <div class="bt-filters">
         <input id="bt-aff-search" placeholder="Rechercher projet, CP, chef chantier…" oninput="_btApplyAffFilters()" style="min-width:220px;">
         <select id="bt-aff-dir" onchange="_btApplyAffFilters()"><option value="">Tous directeurs</option></select>
@@ -1208,6 +1211,99 @@ window._btDeleteAff = async function(id) {
   }
   _btApplyAffFilters();
   _btToast('Projet supprimé');
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AFFECTATION DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════════
+window._btShowAffDashboard = function() {
+  const existing = document.getElementById('bt-aff-dash-modal');
+  if (existing) { existing.remove(); return; }
+  const modal = document.createElement('div');
+  modal.id = 'bt-aff-dash-modal';
+  modal.className = 'bt-modal-backdrop';
+  modal.innerHTML = `
+    <div class="bt-modal" style="max-width:960px;width:100%;">
+      <div class="bt-modal-header">
+        <h3>📊 Dashboard Affectation Projet</h3>
+        <button class="bt-modal-close" onclick="document.getElementById('bt-aff-dash-modal').remove()">×</button>
+      </div>
+      <div class="bt-modal-body" style="padding:18px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
+          <button id="bt-dtab-dir" class="bt-btn bt-btn-primary bt-btn-sm" onclick="_btDashTab('dir')">👤 Directeurs</button>
+          <button id="bt-dtab-cp"  class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btDashTab('cp')">🧑‍💼 Chef Projet</button>
+          <button id="bt-dtab-cc"  class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btDashTab('cc')">🦺 Chef Chantier</button>
+        </div>
+        <div id="bt-dash-content"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  _btDashTab('dir');
+};
+
+window._btDashTab = function(tab) {
+  ['dir','cp','cc'].forEach(t => {
+    const btn = document.getElementById(`bt-dtab-${t}`);
+    if (!btn) return;
+    btn.className = t===tab ? 'bt-btn bt-btn-primary bt-btn-sm' : 'bt-btn bt-btn-secondary bt-btn-sm';
+  });
+  const fieldMap = { dir:'directeurProjet', cp:'chefProjet', cc:'chefChantier' };
+  const field = fieldMap[tab];
+  const stats = {};
+  _btAffectation.forEach(p => {
+    const key = (p[field]||'').trim() || '— Non assigné';
+    if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0, projets:[] };
+    const s = stats[key];
+    const mm = parseFloat(p.montantMarche)||0;
+    const ca = _btLinkedCa(p).value;
+    const av = mm>0 ? Math.min(100,Math.max(0,ca/mm*100)) : 0;
+    s.count++; s.mm+=mm; s.ca+=ca; s.w+=av*mm;
+    if (av>=100) s.done++;
+    s.projets.push(p.projet);
+  });
+  const sorted = Object.entries(stats)
+    .filter(([k]) => !k.startsWith('VIDE'))
+    .sort((a,b) => b[1].count - a[1].count);
+  const content = document.getElementById('bt-dash-content');
+  if (!content) return;
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;">
+      ${sorted.map(([name, s]) => {
+        const avgAv = s.mm>0 ? s.w/s.mm : 0;
+        const avColor = avgAv>=75?'#1a9458':avgAv>=25?'#224F93':'#c02020';
+        const initial = name.replace('— ','').charAt(0).toUpperCase();
+        const pct = s.mm>0 ? (s.ca/s.mm*100) : 0;
+        return `<div style="background:#fff;border:1px solid #dde3ee;border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#224F93,#3a7bd5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">${_btH(initial)}</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;color:#1a2a3a;">${_btH(name)}</div>
+              <div style="font-size:11px;color:#8099b0;margin-top:1px;">${s.count} projet${s.count>1?'s':''} &nbsp;·&nbsp; ${s.done} terminé${s.done>1?'s':''}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+            <div style="background:#f7f9fc;border-radius:8px;padding:9px 11px;">
+              <div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Marché</div>
+              <div style="font-size:13px;font-weight:700;color:#1a2a3a;margin-top:3px;">${_btFmtMoneyShort(s.mm)}</div>
+            </div>
+            <div style="background:#eef3fb;border-radius:8px;padding:9px 11px;">
+              <div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Attaché</div>
+              <div style="font-size:13px;font-weight:700;color:#224F93;margin-top:3px;">${_btFmtMoneyShort(s.ca)}</div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+              <span style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Avancement moy.</span>
+              <span style="font-size:12px;font-weight:700;color:${avColor};">${avgAv.toFixed(1)}%</span>
+            </div>
+            <div style="background:#e0e6ef;border-radius:4px;height:7px;">
+              <div style="height:100%;border-radius:4px;background:${avColor};width:${Math.min(100,avgAv).toFixed(1)}%;"></div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
 };
 
 window._btExportAff = function() {
