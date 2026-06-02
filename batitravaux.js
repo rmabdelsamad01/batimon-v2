@@ -281,6 +281,7 @@ async function _btLoadAffectation() {
         directeurProjet: r.directeur_projet || '',
         chefProjet: r.chef_projet || '',
         chefChantier: r.chef_chantier || '',
+        conducteurTravaux: r.observations || '',
         effectif: r.effectif || '',
         dateDebut: r.date_debut || '',
         dateFin: r.date_fin || '',
@@ -290,7 +291,7 @@ async function _btLoadAffectation() {
         achat: r.achat || '',
         production: r.production || '',
         pose: r.pose || '',
-        observations: r.observations || ''
+        observations: ''
       }));
     } else {
       _btAffectation = BT_AFFECTATION_SEED.map((p, i) => ({ id: 'aff-'+Date.now()+'-'+i, ...p }));
@@ -315,7 +316,7 @@ async function _btSaveAllAffectation() {
         montant_marche: parseFloat(p.montantMarche)||0,
         cumul_attache: parseFloat(p.cumulAttache)||0,
         bet: p.bet||'', achat: p.achat||'', production: p.production||'',
-        pose: p.pose||'', observations: p.observations||'',
+        pose: p.pose||'', observations: p.conducteurTravaux||'',
         updated_at: new Date().toISOString(), updated_by: _btUser()
       }, { onConflict: 'id' });
     }
@@ -967,6 +968,7 @@ window.btInitAffectation = async function() {
         <input id="bt-aff-search" placeholder="Rechercher projet, CP, chef chantier…" oninput="_btApplyAffFilters()" style="min-width:220px;">
         <select id="bt-aff-dir" onchange="_btApplyAffFilters()"><option value="">Tous directeurs</option></select>
         <select id="bt-aff-cp" onchange="_btApplyAffFilters()"><option value="">Tous CPs</option></select>
+        <select id="bt-aff-ct" onchange="_btApplyAffFilters()"><option value="">Tous conducteurs</option></select>
         <select id="bt-aff-cc" onchange="_btApplyAffFilters()"><option value="">Tous chefs chantier</option></select>
         <select id="bt-aff-av" onchange="_btApplyAffFilters()">
           <option value="">Tous avancements</option>
@@ -987,6 +989,7 @@ window.btInitAffectation = async function() {
             <th class="sticky-col-2" style="min-width:200px;">Projet</th>
             <th style="min-width:120px;">Directeur</th>
             <th style="min-width:120px;">Chef Projet</th>
+            <th style="min-width:130px;">Conducteur Travaux</th>
             <th style="min-width:120px;">Chef Chantier</th>
             <th style="min-width:60px;">Effectif</th>
             <th style="min-width:100px;text-align:right;">Montant marché</th>
@@ -994,9 +997,9 @@ window.btInitAffectation = async function() {
             <th style="min-width:120px;">Avancement</th>
             <th style="min-width:36px;"></th>
           </tr></thead>
-          <tbody id="bt-aff-tbody"><tr><td colspan="11" style="text-align:center;padding:30px;color:#8099b0;">Chargement…</td></tr></tbody>
+          <tbody id="bt-aff-tbody"><tr><td colspan="12" style="text-align:center;padding:30px;color:#8099b0;">Chargement…</td></tr></tbody>
           <tfoot><tr class="bt-tot-row">
-            <td colspan="7" id="bt-aff-tot-label" style="font-weight:700;text-align:right;">TOTAL</td>
+            <td colspan="8" id="bt-aff-tot-label" style="font-weight:700;text-align:right;">TOTAL</td>
             <td id="bt-aff-tot-marche" style="text-align:right;font-size:11px;"></td>
             <td id="bt-aff-tot-attache" style="text-align:right;font-size:11px;color:#224F93;"></td>
             <td id="bt-aff-tot-av" style="font-size:11px;font-weight:700;"></td>
@@ -1029,6 +1032,14 @@ function _btRenderAffectation() {
   fixedFill('bt-aff-dir', BT_DIRECTORS);
   fixedFill('bt-aff-cp',  BT_CHEF_PROJETS);
   fixedFill('bt-aff-cc',  BT_CHEF_CHANTIERS);
+  // Conducteur Travaux — dynamic from data
+  const ctSel = document.getElementById('bt-aff-ct');
+  if (ctSel) {
+    const cur = ctSel.value;
+    const cts = [...new Set(_btAffectation.map(p=>p.conducteurTravaux).filter(v=>v&&v!=='VIDE'))].sort();
+    ctSel.innerHTML = '<option value="">Tous conducteurs</option>' + cts.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
+    ctSel.value = cur;
+  }
   _btApplyAffFilters();
 }
 
@@ -1036,12 +1047,14 @@ window._btApplyAffFilters = function() {
   const search = (document.getElementById('bt-aff-search')?.value||'').toLowerCase().trim();
   const fDir = document.getElementById('bt-aff-dir')?.value||'';
   const fCp  = document.getElementById('bt-aff-cp')?.value||'';
+  const fCt  = document.getElementById('bt-aff-ct')?.value||'';
   const fCc  = document.getElementById('bt-aff-cc')?.value||'';
   const fAv  = document.getElementById('bt-aff-av')?.value||'';
 
   let filtered = _btAffectation.filter(p => {
     if (fDir && p.directeurProjet !== fDir) return false;
     if (fCp  && p.chefProjet !== fCp) return false;
+    if (fCt  && p.conducteurTravaux !== fCt) return false;
     if (fCc  && p.chefChantier !== fCc) return false;
     if (fAv) {
       const av = _btCalcAv(p);
@@ -1052,7 +1065,7 @@ window._btApplyAffFilters = function() {
       else if (fAv==='done' && av<100) return false;
     }
     if (search) {
-      const blob = [p.projet,p.numAff,p.directeurProjet,p.chefProjet,p.chefChantier,p.numLigne].filter(Boolean).join(' ').toLowerCase();
+      const blob = [p.projet,p.numAff,p.directeurProjet,p.chefProjet,p.conducteurTravaux,p.chefChantier,p.numLigne].filter(Boolean).join(' ').toLowerCase();
       if (!blob.includes(search)) return false;
     }
     return true;
@@ -1086,7 +1099,7 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
   if (!tbody) return;
   const isVide = v => !v || v==='VIDE';
   tbody.innerHTML = rows.length===0 ?
-    `<tr><td colspan="16" style="text-align:center;padding:40px;color:#8099b0;font-style:italic;">Aucun projet ne correspond aux filtres</td></tr>` :
+    `<tr><td colspan="12" style="text-align:center;padding:40px;color:#8099b0;font-style:italic;">Aucun projet ne correspond aux filtres</td></tr>` :
     rows.map((p, idx) => {
       const caInfo = _btLinkedCa(p);
       const mm = parseFloat(p.montantMarche)||0;
@@ -1099,6 +1112,7 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
         <td class="sticky-col-2"><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','projet')" style="font-weight:600;">${_btH(p.projet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','directeurProjet')" ${isVide(p.directeurProjet)?'style="color:#8099b0;font-style:italic;"':''}>${_btH(p.directeurProjet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefProjet')" ${isVide(p.chefProjet)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefProjet||'—')}</span></td>
+        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','conducteurTravaux')" ${isVide(p.conducteurTravaux)?'style="color:#8099b0;font-style:italic;"':''}>${_btH(p.conducteurTravaux||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefChantier')" ${isVide(p.chefChantier)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefChantier||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','effectif','number')">${p.effectif||'—'}</span></td>
         <td><span class="bt-aff-cell${isDev?'':' bt-aff-locked'}" ${isDev?`onclick="_btEditAffCell(this,'${p.id}','montantMarche','number')"`:''} style="display:block;text-align:right;">${p.montantMarche?_btFmtFull(p.montantMarche):'—'}${isDev?'':' <span style="opacity:.5;font-size:10px;">🔒</span>'}</span></td>
@@ -1192,7 +1206,7 @@ window._btAddAffRow = async function() {
   const p = {
     id: 'aff-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
     numLigne:'', numAff:'', projet:'Nouveau projet', directeurProjet:'',
-    chefProjet:'', chefChantier:'', effectif:'', dateDebut:'', dateFin:'',
+    chefProjet:'', conducteurTravaux:'', chefChantier:'', effectif:'', dateDebut:'', dateFin:'',
     montantMarche:0, cumulAttache:0, bet:'', achat:'', production:'', pose:'', observations:''
   };
   _btAffectation.unshift(p);
@@ -1232,7 +1246,7 @@ function btAffDash(tab) {
   panel.setAttribute('data-tab', tab);
   panel.style.display = 'block';
 
-  var fieldMap = { dir:'directeurProjet', cp:'chefProjet', cc:'chefChantier' };
+  var fieldMap = { dir:'directeurProjet', cp:'chefProjet', ct:'conducteurTravaux', cc:'chefChantier' };
   var field = fieldMap[tab];
   var stats = {};
   (_btAffectation || []).forEach(function(p) {
@@ -1251,11 +1265,11 @@ function btAffDash(tab) {
     .map(function(k) { return { name: k, s: stats[k] }; })
     .sort(function(a, b) { return b.s.count - a.s.count; });
 
-  var tabLabels = { dir:'Directeurs', cp:'Chef Projet', cc:'Chef Chantier' };
+  var tabLabels = { dir:'Directeurs', cp:'Chef Projet', ct:'Conducteur Travaux', cc:'Chef Chantier' };
   var h = '<div style="background:#f7f9fc;border:1px solid #dde3ee;border-radius:10px;padding:14px 18px;">';
   h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">';
-  h += '<div style="display:flex;gap:6px;">';
-  ['dir','cp','cc'].forEach(function(t) {
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+  ['dir','cp','ct','cc'].forEach(function(t) {
     var active = t === tab;
     h += '<button onclick="btAffDash(\'' + t + '\')" style="padding:5px 12px;border-radius:6px;border:1.5px solid #224F93;font-family:Barlow,sans-serif;font-size:11px;font-weight:700;cursor:pointer;background:' + (active?'#224F93':'#fff') + ';color:' + (active?'#fff':'#224F93') + ';">' + tabLabels[t] + '</button>';
   });
