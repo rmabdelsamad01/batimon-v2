@@ -959,6 +959,7 @@ window.btInitAffectation = async function() {
     </div>
     <div style="padding:14px 24px 0;background:#fff;border-bottom:1px solid var(--border,#dde3ee);">
       <div class="bt-kpi-row" id="bt-aff-kpis" style="margin-bottom:14px;"></div>
+      <div id="bt-aff-dash-panel" style="display:none;margin-bottom:14px;"></div>
       <div class="bt-filters">
         <input id="bt-aff-search" placeholder="Rechercher projet, CP, chef chantier…" oninput="_btApplyAffFilters()" style="min-width:220px;">
         <select id="bt-aff-dir" onchange="_btApplyAffFilters()"><option value="">Tous directeurs</option></select>
@@ -1071,10 +1072,8 @@ window._btApplyAffFilters = function() {
     <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:14px;color:#224F93;">${_btFmtMoneyShort(totCa)} MAD</div><div class="bt-kpi-lbl">Total attaché</div></div>
     <div class="bt-kpi"><div class="bt-kpi-val">${avgAv.toFixed(1)}%</div><div class="bt-kpi-lbl">Avancement moy.</div></div>
     <div class="bt-kpi green"><div class="bt-kpi-val">${done}</div><div class="bt-kpi-lbl">Terminés</div></div>
-    <button id="bt-dash-open-btn" class="bt-btn bt-btn-primary bt-btn-sm" style="align-self:center;white-space:nowrap;margin-left:4px;">📊 Dashboard</button>
+    <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="btAffDash()" style="align-self:center;white-space:nowrap;margin-left:4px;">📊 Dashboard</button>
   `;
-  const dashBtn = document.getElementById('bt-dash-open-btn');
-  if (dashBtn) dashBtn.addEventListener('click', window._btShowAffDashboard);
 
   _btRenderAffRows(filtered, totMm, totCa, avgAv);
 };
@@ -1216,120 +1215,78 @@ window._btDeleteAff = async function(id) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // AFFECTATION DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════════
-function _btBuildDashCards(tab) {
+// ─── Affectation Dashboard (inline panel) ──────────────────────────────────────
+function btAffDash(tab) {
+  var panel = document.getElementById('bt-aff-dash-panel');
+  if (!panel) return;
+  tab = tab || 'dir';
+
+  // Toggle off if same tab clicked while open
+  if (panel.style.display !== 'none' && panel.getAttribute('data-tab') === tab) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.setAttribute('data-tab', tab);
+  panel.style.display = 'block';
+
   var fieldMap = { dir:'directeurProjet', cp:'chefProjet', cc:'chefChantier' };
   var field = fieldMap[tab];
   var stats = {};
-  (_btAffectation||[]).forEach(function(p) {
-    var key = ((p[field]||'').trim()) || 'Non assigné';
-    if (key === 'VIDE') key = 'Non assigné';
+  (_btAffectation || []).forEach(function(p) {
+    var key = (p[field] || '').trim();
+    if (!key || key === 'VIDE') key = 'Non assigné';
     if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0 };
     var s = stats[key];
-    var mm = parseFloat(p.montantMarche)||0;
+    var mm = parseFloat(p.montantMarche) || 0;
     var ca = _btLinkedCa(p).value;
-    var av = mm>0 ? Math.min(100,Math.max(0,ca/mm*100)) : 0;
-    s.count++; s.mm+=mm; s.ca+=ca; s.w+=av*mm;
-    if (av>=100) s.done++;
+    var av = mm > 0 ? Math.min(100, Math.max(0, ca / mm * 100)) : 0;
+    s.count++; s.mm += mm; s.ca += ca; s.w += av * mm;
+    if (av >= 100) s.done++;
   });
-  var sorted = Object.keys(stats).map(function(k){ return [k, stats[k]]; })
-    .sort(function(a,b){ return b[1].count - a[1].count; });
+  var rows = Object.keys(stats)
+    .map(function(k) { return { name: k, s: stats[k] }; })
+    .sort(function(a, b) { return b.s.count - a.s.count; });
 
-  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">';
-  sorted.forEach(function(entry) {
-    var name = entry[0], s = entry[1];
-    var avgAv = s.mm>0 ? s.w/s.mm : 0;
-    var avColor = avgAv>=75 ? '#1a9458' : avgAv>=25 ? '#224F93' : '#c02020';
-    var initial = name.charAt(0).toUpperCase();
-    var barW = Math.min(100, avgAv).toFixed(1);
-    html += '<div style="background:#fff;border:1px solid #dde3ee;border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">';
-    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
-    html += '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#224F93,#3a7bd5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">' + _btH(initial) + '</div>';
-    html += '<div>';
-    html += '<div style="font-weight:700;font-size:13px;color:#1a2a3a;">' + _btH(name) + '</div>';
-    html += '<div style="font-size:11px;color:#8099b0;margin-top:2px;">' + s.count + ' projet' + (s.count>1?'s':'') + '&nbsp;&nbsp;·&nbsp;&nbsp;' + s.done + ' terminé' + (s.done>1?'s':'') + '</div>';
-    html += '</div></div>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">';
-    html += '<div style="background:#f7f9fc;border-radius:8px;padding:9px 11px;"><div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Marché</div><div style="font-size:13px;font-weight:700;color:#1a2a3a;margin-top:3px;">' + _btFmtMoneyShort(s.mm) + '</div></div>';
-    html += '<div style="background:#eef3fb;border-radius:8px;padding:9px 11px;"><div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Attaché</div><div style="font-size:13px;font-weight:700;color:#224F93;margin-top:3px;">' + _btFmtMoneyShort(s.ca) + '</div></div>';
-    html += '</div>';
-    html += '<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">';
-    html += '<span style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Avancement moy.</span>';
-    html += '<span style="font-size:12px;font-weight:700;color:' + avColor + ';">' + avgAv.toFixed(1) + '%</span>';
-    html += '</div><div style="background:#e0e6ef;border-radius:4px;height:7px;">';
-    html += '<div style="height:100%;border-radius:4px;background:' + avColor + ';width:' + barW + '%;"></div></div></div>';
-    html += '</div>';
+  var tabLabels = { dir:'Directeurs', cp:'Chef Projet', cc:'Chef Chantier' };
+  var h = '<div style="background:#f7f9fc;border:1px solid #dde3ee;border-radius:10px;padding:14px 18px;">';
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">';
+  h += '<div style="display:flex;gap:6px;">';
+  ['dir','cp','cc'].forEach(function(t) {
+    var active = t === tab;
+    h += '<button onclick="btAffDash(\'' + t + '\')" style="padding:5px 12px;border-radius:6px;border:1.5px solid #224F93;font-family:Barlow,sans-serif;font-size:11px;font-weight:700;cursor:pointer;background:' + (active?'#224F93':'#fff') + ';color:' + (active?'#fff':'#224F93') + ';">' + tabLabels[t] + '</button>';
   });
-  html += '</div>';
-  return html;
+  h += '</div>';
+  h += '<button onclick="document.getElementById(\'bt-aff-dash-panel\').style.display=\'none\'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#8099b0;line-height:1;">×</button>';
+  h += '</div>';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  h += '<thead><tr style="background:#224F93;color:#fff;">';
+  h += '<th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;">Nom</th>';
+  h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">Projets</th>';
+  h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">Terminés</th>';
+  h += '<th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;">Total marché</th>';
+  h += '<th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;">Total attaché</th>';
+  h += '<th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;min-width:120px;">Avanc. moy.</th>';
+  h += '</tr></thead><tbody>';
+  rows.forEach(function(r, i) {
+    var s = r.s;
+    var avgAv = s.mm > 0 ? s.w / s.mm : 0;
+    var avColor = avgAv >= 75 ? '#1a9458' : avgAv >= 25 ? '#224F93' : '#c02020';
+    var bg = i % 2 === 0 ? '#fff' : '#f7f9fc';
+    h += '<tr style="background:' + bg + ';">';
+    h += '<td style="padding:7px 10px;font-weight:700;color:#1a2a3a;">' + _btH(r.name) + '</td>';
+    h += '<td style="padding:7px 10px;text-align:center;font-weight:700;color:#224F93;">' + s.count + '</td>';
+    h += '<td style="padding:7px 10px;text-align:center;color:#1a9458;font-weight:700;">' + s.done + '</td>';
+    h += '<td style="padding:7px 10px;text-align:right;">' + _btFmtMoneyShort(s.mm) + '</td>';
+    h += '<td style="padding:7px 10px;text-align:right;color:#224F93;font-weight:700;">' + _btFmtMoneyShort(s.ca) + '</td>';
+    h += '<td style="padding:7px 10px;"><div style="display:flex;align-items:center;gap:6px;">';
+    h += '<div style="flex:1;background:#e0e6ef;border-radius:3px;height:6px;"><div style="height:100%;border-radius:3px;background:' + avColor + ';width:' + Math.min(100, avgAv).toFixed(1) + '%;"></div></div>';
+    h += '<span style="font-size:11px;font-weight:700;color:' + avColor + ';white-space:nowrap;">' + avgAv.toFixed(1) + '%</span>';
+    h += '</div></td>';
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  panel.innerHTML = h;
 }
-
-window._btShowAffDashboard = function() {
-  try {
-    var existing = document.getElementById('bt-aff-dash-modal');
-    if (existing) { existing.remove(); return; }
-    var modal = document.createElement('div');
-    modal.id = 'bt-aff-dash-modal';
-    modal.className = 'bt-modal-backdrop';
-
-    var inner = document.createElement('div');
-    inner.className = 'bt-modal';
-    inner.style.cssText = 'max-width:960px;width:100%;';
-
-    var header = document.createElement('div');
-    header.className = 'bt-modal-header';
-    header.innerHTML = '<h3>📊 Dashboard Affectation Projet</h3>';
-    var closeBtn = document.createElement('button');
-    closeBtn.className = 'bt-modal-close';
-    closeBtn.textContent = '×';
-    closeBtn.onclick = function(){ modal.remove(); };
-    header.appendChild(closeBtn);
-
-    var body = document.createElement('div');
-    body.className = 'bt-modal-body';
-    body.style.padding = '18px';
-
-    var tabs = document.createElement('div');
-    tabs.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;';
-    var tabDefs = [['dir','👤 Directeurs'],['cp','🧑 Chef Projet'],['cc','🔧 Chef Chantier']];
-    tabDefs.forEach(function(td) {
-      var btn = document.createElement('button');
-      btn.id = 'bt-dtab-' + td[0];
-      btn.className = td[0]==='dir' ? 'bt-btn bt-btn-primary bt-btn-sm' : 'bt-btn bt-btn-secondary bt-btn-sm';
-      btn.textContent = td[1];
-      btn.onclick = function(){ window._btDashTab(td[0]); };
-      tabs.appendChild(btn);
-    });
-
-    var content = document.createElement('div');
-    content.id = 'bt-dash-content';
-
-    body.appendChild(tabs);
-    body.appendChild(content);
-    inner.appendChild(header);
-    inner.appendChild(body);
-    modal.appendChild(inner);
-    document.body.appendChild(modal);
-    modal.addEventListener('click', function(e){ if (e.target===modal) modal.remove(); });
-    window._btDashTab('dir');
-  } catch(err) {
-    _btToast('Erreur dashboard: ' + err.message, false);
-    console.error('[BT dashboard]', err);
-  }
-};
-
-window._btDashTab = function(tab) {
-  try {
-    ['dir','cp','cc'].forEach(function(t) {
-      var btn = document.getElementById('bt-dtab-' + t);
-      if (btn) btn.className = t===tab ? 'bt-btn bt-btn-primary bt-btn-sm' : 'bt-btn bt-btn-secondary bt-btn-sm';
-    });
-    var content = document.getElementById('bt-dash-content');
-    if (!content) return;
-    content.innerHTML = _btBuildDashCards(tab);
-  } catch(err) {
-    console.error('[BT dashTab]', err);
-  }
-};
 
 window._btExportAff = function() {
   const headers = ['#','N° Aff','Projet','Directeur','Chef Projet','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
