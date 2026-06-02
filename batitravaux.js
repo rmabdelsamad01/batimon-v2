@@ -1420,17 +1420,35 @@ window._btDeleteAff = async function(id) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // AFFECTATION DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════════
+var _btDashOnlyIP = false; // "only in progress" toggle — excludes 100% projects
+
+// Called by the toggle button; flips state and re-renders current tab
+function btAffDashToggleIP() {
+  _btDashOnlyIP = !_btDashOnlyIP;
+  var panel = document.getElementById('bt-aff-dash-panel');
+  var tab = (panel && panel.getAttribute('data-tab')) || 'dir';
+  _btDashRender(tab);
+}
+
 // ─── Affectation Dashboard (inline panel) ──────────────────────────────────────
 function btAffDash(tab) {
   var panel = document.getElementById('bt-aff-dash-panel');
   if (!panel) return;
   tab = tab || 'dir';
 
-  // Toggle off if same tab clicked while open
+  // Toggle off if same tab clicked while open AND toggle is inactive
   if (panel.style.display !== 'none' && panel.getAttribute('data-tab') === tab) {
     panel.style.display = 'none';
     return;
   }
+  panel.setAttribute('data-tab', tab);
+  panel.style.display = 'block';
+  _btDashRender(tab);
+}
+
+function _btDashRender(tab) {
+  var panel = document.getElementById('bt-aff-dash-panel');
+  if (!panel) return;
   panel.setAttribute('data-tab', tab);
   panel.style.display = 'block';
 
@@ -1441,6 +1459,8 @@ function btAffDash(tab) {
     var mm = parseFloat(p.montantMarche) || 0;
     var ca = _btLinkedCa(p).value;
     var av = mm > 0 ? Math.min(100, Math.max(0, ca / mm * 100)) : 0;
+    // Skip 100% projects when "only in progress" is active
+    if (_btDashOnlyIP && av >= 100) return;
     // For multi-value fields, distribute into each person's stats
     var keys = tab === 'dir'
       ? [(p[field] || '').trim()]
@@ -1460,22 +1480,30 @@ function btAffDash(tab) {
     .sort(function(a, b) { return b.s.count - a.s.count; });
 
   var tabLabels = { dir:'Directeurs', cp:'Chef Projet', ct:'Conducteur Travaux', cc:'Chef Chantier' };
+  var ipActive = _btDashOnlyIP;
   var h = '<div style="background:#f7f9fc;border:1px solid #dde3ee;border-radius:10px;padding:14px 18px;">';
   h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">';
-  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">';
   ['dir','cp','ct','cc'].forEach(function(t) {
     var active = t === tab;
     h += '<button onclick="btAffDash(\'' + t + '\')" style="padding:5px 12px;border-radius:6px;border:1.5px solid #224F93;font-family:Barlow,sans-serif;font-size:11px;font-weight:700;cursor:pointer;background:' + (active?'#224F93':'#fff') + ';color:' + (active?'#fff':'#224F93') + ';">' + tabLabels[t] + '</button>';
   });
+  // "Only in progress" toggle button
+  h += '<div style="width:1px;height:20px;background:#dde3ee;margin:0 2px;"></div>';
+  h += '<button onclick="btAffDashToggleIP()" title="Masquer les projets terminés (100%)" style="padding:5px 12px;border-radius:6px;border:1.5px solid ' + (ipActive?'#b08400':'#dde3ee') + ';font-family:Barlow,sans-serif;font-size:11px;font-weight:700;cursor:pointer;background:' + (ipActive?'#fff8e1':'#fff') + ';color:' + (ipActive?'#b08400':'#8099b0') + ';">'
+    + (ipActive ? '🟡 En cours uniquement' : '⬜ En cours uniquement') + '</button>';
   h += '</div>';
   h += '<button onclick="document.getElementById(\'bt-aff-dash-panel\').style.display=\'none\'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#8099b0;line-height:1;">×</button>';
   h += '</div>';
+  if (ipActive) {
+    h += '<div style="display:inline-flex;align-items:center;gap:6px;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:4px 10px;margin-bottom:10px;font-size:11px;color:#856404;">🟡 Projets terminés (100%) exclus des totaux</div>';
+  }
   h += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
   h += '<thead><tr style="background:#224F93;color:#fff;">';
   h += '<th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;">Nom</th>';
   h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">Projets</th>';
   h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">En cours</th>';
-  h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">Terminés</th>';
+  if (!ipActive) h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">Terminés</th>';
   h += '<th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;">Total marché</th>';
   h += '<th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;">Total attaché</th>';
   h += '<th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;min-width:120px;">Avanc. moy.</th>';
@@ -1489,7 +1517,7 @@ function btAffDash(tab) {
     h += '<td style="padding:7px 10px;font-weight:700;color:#1a2a3a;">' + _btH(r.name) + '</td>';
     h += '<td style="padding:7px 10px;text-align:center;font-weight:700;color:#224F93;">' + s.count + '</td>';
     h += '<td style="padding:7px 10px;text-align:center;color:#b08400;font-weight:700;">' + s.inProgress + '</td>';
-    h += '<td style="padding:7px 10px;text-align:center;color:#1a9458;font-weight:700;">' + s.done + '</td>';
+    if (!ipActive) h += '<td style="padding:7px 10px;text-align:center;color:#1a9458;font-weight:700;">' + s.done + '</td>';
     h += '<td style="padding:7px 10px;text-align:right;">' + _btFmtFull(s.mm) + '</td>';
     h += '<td style="padding:7px 10px;text-align:right;color:#224F93;font-weight:700;">' + _btFmtFull(s.ca) + '</td>';
     h += '<td style="padding:7px 10px;"><div style="display:flex;align-items:center;gap:6px;">';
