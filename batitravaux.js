@@ -1242,7 +1242,7 @@ function btAffDash(tab) {
     var av = mm > 0 ? Math.min(100, Math.max(0, ca / mm * 100)) : 0;
     s.count++; s.mm += mm; s.ca += ca; s.w += av * mm;
     if (av >= 100) s.done++;
-    else if (av > 0) s.inProgress++;
+    else s.inProgress++;
   });
   var rows = Object.keys(stats)
     .map(function(k) { return { name: k, s: stats[k] }; })
