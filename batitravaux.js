@@ -958,10 +958,7 @@ window.btInitAffectation = async function() {
       </div>
     </div>
     <div style="padding:14px 24px 0;background:#fff;border-bottom:1px solid var(--border,#dde3ee);">
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;">
-        <div class="bt-kpi-row" id="bt-aff-kpis" style="flex:1;margin-bottom:0;"></div>
-        <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="_btShowAffDashboard()" style="white-space:nowrap;align-self:center;padding:8px 16px;font-size:12px;">📊 Dashboard</button>
-      </div>
+      <div class="bt-kpi-row" id="bt-aff-kpis" style="margin-bottom:14px;"></div>
       <div class="bt-filters">
         <input id="bt-aff-search" placeholder="Rechercher projet, CP, chef chantier…" oninput="_btApplyAffFilters()" style="min-width:220px;">
         <select id="bt-aff-dir" onchange="_btApplyAffFilters()"><option value="">Tous directeurs</option></select>
@@ -1074,7 +1071,10 @@ window._btApplyAffFilters = function() {
     <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:14px;color:#224F93;">${_btFmtMoneyShort(totCa)} MAD</div><div class="bt-kpi-lbl">Total attaché</div></div>
     <div class="bt-kpi"><div class="bt-kpi-val">${avgAv.toFixed(1)}%</div><div class="bt-kpi-lbl">Avancement moy.</div></div>
     <div class="bt-kpi green"><div class="bt-kpi-val">${done}</div><div class="bt-kpi-lbl">Terminés</div></div>
+    <button id="bt-dash-open-btn" class="bt-btn bt-btn-primary bt-btn-sm" style="align-self:center;white-space:nowrap;margin-left:4px;">📊 Dashboard</button>
   `;
+  const dashBtn = document.getElementById('bt-dash-open-btn');
+  if (dashBtn) dashBtn.addEventListener('click', window._btShowAffDashboard);
 
   _btRenderAffRows(filtered, totMm, totCa, avgAv);
 };
