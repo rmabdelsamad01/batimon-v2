@@ -62,6 +62,9 @@ function _btFmtMoney(n) {
   if (!n) return '0 MAD';
   return new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n) + ' MAD';
 }
+function _btFmtFull(n) {
+  return new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(parseFloat(n)||0);
+}
 function _btFmtMoneyShort(n) {
   if (!n || n === 0) return '0';
   const v = parseFloat(n);
@@ -1068,8 +1071,8 @@ window._btApplyAffFilters = function() {
   const kpis = document.getElementById('bt-aff-kpis');
   if (kpis) kpis.innerHTML = `
     <div class="bt-kpi"><div class="bt-kpi-val">${filtered.length}</div><div class="bt-kpi-lbl">Projets</div></div>
-    <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:14px;">${_btFmtMoneyShort(totMm)} MAD</div><div class="bt-kpi-lbl">Total marché</div></div>
-    <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:14px;color:#224F93;">${_btFmtMoneyShort(totCa)} MAD</div><div class="bt-kpi-lbl">Total attaché</div></div>
+    <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:11px;">${_btFmtFull(totMm)} MAD</div><div class="bt-kpi-lbl">Total marché</div></div>
+    <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:11px;color:#224F93;">${_btFmtFull(totCa)} MAD</div><div class="bt-kpi-lbl">Total attaché</div></div>
     <div class="bt-kpi"><div class="bt-kpi-val">${avgAv.toFixed(1)}%</div><div class="bt-kpi-lbl">Avancement moy.</div></div>
     <div class="bt-kpi green"><div class="bt-kpi-val">${done}</div><div class="bt-kpi-lbl">Terminés</div></div>
     <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="btAffDash()" style="align-self:center;white-space:nowrap;margin-left:4px;">📊 Dashboard</button>
@@ -1098,8 +1101,8 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefProjet')" ${isVide(p.chefProjet)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefProjet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefChantier')" ${isVide(p.chefChantier)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefChantier||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','effectif','number')">${p.effectif||'—'}</span></td>
-        <td><span class="bt-aff-cell${isDev?'':' bt-aff-locked'}" ${isDev?`onclick="_btEditAffCell(this,'${p.id}','montantMarche','number')"`:''} style="display:block;text-align:right;">${p.montantMarche?_btFmtMoneyShort(p.montantMarche):'—'}${isDev?'':' <span style="opacity:.5;font-size:10px;">🔒</span>'}</span></td>
-        <td><span class="bt-aff-linked-ca" title="${caInfo.linked?'Lié au rapport Suivi Travaux (N° Aff)':'Valeur stockée — aucun rapport lié'}" style="display:block;text-align:right;color:#224F93;font-weight:600;">${caInfo.value?_btFmtMoneyShort(caInfo.value):'0'}${caInfo.linked?' <span style="font-size:10px;color:#1a9458;">🔗</span>':''}</span></td>
+        <td><span class="bt-aff-cell${isDev?'':' bt-aff-locked'}" ${isDev?`onclick="_btEditAffCell(this,'${p.id}','montantMarche','number')"`:''} style="display:block;text-align:right;">${p.montantMarche?_btFmtFull(p.montantMarche):'—'}${isDev?'':' <span style="opacity:.5;font-size:10px;">🔒</span>'}</span></td>
+        <td><span class="bt-aff-linked-ca" title="${caInfo.linked?'Lié au rapport Suivi Travaux (N° Aff)':'Valeur stockée — aucun rapport lié'}" style="display:block;text-align:right;color:#224F93;font-weight:600;">${caInfo.value?_btFmtFull(caInfo.value):'0.00'}${caInfo.linked?' <span style="font-size:10px;color:#1a9458;">🔗</span>':''}</span></td>
         <td><div class="bt-mini-prog"><div class="bar"><div class="fill ${avClass}" style="width:${av}%"></div></div><span class="pct">${av.toFixed(1)}%</span></div></td>
         <td><button class="bt-del-btn" onclick="_btDeleteAff('${p.id}')" title="Supprimer">×</button></td>
       </tr>`;
@@ -1111,8 +1114,8 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
   const totA = document.getElementById('bt-aff-tot-attache');
   const totAv = document.getElementById('bt-aff-tot-av');
   if (totL) totL.textContent = `TOTAL (${rows.length})`;
-  if (totM) totM.textContent = _btFmtMoney(totMm);
-  if (totA) totA.textContent = _btFmtMoney(totCa);
+  if (totM) totM.textContent = _btFmtFull(totMm) + ' MAD';
+  if (totA) totA.textContent = _btFmtFull(totCa) + ' MAD';
   if (totAv) totAv.textContent = avgAv.toFixed(1)+'%';
 }
 
@@ -1279,8 +1282,8 @@ function btAffDash(tab) {
     h += '<td style="padding:7px 10px;text-align:center;font-weight:700;color:#224F93;">' + s.count + '</td>';
     h += '<td style="padding:7px 10px;text-align:center;color:#b08400;font-weight:700;">' + s.inProgress + '</td>';
     h += '<td style="padding:7px 10px;text-align:center;color:#1a9458;font-weight:700;">' + s.done + '</td>';
-    h += '<td style="padding:7px 10px;text-align:right;">' + _btFmtMoneyShort(s.mm) + '</td>';
-    h += '<td style="padding:7px 10px;text-align:right;color:#224F93;font-weight:700;">' + _btFmtMoneyShort(s.ca) + '</td>';
+    h += '<td style="padding:7px 10px;text-align:right;">' + _btFmtFull(s.mm) + '</td>';
+    h += '<td style="padding:7px 10px;text-align:right;color:#224F93;font-weight:700;">' + _btFmtFull(s.ca) + '</td>';
     h += '<td style="padding:7px 10px;"><div style="display:flex;align-items:center;gap:6px;">';
     h += '<div style="flex:1;background:#e0e6ef;border-radius:3px;height:6px;"><div style="height:100%;border-radius:3px;background:' + avColor + ';width:' + Math.min(100, avgAv).toFixed(1) + '%;"></div></div>';
     h += '<span style="font-size:11px;font-weight:700;color:' + avColor + ';white-space:nowrap;">' + avgAv.toFixed(1) + '%</span>';
