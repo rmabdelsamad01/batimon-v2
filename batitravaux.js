@@ -1135,7 +1135,7 @@ window._btApplyAffFilters = function() {
     <div class="bt-kpi"><div class="bt-kpi-val" style="color:#224F93;">${_btFmtFull(totCa)} MAD</div><div class="bt-kpi-lbl">Total attaché</div></div>
     <div class="bt-kpi"><div class="bt-kpi-val">${avgAv.toFixed(1)}%</div><div class="bt-kpi-lbl">Avancement moy.</div></div>
     <div class="bt-kpi green"><div class="bt-kpi-val">${done}</div><div class="bt-kpi-lbl">Terminés</div></div>
-    <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="btAffDash()" style="align-self:center;white-space:nowrap;margin-left:4px;">📊 Dashboard</button>
+    <button class="bt-btn bt-btn-primary" onclick="btAffDash()" style="align-self:stretch;white-space:nowrap;margin-left:4px;padding:14px 18px;border-radius:10px;font-size:13px;">📊 Dashboard</button>
   `;
 
   // Apply sort
