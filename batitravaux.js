@@ -9,6 +9,22 @@ const BT_DIRECTORS      = ['Raed','Anas','Nabil G','Youssef Chbihi'];
 const BT_CHEF_PROJETS   = ['ANAS','BENBATI','CHEBIHI YOUSSEF','EZZAHIA','IMANE','KHADIJA','LARBI BKS','MEHDI BENMADANI','NABIL FT','OTMANE IMMA','OUSSAMA','SAAD','SAFAA','SAMY','SBYK','SIHAM'];
 const BT_CHEF_CHANTIERS = ['ABDELHAK','ABDELLAH','BAHLOUL','BENOMAR MOHAMED','EL OUAFI','JEDDA','KOUIDER','MOUFADAL','OUTMAN','SABATY','ZOUINE'];
 
+// ─── Runtime editable lists (persisted in localStorage, override constants) ─────
+var _btRtDirs, _btRtCPs, _btRtCTs, _btRtCCs;
+function _btLoadRtLists() {
+  function _load(key, def) {
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def.slice(); } catch(e) { return def.slice(); }
+  }
+  _btRtDirs = _load('bt_rt_dirs', BT_DIRECTORS);
+  _btRtCPs  = _load('bt_rt_cps',  BT_CHEF_PROJETS);
+  _btRtCTs  = _load('bt_rt_cts',  []);
+  _btRtCCs  = _load('bt_rt_ccs',  BT_CHEF_CHANTIERS);
+}
+function _btSaveRtList(key, arr) {
+  localStorage.setItem(key, JSON.stringify(arr));
+  _btLoadRtLists();
+}
+
 // Returns true when the logged-in user is the developer (username R1)
 function _btIsDeveloper() {
   return (typeof sbProfile !== 'undefined' && sbProfile) &&
@@ -964,6 +980,7 @@ window.btInitAffectation = async function() {
     <div style="padding:14px 24px 0;background:#fff;border-bottom:1px solid var(--border,#dde3ee);">
       <div class="bt-kpi-row" id="bt-aff-kpis" style="margin-bottom:14px;"></div>
       <div id="bt-aff-dash-panel" style="display:none;margin-bottom:14px;"></div>
+      <div id="bt-aff-mgr-panel" style="display:none;margin-bottom:14px;"></div>
       <div class="bt-filters">
         <input id="bt-aff-search" placeholder="Rechercher projet, CP, chef chantier…" oninput="_btApplyAffFilters()" style="min-width:220px;">
         <select id="bt-aff-dir" onchange="_btApplyAffFilters()"><option value="">Tous directeurs</option></select>
@@ -978,6 +995,7 @@ window.btInitAffectation = async function() {
           <option value="high">Avancé (75–100%)</option>
           <option value="done">Terminé (100%)</option>
         </select>
+        <button id="bt-aff-mgr-btn" style="display:none;" onclick="btAffMgr()" class="bt-btn bt-btn-secondary bt-btn-sm">⚙️ Gérer listes</button>
       </div>
     </div>
     <div style="flex:1;overflow:auto;padding:14px 24px;">
@@ -1009,6 +1027,7 @@ window.btInitAffectation = async function() {
       </div>
     </div>
   </div>`;
+  _btLoadRtLists();
   if (_btReports.length === 0) await _btLoadReports();
   await _btLoadAffectation();
   _btRenderAffectation();
@@ -1029,17 +1048,21 @@ function _btRenderAffectation() {
       list.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
     sel.value = cur;
   };
-  fixedFill('bt-aff-dir', BT_DIRECTORS);
-  fixedFill('bt-aff-cp',  BT_CHEF_PROJETS);
-  fixedFill('bt-aff-cc',  BT_CHEF_CHANTIERS);
-  // Conducteur Travaux — dynamic from data
+  fixedFill('bt-aff-dir', _btRtDirs || BT_DIRECTORS);
+  fixedFill('bt-aff-cp',  _btRtCPs  || BT_CHEF_PROJETS);
+  fixedFill('bt-aff-cc',  _btRtCCs  || BT_CHEF_CHANTIERS);
+  // Conducteur Travaux — runtime list merged with data
   const ctSel = document.getElementById('bt-aff-ct');
   if (ctSel) {
     const cur = ctSel.value;
-    const cts = [...new Set(_btAffectation.map(p=>p.conducteurTravaux).filter(v=>v&&v!=='VIDE'))].sort();
+    const ctData = _btAffectation.map(p=>p.conducteurTravaux).filter(v=>v&&v!=='VIDE');
+    const cts = [...new Set([...(_btRtCTs||[]), ...ctData])].sort();
     ctSel.innerHTML = '<option value="">Tous conducteurs</option>' + cts.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
     ctSel.value = cur;
   }
+  // Show manager button for developer only
+  const mgrBtn = document.getElementById('bt-aff-mgr-btn');
+  if (mgrBtn) mgrBtn.style.display = _btIsDeveloper() ? 'inline-flex' : 'none';
   _btApplyAffFilters();
 }
 
@@ -1149,12 +1172,14 @@ window._btEditAffCell = function(cellSpan, projectId, field, type) {
   cellSpan.classList.add('editing');
 
   // Dropdown fields
+  const ctList = [...new Set([...(_btRtCTs||[]), ..._btAffectation.map(p=>p.conducteurTravaux).filter(v=>v&&v!=='VIDE')])].sort();
   const dropdownLists = {
-    directeurProjet: BT_DIRECTORS,
-    chefProjet:      BT_CHEF_PROJETS,
-    chefChantier:    BT_CHEF_CHANTIERS
+    directeurProjet:  _btRtDirs || BT_DIRECTORS,
+    chefProjet:       _btRtCPs  || BT_CHEF_PROJETS,
+    conducteurTravaux: ctList.length > 0 ? ctList : null,
+    chefChantier:     _btRtCCs  || BT_CHEF_CHANTIERS
   };
-  if (field in dropdownLists) {
+  if (field in dropdownLists && dropdownLists[field] !== null) {
     const sel = document.createElement('select');
     sel.style.cssText = 'width:100%;border:1.5px solid #224F93;border-radius:4px;padding:3px 6px;font-family:Barlow,sans-serif;font-size:12px;outline:none;';
     sel.innerHTML = `<option value="">—</option>` +
@@ -1306,6 +1331,104 @@ function btAffDash(tab) {
   });
   h += '</tbody></table></div>';
   panel.innerHTML = h;
+}
+
+// ─── Developer list manager ─────────────────────────────────────────────────────
+function btAffMgr() {
+  if (!_btIsDeveloper()) return;
+  var panel = document.getElementById('bt-aff-mgr-panel');
+  if (!panel) return;
+  if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  btAffMgrRender();
+}
+
+function btAffMgrRender() {
+  var panel = document.getElementById('bt-aff-mgr-panel');
+  if (!panel) return;
+  var lists = [
+    { key:'bt_rt_dirs', label:'Directeurs',         arr: _btRtDirs || [] },
+    { key:'bt_rt_cps',  label:'Chef Projet',        arr: _btRtCPs  || [] },
+    { key:'bt_rt_cts',  label:'Conducteur Travaux', arr: _btRtCTs  || [] },
+    { key:'bt_rt_ccs',  label:'Chef Chantier',      arr: _btRtCCs  || [] }
+  ];
+
+  var h = '<div style="background:#f7f9fc;border:1px solid #dde3ee;border-radius:10px;padding:16px 18px;">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
+  h += '<span style="font-size:13px;font-weight:700;color:#224F93;">⚙️ Gestion des listes (Développeur)</span>';
+  h += '<button onclick="document.getElementById(\'bt-aff-mgr-panel\').style.display=\'none\'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#8099b0;">×</button>';
+  h += '</div>';
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">';
+
+  lists.forEach(function(lst) {
+    h += '<div style="background:#fff;border:1px solid #dde3ee;border-radius:8px;padding:12px;">';
+    h += '<div style="font-size:11px;font-weight:700;color:#224F93;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;">' + _btH(lst.label) + '</div>';
+    h += '<div id="bt-mgr-list-' + lst.key + '">';
+    lst.arr.forEach(function(name, idx) {
+      h += '<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;" id="bt-mgr-item-' + lst.key + '-' + idx + '">';
+      h += '<span style="flex:1;font-size:12px;padding:3px 6px;background:#f7f9fc;border-radius:4px;border:1px solid #e0e6ef;">' + _btH(name) + '</span>';
+      h += '<button onclick="btMgrEdit(\'' + lst.key + '\',' + idx + ')" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 4px;" title="Renommer">✏️</button>';
+      h += '<button onclick="btMgrDel(\'' + lst.key + '\',' + idx + ')" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 4px;color:#c02020;" title="Supprimer">🗑️</button>';
+      h += '</div>';
+    });
+    h += '</div>';
+    h += '<div style="display:flex;gap:4px;margin-top:6px;">';
+    h += '<input id="bt-mgr-add-' + lst.key + '" placeholder="Ajouter…" style="flex:1;padding:4px 7px;border:1.5px solid #dde3ee;border-radius:5px;font-size:12px;font-family:Barlow,sans-serif;outline:none;" onkeydown="if(event.key===\'Enter\')btMgrAdd(\'' + lst.key + '\')">';
+    h += '<button onclick="btMgrAdd(\'' + lst.key + '\')" style="padding:4px 9px;background:#224F93;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer;">+</button>';
+    h += '</div></div>';
+  });
+
+  h += '</div></div>';
+  panel.innerHTML = h;
+}
+
+function _btMgrGetArr(key) {
+  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : []; } catch(e) { return []; }
+}
+
+function btMgrAdd(key) {
+  var inp = document.getElementById('bt-mgr-add-' + key);
+  if (!inp) return;
+  var val = inp.value.trim();
+  if (!val) return;
+  var arr = _btMgrGetArr(key);
+  if (arr.indexOf(val) === -1) arr.push(val);
+  _btSaveRtList(key, arr);
+  inp.value = '';
+  btAffMgrRender();
+  _btRenderAffectation();
+}
+
+function btMgrDel(key, idx) {
+  var arr = _btMgrGetArr(key);
+  arr.splice(idx, 1);
+  _btSaveRtList(key, arr);
+  btAffMgrRender();
+  _btRenderAffectation();
+}
+
+function btMgrEdit(key, idx) {
+  var itemDiv = document.getElementById('bt-mgr-item-' + key + '-' + idx);
+  if (!itemDiv) return;
+  var arr = _btMgrGetArr(key);
+  var current = arr[idx] || '';
+  itemDiv.innerHTML = '<input id="bt-mgr-edit-inp" value="' + _btA(current) + '" style="flex:1;padding:3px 6px;border:1.5px solid #224F93;border-radius:4px;font-size:12px;font-family:Barlow,sans-serif;outline:none;">'
+    + '<button onclick="btMgrSaveEdit(\'' + key + '\',' + idx + ')" style="padding:2px 8px;background:#224F93;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;">✓</button>'
+    + '<button onclick="btAffMgrRender()" style="background:none;border:none;cursor:pointer;font-size:13px;padding:2px 4px;color:#8099b0;">✕</button>';
+  var inp = document.getElementById('bt-mgr-edit-inp');
+  if (inp) { inp.focus(); inp.select(); inp.onkeydown = function(e){ if(e.key==='Enter') btMgrSaveEdit(key,idx); if(e.key==='Escape') btAffMgrRender(); }; }
+}
+
+function btMgrSaveEdit(key, idx) {
+  var inp = document.getElementById('bt-mgr-edit-inp');
+  if (!inp) return;
+  var val = inp.value.trim();
+  if (!val) return;
+  var arr = _btMgrGetArr(key);
+  arr[idx] = val;
+  _btSaveRtList(key, arr);
+  btAffMgrRender();
+  _btRenderAffectation();
 }
 
 window._btExportAff = function() {
