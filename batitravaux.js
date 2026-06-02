@@ -1198,29 +1198,54 @@ window._btEditAffCell = function(cellSpan, projectId, field, type) {
                    [...new Set([...(_btRtCTs || []), ...ctFlatData])].sort();
     const currentArr = _btFlatArr(oldValue).filter(Boolean);
     const panel = document.createElement('div');
-    panel.style.cssText = 'position:fixed;z-index:10000;background:#fff;border:1.5px solid #224F93;border-radius:8px;padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.18);min-width:190px;max-height:290px;overflow-y:auto;';
+    panel.style.cssText = 'position:fixed;z-index:10000;background:#fff;border:1.5px solid #224F93;border-radius:8px;padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.18);min-width:210px;max-width:300px;';
     const rect = cellSpan.getBoundingClientRect();
-    panel.style.top = (rect.bottom + 4) + 'px';
-    panel.style.left = Math.min(rect.left, window.innerWidth - 210) + 'px';
+    panel.style.top = Math.min(rect.bottom + 4, window.innerHeight - 320) + 'px';
+    panel.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
     const msLabel = {'chefProjet':'Chef Projet','conducteurTravaux':'Conducteur Travaux','chefChantier':'Chef Chantier'}[field];
     let ph = `<div style="font-size:10px;font-weight:700;color:#224F93;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">${msLabel}</div>`;
-    if (msList.length === 0) {
-      ph += `<div style="font-size:11px;color:#8099b0;padding:4px 0;">Aucun élément — ajoutez via ⚙️ Gérer listes</div>`;
-    } else {
-      ph += msList.map(v =>
-        `<label style="display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12px;font-family:Barlow,sans-serif;white-space:nowrap;">
-          <input type="checkbox" class="_btMs" value="${_btA(v)}" ${currentArr.includes(v)?'checked':''} style="cursor:pointer;accent-color:#224F93;">
-          ${_btH(v)}
-        </label>`
-      ).join('');
-    }
-    ph += `<div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;border-top:1px solid #f0f2f5;padding-top:8px;">
+    ph += `<div id="_btMsChecks" style="max-height:170px;overflow-y:auto;margin-bottom:8px;">`;
+    ph += msList.map(v =>
+      `<label style="display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12px;font-family:Barlow,sans-serif;white-space:nowrap;">
+        <input type="checkbox" class="_btMs" value="${_btA(v)}" ${currentArr.includes(v)?'checked':''} style="cursor:pointer;accent-color:#224F93;">
+        ${_btH(v)}
+      </label>`
+    ).join('');
+    ph += `</div>`;
+    ph += `<div style="display:flex;gap:5px;margin-bottom:8px;">
+      <input id="_btMsNewInp" placeholder="Ajouter un nom…" style="flex:1;padding:4px 7px;border:1.5px solid #dde3ee;border-radius:5px;font-size:11px;font-family:Barlow,sans-serif;outline:none;">
+      <button id="_btMsAddBtn" style="padding:4px 9px;background:#eef3fb;color:#224F93;border:1.5px solid #224F93;border-radius:5px;font-size:11px;cursor:pointer;font-weight:700;">+</button>
+    </div>`;
+    ph += `<div style="display:flex;gap:6px;justify-content:flex-end;border-top:1px solid #f0f2f5;padding-top:8px;">
       <button id="_btMsCancelBtn" style="padding:4px 12px;border:1.5px solid #dde3ee;border-radius:5px;background:#fff;font-size:11px;font-family:Barlow,sans-serif;cursor:pointer;">Annuler</button>
       <button id="_btMsOkBtn" style="padding:4px 12px;background:#224F93;color:#fff;border:none;border-radius:5px;font-size:11px;font-family:Barlow,sans-serif;cursor:pointer;font-weight:700;">✓ OK</button>
     </div>`;
     panel.innerHTML = ph;
     document.body.appendChild(panel);
     cellSpan.innerHTML = '<span style="color:#224F93;font-style:italic;font-size:11px;">sélection…</span>';
+
+    // Inline add: type a new name → add as checked checkbox
+    const addInline = () => {
+      const inp = panel.querySelector('#_btMsNewInp');
+      const val = (inp?.value||'').trim();
+      if (!val) return;
+      const checks = panel.querySelector('#_btMsChecks');
+      // Check if already exists
+      const existing = [...checks.querySelectorAll('input._btMs')].find(cb => cb.value.toLowerCase() === val.toLowerCase());
+      if (existing) { existing.checked = true; inp.value=''; return; }
+      const lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12px;font-family:Barlow,sans-serif;white-space:nowrap;';
+      lbl.innerHTML = `<input type="checkbox" class="_btMs" value="${_btA(val)}" checked style="cursor:pointer;accent-color:#224F93;"> ${_btH(val)}`;
+      checks.appendChild(lbl);
+      inp.value = '';
+      // Also persist to runtime list for CT so it shows next time
+      if (field === 'conducteurTravaux') {
+        const rtArr = _btMgrGetArr('bt_rt_cts');
+        if (!rtArr.includes(val)) { rtArr.push(val); _btSaveRtList('bt_rt_cts', rtArr); }
+      }
+    };
+    panel.querySelector('#_btMsAddBtn').addEventListener('click', addInline);
+    panel.querySelector('#_btMsNewInp').addEventListener('keydown', e => { if (e.key==='Enter') { e.preventDefault(); addInline(); } });
 
     const closeMs = () => {
       panel.remove();
