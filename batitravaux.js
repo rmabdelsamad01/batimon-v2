@@ -25,6 +25,23 @@ function _btSaveRtList(key, arr) {
   _btLoadRtLists();
 }
 
+// ─── Multi-value array helpers ──────────────────────────────────────────────────
+// Normalise a stored value (string or JSON array) to a JS array
+function _btNormArr(v) {
+  if (Array.isArray(v)) return v.filter(Boolean);
+  if (!v || v === 'VIDE') return [];
+  try { var p = JSON.parse(v); if (Array.isArray(p)) return p.filter(Boolean); } catch(e) {}
+  return v.trim() ? [v.trim()] : [];
+}
+// Serialise an array for storage: single item stays plain string (backward compat)
+function _btArrStr(arr) {
+  if (!arr || arr.length === 0) return '';
+  if (arr.length === 1) return arr[0];
+  return JSON.stringify(arr);
+}
+// Flat-join array or string to space-separated string (for search blobs)
+function _btFlatArr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
+
 // Returns true when the logged-in user is the developer (username R1)
 function _btIsDeveloper() {
   return (typeof sbProfile !== 'undefined' && sbProfile) &&
@@ -295,9 +312,9 @@ async function _btLoadAffectation() {
         numAff: r.num_aff || '',
         projet: r.projet || '',
         directeurProjet: r.directeur_projet || '',
-        chefProjet: r.chef_projet || '',
-        chefChantier: r.chef_chantier || '',
-        conducteurTravaux: r.observations || '',
+        chefProjet: _btNormArr(r.chef_projet || ''),
+        chefChantier: _btNormArr(r.chef_chantier || ''),
+        conducteurTravaux: _btNormArr(r.observations || ''),
         effectif: r.effectif || '',
         dateDebut: r.date_debut || '',
         dateFin: r.date_fin || '',
@@ -327,12 +344,12 @@ async function _btSaveAllAffectation() {
       await db.from('bt_affectation').upsert({
         id: p.id, num_ligne: p.numLigne||'', num_aff: p.numAff||'',
         projet: p.projet||'', directeur_projet: p.directeurProjet||'',
-        chef_projet: p.chefProjet||'', chef_chantier: p.chefChantier||'',
+        chef_projet: _btArrStr(p.chefProjet)||'', chef_chantier: _btArrStr(p.chefChantier)||'',
         effectif: p.effectif||'', date_debut: p.dateDebut||'', date_fin: p.dateFin||'',
         montant_marche: parseFloat(p.montantMarche)||0,
         cumul_attache: parseFloat(p.cumulAttache)||0,
         bet: p.bet||'', achat: p.achat||'', production: p.production||'',
-        pose: p.pose||'', observations: p.conducteurTravaux||'',
+        pose: p.pose||'', observations: _btArrStr(p.conducteurTravaux)||'',
         updated_at: new Date().toISOString(), updated_by: _btUser()
       }, { onConflict: 'id' });
     }
@@ -346,12 +363,12 @@ async function _btSaveAffRow(p, oldVal, newField, newVal) {
     await db.from('bt_affectation').upsert({
       id: p.id, num_ligne: p.numLigne||'', num_aff: p.numAff||'',
       projet: p.projet||'', directeur_projet: p.directeurProjet||'',
-      chef_projet: p.chefProjet||'', chef_chantier: p.chefChantier||'',
+      chef_projet: _btArrStr(p.chefProjet)||'', chef_chantier: _btArrStr(p.chefChantier)||'',
       effectif: p.effectif||'', date_debut: p.dateDebut||'', date_fin: p.dateFin||'',
       montant_marche: parseFloat(p.montantMarche)||0,
       cumul_attache: parseFloat(p.cumulAttache)||0,
       bet: p.bet||'', achat: p.achat||'', production: p.production||'',
-      pose: p.pose||'', observations: p.observations||'',
+      pose: p.pose||'', observations: _btArrStr(p.conducteurTravaux)||'',
       updated_at: new Date().toISOString(), updated_by: _btUser()
     }, { onConflict: 'id' });
     if (newField) {
@@ -1055,7 +1072,7 @@ function _btRenderAffectation() {
   const ctSel = document.getElementById('bt-aff-ct');
   if (ctSel) {
     const cur = ctSel.value;
-    const ctData = _btAffectation.map(p=>p.conducteurTravaux).filter(v=>v&&v!=='VIDE');
+    const ctData = _btAffectation.flatMap(p=>_btFlatArr(p.conducteurTravaux)).filter(v=>v&&v!=='VIDE');
     const cts = [...new Set([...(_btRtCTs||[]), ...ctData])].sort();
     ctSel.innerHTML = '<option value="">Tous conducteurs</option>' + cts.map(v=>`<option value="${_btA(v)}">${_btH(v)}</option>`).join('');
     ctSel.value = cur;
@@ -1076,9 +1093,9 @@ window._btApplyAffFilters = function() {
 
   let filtered = _btAffectation.filter(p => {
     if (fDir && p.directeurProjet !== fDir) return false;
-    if (fCp  && p.chefProjet !== fCp) return false;
-    if (fCt  && p.conducteurTravaux !== fCt) return false;
-    if (fCc  && p.chefChantier !== fCc) return false;
+    if (fCp  && !_btFlatArr(p.chefProjet).includes(fCp)) return false;
+    if (fCt  && !_btFlatArr(p.conducteurTravaux).includes(fCt)) return false;
+    if (fCc  && !_btFlatArr(p.chefChantier).includes(fCc)) return false;
     if (fAv) {
       const av = _btCalcAv(p);
       if (fAv==='0' && av!==0) return false;
@@ -1088,7 +1105,7 @@ window._btApplyAffFilters = function() {
       else if (fAv==='done' && av<100) return false;
     }
     if (search) {
-      const blob = [p.projet,p.numAff,p.directeurProjet,p.chefProjet,p.conducteurTravaux,p.chefChantier,p.numLigne].filter(Boolean).join(' ').toLowerCase();
+      const blob = [p.projet,p.numAff,p.directeurProjet,..._btFlatArr(p.chefProjet),..._btFlatArr(p.conducteurTravaux),..._btFlatArr(p.chefChantier),p.numLigne].filter(Boolean).join(' ').toLowerCase();
       if (!blob.includes(search)) return false;
     }
     return true;
@@ -1120,7 +1137,8 @@ window._btApplyAffFilters = function() {
 function _btRenderAffRows(rows, totMm, totCa, avgAv) {
   const tbody = document.getElementById('bt-aff-tbody');
   if (!tbody) return;
-  const isVide = v => !v || v==='VIDE';
+  const isVide = v => Array.isArray(v) ? v.filter(Boolean).length===0 : (!v||v==='VIDE');
+  const showArr = v => { const a=_btFlatArr(v).filter(Boolean); return a.length>0 ? a.map(_btH).join(', ') : '—'; };
   tbody.innerHTML = rows.length===0 ?
     `<tr><td colspan="12" style="text-align:center;padding:40px;color:#8099b0;font-style:italic;">Aucun projet ne correspond aux filtres</td></tr>` :
     rows.map((p, idx) => {
@@ -1134,9 +1152,9 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','numAff')">${_btH(p.numAff||'—')}</span></td>
         <td class="sticky-col-2"><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','projet')" style="font-weight:600;">${_btH(p.projet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','directeurProjet')" ${isVide(p.directeurProjet)?'style="color:#8099b0;font-style:italic;"':''}>${_btH(p.directeurProjet||'—')}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefProjet')" ${isVide(p.chefProjet)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefProjet||'—')}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','conducteurTravaux')" ${isVide(p.conducteurTravaux)?'style="color:#8099b0;font-style:italic;"':''}>${_btH(p.conducteurTravaux||'—')}</span></td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefChantier')" ${isVide(p.chefChantier)?'style="color:#c02020;font-style:italic;"':''}>${_btH(p.chefChantier||'—')}</span></td>
+        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefProjet')" ${isVide(p.chefProjet)?'style="color:#c02020;font-style:italic;"':''}>${showArr(p.chefProjet)}</span></td>
+        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','conducteurTravaux')" ${isVide(p.conducteurTravaux)?'style="color:#8099b0;font-style:italic;"':''}>${showArr(p.conducteurTravaux)}</span></td>
+        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefChantier')" ${isVide(p.chefChantier)?'style="color:#c02020;font-style:italic;"':''}>${showArr(p.chefChantier)}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','effectif','number')">${p.effectif||'—'}</span></td>
         <td><span class="bt-aff-cell${isDev?'':' bt-aff-locked'}" ${isDev?`onclick="_btEditAffCell(this,'${p.id}','montantMarche','number')"`:''} style="display:block;text-align:right;">${p.montantMarche?_btFmtFull(p.montantMarche):'—'}${isDev?'':' <span style="opacity:.5;font-size:10px;">🔒</span>'}</span></td>
         <td><span class="bt-aff-linked-ca" title="${caInfo.linked?'Lié au rapport Suivi Travaux (N° Aff)':'Valeur stockée — aucun rapport lié'}" style="display:block;text-align:right;color:#224F93;font-weight:600;">${caInfo.value?_btFmtFull(caInfo.value):'0.00'}${caInfo.linked?' <span style="font-size:10px;color:#1a9458;">🔗</span>':''}</span></td>
@@ -1171,13 +1189,72 @@ window._btEditAffCell = function(cellSpan, projectId, field, type) {
   const oldValue = project[field] !== undefined ? project[field] : '';
   cellSpan.classList.add('editing');
 
-  // Dropdown fields
-  const ctList = [...new Set([...(_btRtCTs||[]), ..._btAffectation.map(p=>p.conducteurTravaux).filter(v=>v&&v!=='VIDE')])].sort();
+  // Multi-select fields: Chef Projet, Conducteur Travaux, Chef Chantier
+  const _btMsFields = ['chefProjet', 'conducteurTravaux', 'chefChantier'];
+  if (_btMsFields.includes(field)) {
+    const ctFlatData = _btAffectation.flatMap(p => _btFlatArr(p.conducteurTravaux)).filter(Boolean);
+    const msList = field === 'chefProjet' ? (_btRtCPs || BT_CHEF_PROJETS) :
+                   field === 'chefChantier' ? (_btRtCCs || BT_CHEF_CHANTIERS) :
+                   [...new Set([...(_btRtCTs || []), ...ctFlatData])].sort();
+    const currentArr = _btFlatArr(oldValue).filter(Boolean);
+    const panel = document.createElement('div');
+    panel.style.cssText = 'position:fixed;z-index:10000;background:#fff;border:1.5px solid #224F93;border-radius:8px;padding:10px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.18);min-width:190px;max-height:290px;overflow-y:auto;';
+    const rect = cellSpan.getBoundingClientRect();
+    panel.style.top = (rect.bottom + 4) + 'px';
+    panel.style.left = Math.min(rect.left, window.innerWidth - 210) + 'px';
+    const msLabel = {'chefProjet':'Chef Projet','conducteurTravaux':'Conducteur Travaux','chefChantier':'Chef Chantier'}[field];
+    let ph = `<div style="font-size:10px;font-weight:700;color:#224F93;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">${msLabel}</div>`;
+    if (msList.length === 0) {
+      ph += `<div style="font-size:11px;color:#8099b0;padding:4px 0;">Aucun élément — ajoutez via ⚙️ Gérer listes</div>`;
+    } else {
+      ph += msList.map(v =>
+        `<label style="display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12px;font-family:Barlow,sans-serif;white-space:nowrap;">
+          <input type="checkbox" class="_btMs" value="${_btA(v)}" ${currentArr.includes(v)?'checked':''} style="cursor:pointer;accent-color:#224F93;">
+          ${_btH(v)}
+        </label>`
+      ).join('');
+    }
+    ph += `<div style="margin-top:10px;display:flex;gap:6px;justify-content:flex-end;border-top:1px solid #f0f2f5;padding-top:8px;">
+      <button id="_btMsCancelBtn" style="padding:4px 12px;border:1.5px solid #dde3ee;border-radius:5px;background:#fff;font-size:11px;font-family:Barlow,sans-serif;cursor:pointer;">Annuler</button>
+      <button id="_btMsOkBtn" style="padding:4px 12px;background:#224F93;color:#fff;border:none;border-radius:5px;font-size:11px;font-family:Barlow,sans-serif;cursor:pointer;font-weight:700;">✓ OK</button>
+    </div>`;
+    panel.innerHTML = ph;
+    document.body.appendChild(panel);
+    cellSpan.innerHTML = '<span style="color:#224F93;font-style:italic;font-size:11px;">sélection…</span>';
+
+    const closeMs = () => {
+      panel.remove();
+      cellSpan.classList.remove('editing');
+      cellSpan.innerHTML = oldHtml;
+    };
+    const confirmMs = async () => {
+      const newArr = [...panel.querySelectorAll('input._btMs:checked')].map(cb => cb.value);
+      panel.remove();
+      cellSpan.classList.remove('editing');
+      const oldStr = JSON.stringify(currentArr.slice().sort());
+      const newStr = JSON.stringify(newArr.slice().sort());
+      if (oldStr === newStr) { cellSpan.innerHTML = oldHtml; return; }
+      project[field] = newArr;
+      await _btSaveAffRow(project, _btArrStr(currentArr), field, _btArrStr(newArr));
+      _btApplyAffFilters();
+      _btToast('Modifié ✓');
+    };
+    panel.querySelector('#_btMsOkBtn').addEventListener('click', confirmMs);
+    panel.querySelector('#_btMsCancelBtn').addEventListener('click', closeMs);
+    const outsideMs = (e) => {
+      if (!panel.contains(e.target) && e.target !== cellSpan) {
+        closeMs();
+        document.removeEventListener('mousedown', outsideMs);
+      }
+    };
+    setTimeout(() => document.addEventListener('mousedown', outsideMs), 50);
+    return;
+  }
+
+  // Single-value dropdown: Directeur only
+  const ctList = [...new Set([...(_btRtCTs||[]), ..._btAffectation.flatMap(p=>_btFlatArr(p.conducteurTravaux)).filter(v=>v&&v!=='VIDE')])].sort();
   const dropdownLists = {
-    directeurProjet:  _btRtDirs || BT_DIRECTORS,
-    chefProjet:       _btRtCPs  || BT_CHEF_PROJETS,
-    conducteurTravaux: ctList.length > 0 ? ctList : null,
-    chefChantier:     _btRtCCs  || BT_CHEF_CHANTIERS
+    directeurProjet: _btRtDirs || BT_DIRECTORS
   };
   if (field in dropdownLists && dropdownLists[field] !== null) {
     const sel = document.createElement('select');
@@ -1231,7 +1308,7 @@ window._btAddAffRow = async function() {
   const p = {
     id: 'aff-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
     numLigne:'', numAff:'', projet:'Nouveau projet', directeurProjet:'',
-    chefProjet:'', conducteurTravaux:'', chefChantier:'', effectif:'', dateDebut:'', dateFin:'',
+    chefProjet:[], conducteurTravaux:[], chefChantier:[], effectif:'', dateDebut:'', dateFin:'',
     montantMarche:0, cumulAttache:0, bet:'', achat:'', production:'', pose:'', observations:''
   };
   _btAffectation.unshift(p);
@@ -1275,16 +1352,22 @@ function btAffDash(tab) {
   var field = fieldMap[tab];
   var stats = {};
   (_btAffectation || []).forEach(function(p) {
-    var key = (p[field] || '').trim();
-    if (!key || key === 'VIDE') key = 'Non assigné';
-    if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0, inProgress:0 };
-    var s = stats[key];
     var mm = parseFloat(p.montantMarche) || 0;
     var ca = _btLinkedCa(p).value;
     var av = mm > 0 ? Math.min(100, Math.max(0, ca / mm * 100)) : 0;
-    s.count++; s.mm += mm; s.ca += ca; s.w += av * mm;
-    if (av >= 100) s.done++;
-    else s.inProgress++;
+    // For multi-value fields, distribute into each person's stats
+    var keys = tab === 'dir'
+      ? [(p[field] || '').trim()]
+      : _btFlatArr(p[field]).map(function(v){ return v.trim(); }).filter(Boolean);
+    if (keys.length === 0) keys = ['Non assigné'];
+    keys.forEach(function(key) {
+      if (!key || key === 'VIDE') key = 'Non assigné';
+      if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0, inProgress:0 };
+      var s = stats[key];
+      s.count++; s.mm += mm; s.ca += ca; s.w += av * mm;
+      if (av >= 100) s.done++;
+      else s.inProgress++;
+    });
   });
   var rows = Object.keys(stats)
     .map(function(k) { return { name: k, s: stats[k] }; })
