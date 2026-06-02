@@ -1235,13 +1235,14 @@ function btAffDash(tab) {
   (_btAffectation || []).forEach(function(p) {
     var key = (p[field] || '').trim();
     if (!key || key === 'VIDE') key = 'Non assigné';
-    if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0 };
+    if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0, inProgress:0 };
     var s = stats[key];
     var mm = parseFloat(p.montantMarche) || 0;
     var ca = _btLinkedCa(p).value;
     var av = mm > 0 ? Math.min(100, Math.max(0, ca / mm * 100)) : 0;
     s.count++; s.mm += mm; s.ca += ca; s.w += av * mm;
     if (av >= 100) s.done++;
+    else if (av > 0) s.inProgress++;
   });
   var rows = Object.keys(stats)
     .map(function(k) { return { name: k, s: stats[k] }; })
@@ -1262,6 +1263,7 @@ function btAffDash(tab) {
   h += '<thead><tr style="background:#224F93;color:#fff;">';
   h += '<th style="padding:7px 10px;text-align:left;font-size:11px;font-weight:700;">Nom</th>';
   h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">Projets</th>';
+  h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">En cours</th>';
   h += '<th style="padding:7px 10px;text-align:center;font-size:11px;font-weight:700;">Terminés</th>';
   h += '<th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;">Total marché</th>';
   h += '<th style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;">Total attaché</th>';
@@ -1275,6 +1277,7 @@ function btAffDash(tab) {
     h += '<tr style="background:' + bg + ';">';
     h += '<td style="padding:7px 10px;font-weight:700;color:#1a2a3a;">' + _btH(r.name) + '</td>';
     h += '<td style="padding:7px 10px;text-align:center;font-weight:700;color:#224F93;">' + s.count + '</td>';
+    h += '<td style="padding:7px 10px;text-align:center;color:#b08400;font-weight:700;">' + s.inProgress + '</td>';
     h += '<td style="padding:7px 10px;text-align:center;color:#1a9458;font-weight:700;">' + s.done + '</td>';
     h += '<td style="padding:7px 10px;text-align:right;">' + _btFmtMoneyShort(s.mm) + '</td>';
     h += '<td style="padding:7px 10px;text-align:right;color:#224F93;font-weight:700;">' + _btFmtMoneyShort(s.ca) + '</td>';
