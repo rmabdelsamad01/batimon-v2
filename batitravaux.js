@@ -69,6 +69,8 @@ let _btTravauxSub   = 'dashboard';   // active sub-tab in Suivi Travaux
 let _btPendingFiles = new Map();
 let _btFileIdCtr    = 0;
 let _btCssInjected  = false;
+let _btAffSortField = null;          // active sort column
+let _btAffSortDir   = 1;             // 1 = asc, -1 = desc
 
 // ─── Current user ───────────────────────────────────────────────────────────────
 function _btUser() {
@@ -212,6 +214,10 @@ function _btInjectCss() {
 .bt-mini-prog .pct { font-size:10px; font-weight:700; color:#445; white-space:nowrap; }
 .bt-del-btn { background:none; border:none; color:#c02020; cursor:pointer; font-size:14px; padding:2px 5px; }
 .bt-del-btn:hover { background:#fdf0f0; border-radius:4px; }
+.bt-aff-table th.bt-sortable { cursor:pointer; user-select:none; }
+.bt-aff-table th.bt-sortable:hover { background:#1a3d7a; }
+.bt-sort-ind { margin-left:4px; font-size:10px; opacity:0.45; }
+.bt-aff-table th.bt-sort-active .bt-sort-ind { opacity:1; color:#7ecfff; }
 .bt-aff-locked { cursor:default !important; color:#8099b0; }
 .bt-aff-locked:hover { background:none !important; }
 .bt-aff-linked-ca { cursor:default; border-radius:4px; padding:1px 3px; }
@@ -1020,16 +1026,16 @@ window.btInitAffectation = async function() {
         <table class="bt-aff-table" id="bt-aff-table">
           <thead><tr>
             <th class="sticky-col">#</th>
-            <th style="min-width:80px;">N° Aff</th>
-            <th class="sticky-col-2" style="min-width:200px;">Projet</th>
-            <th style="min-width:120px;">Directeur</th>
-            <th style="min-width:120px;">Chef Projet</th>
-            <th style="min-width:130px;">Conducteur Travaux</th>
-            <th style="min-width:120px;">Chef Chantier</th>
-            <th style="min-width:60px;">Effectif</th>
-            <th style="min-width:100px;text-align:right;">Montant marché</th>
-            <th style="min-width:100px;text-align:right;">Cumul attaché</th>
-            <th style="min-width:120px;">Avancement</th>
+            <th id="th-numaff" class="bt-sortable" style="min-width:80px;" onclick="_btSortAff('numAff')">N° Aff <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-projet" class="bt-sortable sticky-col-2" style="min-width:200px;" onclick="_btSortAff('projet')">Projet <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-dir" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('directeurProjet')">Directeur <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-cp" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('chefProjet')">Chef Projet <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-ct" class="bt-sortable" style="min-width:130px;" onclick="_btSortAff('conducteurTravaux')">Conducteur Travaux <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-cc" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('chefChantier')">Chef Chantier <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-eff" class="bt-sortable" style="min-width:60px;" onclick="_btSortAff('effectif')">Effectif <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-mm" class="bt-sortable" style="min-width:100px;text-align:right;" onclick="_btSortAff('montantMarche')">Montant marché <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-ca" class="bt-sortable" style="min-width:100px;text-align:right;" onclick="_btSortAff('cumulAttache')">Cumul attaché <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-av" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('avancement')">Avancement <span class="bt-sort-ind">⇅</span></th>
             <th style="min-width:36px;"></th>
           </tr></thead>
           <tbody id="bt-aff-tbody"><tr><td colspan="12" style="text-align:center;padding:30px;color:#8099b0;">Chargement…</td></tr></tbody>
@@ -1131,8 +1137,62 @@ window._btApplyAffFilters = function() {
     <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="btAffDash()" style="align-self:center;white-space:nowrap;margin-left:4px;">📊 Dashboard</button>
   `;
 
+  // Apply sort
+  if (_btAffSortField) {
+    filtered.sort((a, b) => {
+      let va, vb;
+      if (_btAffSortField === 'avancement') {
+        const av = p => { const mm=parseFloat(p.montantMarche)||0; const ca=_btLinkedCa(p).value; return mm>0?Math.min(100,Math.max(0,ca/mm*100)):0; };
+        va = av(a); vb = av(b);
+      } else if (_btAffSortField === 'cumulAttache') {
+        va = _btLinkedCa(a).value; vb = _btLinkedCa(b).value;
+      } else if (_btAffSortField === 'montantMarche' || _btAffSortField === 'effectif') {
+        va = parseFloat(a[_btAffSortField])||0; vb = parseFloat(b[_btAffSortField])||0;
+      } else {
+        va = Array.isArray(a[_btAffSortField]) ? a[_btAffSortField].filter(Boolean).join(', ') : (a[_btAffSortField]||'');
+        vb = Array.isArray(b[_btAffSortField]) ? b[_btAffSortField].filter(Boolean).join(', ') : (b[_btAffSortField]||'');
+      }
+      if (typeof va === 'number') return (va - vb) * _btAffSortDir;
+      return String(va).localeCompare(String(vb), 'fr', {sensitivity:'base'}) * _btAffSortDir;
+    });
+  }
+
   _btRenderAffRows(filtered, totMm, totCa, avgAv);
 };
+
+window._btSortAff = function(field) {
+  if (_btAffSortField === field) {
+    _btAffSortDir = -_btAffSortDir;
+  } else {
+    _btAffSortField = field;
+    _btAffSortDir = 1;
+  }
+  _btApplyAffFilters();
+};
+
+function _btUpdateAffSortHeaders() {
+  const cols = [
+    { id:'th-numaff',   field:'numAff',           label:'N° Aff' },
+    { id:'th-projet',   field:'projet',            label:'Projet' },
+    { id:'th-dir',      field:'directeurProjet',   label:'Directeur' },
+    { id:'th-cp',       field:'chefProjet',        label:'Chef Projet' },
+    { id:'th-ct',       field:'conducteurTravaux', label:'Conducteur Travaux' },
+    { id:'th-cc',       field:'chefChantier',      label:'Chef Chantier' },
+    { id:'th-eff',      field:'effectif',          label:'Effectif' },
+    { id:'th-mm',       field:'montantMarche',     label:'Montant marché' },
+    { id:'th-ca',       field:'cumulAttache',      label:'Cumul attaché' },
+    { id:'th-av',       field:'avancement',        label:'Avancement' },
+  ];
+  cols.forEach(c => {
+    const th = document.getElementById(c.id);
+    if (!th) return;
+    const isActive = _btAffSortField === c.field;
+    const ind = isActive ? (_btAffSortDir === 1 ? ' ↑' : ' ↓') : ' ⇅';
+    th.className = 'bt-sortable' + (isActive ? ' bt-sort-active' : '') +
+                   (['montantMarche','cumulAttache'].includes(c.field) ? ' text-right' : '');
+    th.innerHTML = c.label + `<span class="bt-sort-ind">${ind}</span>`;
+  });
+}
 
 function _btRenderAffRows(rows, totMm, totCa, avgAv) {
   const tbody = document.getElementById('bt-aff-tbody');
@@ -1172,6 +1232,7 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
   if (totM) totM.textContent = _btFmtFull(totMm) + ' MAD';
   if (totA) totA.textContent = _btFmtFull(totCa) + ' MAD';
   if (totAv) totAv.textContent = avgAv.toFixed(1)+'%';
+  _btUpdateAffSortHeaders();
 }
 
 window._btEditAffCell = function(cellSpan, projectId, field, type) {
