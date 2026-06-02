@@ -1131,8 +1131,8 @@ window._btApplyAffFilters = function() {
   const kpis = document.getElementById('bt-aff-kpis');
   if (kpis) kpis.innerHTML = `
     <div class="bt-kpi"><div class="bt-kpi-val">${filtered.length}</div><div class="bt-kpi-lbl">Projets</div></div>
-    <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:11px;">${_btFmtFull(totMm)} MAD</div><div class="bt-kpi-lbl">Total marché</div></div>
-    <div class="bt-kpi"><div class="bt-kpi-val" style="font-size:11px;color:#224F93;">${_btFmtFull(totCa)} MAD</div><div class="bt-kpi-lbl">Total attaché</div></div>
+    <div class="bt-kpi"><div class="bt-kpi-val">${_btFmtFull(totMm)} MAD</div><div class="bt-kpi-lbl">Total marché</div></div>
+    <div class="bt-kpi"><div class="bt-kpi-val" style="color:#224F93;">${_btFmtFull(totCa)} MAD</div><div class="bt-kpi-lbl">Total attaché</div></div>
     <div class="bt-kpi"><div class="bt-kpi-val">${avgAv.toFixed(1)}%</div><div class="bt-kpi-lbl">Avancement moy.</div></div>
     <div class="bt-kpi green"><div class="bt-kpi-val">${done}</div><div class="bt-kpi-lbl">Terminés</div></div>
     <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="btAffDash()" style="align-self:center;white-space:nowrap;margin-left:4px;">📊 Dashboard</button>
