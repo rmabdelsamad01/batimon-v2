@@ -71,6 +71,7 @@ let _btFileIdCtr    = 0;
 let _btCssInjected  = false;
 let _btAffSortField = null;          // active sort column
 let _btAffSortDir   = 1;             // 1 = asc, -1 = desc
+let _btLastAffRows  = [];            // last filtered+sorted rows (used by CSV export)
 
 // ─── Current user ───────────────────────────────────────────────────────────────
 function _btUser() {
@@ -1157,6 +1158,7 @@ window._btApplyAffFilters = function() {
     });
   }
 
+  _btLastAffRows = filtered;
   _btRenderAffRows(filtered, totMm, totCa, avgAv);
 };
 
@@ -1629,12 +1631,28 @@ function btMgrSaveEdit(key, idx) {
 }
 
 window._btExportAff = function() {
-  const headers = ['#','N° Aff','Projet','Directeur','Chef Projet','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
-  const rows = _btAffectation.map((p,i) => [
-    p.numLigne||(i+1), p.numAff, p.projet, p.directeurProjet, p.chefProjet,
-    p.chefChantier, p.effectif, p.montantMarche, p.cumulAttache,
-    _btCalcAv(p).toFixed(2)+'%'
-  ]);
+  // Export the rows exactly as currently displayed (same filter + sort order)
+  const source = _btLastAffRows.length > 0 ? _btLastAffRows : _btAffectation;
+  const headers = ['#','N° Aff','Projet','Directeur','Chef Projet','Conducteur Travaux','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
+  const rows = source.map((p, i) => {
+    const caInfo = _btLinkedCa(p);
+    const mm = parseFloat(p.montantMarche)||0;
+    const av = mm > 0 ? Math.min(100, Math.max(0, caInfo.value / mm * 100)) : 0;
+    const arrStr = v => _btFlatArr(v).filter(Boolean).join(', ');
+    return [
+      i + 1,                    // SQN matches display
+      p.numAff,
+      p.projet,
+      p.directeurProjet,
+      arrStr(p.chefProjet),
+      arrStr(p.conducteurTravaux),
+      arrStr(p.chefChantier),
+      p.effectif,
+      p.montantMarche,
+      caInfo.value,             // linked cumul attaché (same as display)
+      av.toFixed(2) + '%'
+    ];
+  });
   const csv = [headers,...rows].map(r=>r.map(c=>{
     const s=(c==null)?'':String(c);
     return '"'+s.replace(/"/g,'""')+'"';
