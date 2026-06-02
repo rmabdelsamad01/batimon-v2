@@ -1216,94 +1216,119 @@ window._btDeleteAff = async function(id) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // AFFECTATION DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════════
+function _btBuildDashCards(tab) {
+  var fieldMap = { dir:'directeurProjet', cp:'chefProjet', cc:'chefChantier' };
+  var field = fieldMap[tab];
+  var stats = {};
+  (_btAffectation||[]).forEach(function(p) {
+    var key = ((p[field]||'').trim()) || 'Non assigné';
+    if (key === 'VIDE') key = 'Non assigné';
+    if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0 };
+    var s = stats[key];
+    var mm = parseFloat(p.montantMarche)||0;
+    var ca = _btLinkedCa(p).value;
+    var av = mm>0 ? Math.min(100,Math.max(0,ca/mm*100)) : 0;
+    s.count++; s.mm+=mm; s.ca+=ca; s.w+=av*mm;
+    if (av>=100) s.done++;
+  });
+  var sorted = Object.keys(stats).map(function(k){ return [k, stats[k]]; })
+    .sort(function(a,b){ return b[1].count - a[1].count; });
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">';
+  sorted.forEach(function(entry) {
+    var name = entry[0], s = entry[1];
+    var avgAv = s.mm>0 ? s.w/s.mm : 0;
+    var avColor = avgAv>=75 ? '#1a9458' : avgAv>=25 ? '#224F93' : '#c02020';
+    var initial = name.charAt(0).toUpperCase();
+    var barW = Math.min(100, avgAv).toFixed(1);
+    html += '<div style="background:#fff;border:1px solid #dde3ee;border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">';
+    html += '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#224F93,#3a7bd5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">' + _btH(initial) + '</div>';
+    html += '<div>';
+    html += '<div style="font-weight:700;font-size:13px;color:#1a2a3a;">' + _btH(name) + '</div>';
+    html += '<div style="font-size:11px;color:#8099b0;margin-top:2px;">' + s.count + ' projet' + (s.count>1?'s':'') + '&nbsp;&nbsp;·&nbsp;&nbsp;' + s.done + ' terminé' + (s.done>1?'s':'') + '</div>';
+    html += '</div></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">';
+    html += '<div style="background:#f7f9fc;border-radius:8px;padding:9px 11px;"><div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Marché</div><div style="font-size:13px;font-weight:700;color:#1a2a3a;margin-top:3px;">' + _btFmtMoneyShort(s.mm) + '</div></div>';
+    html += '<div style="background:#eef3fb;border-radius:8px;padding:9px 11px;"><div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Attaché</div><div style="font-size:13px;font-weight:700;color:#224F93;margin-top:3px;">' + _btFmtMoneyShort(s.ca) + '</div></div>';
+    html += '</div>';
+    html += '<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">';
+    html += '<span style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Avancement moy.</span>';
+    html += '<span style="font-size:12px;font-weight:700;color:' + avColor + ';">' + avgAv.toFixed(1) + '%</span>';
+    html += '</div><div style="background:#e0e6ef;border-radius:4px;height:7px;">';
+    html += '<div style="height:100%;border-radius:4px;background:' + avColor + ';width:' + barW + '%;"></div></div></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
 window._btShowAffDashboard = function() {
-  const existing = document.getElementById('bt-aff-dash-modal');
-  if (existing) { existing.remove(); return; }
-  const modal = document.createElement('div');
-  modal.id = 'bt-aff-dash-modal';
-  modal.className = 'bt-modal-backdrop';
-  modal.innerHTML = `
-    <div class="bt-modal" style="max-width:960px;width:100%;">
-      <div class="bt-modal-header">
-        <h3>📊 Dashboard Affectation Projet</h3>
-        <button class="bt-modal-close" onclick="document.getElementById('bt-aff-dash-modal').remove()">×</button>
-      </div>
-      <div class="bt-modal-body" style="padding:18px;">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;">
-          <button id="bt-dtab-dir" class="bt-btn bt-btn-primary bt-btn-sm" onclick="_btDashTab('dir')">👤 Directeurs</button>
-          <button id="bt-dtab-cp"  class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btDashTab('cp')">🧑‍💼 Chef Projet</button>
-          <button id="bt-dtab-cc"  class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btDashTab('cc')">🦺 Chef Chantier</button>
-        </div>
-        <div id="bt-dash-content"></div>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-  _btDashTab('dir');
+  try {
+    var existing = document.getElementById('bt-aff-dash-modal');
+    if (existing) { existing.remove(); return; }
+    var modal = document.createElement('div');
+    modal.id = 'bt-aff-dash-modal';
+    modal.className = 'bt-modal-backdrop';
+
+    var inner = document.createElement('div');
+    inner.className = 'bt-modal';
+    inner.style.cssText = 'max-width:960px;width:100%;';
+
+    var header = document.createElement('div');
+    header.className = 'bt-modal-header';
+    header.innerHTML = '<h3>📊 Dashboard Affectation Projet</h3>';
+    var closeBtn = document.createElement('button');
+    closeBtn.className = 'bt-modal-close';
+    closeBtn.textContent = '×';
+    closeBtn.onclick = function(){ modal.remove(); };
+    header.appendChild(closeBtn);
+
+    var body = document.createElement('div');
+    body.className = 'bt-modal-body';
+    body.style.padding = '18px';
+
+    var tabs = document.createElement('div');
+    tabs.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;';
+    var tabDefs = [['dir','👤 Directeurs'],['cp','🧑 Chef Projet'],['cc','🔧 Chef Chantier']];
+    tabDefs.forEach(function(td) {
+      var btn = document.createElement('button');
+      btn.id = 'bt-dtab-' + td[0];
+      btn.className = td[0]==='dir' ? 'bt-btn bt-btn-primary bt-btn-sm' : 'bt-btn bt-btn-secondary bt-btn-sm';
+      btn.textContent = td[1];
+      btn.onclick = function(){ window._btDashTab(td[0]); };
+      tabs.appendChild(btn);
+    });
+
+    var content = document.createElement('div');
+    content.id = 'bt-dash-content';
+
+    body.appendChild(tabs);
+    body.appendChild(content);
+    inner.appendChild(header);
+    inner.appendChild(body);
+    modal.appendChild(inner);
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e){ if (e.target===modal) modal.remove(); });
+    window._btDashTab('dir');
+  } catch(err) {
+    _btToast('Erreur dashboard: ' + err.message, false);
+    console.error('[BT dashboard]', err);
+  }
 };
 
 window._btDashTab = function(tab) {
-  ['dir','cp','cc'].forEach(t => {
-    const btn = document.getElementById(`bt-dtab-${t}`);
-    if (!btn) return;
-    btn.className = t===tab ? 'bt-btn bt-btn-primary bt-btn-sm' : 'bt-btn bt-btn-secondary bt-btn-sm';
-  });
-  const fieldMap = { dir:'directeurProjet', cp:'chefProjet', cc:'chefChantier' };
-  const field = fieldMap[tab];
-  const stats = {};
-  _btAffectation.forEach(p => {
-    const key = (p[field]||'').trim() || '— Non assigné';
-    if (!stats[key]) stats[key] = { count:0, mm:0, ca:0, w:0, done:0, projets:[] };
-    const s = stats[key];
-    const mm = parseFloat(p.montantMarche)||0;
-    const ca = _btLinkedCa(p).value;
-    const av = mm>0 ? Math.min(100,Math.max(0,ca/mm*100)) : 0;
-    s.count++; s.mm+=mm; s.ca+=ca; s.w+=av*mm;
-    if (av>=100) s.done++;
-    s.projets.push(p.projet);
-  });
-  const sorted = Object.entries(stats)
-    .filter(([k]) => !k.startsWith('VIDE'))
-    .sort((a,b) => b[1].count - a[1].count);
-  const content = document.getElementById('bt-dash-content');
-  if (!content) return;
-  content.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;">
-      ${sorted.map(([name, s]) => {
-        const avgAv = s.mm>0 ? s.w/s.mm : 0;
-        const avColor = avgAv>=75?'#1a9458':avgAv>=25?'#224F93':'#c02020';
-        const initial = name.replace('— ','').charAt(0).toUpperCase();
-        const pct = s.mm>0 ? (s.ca/s.mm*100) : 0;
-        return `<div style="background:#fff;border:1px solid #dde3ee;border-radius:12px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#224F93,#3a7bd5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">${_btH(initial)}</div>
-            <div>
-              <div style="font-weight:700;font-size:13px;color:#1a2a3a;">${_btH(name)}</div>
-              <div style="font-size:11px;color:#8099b0;margin-top:1px;">${s.count} projet${s.count>1?'s':''} &nbsp;·&nbsp; ${s.done} terminé${s.done>1?'s':''}</div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-            <div style="background:#f7f9fc;border-radius:8px;padding:9px 11px;">
-              <div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Marché</div>
-              <div style="font-size:13px;font-weight:700;color:#1a2a3a;margin-top:3px;">${_btFmtMoneyShort(s.mm)}</div>
-            </div>
-            <div style="background:#eef3fb;border-radius:8px;padding:9px 11px;">
-              <div style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Attaché</div>
-              <div style="font-size:13px;font-weight:700;color:#224F93;margin-top:3px;">${_btFmtMoneyShort(s.ca)}</div>
-            </div>
-          </div>
-          <div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-              <span style="font-size:10px;color:#8099b0;font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Avancement moy.</span>
-              <span style="font-size:12px;font-weight:700;color:${avColor};">${avgAv.toFixed(1)}%</span>
-            </div>
-            <div style="background:#e0e6ef;border-radius:4px;height:7px;">
-              <div style="height:100%;border-radius:4px;background:${avColor};width:${Math.min(100,avgAv).toFixed(1)}%;"></div>
-            </div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  try {
+    ['dir','cp','cc'].forEach(function(t) {
+      var btn = document.getElementById('bt-dtab-' + t);
+      if (btn) btn.className = t===tab ? 'bt-btn bt-btn-primary bt-btn-sm' : 'bt-btn bt-btn-secondary bt-btn-sm';
+    });
+    var content = document.getElementById('bt-dash-content');
+    if (!content) return;
+    content.innerHTML = _btBuildDashCards(tab);
+  } catch(err) {
+    console.error('[BT dashTab]', err);
+  }
 };
 
 window._btExportAff = function() {
