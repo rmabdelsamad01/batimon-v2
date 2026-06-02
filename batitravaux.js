@@ -1399,11 +1399,11 @@ window._btAddAffRow = async function() {
     chefProjet:[], conducteurTravaux:[], chefChantier:[], effectif:'', dateDebut:'', dateFin:'',
     montantMarche:0, cumulAttache:0, bet:'', achat:'', production:'', pose:'', observations:''
   };
-  _btAffectation.unshift(p);
+  _btAffectation.push(p);
   await _btSaveAffRow(p, null, null, null);
   await _btLogHistory('CREATE','bt_affectation',p.id,p.projet,null,null,null);
   _btApplyAffFilters();
-  _btToast('Projet ajouté en haut du tableau');
+  _btToast('Projet ajouté en bas du tableau');
 };
 
 window._btDeleteAff = async function(id) {
