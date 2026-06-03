@@ -1957,6 +1957,9 @@ function _cgApplyZoom(){
   const z=_CG_ZOOM_LEVELS[_cgZoomIdx];
   const wrap=document.getElementById('cg-grid-wrap');
   if(wrap) wrap.style.zoom=z;
+  // Plan view zoom
+  const pvWrap=document.getElementById('pv-canvas-wrap');
+  if(pvWrap){pvWrap.style.transform=`scale(${z})`;pvWrap.style.transformOrigin='top left';}
   const lbl=document.getElementById('cg-zoom-label');
   if(lbl) lbl.textContent=Math.round(z*100)+'%';
 }
@@ -1968,8 +1971,97 @@ function _cgSetFilter(status,btn){
     if(status==='all'||td.dataset.status===status){td.style.opacity='';td.style.outline='';}
     else{td.style.opacity='0.15';td.style.outline='';}
   });
+  if(typeof pvApplyFilter==='function') pvApplyFilter(status);
 }
 function _cgPrint(){
+  const printDate=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  const logoEl=document.querySelector('header img[alt="BATIMON"]');
+  const logoSrc=logoEl?logoEl.src:'';
+  const projName=(window.PROJECT_META&&window._activeProjectId&&window.PROJECT_META[window._activeProjectId])?window.PROJECT_META[window._activeProjectId].name:(window._activeProjectId||'Project');
+  const headerH=60;
+
+  // ── Plan view print ──────────────────────────────────────────────────────────
+  const pvActive=(typeof _pvActiveView!=='undefined'&&_pvActiveView==='plan');
+  if(pvActive){
+    const pvWrap=document.getElementById('pv-canvas-wrap');
+    if(!pvWrap) return;
+    const bgImg=pvWrap.querySelector('img');
+    const svg=pvWrap.querySelector('svg');
+    // Serialise the SVG with all inline styles applied
+    const svgCopy=svg?svg.cloneNode(true):null;
+    if(svgCopy){
+      // Re-apply opacity filters that pvApplyFilter may have set
+      document.querySelectorAll('#pv-svg .pv-rg').forEach((g,i)=>{
+        const c=svgCopy.querySelectorAll('.pv-rg')[i];
+        if(c) c.style.opacity=g.style.opacity;
+      });
+    }
+    const imgSrc=bgImg?bgImg.src:'';
+    const svgStr=svgCopy?svgCopy.outerHTML:'';
+    const allCSS=Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      @page{size:auto;margin:0;}
+      *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important;}
+      html,body{width:100%;background:#fff !important;overflow:hidden;}
+      body{font-family:'Barlow',sans-serif;font-size:11px;color:#1a2a3a;}
+      .ph{width:100%;height:${headerH}px;background:#224F93;display:flex;align-items:center;justify-content:space-between;padding:0 25px;border-bottom:4px solid #1a3d72;flex-shrink:0;}
+      .ph-left{display:flex;align-items:center;gap:20px;}
+      .ph-left img{height:78px;width:auto;filter:brightness(0) invert(1);}
+      .ph-center{display:flex;flex-direction:column;align-items:center;gap:3px;}
+      .ph-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:0.05em;}
+      .ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+      .ph-project{font-size:12px;font-weight:700;color:#fff;}
+      .ph-date{font-size:12px;color:rgba(255,255,255,0.6);font-family:monospace;}
+      .pv-print-wrap{position:relative;line-height:0;display:inline-block;transform-origin:top left;}
+      .pv-print-wrap img{display:block;max-width:100%;max-height:calc(100vh - ${headerH}px);}
+      .pv-print-wrap svg{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;}
+      ${allCSS}
+      @media print{html,body{overflow:hidden !important;}.pv-print-wrap{page-break-inside:avoid;break-inside:avoid;}}
+    </style>
+    <script>
+      window.onload=function(){
+        var pw=window.innerWidth-40;
+        var ph=window.innerHeight-${headerH}-40;
+        var wrap=document.querySelector('.pv-print-wrap');
+        var iw=wrap.offsetWidth||wrap.scrollWidth;
+        var ih=wrap.offsetHeight||wrap.scrollHeight;
+        var scale=Math.min(pw/iw,ph/ih,1);
+        wrap.style.transform='scale('+scale+')';
+        wrap.style.transformOrigin='top left';
+        var outer=document.querySelector('.pv-print-outer');
+        outer.style.width=Math.ceil(iw*scale)+'px';
+        outer.style.height=Math.ceil(ih*scale)+'px';
+        setTimeout(function(){window.focus();window.print();},800);
+      };
+    <\/script>
+    </head><body>
+    <div class="ph">
+      <div class="ph-left"><img src="${logoSrc}" alt="BATIMON"></div>
+      <div class="ph-center"><div class="ph-title">Plan View</div></div>
+      <div class="ph-right">
+        <div class="ph-project">${projName}</div>
+        <div class="ph-date">${printDate}</div>
+      </div>
+    </div>
+    <div class="pv-print-outer" style="padding:20px;overflow:hidden;">
+      <div class="pv-print-wrap">
+        ${imgSrc?`<img src="${imgSrc}" draggable="false">`:'<div style="width:700px;height:480px;background:#f8fafd;"></div>'}
+        ${svgStr}
+      </div>
+    </div>
+    </body></html>`;
+    const iframe=document.createElement('iframe');
+    iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:1587px;height:1122px;border:none;visibility:hidden;';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(html);
+    iframe.contentDocument.close();
+    iframe.contentWindow.onafterprint=()=>{document.body.removeChild(iframe);};
+    return;
+  }
+
+  // ── Facade / grid print ──────────────────────────────────────────────────────
   const wrap=document.getElementById('cg-grid-wrap');
   if(!wrap) return;
   const origZoom=wrap.style.zoom;
@@ -1977,12 +2069,7 @@ function _cgPrint(){
   const tableW=wrap.scrollWidth;
   const tableH=wrap.scrollHeight;
   const allCSS=Array.from(document.styleSheets).flatMap(s=>{try{return Array.from(s.cssRules).map(r=>r.cssText);}catch(e){return[];}}).join('\n');
-  const printDate=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
-  const logoEl=document.querySelector('header img[alt="BATIMON"]');
-  const logoSrc=logoEl?logoEl.src:'';
-  const projName=(window.PROJECT_META&&window._activeProjectId&&window.PROJECT_META[window._activeProjectId])?window.PROJECT_META[window._activeProjectId].name:(window._activeProjectId||'Project');
   wrap.style.zoom=origZoom;
-  const headerH=60;
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
     @page{size:auto;margin:0;}

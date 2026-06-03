@@ -416,6 +416,24 @@ function pvSyncStatus(){
   _pvRefreshSVG();
 }
 
+// Apply filter to plan view: dim rects whose status doesn't match
+function pvApplyFilter(status){
+  const container=document.getElementById('pv-container');
+  if(!container||container.style.display==='none') return;
+  const {pid,facade}=_pvState;
+  const cells=_custFacadeCache[`${pid}|${facade}`]||{};
+  document.querySelectorAll('#pv-svg .pv-rg').forEach(g=>{
+    const id=g.dataset.id;
+    const {floor}=_pvState;
+    const layout=_pvLayouts[`${pid}|${facade}`]||{};
+    const rect=(layout[floor]?.rects||[]).find(r=>r.id===id);
+    if(!rect||!rect.cellKey){g.style.opacity='';return;}
+    const st=cells[rect.cellKey]?.status||'pending';
+    if(status==='all'||st===status){g.style.opacity='';}
+    else{g.style.opacity='0.12';}
+  });
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // FLOOR SELECTION
 // ─────────────────────────────────────────────────────────────────────────────
