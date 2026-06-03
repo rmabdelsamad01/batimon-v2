@@ -238,12 +238,12 @@ function _pvRectSVG(rect, pid, facade){
          onmousedown="pvRectMD(event,'${rect.id}');event.stopPropagation();"
          style="cursor:${isDev?'move':'default'};">
         <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3"
-          fill="#1a3d72" fill-opacity="0.88"
-          stroke="${isSel?'#f0d060':'#224F93'}" stroke-width="${isSel?2.5:1.5}"
+          fill="transparent" fill-opacity="0"
+          stroke="${isSel?'#224F93':'transparent'}" stroke-width="${isSel?2:0}"
           ${isSel?'stroke-dasharray="6,3"':''}/>
         <text class="pv-title-text" x="${cx}%" y="${rect.y+rect.h*0.22}%"
           text-anchor="middle" dominant-baseline="middle"
-          fill="#ffffff" font-family="Barlow,sans-serif"
+          fill="#224F93" font-family="Barlow,sans-serif"
           style="pointer-events:none;user-select:none;font-size:10px;">
           ${tspans}
         </text>
