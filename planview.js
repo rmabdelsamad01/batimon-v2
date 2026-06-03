@@ -165,9 +165,15 @@ function _pvBuild(container, isDev, floors){
         </div>
       </div>
     </div>
-    ${_pvLinkModalHTML()}
-    ${_pvDupModalHTML(pid,facade)}
   `;
+  // Mount modals on document.body so position:fixed is never clipped by overflow:hidden ancestors
+  ['pv-link-modal','pv-dup-modal'].forEach(id=>{
+    const old=document.getElementById(id); if(old) old.remove();
+  });
+  const _modWrap=document.createElement('div');
+  _modWrap.id='pv-modals-root';
+  _modWrap.innerHTML=_pvLinkModalHTML()+_pvDupModalHTML(pid,facade);
+  document.body.appendChild(_modWrap);
   // Fit labels after initial DOM render
   requestAnimationFrame(_pvFitLabels);
 }
@@ -889,5 +895,7 @@ async function pvSwitchView(view){
     pv.style.display='none'; fv.style.display='flex'; fv.style.flexDirection='column';
     if(fb){fb.style.background='#224F93';fb.style.color='#fff';fb.style.borderColor='#224F93';}
     if(pb){pb.style.background='var(--surface)';pb.style.color='var(--text2)';pb.style.borderColor='var(--border)';}
+    // Remove body-mounted modals when leaving plan view
+    const mr=document.getElementById('pv-modals-root'); if(mr) mr.remove();
   }
 }
