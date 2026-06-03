@@ -1948,7 +1948,7 @@ function _custRemapCells(pid,facade,mapFn){
 }
 
 let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null;
-let _cgZoomIdx=5; const _CG_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2];
+let _cgZoomIdx=5; const _CG_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2,2.5,3,4,5,6,8];
 let _cgFilterStatus='all';
 function _cgZoomIn(){_cgZoomIdx=Math.min(_CG_ZOOM_LEVELS.length-1,_cgZoomIdx+1);_cgApplyZoom();}
 function _cgZoomOut(){_cgZoomIdx=Math.max(0,_cgZoomIdx-1);_cgApplyZoom();}
