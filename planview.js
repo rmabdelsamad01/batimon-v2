@@ -504,6 +504,24 @@ function pvDeleteSelected(){
 // LINK MODAL (assign rectangle to a facade cell)
 // ─────────────────────────────────────────────────────────────────────────────
 
+function _pvCellRefFromKey(key){
+  if(!key) return '';
+  const {pid,facade}=_pvState;
+  const meta=_custGetMeta(pid,facade);
+  const m=key.match(/^r(\d+)_c(\d+)$/);
+  if(!m) return key;
+  const ri=parseInt(m[1]),ci=parseInt(m[2]);
+  const rLbl=meta.rows[ri]?.label||String(ri+1);
+  const cLbl=meta.cols[ci]?.label||String(ci+1);
+  return `${rLbl}-${cLbl}`;
+}
+
+function pvCellSelectChanged(){
+  const sel=document.getElementById('pv-cell-select');
+  const li=document.getElementById('pv-label-input');
+  if(sel&&li) li.value=_pvCellRefFromKey(sel.value);
+}
+
 function pvShowLinkModal(selectedKey, label){
   const {pid,facade}=_pvState;
   const meta=_custGetMeta(pid,facade);
@@ -520,7 +538,8 @@ function pvShowLinkModal(selectedKey, label){
     sel.innerHTML=opts.join('');
   }
   const li=document.getElementById('pv-label-input');
-  if(li) li.value=label||'';
+  // If no existing label, auto-fill from the currently selected cell ref
+  if(li) li.value=label||_pvCellRefFromKey(sel?.value)||'';
   const m=document.getElementById('pv-link-modal');
   if(m) m.style.display='flex';
 }
@@ -558,7 +577,7 @@ function _pvLinkModalHTML(){
         <div style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:18px;">Link Element to Cell</div>
         <div style="margin-bottom:14px;">
           <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Cell Reference</label>
-          <select id="pv-cell-select" style="width:100%;padding:8px 10px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;outline:none;"></select>
+          <select id="pv-cell-select" onchange="pvCellSelectChanged()" style="width:100%;padding:8px 10px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;outline:none;"></select>
         </div>
         <div style="margin-bottom:20px;">
           <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Label <span style="font-weight:400;text-transform:none;">(optional — shown on the rectangle)</span></label>
