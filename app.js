@@ -2855,6 +2855,10 @@ async function renderCustomMonitoring(pageId){
         td.style.opacity=td.dataset.status===_cgFilterStatus?'':'0.15';
       });
     }
+    // Restore plan view if it was active before re-render
+    if(typeof _pvActiveView!=='undefined'&&_pvActiveView==='plan'&&typeof pvSwitchView==='function'){
+      pvSwitchView('plan');
+    }
   },0);
   // Escape cancels merge/unmerge mode
   document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
