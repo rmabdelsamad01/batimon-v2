@@ -516,36 +516,60 @@ function _pvCellRefFromKey(key){
   return `${rLbl}-${cLbl}`;
 }
 
-function pvCellSelectChanged(){
-  const sel=document.getElementById('pv-cell-select');
+function pvFloorSelectChanged(){
+  const {pid,facade}=_pvState;
+  const meta=_custGetMeta(pid,facade);
+  const ri=parseInt(document.getElementById('pv-floor-select')?.value);
+  const colSel=document.getElementById('pv-col-select');
+  if(!colSel||isNaN(ri)) return;
+  colSel.innerHTML=meta.cols.map((col,ci)=>`<option value="${ci}">${col.label}</option>`).join('');
+  pvColSelectChanged();
+}
+
+function pvColSelectChanged(){
   const li=document.getElementById('pv-label-input');
-  if(sel&&li) li.value=_pvCellRefFromKey(sel.value);
+  const key=pvGetSelectedCellKey();
+  if(li) li.value=_pvCellRefFromKey(key);
+}
+
+function pvGetSelectedCellKey(){
+  const ri=document.getElementById('pv-floor-select')?.value;
+  const ci=document.getElementById('pv-col-select')?.value;
+  if(ri===undefined||ri===null||ci===undefined||ci===null) return '';
+  return `r${ri}_c${ci}`;
 }
 
 function pvShowLinkModal(selectedKey, label){
   const {pid,facade}=_pvState;
   const meta=_custGetMeta(pid,facade);
-  const sel=document.getElementById('pv-cell-select');
-  if(sel){
-    const opts=[];
-    meta.rows.forEach((row,ri)=>{
-      meta.cols.forEach((col,ci)=>{
-        const key=`r${ri}_c${ci}`;
-        const ref=`${row.label}-${col.label}`;
-        opts.push(`<option value="${key}"${key===selectedKey?' selected':''}>${ref}</option>`);
-      });
-    });
-    sel.innerHTML=opts.join('');
+
+  // Parse existing key to pre-select floor + col
+  let selRi=0, selCi=0;
+  if(selectedKey){
+    const m=selectedKey.match(/^r(\d+)_c(\d+)$/);
+    if(m){selRi=parseInt(m[1]);selCi=parseInt(m[2]);}
   }
+
+  // Floor dropdown
+  const floorSel=document.getElementById('pv-floor-select');
+  if(floorSel){
+    floorSel.innerHTML=meta.rows.map((row,ri)=>`<option value="${ri}"${ri===selRi?' selected':''}>${row.label}</option>`).join('');
+  }
+
+  // Col dropdown (for selected floor)
+  const colSel=document.getElementById('pv-col-select');
+  if(colSel){
+    colSel.innerHTML=meta.cols.map((col,ci)=>`<option value="${ci}"${ci===selCi?' selected':''}>${col.label}</option>`).join('');
+  }
+
   const li=document.getElementById('pv-label-input');
-  // If no existing label, auto-fill from the currently selected cell ref
-  if(li) li.value=label||_pvCellRefFromKey(sel?.value)||'';
+  if(li) li.value=label||_pvCellRefFromKey(selectedKey)||_pvCellRefFromKey(pvGetSelectedCellKey())||'';
   const m=document.getElementById('pv-link-modal');
   if(m) m.style.display='flex';
 }
 
 function pvLinkSave(){
-  const cellKey=document.getElementById('pv-cell-select')?.value;
+  const cellKey=pvGetSelectedCellKey();
   const label=(document.getElementById('pv-label-input')?.value||'').trim();
   if(!cellKey){pvLinkCancel();return;}
   const {pid,facade,floor}=_pvState;
@@ -575,9 +599,15 @@ function _pvLinkModalHTML(){
     <div id="pv-link-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15000;align-items:center;justify-content:center;">
       <div style="background:#fff;border-radius:12px;padding:24px 24px 20px;width:360px;box-shadow:0 8px 32px rgba(34,79,147,0.2);font-family:'Barlow',sans-serif;">
         <div style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:18px;">Link Element to Cell</div>
-        <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Cell Reference</label>
-          <select id="pv-cell-select" onchange="pvCellSelectChanged()" style="width:100%;padding:8px 10px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;outline:none;"></select>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <div style="flex:1;">
+            <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Floor</label>
+            <select id="pv-floor-select" onchange="pvFloorSelectChanged()" style="width:100%;padding:8px 10px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;outline:none;"></select>
+          </div>
+          <div style="flex:1;">
+            <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Column</label>
+            <select id="pv-col-select" onchange="pvColSelectChanged()" style="width:100%;padding:8px 10px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;outline:none;"></select>
+          </div>
         </div>
         <div style="margin-bottom:20px;">
           <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Label <span style="font-weight:400;text-transform:none;">(optional — shown on the rectangle)</span></label>
