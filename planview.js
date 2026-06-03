@@ -367,7 +367,7 @@ function pvMM(e){
     const {pid,facade,floor}=_pvState;
     const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===_pvMouse.rectId);
     if(rect){
-      const or=_pvMouse.orig; const pos=_pvMouse.pos; const mn=0.5;
+      const or=_pvMouse.orig; const pos=_pvMouse.pos; const mn=0.1;
       if(pos.includes('e')) rect.w=Math.max(mn,or.w+dx);
       if(pos.includes('s')) rect.h=Math.max(mn,or.h+dy);
       if(pos.includes('w')){rect.x=or.x+dx; rect.w=Math.max(mn,or.w-dx);}
@@ -392,7 +392,7 @@ function pvMU(e){
     const w=Math.abs(pt.x-_pvMouse.startX), h=Math.abs(pt.y-_pvMouse.startY);
     const g=document.getElementById('pv-ghost');
     if(g){g.style.display='none';g.setAttribute('width','0%');g.setAttribute('height','0%');}
-    if(w>1&&h>1){
+    if(w>0.1&&h>0.1){
       _pvPendingRect={id:'r'+Date.now(),x,y,w,h,cellKey:'',label:''};
       _pvEditingRectId=null;
       pvShowLinkModal();
