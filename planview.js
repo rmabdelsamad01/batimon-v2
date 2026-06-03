@@ -775,7 +775,6 @@ function pvLinkSave(){
   _pvPendingRect=null; _pvEditingRectId=null;
   pvLinkCancel();
   _pvRefreshSVG();
-  _pvToast('Element linked — click Save Layout to persist');
 }
 
 function pvLinkCancel(){
