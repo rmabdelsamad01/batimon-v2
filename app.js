@@ -2310,6 +2310,7 @@ function saveCustPanel(){
         td.title=`${_custCurCellRef} — ${_custStLabel[status]}`;
       }
     }
+    if(typeof pvSyncStatus==='function') pvSyncStatus();
   }
   closeCustStatusModal();
 }
@@ -2580,6 +2581,10 @@ async function custCellSavePanel(){
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+function _pvInitState(pid,facade){
+  if(typeof _pvState!=='undefined'){ _pvState.pid=pid; _pvState.facade=facade; }
+}
+
 async function renderCustomMonitoring(pageId){
   window._currentCustomPage = pageId;
   const pid = window._activeProjectId;
@@ -2684,6 +2689,18 @@ async function renderCustomMonitoring(pageId){
             title="Click to edit nickname"
             style="font-size:11px;color:var(--text3);cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
             onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">(${nick})</div>`:''}
+          <div style="margin-left:auto;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden;flex-shrink:0;">
+            <button id="pv-tab-facade" onclick="_pvInitState('${pid}','${facadeDir}');pvSwitchView('facade')"
+              style="padding:5px 13px;border:none;background:#224F93;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+              Facade View
+            </button>
+            <button id="pv-tab-plan" onclick="_pvInitState('${pid}','${facadeDir}');pvSwitchView('plan')"
+              style="padding:5px 13px;border:none;border-left:1px solid var(--border);background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M3 9h6M3 15h6"/><circle cx="16" cy="12" r="3"/></svg>
+              Plan View
+            </button>
+          </div>
         </div>
         <div style="padding:7px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           ${_isDev?`
@@ -2701,23 +2718,26 @@ async function renderCustomMonitoring(pageId){
             ${_printBtn}
           `}
         </div>
-        <div style="flex:1;overflow:auto;padding:14px 20px;">
-          <div id="cg-grid-wrap" style="overflow:auto;border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);display:inline-block;">
-            <table style="border-collapse:collapse;">
-              <thead><tr>
-                <th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>
-                ${colHdrs}
-              </tr></thead>
-              <tbody>${bodyRows}</tbody>
-            </table>
+        <div id="pv-facade-view" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="flex:1;overflow:auto;padding:14px 20px;">
+            <div id="cg-grid-wrap" style="overflow:auto;border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);display:inline-block;">
+              <table style="border-collapse:collapse;">
+                <thead><tr>
+                  <th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>
+                  ${colHdrs}
+                </tr></thead>
+                <tbody>${bodyRows}</tbody>
+              </table>
+            </div>
+          </div>
+          <div style="padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);">
+            <div style="display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
+              ${legend}
+            </div>
           </div>
         </div>
-        <div style="padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);">
-          <div style="display:inline-flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;">
-            <span style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-right:4px;">Legend</span>
-            ${legend}
-          </div>
-        </div>
+        <div id="pv-container" style="display:none;flex:1;overflow:hidden;"></div>
         <!-- Right cell-detail panel -->
         <div id="cg-right-panel" style="position:absolute;top:0;right:0;bottom:0;width:280px;background:var(--surface);border-left:2px solid #224F93;box-shadow:-4px 0 18px rgba(34,79,147,0.13);display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.22s cubic-bezier(0.4,0,0.2,1);z-index:50;font-family:'Barlow',sans-serif;">
           <div style="padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#224F93;">
