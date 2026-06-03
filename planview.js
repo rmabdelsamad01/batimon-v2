@@ -163,6 +163,8 @@ function _pvBuild(container, isDev, floors){
     ${_pvLinkModalHTML()}
     ${_pvDupModalHTML(pid,facade)}
   `;
+  // Fit labels after initial DOM render
+  requestAnimationFrame(_pvFitLabels);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -194,8 +196,8 @@ function _pvRectSVG(rect, pid, facade){
         ${isSel?'stroke-dasharray="5,3"':''}/>
       <text x="${rect.x+rect.w/2}%" y="${rect.y+rect.h/2}%"
         text-anchor="middle" dominant-baseline="middle"
-        fill="${tc}" font-size="10" font-family="Barlow,sans-serif" font-weight="700"
-        style="pointer-events:none;user-select:none;">${lbl}</text>
+        fill="${tc}" font-family="Barlow,sans-serif" font-weight="700"
+        style="pointer-events:none;user-select:none;font-size:10px;">${lbl}</text>
       ${handles}
     </g>`;
 }
@@ -343,6 +345,27 @@ function _pvRefreshSVG(){
     tmp.innerHTML=_pvRectSVG(r,pid,facade);
     const grp=tmp.querySelector('.pv-rg');
     if(grp) svg.insertBefore(grp,ghost);
+  });
+  _pvFitLabels();
+}
+
+// Fit each rectangle's label font-size to the actual pixel bounds of its box
+function _pvFitLabels(){
+  const svg=document.getElementById('pv-svg'); if(!svg) return;
+  svg.querySelectorAll('.pv-rg').forEach(g=>{
+    const r=g.querySelector('rect');
+    const t=g.querySelector('text');
+    if(!r||!t) return;
+    const rb=r.getBoundingClientRect();
+    const rw=rb.width, rh=rb.height;
+    if(rw<=0||rh<=0) return;
+    let fs=Math.max(7, Math.min(rw*0.3, rh*0.5));
+    t.style.fontSize=fs+'px';
+    // Shrink until text fits within ~88% of box width
+    let i=0;
+    while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>rw*0.88&&fs>6&&i<15){
+      fs-=1; t.style.fontSize=fs+'px'; i++;
+    }
   });
 }
 
