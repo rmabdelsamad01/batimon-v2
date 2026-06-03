@@ -176,9 +176,10 @@ function _pvRectSVG(rect, pid, facade){
   const tc=_custStText[st]||'#4a6080';
   const isSel=_pvState.selectedId===rect.id;
   const lbl=rect.label||rect.cellKey;
+  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
   // x,y,w,h stored as 0-100 (%)
   const x=`${rect.x}%`, y=`${rect.y}%`, w=`${rect.w}%`, h=`${rect.h}%`;
-  const handles=isSel?_pvHandlesSVG(rect):'';
+  const handles=(isSel&&isDev)?_pvHandlesSVG(rect):'';
   return `
     <g id="pvrg-${rect.id}" class="pv-rg" data-id="${rect.id}"
        onclick="pvRectClick(event,'${rect.id}','${rect.cellKey}','${pid}','${facade}')"
@@ -300,6 +301,8 @@ function pvMU(e){
 function pvRectMD(e,id){
   if(e.button!==0) return;
   if(_pvState.drawMode) return;
+  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  if(!isDev) return;
   _pvState.selectedId=id;
   const {pid,facade,floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
@@ -311,6 +314,8 @@ function pvRectMD(e,id){
 
 function pvHandleMD(e,pos){
   if(e.button!==0) return;
+  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  if(!isDev) return;
   const id=_pvState.selectedId; if(!id) return;
   const {pid,facade,floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
