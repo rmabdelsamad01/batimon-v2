@@ -2670,7 +2670,7 @@ async function custCellSavePanel(){
 
 function _pvInitState(pid,facade){
   if(typeof _pvState!=='undefined'){ _pvState.pid=pid; _pvState.facade=facade; }
-  if(typeof _pvActiveView!=='undefined') _pvActiveView='facade';
+  // Do NOT reset _pvActiveView — let the view persist across navigation
 }
 
 async function renderCustomMonitoring(pageId){
@@ -2855,8 +2855,9 @@ async function renderCustomMonitoring(pageId){
         td.style.opacity=td.dataset.status===_cgFilterStatus?'':'0.15';
       });
     }
-    // Restore plan view if it was active before re-render
+    // Restore plan view if it was active before re-render (works across facade navigation too)
     if(typeof _pvActiveView!=='undefined'&&_pvActiveView==='plan'&&typeof pvSwitchView==='function'){
+      if(typeof _pvState!=='undefined'){_pvState.pid=pid;_pvState.facade=facade;}
       pvSwitchView('plan');
     }
   },0);
