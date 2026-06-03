@@ -275,10 +275,12 @@ function _pvRectSVG(rect, pid, facade){
         fill="${bg}" fill-opacity="${st==='pending'?0.3:0.72}"
         stroke="${isSel?'#224F93':tc}" stroke-width="${isSel?2:1}"
         ${isSel?'stroke-dasharray="5,3"':''}/>
-      <text x="${rect.x+rect.w/2}%" y="${rect.y+rect.h/2}%"
-        text-anchor="middle" dominant-baseline="middle"
-        fill="${tc}" font-family="Barlow,sans-serif" font-weight="700"
-        style="${txtStyle}">${lbl}</text>
+      <svg x="${x}" y="${y}" width="${w}" height="${h}" overflow="hidden" style="pointer-events:none;">
+        <text x="50%" y="50%"
+          text-anchor="middle" dominant-baseline="middle"
+          fill="${tc}" font-family="Barlow,sans-serif" font-weight="700"
+          style="${txtStyle}">${lbl}</text>
+      </svg>
       ${handles}
     </g>`;
 }
@@ -435,7 +437,7 @@ function _pvFitLabels(){
   const svg=document.getElementById('pv-svg'); if(!svg) return;
   svg.querySelectorAll('.pv-rg').forEach(g=>{
     const r=g.querySelector('rect');
-    const t=g.querySelector('text');
+    const t=g.querySelector('text');  // may be inside nested <svg>
     if(!r||!t) return;
     const rb=r.getBoundingClientRect();
     const rw=rb.width, rh=rb.height;
@@ -459,12 +461,13 @@ function _pvFitLabels(){
       const isPortrait=g.classList.contains('pv-portrait');
       const run=isPortrait?rh:rw;   // available length along text direction
       const cap=isPortrait?rw:rh;   // available height perpendicular to text
-      let fs=Math.max(7, Math.min(run*0.3, cap*0.5));
+      const MIN_FS=4;
+      let fs=Math.max(MIN_FS, Math.min(run*0.3, cap*0.6));
       t.style.fontSize=fs+'px';
       // Shrink until text fits within ~88% of the long side
       let i=0;
-      while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>run*0.88&&fs>6&&i<15){
-        fs-=1; t.style.fontSize=fs+'px'; i++;
+      while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>run*0.88&&fs>MIN_FS&&i<20){
+        fs=Math.max(MIN_FS,fs-0.5); t.style.fontSize=fs+'px'; i++;
       }
     }
   });
