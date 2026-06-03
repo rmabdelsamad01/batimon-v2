@@ -178,7 +178,8 @@ function _pvBuild(container, isDev, floors){
 
 function _pvGetTitleLines(pid, facade){
   const projName=(window.PROJECT_META&&window.PROJECT_META[pid])
-    ? window.PROJECT_META[pid].name : (pid||'Project');
+    ? window.PROJECT_META[pid].name
+    : (window._activeProjectName||pid||'Project');
   const cats=(typeof getProjectCategories==='function')?getProjectCategories(pid):[];
   const cpFM=(window._currentCustomPage||'').match(/^c(\d+)-([A-Z]+)$/);
   let catNick='', facNick=facade;
