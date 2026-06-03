@@ -193,7 +193,7 @@ function _pvGetTitleLines(pid, facade){
     facadeDir=leg[pageId]||pageId; catNum=1;
   }
   const cat=cats.find(x=>x.num===catNum);
-  const catNick=cat?.nick||('CAT'+catNum);
+  const catNick=cat?.name||cat?.nick||('CAT'+catNum);
   const rawName=cat?.facadeNames?.[facadeDir];
   const facNick=(typeof _fmtFacadeDisplay==='function'&&rawName)
     ? (_fmtFacadeDisplay(rawName)||facadeDir)
