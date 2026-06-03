@@ -262,8 +262,11 @@ function _pvRectSVG(rect, pid, facade){
   const tc=_custStText[st]||'#4a6080';
   // Mirror facade display: panelRef takes priority, then stored label, then cellKey
   const lbl=cellData.panelRef||rect.label||rect.cellKey;
+  // Rotate text along the long side: portrait rects get -90° rotation
+  const isPortrait=rect.h>rect.w;
+  const txtStyle=`pointer-events:none;user-select:none;font-size:10px;${isPortrait?'transform-box:fill-box;transform-origin:center;transform:rotate(-90deg);':''}`;
   return `
-    <g id="pvrg-${rect.id}" class="pv-rg" data-id="${rect.id}"
+    <g id="pvrg-${rect.id}" class="pv-rg${isPortrait?' pv-portrait':''}" data-id="${rect.id}"
        onclick="pvRectClick(event,'${rect.id}','${rect.cellKey}','${pid}','${facade}')"
        oncontextmenu="pvRectRC(event,'${rect.id}','${rect.cellKey}','${pid}','${facade}');return false;"
        onmousedown="pvRectMD(event,'${rect.id}');event.stopPropagation();"
@@ -275,7 +278,7 @@ function _pvRectSVG(rect, pid, facade){
       <text x="${rect.x+rect.w/2}%" y="${rect.y+rect.h/2}%"
         text-anchor="middle" dominant-baseline="middle"
         fill="${tc}" font-family="Barlow,sans-serif" font-weight="700"
-        style="pointer-events:none;user-select:none;font-size:10px;">${lbl}</text>
+        style="${txtStyle}">${lbl}</text>
       ${handles}
     </g>`;
 }
@@ -452,12 +455,15 @@ function _pvFitLabels(){
         fs-=1; t.style.fontSize=fs+'px'; i++;
       }
     } else {
-      // Single-line rect
-      let fs=Math.max(7, Math.min(rw*0.3, rh*0.5));
+      // Single-line rect — portrait rects rotate text so long axis is the run direction
+      const isPortrait=g.classList.contains('pv-portrait');
+      const run=isPortrait?rh:rw;   // available length along text direction
+      const cap=isPortrait?rw:rh;   // available height perpendicular to text
+      let fs=Math.max(7, Math.min(run*0.3, cap*0.5));
       t.style.fontSize=fs+'px';
-      // Shrink until text fits within ~88% of box width
+      // Shrink until text fits within ~88% of the long side
       let i=0;
-      while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>rw*0.88&&fs>6&&i<15){
+      while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>run*0.88&&fs>6&&i<15){
         fs-=1; t.style.fontSize=fs+'px'; i++;
       }
     }
