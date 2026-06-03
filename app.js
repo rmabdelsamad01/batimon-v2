@@ -2799,6 +2799,11 @@ async function renderCustomMonitoring(pageId){
             <button id="cg-unmerge-btn" onclick="custGridStartUnmerge()" style="${bs}" title="Click a merged cell to split it" onmouseover="this.style.background='#fff0f0'" onmouseout="if(_gridMode!=='unmerge')this.style.background='#f0f4f9'">⊟ Unmerge</button>
             <button onclick="custGridCancelMode()" style="${bs}color:#8099b0;" title="Cancel current mode (Esc)">✕</button>
             <span id="cg-hint" style="font-size:11px;color:#224F93;font-style:italic;"></span>
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
+            <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
+            ${_filterBtns}
+            ${_zoomControls}
+            ${_printBtn}
           `:`
             <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
             ${_filterBtns}
