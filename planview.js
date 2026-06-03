@@ -171,11 +171,13 @@ function _pvBuild(container, isDev, floors){
 
 function _pvRectSVG(rect, pid, facade){
   const cells=_custFacadeCache[`${pid}|${facade}`]||{};
-  const st=cells[rect.cellKey]?.status||'pending';
+  const cellData=cells[rect.cellKey]||{};
+  const st=cellData.status||'pending';
   const bg=_custStBg[st]||'#f0f4f9';
   const tc=_custStText[st]||'#4a6080';
   const isSel=_pvState.selectedId===rect.id;
-  const lbl=rect.label||rect.cellKey;
+  // Mirror facade display: panelRef takes priority, then stored label, then cellKey
+  const lbl=cellData.panelRef||rect.label||rect.cellKey;
   const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
   // x,y,w,h stored as 0-100 (%)
   const x=`${rect.x}%`, y=`${rect.y}%`, w=`${rect.w}%`, h=`${rect.h}%`;
