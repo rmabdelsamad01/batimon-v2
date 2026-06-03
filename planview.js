@@ -181,18 +181,23 @@ function _pvGetTitleLines(pid, facade){
     ? window.PROJECT_META[pid].name
     : (window._activeProjectName||pid||'Project');
   const cats=(typeof getProjectCategories==='function')?getProjectCategories(pid):[];
-  const cpFM=(window._currentCustomPage||'').match(/^c(\d+)-([A-Z]+)$/);
-  let catNick='', facNick=facade;
-  if(cpFM){
-    const cn=parseInt(cpFM[1]), cd=cpFM[2];
-    const cat=cats.find(x=>x.num===cn);
-    catNick=cat?.nick||'CAT'+cn;
-    // Use facadeNames (same source as the header label) not facadeNicks
-    const rawName=cat?.facadeNames?.[cd];
-    facNick=(typeof _fmtFacadeDisplay==='function'&&rawName)
-      ? (_fmtFacadeDisplay(rawName)||cd)
-      : (rawName||cd);
+  // Mirror renderCustomMonitoring: resolve catNum + facadeDir from _currentCustomPage
+  const pageId=window._currentCustomPage||'';
+  let catNum=1, facadeDir=facade;
+  const catFM=pageId.match(/^c(\d+)-([A-Z]+)$/);
+  if(catFM){
+    catNum=parseInt(catFM[1]); facadeDir=catFM[2];
+  } else {
+    // Cat1 / legacy: pageId is the direction code directly (e.g. 'SF')
+    const leg={NF:'NF','BM-NF':'NF',SF:'SF','BM-SF':'SF',EF:'EF','BM-EF':'EF',WF:'WF','BM-WF':'WF'};
+    facadeDir=leg[pageId]||pageId; catNum=1;
   }
+  const cat=cats.find(x=>x.num===catNum);
+  const catNick=cat?.nick||('CAT'+catNum);
+  const rawName=cat?.facadeNames?.[facadeDir];
+  const facNick=(typeof _fmtFacadeDisplay==='function'&&rawName)
+    ? (_fmtFacadeDisplay(rawName)||facadeDir)
+    : (rawName||facadeDir);
   return [projName, catNick, facNick, _pvState.floor||''];
 }
 
