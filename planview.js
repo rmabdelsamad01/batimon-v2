@@ -497,7 +497,7 @@ function _pvFitLabels(){
       const isPortrait=g.classList.contains('pv-portrait');
       const run=isPortrait?rh:rw;   // available length along text direction
       const cap=isPortrait?rw:rh;   // available height perpendicular to text
-      const MIN_FS=4;
+      const MIN_FS=1;
       let fs=Math.max(MIN_FS, Math.min(run*0.3, cap*0.6));
       t.style.fontSize=fs+'px';
       // Shrink until text fits within ~88% of the long side
