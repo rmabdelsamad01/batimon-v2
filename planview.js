@@ -118,6 +118,11 @@ function _pvBuild(container, isDev, floors){
       </button>
       <button onclick="pvDeleteSelected()"
         style="padding:3px 9px;border:1px solid rgba(192,32,32,0.25);border-radius:5px;background:#fff5f5;color:#c02020;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;">Delete</button>
+      <button onclick="pvInsertTitleBlock()"
+        style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        Title
+      </button>
       <button onclick="pvShowDupModal()"
         style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;">Duplicate from…</button>
       <span id="pv-hint" style="font-size:10px;color:#a07800;font-style:italic;"></span>
@@ -168,22 +173,82 @@ function _pvBuild(container, isDev, floors){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// TITLE BLOCK HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function _pvGetTitleLines(pid, facade){
+  const projName=(window.PROJECT_META&&window.PROJECT_META[pid])
+    ? window.PROJECT_META[pid].name : (pid||'Project');
+  const cats=(typeof getProjectCategories==='function')?getProjectCategories(pid):[];
+  const cpFM=(window._currentCustomPage||'').match(/^c(\d+)-([A-Z]+)$/);
+  let catNick='', facNick=facade;
+  if(cpFM){
+    const cn=parseInt(cpFM[1]), cd=cpFM[2];
+    const cat=cats.find(x=>x.num===cn);
+    catNick=cat?.nick||'CAT'+cn;
+    facNick=cat?.facadeNicks?.[cd]||cd+cn;
+  }
+  return [projName, catNick, facNick, _pvState.floor||''];
+}
+
+function pvInsertTitleBlock(){
+  const {pid,facade,floor}=_pvState;
+  if(!_pvLayouts[`${pid}|${facade}`]) _pvLayouts[`${pid}|${facade}`]={};
+  if(!_pvLayouts[`${pid}|${facade}`][floor]) _pvLayouts[`${pid}|${facade}`][floor]={rects:[]};
+  const rects=_pvLayouts[`${pid}|${facade}`][floor].rects;
+  const id='t'+Date.now();
+  rects.push({id, type:'title', cellKey:'', label:'title', x:1, y:1, w:28, h:18});
+  _pvState.selectedId=id;
+  _pvRefreshSVG();
+  _pvToast('Title block added — move/resize, then Save Layout');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SVG RECT RENDERING
 // ─────────────────────────────────────────────────────────────────────────────
 
 function _pvRectSVG(rect, pid, facade){
+  const isSel=_pvState.selectedId===rect.id;
+  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  const x=`${rect.x}%`, y=`${rect.y}%`, w=`${rect.w}%`, h=`${rect.h}%`;
+  const handles=(isSel&&isDev)?_pvHandlesSVG(rect):'';
+
+  // ── Title block ─────────────────────────────────────────────────────────────
+  if(rect.type==='title'){
+    const lines=_pvGetTitleLines(pid,facade);
+    const cx=rect.x+rect.w/2, cy=rect.y+rect.h/2;
+    // 4 tspan lines: project (bold), category, facade, floor
+    const tspans=lines.map((ln,i)=>{
+      const bold=i===0?'font-weight:800;':'font-weight:600;';
+      const opacity=i===0?'1':'0.75';
+      return `<tspan x="${cx}%" dy="${i===0?'0':'1.25em'}" style="${bold}opacity:${opacity};">${ln||''}</tspan>`;
+    }).join('');
+    return `
+      <g id="pvrg-${rect.id}" class="pv-rg pv-title-rg" data-id="${rect.id}"
+         onmousedown="pvRectMD(event,'${rect.id}');event.stopPropagation();"
+         style="cursor:${isDev?'move':'default'};">
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3"
+          fill="#1a3d72" fill-opacity="0.88"
+          stroke="${isSel?'#f0d060':'#224F93'}" stroke-width="${isSel?2.5:1.5}"
+          ${isSel?'stroke-dasharray="6,3"':''}/>
+        <text class="pv-title-text" x="${cx}%" y="${rect.y+rect.h*0.22}%"
+          text-anchor="middle" dominant-baseline="middle"
+          fill="#ffffff" font-family="Barlow,sans-serif"
+          style="pointer-events:none;user-select:none;font-size:10px;">
+          ${tspans}
+        </text>
+        ${handles}
+      </g>`;
+  }
+
+  // ── Normal cell rect ────────────────────────────────────────────────────────
   const cells=_custFacadeCache[`${pid}|${facade}`]||{};
   const cellData=cells[rect.cellKey]||{};
   const st=cellData.status||'pending';
   const bg=_custStBg[st]||'#f0f4f9';
   const tc=_custStText[st]||'#4a6080';
-  const isSel=_pvState.selectedId===rect.id;
   // Mirror facade display: panelRef takes priority, then stored label, then cellKey
   const lbl=cellData.panelRef||rect.label||rect.cellKey;
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
-  // x,y,w,h stored as 0-100 (%)
-  const x=`${rect.x}%`, y=`${rect.y}%`, w=`${rect.w}%`, h=`${rect.h}%`;
-  const handles=(isSel&&isDev)?_pvHandlesSVG(rect):'';
   return `
     <g id="pvrg-${rect.id}" class="pv-rg" data-id="${rect.id}"
        onclick="pvRectClick(event,'${rect.id}','${rect.cellKey}','${pid}','${facade}')"
@@ -359,12 +424,29 @@ function _pvFitLabels(){
     const rb=r.getBoundingClientRect();
     const rw=rb.width, rh=rb.height;
     if(rw<=0||rh<=0) return;
-    let fs=Math.max(7, Math.min(rw*0.3, rh*0.5));
-    t.style.fontSize=fs+'px';
-    // Shrink until text fits within ~88% of box width
-    let i=0;
-    while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>rw*0.88&&fs>6&&i<15){
-      fs-=1; t.style.fontSize=fs+'px'; i++;
+    const isTitle=g.classList.contains('pv-title-rg');
+    if(isTitle){
+      // 4 lines — size based on line height = rh/4 with padding
+      let fs=Math.max(6, Math.min(rw*0.18, rh*0.18));
+      t.style.fontSize=fs+'px';
+      // Shrink until longest tspan fits
+      const tspans=t.querySelectorAll('tspan');
+      let i=0;
+      while(fs>5&&i<15){
+        let overflow=false;
+        tspans.forEach(ts=>{if(typeof ts.getComputedTextLength==='function'&&ts.getComputedTextLength()>rw*0.88) overflow=true;});
+        if(!overflow) break;
+        fs-=1; t.style.fontSize=fs+'px'; i++;
+      }
+    } else {
+      // Single-line rect
+      let fs=Math.max(7, Math.min(rw*0.3, rh*0.5));
+      t.style.fontSize=fs+'px';
+      // Shrink until text fits within ~88% of box width
+      let i=0;
+      while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>rw*0.88&&fs>6&&i<15){
+        fs-=1; t.style.fontSize=fs+'px'; i++;
+      }
     }
   });
 }
@@ -404,13 +486,14 @@ async function pvRectRC(e,id,cellKey,pid,facade){
   e.preventDefault(); e.stopPropagation();
   const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
   if(isDev&&_pvState.drawMode){
-    // Dev right-click: edit this rect's link
+    // Dev right-click: edit this rect's link (skip title blocks)
+    const {floor:fl}=_pvState;
+    const rectChk=(_pvLayouts[`${pid}|${facade}`]?.[fl]?.rects||[]).find(r=>r.id===id);
+    if(rectChk?.type==='title'){_pvState.selectedId=id;_pvRefreshSVG();return;}
     _pvState.selectedId=id;
     _pvEditingRectId=id;
-    const {floor}=_pvState;
-    const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
-    if(rect) _pvPendingRect={...rect};
-    pvShowLinkModal(rect?.cellKey,rect?.label);
+    if(rectChk) _pvPendingRect={...rectChk};
+    pvShowLinkModal(rectChk?.cellKey,rectChk?.label);
     return;
   }
   // Normal: open cell detail panel
