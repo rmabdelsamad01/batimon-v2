@@ -264,13 +264,15 @@ function _pvRectSVG(rect, pid, facade){
   const lbl=cellData.panelRef||rect.label||rect.cellKey;
   // Rotate text along the long side: portrait rects get -90° rotation
   const isPortrait=rect.h>rect.w;
+  const rot=rect.rotation||0;
+  const grpRotStyle=rot?`transform-box:fill-box;transform-origin:center;transform:rotate(${rot}deg);`:'';
   const txtStyle=`pointer-events:none;user-select:none;font-size:10px;${isPortrait?'transform-box:fill-box;transform-origin:center;transform:rotate(-90deg);':''}`;
   return `
     <g id="pvrg-${rect.id}" class="pv-rg${isPortrait?' pv-portrait':''}" data-id="${rect.id}"
        onclick="pvRectClick(event,'${rect.id}','${rect.cellKey}','${pid}','${facade}')"
        oncontextmenu="pvRectRC(event,'${rect.id}','${rect.cellKey}','${pid}','${facade}');return false;"
        onmousedown="pvRectMD(event,'${rect.id}');event.stopPropagation();"
-       style="cursor:pointer;">
+       style="cursor:pointer;${grpRotStyle}">
       <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2"
         fill="${bg}" fill-opacity="${st==='pending'?0.3:0.72}"
         stroke="${isSel?'#224F93':tc}" stroke-width="${isSel?2:1}"
@@ -287,8 +289,6 @@ function _pvRectSVG(rect, pid, facade){
 
 const _PV_HW=7; // handle half-width in px — SVG handles need px since % + offset is tricky
 function _pvHandlesSVG(rect){
-  // Handles at corners and midpoints — we use foreignObject workaround: render at % + clientRect offset
-  // Simpler: render a visible selected border, handle circles via SVG circle with cx/cy in %
   const pts=[
     {cx:rect.x,          cy:rect.y,          pos:'nw'},
     {cx:rect.x+rect.w/2, cy:rect.y,          pos:'n'},
@@ -299,12 +299,24 @@ function _pvHandlesSVG(rect){
     {cx:rect.x,          cy:rect.y+rect.h,   pos:'sw'},
     {cx:rect.x,          cy:rect.y+rect.h/2, pos:'w'},
   ];
-  return pts.map(p=>`
+  const resizeHandles=pts.map(p=>`
     <circle class="pv-handle" data-pos="${p.pos}"
       cx="${p.cx}%" cy="${p.cy}%" r="4"
       fill="#fff" stroke="#224F93" stroke-width="1.5"
       style="cursor:${p.pos}-resize;"
       onmousedown="pvHandleMD(event,'${p.pos}');event.stopPropagation();"/>`).join('');
+  // Rotation handle: small circle above top-center with a dashed stem
+  const rcx=rect.x+rect.w/2;
+  const rcy=rect.y-4;
+  const rotHandle=`
+    <line x1="${rcx}%" y1="${rect.y}%" x2="${rcx}%" y2="${rcy}%"
+      stroke="#d08020" stroke-width="1" stroke-dasharray="3,2" style="pointer-events:none;"/>
+    <circle class="pv-rot-handle"
+      cx="${rcx}%" cy="${rcy}%" r="5"
+      fill="#fffbe6" stroke="#d08020" stroke-width="1.5"
+      style="cursor:grab;"
+      onmousedown="pvRotHandleMD(event);event.stopPropagation();"/>`;
+  return resizeHandles+rotHandle;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -362,6 +374,12 @@ function pvMM(e){
       if(pos.includes('n')){rect.y=or.y+dy; rect.h=Math.max(mn,or.h-dy);}
       _pvRefreshSVG();
     }
+  } else if(_pvMouse.mode==='rotate'){
+    const angle=Math.atan2(e.clientY-_pvMouse.cy,e.clientX-_pvMouse.cx)*180/Math.PI;
+    const da=angle-_pvMouse.startAngle;
+    const {pid,facade,floor}=_pvState;
+    const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===_pvMouse.rectId);
+    if(rect){rect.rotation=((_pvMouse.origRot+da)%360+360)%360; _pvRefreshSVG();}
   }
   e.preventDefault();
 }
@@ -379,7 +397,7 @@ function pvMU(e){
       _pvEditingRectId=null;
       pvShowLinkModal();
     }
-  } else if(_pvMouse.mode==='drag'||_pvMouse.mode==='resize'){
+  } else if(_pvMouse.mode==='drag'||_pvMouse.mode==='resize'||_pvMouse.mode==='rotate'){
     pvSaveLayout(true);
   }
   _pvMouse={down:false,mode:null};
@@ -409,6 +427,24 @@ function pvHandleMD(e,pos){
   if(!rect) return;
   const pt=_pvPct(e);
   _pvMouse={down:true,mode:'resize',rectId:id,pos,startX:pt.x,startY:pt.y,orig:{...rect}};
+}
+
+function pvRotHandleMD(e){
+  if(e.button!==0) return;
+  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  if(!isDev) return;
+  const id=_pvState.selectedId; if(!id) return;
+  const {pid,facade,floor}=_pvState;
+  const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
+  if(!rect) return;
+  const wrap=document.getElementById('pv-canvas-wrap'); if(!wrap) return;
+  const b=wrap.getBoundingClientRect();
+  // Pivot = center of rect in client pixels
+  const cx=b.left+(rect.x+rect.w/2)/100*b.width;
+  const cy=b.top+(rect.y+rect.h/2)/100*b.height;
+  const startAngle=Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI;
+  _pvMouse={down:true,mode:'rotate',rectId:id,cx,cy,startAngle,origRot:rect.rotation||0};
+  e.preventDefault();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
