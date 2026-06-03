@@ -195,9 +195,12 @@ function _pvGetTitleLines(pid, facade){
   const cat=cats.find(x=>x.num===catNum);
   const catNick=cat?.name||cat?.nick||('CAT'+catNum);
   const rawName=cat?.facadeNames?.[facadeDir];
-  const facNick=(typeof _fmtFacadeDisplay==='function'&&rawName)
+  const formatted=(typeof _fmtFacadeDisplay==='function'&&rawName)
     ? (_fmtFacadeDisplay(rawName)||facadeDir)
     : (rawName||facadeDir);
+  const facNick=(typeof _stripTrailingNum==='function')
+    ? (_stripTrailingNum(formatted)||facadeDir)
+    : formatted;
   return [projName, catNick, facNick, _pvState.floor||''];
 }
 
