@@ -549,8 +549,8 @@ function pvRectClick(e,id,cellKey,pid,facade){
 async function pvRectRC(e,id,cellKey,pid,facade){
   e.preventDefault(); e.stopPropagation();
   const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
-  if(isDev&&_pvState.drawMode){
-    // Dev right-click: edit this rect's link (skip title blocks)
+  if(isDev){
+    // Dev right-click: always open link editor (skip title blocks)
     const {floor:fl}=_pvState;
     const rectChk=(_pvLayouts[`${pid}|${facade}`]?.[fl]?.rects||[]).find(r=>r.id===id);
     if(rectChk?.type==='title'){_pvState.selectedId=id;_pvRefreshSVG();return;}
