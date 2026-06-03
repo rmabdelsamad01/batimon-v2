@@ -634,7 +634,6 @@ function _pvDupModalHTML(pid,facade){
 let _pvActiveView='facade'; // 'facade' | 'plan'
 
 async function pvSwitchView(view){
-  if(view===_pvActiveView) return;
   _pvActiveView=view;
   const fv=document.getElementById('pv-facade-view');
   const pv=document.getElementById('pv-container');

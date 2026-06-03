@@ -2583,6 +2583,7 @@ async function custCellSavePanel(){
 
 function _pvInitState(pid,facade){
   if(typeof _pvState!=='undefined'){ _pvState.pid=pid; _pvState.facade=facade; }
+  if(typeof _pvActiveView!=='undefined') _pvActiveView='facade';
 }
 
 async function renderCustomMonitoring(pageId){
