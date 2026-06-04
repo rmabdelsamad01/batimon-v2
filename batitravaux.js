@@ -38,29 +38,45 @@ function _btSubscribeRtLists() {
 }
 
 async function _btLoadRtLists() {
+  const keys = ['bt_rt_dirs','bt_rt_cps','bt_rt_cts','bt_rt_ccs'];
   const defs = {
     bt_rt_dirs: BT_DIRECTORS,
     bt_rt_cps:  BT_CHEF_PROJETS,
     bt_rt_cts:  [],
     bt_rt_ccs:  BT_CHEF_CHANTIERS,
   };
+  function _fromLS(k, d) { try { var v=localStorage.getItem(k); return v?JSON.parse(v):d.slice(); } catch(e){ return d.slice(); } }
   try {
-    const { data } = await window.sb.from('bt_config')
-      .select('key,value')
-      .in('key', Object.keys(defs));
+    const { data } = await window.sb.from('bt_config').select('key,value').in('key', keys);
     const map = {};
     (data||[]).forEach(r => { try { map[r.key] = JSON.parse(r.value); } catch(e) {} });
-    _btRtDirs = map['bt_rt_dirs'] || defs.bt_rt_dirs.slice();
-    _btRtCPs  = map['bt_rt_cps']  || defs.bt_rt_cps.slice();
-    _btRtCTs  = map['bt_rt_cts']  || defs.bt_rt_cts.slice();
-    _btRtCCs  = map['bt_rt_ccs']  || defs.bt_rt_ccs.slice();
+    // If bt_config has no rows yet, migrate from localStorage once
+    if (!Object.keys(map).length) {
+      const migrated = {};
+      keys.forEach(k => { migrated[k] = _fromLS(k, defs[k]); });
+      // Save all to bt_config so every user gets them
+      await Promise.all(keys.map(k =>
+        window.sb.from('bt_config').upsert(
+          { key: k, value: JSON.stringify(migrated[k]), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        ).catch(()=>{})
+      ));
+      _btRtDirs = migrated['bt_rt_dirs'];
+      _btRtCPs  = migrated['bt_rt_cps'];
+      _btRtCTs  = migrated['bt_rt_cts'];
+      _btRtCCs  = migrated['bt_rt_ccs'];
+    } else {
+      _btRtDirs = map['bt_rt_dirs'] || defs.bt_rt_dirs.slice();
+      _btRtCPs  = map['bt_rt_cps']  || defs.bt_rt_cps.slice();
+      _btRtCTs  = map['bt_rt_cts']  || defs.bt_rt_cts.slice();
+      _btRtCCs  = map['bt_rt_ccs']  || defs.bt_rt_ccs.slice();
+    }
   } catch(e) {
-    // Fallback to localStorage
-    function _load(k, d) { try { var v=localStorage.getItem(k); return v?JSON.parse(v):d.slice(); } catch(ex){ return d.slice(); } }
-    _btRtDirs = _load('bt_rt_dirs', defs.bt_rt_dirs);
-    _btRtCPs  = _load('bt_rt_cps',  defs.bt_rt_cps);
-    _btRtCTs  = _load('bt_rt_cts',  defs.bt_rt_cts);
-    _btRtCCs  = _load('bt_rt_ccs',  defs.bt_rt_ccs);
+    // Fallback to localStorage if Supabase unreachable
+    _btRtDirs = _fromLS('bt_rt_dirs', defs.bt_rt_dirs);
+    _btRtCPs  = _fromLS('bt_rt_cps',  defs.bt_rt_cps);
+    _btRtCTs  = _fromLS('bt_rt_cts',  defs.bt_rt_cts);
+    _btRtCCs  = _fromLS('bt_rt_ccs',  defs.bt_rt_ccs);
   }
 }
 
