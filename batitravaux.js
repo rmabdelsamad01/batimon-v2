@@ -12,6 +12,31 @@ const BT_CHEF_CHANTIERS = ['ABDELHAK','ABDELLAH','BAHLOUL','BENOMAR MOHAMED','EL
 // ─── Runtime editable lists (persisted in Supabase, localStorage fallback) ──────
 const _BT_CFG_PROJECT = '__bt__';
 var _btRtDirs, _btRtCPs, _btRtCTs, _btRtCCs;
+var _btRtChannel = null;
+
+function _btSubscribeRtLists() {
+  if (_btRtChannel) { try { window.sb.removeChannel(_btRtChannel); } catch(e){} _btRtChannel = null; }
+  try {
+    _btRtChannel = window.sb.channel('bt-rt-lists')
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'project_info',
+        filter: `project=eq.${_BT_CFG_PROJECT}`
+      }, payload => {
+        const row = payload.new || {};
+        if (!row.key || row.value == null) return;
+        try {
+          const arr = JSON.parse(row.value);
+          if      (row.key === 'bt_rt_dirs') _btRtDirs = arr;
+          else if (row.key === 'bt_rt_cps')  _btRtCPs  = arr;
+          else if (row.key === 'bt_rt_cts')  _btRtCTs  = arr;
+          else if (row.key === 'bt_rt_ccs')  _btRtCCs  = arr;
+          else return;
+          _btRenderAffectation();
+        } catch(e) {}
+      })
+      .subscribe();
+  } catch(e) { console.warn('[BT] realtime subscribe failed', e); }
+}
 
 async function _btLoadRtLists() {
   const defs = {
@@ -1088,13 +1113,14 @@ window.btInitAffectation = async function() {
     </div>
   </div>`;
   await _btLoadRtLists();
+  _btSubscribeRtLists();
   if (_btReports.length === 0) await _btLoadReports();
   await _btLoadAffectation();
   _btRenderAffectation();
 };
 
 window._btRefreshAff = async function() {
-  await Promise.all([_btLoadReports(), _btLoadAffectation()]);
+  await Promise.all([_btLoadRtLists(), _btLoadReports(), _btLoadAffectation()]);
   _btRenderAffectation();
   _btToast('Actualisé ✓');
 };
