@@ -1630,8 +1630,10 @@ function btAffMgrRender() {
   var h = '<div style="background:#f7f9fc;border:1px solid #dde3ee;border-radius:10px;padding:16px 18px;">';
   h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
   h += '<span style="font-size:13px;font-weight:700;color:#224F93;">⚙️ Gestion des listes (Développeur)</span>';
+  h += '<div style="display:flex;align-items:center;gap:8px;">';
+  h += '<button onclick="btMgrSyncAll()" style="padding:4px 12px;background:#1a7a4a;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;">↑ Sync Supabase</button>';
   h += '<button onclick="document.getElementById(\'bt-aff-mgr-panel\').style.display=\'none\'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#8099b0;">×</button>';
-  h += '</div>';
+  h += '</div></div>';
   h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">';
 
   lists.forEach(function(lst) {
@@ -1654,6 +1656,22 @@ function btAffMgrRender() {
 
   h += '</div></div>';
   panel.innerHTML = h;
+}
+
+async function btMgrSyncAll() {
+  const keys = ['bt_rt_dirs','bt_rt_cps','bt_rt_cts','bt_rt_ccs'];
+  const arrs  = [_btRtDirs, _btRtCPs, _btRtCTs, _btRtCCs];
+  try {
+    await Promise.all(keys.map((k,i) =>
+      window.sb.from('bt_config').upsert(
+        { key: k, value: JSON.stringify(arrs[i]||[]), updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
+      )
+    ));
+    _btToast('Listes synchronisées ✓');
+  } catch(e) {
+    _btToast('Erreur sync: ' + e.message);
+  }
 }
 
 function _btMgrGetArr(key) {
