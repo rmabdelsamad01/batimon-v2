@@ -1072,6 +1072,7 @@ window.btInitAffectation = async function() {
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="_btAddAffRow()">+ Ajouter</button>
+        <button class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btImportExcel()">↑ Import Excel</button>
         <button class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btExportAff()">↓ CSV</button>
         <button class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btRefreshAff()">↻ Actualiser</button>
       </div>
@@ -1525,6 +1526,91 @@ window._btAddAffRow = async function() {
   await _btLogHistory('CREATE','bt_affectation',p.id,p.projet,null,null,null);
   _btApplyAffFilters();
   _btToast('Projet ajouté en bas du tableau');
+};
+
+window._btImportExcel = function() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.xlsx,.xls';
+  inp.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+      try {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (!rows.length) { _btToast('Aucune donnée trouvée dans le fichier'); return; }
+
+        // Flexible column mapping (case-insensitive, accent-insensitive)
+        function norm(s) { return String(s||'').toLowerCase().replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[ùû]/g,'u').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').trim(); }
+        const COL_MAP = {
+          'num_ligne':         ['num ligne','numligne','n ligne','n°ligne','no ligne','num_ligne'],
+          'num_aff':           ['num aff','numaff','n aff','numero affectation','num_aff'],
+          'projet':            ['projet','project','nom projet'],
+          'client':            ['client'],
+          'directeurProjet':   ['directeur','directeur projet','dir projet','directeurprojet'],
+          'chefProjet':        ['chef projet','chefprojet','cp'],
+          'conducteurTravaux': ['conducteur','conducteur travaux','conducteurtravaux','ct'],
+          'chefChantier':      ['chef chantier','chefchantier','cc'],
+          'effectif':          ['effectif'],
+          'dateDebut':         ['date debut','datedebut','debut','date de debut','date début'],
+          'dateFin':           ['date fin','datefin','fin','date de fin'],
+          'montantMarche':     ['montant marche','montantmarche','montant','marche','montant marché'],
+          'cumulAttache':      ['cumul attache','cumulattache','cumul','attache','cumul attaché'],
+          'bet':               ['bet'],
+          'achat':             ['achat'],
+          'production':        ['production'],
+          'pose':              ['pose'],
+          'observations':      ['observations','observation','obs'],
+        };
+
+        // Map actual header names to field names
+        const headers = Object.keys(rows[0]);
+        const headerMap = {};
+        headers.forEach(h => {
+          const hn = norm(h);
+          for (const [field, aliases] of Object.entries(COL_MAP)) {
+            if (aliases.includes(hn)) { headerMap[h] = field; break; }
+          }
+        });
+
+        let added = 0;
+        for (const row of rows) {
+          const p = {
+            id: 'aff-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+            numLigne:'', numAff:'', projet:'', client:'', directeurProjet:'',
+            chefProjet:[], conducteurTravaux:[], chefChantier:[], effectif:'',
+            dateDebut:'', dateFin:'', montantMarche:0, cumulAttache:0,
+            bet:'', achat:'', production:'', pose:'', observations:''
+          };
+          for (const [h, field] of Object.entries(headerMap)) {
+            const val = String(row[h]||'').trim();
+            if (['chefProjet','conducteurTravaux','chefChantier'].includes(field)) {
+              p[field] = val ? val.split(/[,;]+/).map(s=>s.trim()).filter(Boolean) : [];
+            } else if (['montantMarche','cumulAttache'].includes(field)) {
+              p[field] = parseFloat(val.replace(/\s/g,'').replace(',','.')) || 0;
+            } else {
+              p[field] = val;
+            }
+          }
+          if (!p.projet) continue; // skip empty rows
+          _btAffectation.push(p);
+          await _btSaveAffRow(p, null, null, null);
+          await _btLogHistory('CREATE','bt_affectation',p.id,p.projet,null,null,null);
+          added++;
+        }
+        _btApplyAffFilters();
+        _btToast(added + ' ligne(s) importée(s) depuis Excel');
+      } catch(err) {
+        console.error('[BT] importExcel error', err);
+        _btToast('Erreur lors de l\'import: ' + (err.message||err));
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+  inp.click();
 };
 
 window._btDeleteAff = async function(id) {
