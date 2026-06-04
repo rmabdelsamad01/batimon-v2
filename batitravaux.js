@@ -19,8 +19,7 @@ function _btSubscribeRtLists() {
   try {
     _btRtChannel = window.sb.channel('bt-rt-lists')
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'project_info',
-        filter: `project=eq.${_BT_CFG_PROJECT}`
+        event: '*', schema: 'public', table: 'bt_config'
       }, payload => {
         const row = payload.new || {};
         if (!row.key || row.value == null) return;
@@ -46,9 +45,8 @@ async function _btLoadRtLists() {
     bt_rt_ccs:  BT_CHEF_CHANTIERS,
   };
   try {
-    const { data } = await window.sb.from('project_info')
+    const { data } = await window.sb.from('bt_config')
       .select('key,value')
-      .eq('project', _BT_CFG_PROJECT)
       .in('key', Object.keys(defs));
     const map = {};
     (data||[]).forEach(r => { try { map[r.key] = JSON.parse(r.value); } catch(e) {} });
@@ -72,16 +70,15 @@ function _btSaveRtList(key, arr) {
   else if (key === 'bt_rt_cps') _btRtCPs = arr;
   else if (key === 'bt_rt_cts') _btRtCTs = arr;
   else if (key === 'bt_rt_ccs') _btRtCCs = arr;
-  // Persist to Supabase asynchronously
+  // Persist to bt_config table asynchronously
   (async () => {
     try {
-      await window.sb.from('project_info').upsert(
-        { project: _BT_CFG_PROJECT, key, value: JSON.stringify(arr) },
-        { onConflict: 'project,key' }
+      await window.sb.from('bt_config').upsert(
+        { key, value: JSON.stringify(arr), updated_at: new Date().toISOString() },
+        { onConflict: 'key' }
       );
     } catch(e) {
-      console.warn('[BT] saveRtList Supabase failed, falling back to localStorage', e);
-      localStorage.setItem(key, JSON.stringify(arr));
+      console.warn('[BT] saveRtList failed', e);
     }
   })();
 }
