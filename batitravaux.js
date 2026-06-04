@@ -1086,14 +1086,21 @@ window.btInitAffectation = async function() {
         <select id="bt-aff-cp" onchange="_btApplyAffFilters()"><option value="">Tous CPs</option></select>
         <select id="bt-aff-ct" onchange="_btApplyAffFilters()"><option value="">Tous conducteurs</option></select>
         <select id="bt-aff-cc" onchange="_btApplyAffFilters()"><option value="">Tous chefs chantier</option></select>
-        <select id="bt-aff-av" onchange="_btApplyAffFilters()">
-          <option value="">Tous avancements</option>
-          <option value="0">Pas démarré (0%)</option>
-          <option value="low">Faible (0–25%)</option>
-          <option value="mid">Moyen (25–75%)</option>
-          <option value="high">Avancé (75–100%)</option>
-          <option value="done">Terminé (100%)</option>
-        </select>
+        <div id="bt-av-wrap" style="position:relative;">
+          <button id="bt-av-btn" onclick="_btAvToggle(event)"
+            style="padding:6px 10px;border:1px solid #dde3ee;border-radius:6px;background:#fff;color:#445;font-family:Barlow,sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;min-width:150px;justify-content:space-between;">
+            <span id="bt-av-label">Tous avancements</span><span style="opacity:.5;">▾</span>
+          </button>
+          <div id="bt-av-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid #dde3ee;border-radius:8px;box-shadow:0 4px 16px rgba(34,79,147,0.12);z-index:500;min-width:180px;padding:6px 0;">
+            <label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:Barlow,sans-serif;border-bottom:1px solid #f0f4f9;color:#224F93;font-weight:600;" onclick="_btAvClear()">
+              <span>✕ Effacer sélection</span>
+            </label>
+            ${[['0','Pas démarré (0%)'],['low','Faible (0–25%)'],['mid','Moyen (25–75%)'],['high','Avancé (75–100%)'],['done','Terminé (100%)']].map(([v,l])=>`
+            <label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:Barlow,sans-serif;user-select:none;" onmouseover="this.style.background='#f0f4f9'" onmouseout="this.style.background=''">
+              <input type="checkbox" value="${v}" class="bt-av-chk" onchange="_btAvChange()" style="accent-color:#224F93;width:14px;height:14px;cursor:pointer;"> ${l}
+            </label>`).join('')}
+          </div>
+        </div>
         <button id="bt-aff-mgr-btn" style="display:none;" onclick="btAffMgr()" class="bt-btn bt-btn-secondary bt-btn-sm">⚙️ Gérer listes</button>
       </div>
     </div>
@@ -1140,6 +1147,36 @@ window._btRefreshAff = async function() {
   _btToast('Actualisé ✓');
 };
 
+function _btAvToggle(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('bt-av-panel');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    setTimeout(() => {
+      document.addEventListener('click', function handler(ev) {
+        if (!document.getElementById('bt-av-wrap')?.contains(ev.target)) {
+          panel.style.display = 'none';
+          document.removeEventListener('click', handler);
+        }
+      });
+    }, 0);
+  }
+}
+
+function _btAvChange() {
+  const checked = [...document.querySelectorAll('.bt-av-chk:checked')];
+  const label = document.getElementById('bt-av-label');
+  if (label) label.textContent = checked.length ? checked.length + ' sélectionné(s)' : 'Tous avancements';
+  _btRenderAffectation();
+}
+
+function _btAvClear() {
+  document.querySelectorAll('.bt-av-chk').forEach(c => c.checked = false);
+  _btAvChange();
+}
+
 function _btRenderAffectation() {
   const fixedFill = (id, list) => {
     const sel = document.getElementById(id);
@@ -1173,7 +1210,8 @@ window._btApplyAffFilters = function() {
   const fCp  = document.getElementById('bt-aff-cp')?.value||'';
   const fCt  = document.getElementById('bt-aff-ct')?.value||'';
   const fCc  = document.getElementById('bt-aff-cc')?.value||'';
-  const fAv  = document.getElementById('bt-aff-av')?.value||'';
+  const fAvChecked = [...document.querySelectorAll('.bt-av-chk:checked')].map(c=>c.value);
+  const fAv = fAvChecked.length ? fAvChecked : null;
 
   let filtered = _btAffectation.filter(p => {
     if (fDir && p.directeurProjet !== fDir) return false;
@@ -1182,11 +1220,15 @@ window._btApplyAffFilters = function() {
     if (fCc  && !_btFlatArr(p.chefChantier).includes(fCc)) return false;
     if (fAv) {
       const av = _btCalcAv(p);
-      if (fAv==='0' && av!==0) return false;
-      else if (fAv==='low' && (av===0||av>=25)) return false;
-      else if (fAv==='mid' && (av<25||av>=75)) return false;
-      else if (fAv==='high' && (av<75||av>=100)) return false;
-      else if (fAv==='done' && av<100) return false;
+      const avMatch = v => {
+        if (v==='0')    return av===0;
+        if (v==='low')  return av>0&&av<25;
+        if (v==='mid')  return av>=25&&av<75;
+        if (v==='high') return av>=75&&av<100;
+        if (v==='done') return av>=100;
+        return false;
+      };
+      if (!fAv.some(avMatch)) return false;
     }
     if (search) {
       const blob = [p.projet,p.client,p.numAff,p.directeurProjet,..._btFlatArr(p.chefProjet),..._btFlatArr(p.conducteurTravaux),..._btFlatArr(p.chefChantier),p.numLigne].filter(Boolean).join(' ').toLowerCase();
