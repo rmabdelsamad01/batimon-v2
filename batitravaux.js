@@ -392,6 +392,7 @@ async function _btLoadAffectation() {
         numLigne: r.num_ligne || '',
         numAff: r.num_aff || '',
         projet: r.projet || '',
+        client: r.client || '',
         directeurProjet: r.directeur_projet || '',
         chefProjet: _btNormArr(r.chef_projet || ''),
         chefChantier: _btNormArr(r.chef_chantier || ''),
@@ -424,7 +425,7 @@ async function _btSaveAllAffectation() {
     for (const p of _btAffectation) {
       await db.from('bt_affectation').upsert({
         id: p.id, num_ligne: p.numLigne||'', num_aff: p.numAff||'',
-        projet: p.projet||'', directeur_projet: p.directeurProjet||'',
+        projet: p.projet||'', client: p.client||'', directeur_projet: p.directeurProjet||'',
         chef_projet: _btArrStr(p.chefProjet)||'', chef_chantier: _btArrStr(p.chefChantier)||'',
         effectif: p.effectif||'', date_debut: p.dateDebut||'', date_fin: p.dateFin||'',
         montant_marche: parseFloat(p.montantMarche)||0,
@@ -443,7 +444,7 @@ async function _btSaveAffRow(p, oldVal, newField, newVal) {
   try {
     await db.from('bt_affectation').upsert({
       id: p.id, num_ligne: p.numLigne||'', num_aff: p.numAff||'',
-      projet: p.projet||'', directeur_projet: p.directeurProjet||'',
+      projet: p.projet||'', client: p.client||'', directeur_projet: p.directeurProjet||'',
       chef_projet: _btArrStr(p.chefProjet)||'', chef_chantier: _btArrStr(p.chefChantier)||'',
       effectif: p.effectif||'', date_debut: p.dateDebut||'', date_fin: p.dateFin||'',
       montant_marche: parseFloat(p.montantMarche)||0,
@@ -1103,6 +1104,7 @@ window.btInitAffectation = async function() {
             <th class="sticky-col">#</th>
             <th id="th-numaff" class="bt-sortable" style="min-width:80px;" onclick="_btSortAff('numAff')">N° Aff <span class="bt-sort-ind">⇅</span></th>
             <th id="th-projet" class="bt-sortable sticky-col-2" style="min-width:200px;" onclick="_btSortAff('projet')">Projet <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-client" class="bt-sortable" style="min-width:200px;" onclick="_btSortAff('client')">Client <span class="bt-sort-ind">⇅</span></th>
             <th id="th-dir" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('directeurProjet')">Directeur <span class="bt-sort-ind">⇅</span></th>
             <th id="th-cp" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('chefProjet')">Chef Projet <span class="bt-sort-ind">⇅</span></th>
             <th id="th-ct" class="bt-sortable" style="min-width:130px;" onclick="_btSortAff('conducteurTravaux')">Conducteur Travaux <span class="bt-sort-ind">⇅</span></th>
@@ -1187,7 +1189,7 @@ window._btApplyAffFilters = function() {
       else if (fAv==='done' && av<100) return false;
     }
     if (search) {
-      const blob = [p.projet,p.numAff,p.directeurProjet,..._btFlatArr(p.chefProjet),..._btFlatArr(p.conducteurTravaux),..._btFlatArr(p.chefChantier),p.numLigne].filter(Boolean).join(' ').toLowerCase();
+      const blob = [p.projet,p.client,p.numAff,p.directeurProjet,..._btFlatArr(p.chefProjet),..._btFlatArr(p.conducteurTravaux),..._btFlatArr(p.chefChantier),p.numLigne].filter(Boolean).join(' ').toLowerCase();
       if (!blob.includes(search)) return false;
     }
     return true;
@@ -1251,6 +1253,7 @@ function _btUpdateAffSortHeaders() {
   const cols = [
     { id:'th-numaff',   field:'numAff',           label:'N° Aff' },
     { id:'th-projet',   field:'projet',            label:'Projet' },
+    { id:'th-client',   field:'client',            label:'Client' },
     { id:'th-dir',      field:'directeurProjet',   label:'Directeur' },
     { id:'th-cp',       field:'chefProjet',        label:'Chef Projet' },
     { id:'th-ct',       field:'conducteurTravaux', label:'Conducteur Travaux' },
@@ -1288,6 +1291,7 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
         <td class="sticky-col">${idx+1}</td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','numAff')">${_btH(p.numAff||'—')}</span></td>
         <td class="sticky-col-2"><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','projet')" style="font-weight:600;">${_btH(p.projet||'—')}</span></td>
+        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','client')" style="font-weight:600;">${_btH(p.client||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','directeurProjet')" ${isVide(p.directeurProjet)?'style="color:#8099b0;font-style:italic;"':''}>${_btH(p.directeurProjet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','chefProjet')" ${isVide(p.chefProjet)?'style="color:#c02020;font-style:italic;"':''}>${showArr(p.chefProjet)}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','conducteurTravaux')" ${isVide(p.conducteurTravaux)?'style="color:#8099b0;font-style:italic;"':''}>${showArr(p.conducteurTravaux)}</span></td>
@@ -1760,7 +1764,7 @@ async function _btRenameInAffectation(key, oldName, newName) {
 window._btExportAff = function() {
   // Export the rows exactly as currently displayed (same filter + sort order)
   const source = _btLastAffRows.length > 0 ? _btLastAffRows : _btAffectation;
-  const headers = ['#','N° Aff','Projet','Directeur','Chef Projet','Conducteur Travaux','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
+  const headers = ['#','N° Aff','Projet','Client','Directeur','Chef Projet','Conducteur Travaux','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
   const rows = source.map((p, i) => {
     const caInfo = _btLinkedCa(p);
     const mm = parseFloat(p.montantMarche)||0;
@@ -1770,6 +1774,7 @@ window._btExportAff = function() {
       i + 1,                    // SQN matches display
       p.numAff,
       p.projet,
+      p.client,
       p.directeurProjet,
       arrStr(p.chefProjet),
       arrStr(p.conducteurTravaux),
