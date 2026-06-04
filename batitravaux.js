@@ -15,9 +15,9 @@ var _btRtDirs, _btRtCPs, _btRtCTs, _btRtCCs;
 var _btRtChannel = null;
 
 function _btSubscribeRtLists() {
-  if (_btRtChannel) { try { window.sb.removeChannel(_btRtChannel); } catch(e){} _btRtChannel = null; }
+  if (_btRtChannel) { try { _btSb().removeChannel(_btRtChannel); } catch(e){} _btRtChannel = null; }
   try {
-    _btRtChannel = window.sb.channel('bt-rt-lists')
+    _btRtChannel = _btSb().channel('bt-rt-lists')
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'bt_config'
       }, payload => {
@@ -47,7 +47,7 @@ async function _btLoadRtLists() {
   };
   function _fromLS(k, d) { try { var v=localStorage.getItem(k); return v?JSON.parse(v):d.slice(); } catch(e){ return d.slice(); } }
   try {
-    const { data } = await window.sb.from('bt_config').select('key,value').in('key', keys);
+    const { data } = await _btSb().from('bt_config').select('key,value').in('key', keys);
     const map = {};
     (data||[]).forEach(r => { try { map[r.key] = JSON.parse(r.value); } catch(e) {} });
     // If bt_config has no rows yet, migrate from localStorage once
@@ -56,7 +56,7 @@ async function _btLoadRtLists() {
       keys.forEach(k => { migrated[k] = _fromLS(k, defs[k]); });
       // Save all to bt_config so every user gets them
       await Promise.all(keys.map(k =>
-        window.sb.from('bt_config').upsert(
+        _btSb().from('bt_config').upsert(
           { key: k, value: JSON.stringify(migrated[k]), updated_at: new Date().toISOString() },
           { onConflict: 'key' }
         ).catch(()=>{})
@@ -89,7 +89,7 @@ function _btSaveRtList(key, arr) {
   // Persist to bt_config table asynchronously
   (async () => {
     try {
-      await window.sb.from('bt_config').upsert(
+      await _btSb().from('bt_config').upsert(
         { key, value: JSON.stringify(arr), updated_at: new Date().toISOString() },
         { onConflict: 'key' }
       );
@@ -1666,7 +1666,7 @@ async function btMgrSyncAll() {
   const arrs  = [_btRtDirs, _btRtCPs, _btRtCTs, _btRtCCs];
   try {
     await Promise.all(keys.map((k,i) =>
-      window.sb.from('bt_config').upsert(
+      _btSb().from('bt_config').upsert(
         { key: k, value: JSON.stringify(arrs[i]||[]), updated_at: new Date().toISOString() },
         { onConflict: 'key' }
       )
