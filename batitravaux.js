@@ -81,7 +81,7 @@ function _btFlatArr(v) { return Array.isArray(v) ? v : (v ? [v] : []); }
 // Returns true when the logged-in user is the developer (username R1)
 function _btIsDeveloper() {
   return (typeof sbProfile !== 'undefined' && sbProfile) &&
-         sbProfile.role === 'developer';
+         (sbProfile.role === 'developer' || (sbProfile.username || '').toLowerCase() === 'r1');
 }
 
 // Returns the effective cumul attaché for an affectation row.
