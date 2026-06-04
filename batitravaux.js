@@ -1659,6 +1659,9 @@ function btAffMgrRender() {
 }
 
 async function btMgrSyncAll() {
+  const btn = document.querySelector('[onclick="btMgrSyncAll()"]');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Sync en cours…'; btn.disabled = true; }
   const keys = ['bt_rt_dirs','bt_rt_cps','bt_rt_cts','bt_rt_ccs'];
   const arrs  = [_btRtDirs, _btRtCPs, _btRtCTs, _btRtCCs];
   try {
@@ -1668,9 +1671,11 @@ async function btMgrSyncAll() {
         { onConflict: 'key' }
       )
     ));
-    _btToast('Listes synchronisées ✓');
+    if (btn) { btn.textContent = '✓ Sync complété'; btn.style.background='#0f5c32'; }
+    setTimeout(() => { if (btn) { btn.textContent = orig; btn.style.background=''; btn.disabled = false; } }, 3000);
   } catch(e) {
-    _btToast('Erreur sync: ' + e.message);
+    if (btn) { btn.textContent = '✗ Erreur'; btn.style.background='#c02020'; }
+    setTimeout(() => { if (btn) { btn.textContent = orig; btn.style.background=''; btn.disabled = false; } }, 3000);
   }
 }
 
