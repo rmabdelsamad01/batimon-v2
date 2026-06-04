@@ -1112,11 +1112,11 @@ window.btInitAffectation = async function() {
             <th id="th-numaff" class="bt-sortable" style="min-width:80px;" onclick="_btSortAff('numAff')">N° Aff <span class="bt-sort-ind">⇅</span></th>
             <th id="th-projet" class="bt-sortable sticky-col-2" style="min-width:200px;" onclick="_btSortAff('projet')">Projet <span class="bt-sort-ind">⇅</span></th>
             <th id="th-client" class="bt-sortable" style="min-width:200px;" onclick="_btSortAff('client')">Client <span class="bt-sort-ind">⇅</span></th>
-            <th id="th-dir" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('directeurProjet')">Directeur <span class="bt-sort-ind">⇅</span></th>
-            <th id="th-cp" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('chefProjet')">Chef Projet <span class="bt-sort-ind">⇅</span></th>
-            <th id="th-ct" class="bt-sortable" style="min-width:130px;" onclick="_btSortAff('conducteurTravaux')">Conducteur Travaux <span class="bt-sort-ind">⇅</span></th>
-            <th id="th-cc" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('chefChantier')">Chef Chantier <span class="bt-sort-ind">⇅</span></th>
-            <th id="th-eff" class="bt-sortable" style="min-width:60px;" onclick="_btSortAff('effectif')">Effectif <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-dir" class="bt-sortable" style="min-width:80px;white-space:normal;" onclick="_btSortAff('directeurProjet')">Directeur <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-cp" class="bt-sortable" style="min-width:80px;white-space:normal;" onclick="_btSortAff('chefProjet')">Chef Projet <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-ct" class="bt-sortable" style="min-width:80px;white-space:normal;" onclick="_btSortAff('conducteurTravaux')">Conducteur Travaux <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-cc" class="bt-sortable" style="min-width:80px;white-space:normal;" onclick="_btSortAff('chefChantier')">Chef Chantier <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-eff" class="bt-sortable" style="min-width:40px;width:40px;" onclick="_btSortAff('effectif')">Eff. <span class="bt-sort-ind">⇅</span></th>
             <th id="th-mm" class="bt-sortable" style="min-width:100px;text-align:right;" onclick="_btSortAff('montantMarche')">Montant marché <span class="bt-sort-ind">⇅</span></th>
             <th id="th-ca" class="bt-sortable" style="min-width:100px;text-align:right;" onclick="_btSortAff('cumulAttache')">Cumul attaché <span class="bt-sort-ind">⇅</span></th>
             <th id="th-av" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('avancement')">Avancement <span class="bt-sort-ind">⇅</span></th>
