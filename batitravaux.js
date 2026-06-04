@@ -9,20 +9,56 @@ const BT_DIRECTORS      = ['Raed','Anas','Nabil G','Youssef Chbihi'];
 const BT_CHEF_PROJETS   = ['ANAS','BENBATI','CHEBIHI YOUSSEF','EZZAHIA','IMANE','KHADIJA','LARBI BKS','MEHDI BENMADANI','NABIL FT','OTMANE IMMA','OUSSAMA','SAAD','SAFAA','SAMY','SBYK','SIHAM'];
 const BT_CHEF_CHANTIERS = ['ABDELHAK','ABDELLAH','BAHLOUL','BENOMAR MOHAMED','EL OUAFI','JEDDA','KOUIDER','MOUFADAL','OUTMAN','SABATY','ZOUINE'];
 
-// ─── Runtime editable lists (persisted in localStorage, override constants) ─────
+// ─── Runtime editable lists (persisted in Supabase, localStorage fallback) ──────
+const _BT_CFG_PROJECT = '__bt__';
 var _btRtDirs, _btRtCPs, _btRtCTs, _btRtCCs;
-function _btLoadRtLists() {
-  function _load(key, def) {
-    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def.slice(); } catch(e) { return def.slice(); }
+
+async function _btLoadRtLists() {
+  const defs = {
+    bt_rt_dirs: BT_DIRECTORS,
+    bt_rt_cps:  BT_CHEF_PROJETS,
+    bt_rt_cts:  [],
+    bt_rt_ccs:  BT_CHEF_CHANTIERS,
+  };
+  try {
+    const { data } = await window.sb.from('project_info')
+      .select('key,value')
+      .eq('project', _BT_CFG_PROJECT)
+      .in('key', Object.keys(defs));
+    const map = {};
+    (data||[]).forEach(r => { try { map[r.key] = JSON.parse(r.value); } catch(e) {} });
+    _btRtDirs = map['bt_rt_dirs'] || defs.bt_rt_dirs.slice();
+    _btRtCPs  = map['bt_rt_cps']  || defs.bt_rt_cps.slice();
+    _btRtCTs  = map['bt_rt_cts']  || defs.bt_rt_cts.slice();
+    _btRtCCs  = map['bt_rt_ccs']  || defs.bt_rt_ccs.slice();
+  } catch(e) {
+    // Fallback to localStorage
+    function _load(k, d) { try { var v=localStorage.getItem(k); return v?JSON.parse(v):d.slice(); } catch(ex){ return d.slice(); } }
+    _btRtDirs = _load('bt_rt_dirs', defs.bt_rt_dirs);
+    _btRtCPs  = _load('bt_rt_cps',  defs.bt_rt_cps);
+    _btRtCTs  = _load('bt_rt_cts',  defs.bt_rt_cts);
+    _btRtCCs  = _load('bt_rt_ccs',  defs.bt_rt_ccs);
   }
-  _btRtDirs = _load('bt_rt_dirs', BT_DIRECTORS);
-  _btRtCPs  = _load('bt_rt_cps',  BT_CHEF_PROJETS);
-  _btRtCTs  = _load('bt_rt_cts',  []);
-  _btRtCCs  = _load('bt_rt_ccs',  BT_CHEF_CHANTIERS);
 }
+
 function _btSaveRtList(key, arr) {
-  localStorage.setItem(key, JSON.stringify(arr));
-  _btLoadRtLists();
+  // Update in-memory immediately so UI re-renders with correct data right away
+  if (key === 'bt_rt_dirs') _btRtDirs = arr;
+  else if (key === 'bt_rt_cps') _btRtCPs = arr;
+  else if (key === 'bt_rt_cts') _btRtCTs = arr;
+  else if (key === 'bt_rt_ccs') _btRtCCs = arr;
+  // Persist to Supabase asynchronously
+  (async () => {
+    try {
+      await window.sb.from('project_info').upsert(
+        { project: _BT_CFG_PROJECT, key, value: JSON.stringify(arr) },
+        { onConflict: 'project,key' }
+      );
+    } catch(e) {
+      console.warn('[BT] saveRtList Supabase failed, falling back to localStorage', e);
+      localStorage.setItem(key, JSON.stringify(arr));
+    }
+  })();
 }
 
 // ─── Multi-value array helpers ──────────────────────────────────────────────────
@@ -1051,7 +1087,7 @@ window.btInitAffectation = async function() {
       </div>
     </div>
   </div>`;
-  _btLoadRtLists();
+  await _btLoadRtLists();
   if (_btReports.length === 0) await _btLoadReports();
   await _btLoadAffectation();
   _btRenderAffectation();
@@ -1582,7 +1618,8 @@ function btAffMgrRender() {
 }
 
 function _btMgrGetArr(key) {
-  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : []; } catch(e) { return []; }
+  const m = { bt_rt_dirs:_btRtDirs, bt_rt_cps:_btRtCPs, bt_rt_cts:_btRtCTs, bt_rt_ccs:_btRtCCs };
+  return (m[key] || []).slice();
 }
 
 function btMgrAdd(key) {
