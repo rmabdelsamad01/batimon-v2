@@ -1674,8 +1674,10 @@ async function btMgrSyncAll() {
     if (btn) { btn.textContent = '✓ Sync complété'; btn.style.background='#0f5c32'; }
     setTimeout(() => { if (btn) { btn.textContent = orig; btn.style.background=''; btn.disabled = false; } }, 3000);
   } catch(e) {
-    if (btn) { btn.textContent = '✗ Erreur'; btn.style.background='#c02020'; }
-    setTimeout(() => { if (btn) { btn.textContent = orig; btn.style.background=''; btn.disabled = false; } }, 3000);
+    const msg = e?.message || JSON.stringify(e);
+    console.error('[BT] btMgrSyncAll error:', e);
+    if (btn) { btn.textContent = '✗ ' + msg; btn.style.background='#c02020'; btn.title = msg; }
+    setTimeout(() => { if (btn) { btn.textContent = orig; btn.style.background=''; btn.style.color=''; btn.disabled = false; btn.title=''; } }, 6000);
   }
 }
 
