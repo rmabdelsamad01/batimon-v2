@@ -1725,10 +1725,36 @@ function btMgrSaveEdit(key, idx) {
   var val = inp.value.trim();
   if (!val) return;
   var arr = _btMgrGetArr(key);
+  var oldName = arr[idx];
   arr[idx] = val;
   _btSaveRtList(key, arr);
   btAffMgrRender();
   _btRenderAffectation();
+  // Auto-rename matching rows in bt_affectation
+  if (oldName && oldName !== val) _btRenameInAffectation(key, oldName, val);
+}
+
+async function _btRenameInAffectation(key, oldName, newName) {
+  const fieldMap = {
+    'bt_rt_dirs': 'directeurProjet',
+    'bt_rt_cps':  'chefProjet',
+    'bt_rt_cts':  'conducteurTravaux',
+    'bt_rt_ccs':  'chefChantier',
+  };
+  const field = fieldMap[key];
+  if (!field) return;
+  const toSave = [];
+  _btAffectation.forEach(function(p) {
+    var vals = _btNormArr(p[field]);
+    if (!vals.includes(oldName)) return;
+    var updated = vals.map(function(v){ return v === oldName ? newName : v; });
+    p[field] = updated.length === 1 ? updated[0] : updated;
+    toSave.push(p);
+  });
+  for (var i = 0; i < toSave.length; i++) {
+    await _btSaveAffRow(toSave[i], oldName, field, newName);
+  }
+  if (toSave.length) _btRenderAffectation();
 }
 
 window._btExportAff = function() {
