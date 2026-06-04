@@ -1073,7 +1073,7 @@ window.btInitAffectation = async function() {
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="bt-btn bt-btn-primary bt-btn-sm" onclick="_btAddAffRow()">+ Ajouter</button>
         <button class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btImportExcel()">↑ Import Excel</button>
-        <button class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btExportAff()">↓ CSV</button>
+        <button class="bt-btn bt-btn-secondary bt-btn-sm" onclick="_btExportAff()">↓ Export Excel</button>
       </div>
     </div>
     <div style="padding:14px 24px 0;background:#fff;border-bottom:1px solid var(--border,#dde3ee);">
