@@ -13291,7 +13291,12 @@ let _demoExpandedLegId=null;
 
 function _demoToggleLegendBreakdown(lid){
   _demoExpandedLegId=(_demoExpandedLegId===lid)?null:lid;
-  _demoRenderLegend();
+  if(_demoActiveZone==='overview'){
+    const area=document.getElementById('demo-grid-area');
+    if(area) _demoRenderOverview(area);
+  } else {
+    _demoRenderLegend();
+  }
 }
 
 function _demoLegendBreakdown(lid){
@@ -13393,32 +13398,18 @@ function _demoRenderLegend(){
     el.innerHTML='<div style="font-size:11px;color:#8099b0;text-align:center;padding:20px 8px;line-height:1.6;">No items yet.<br>Click <strong>+ Add</strong><br>to build your legend.</div>';
     return;
   }
-  el.innerHTML=_demoData.legend.map(item=>{
-    const isExp=_demoExpandedLegId===item.id;
-    const breakdownHTML=isExp?_demoLegendBreakdown(item.id):'';
-    return `
+  el.innerHTML=_demoData.legend.map(item=>`
     <div class="demo-leg-row" data-lid="${item.id}" draggable="true"
-      style="border-radius:7px;margin-bottom:4px;background:#f8fafd;border:1px solid ${isExp?'#a855f7':'#e0e8f0'};">
-      <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:default;">
-        <span title="Drag to reorder" style="font-size:13px;color:#c0cde0;cursor:grab;flex-shrink:0;line-height:1;padding:0 2px;">⠿</span>
-        <div onclick="_demoOpenColorEdit('${item.id}',this,event)" title="Click to change colour"
-          style="width:26px;height:26px;border-radius:5px;background:${item.color};cursor:pointer;flex-shrink:0;border:2px solid ${item.color}99;"></div>
-        <span onclick="_demoInlineEditLabel('${item.id}',this)" title="Click to rename"
-          style="flex:1;font-size:11px;font-weight:600;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;min-width:0;">${item.label}</span>
-        <span style="font-size:11px;font-weight:700;color:#224F93;min-width:22px;text-align:center;background:#e8f0fb;border-radius:10px;padding:1px 6px;flex-shrink:0;">${_demoCountPanels(item.id)}</span>
-        <button onclick="event.stopPropagation();_demoToggleLegendBreakdown('${item.id}')" title="${isExp?'Collapse':'Expand breakdown'}"
-          style="border:none;background:none;cursor:pointer;color:${isExp?'#a855f7':'#c0cde0'};font-size:12px;line-height:1;padding:0 2px;flex-shrink:0;transition:transform 0.15s;transform:rotate(${isExp?'180':'0'}deg);">▼</button>
-        <button onclick="_demoRemoveLegendItem('${item.id}')" style="border:none;background:none;cursor:pointer;color:#c0cde0;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0;" title="Remove">✕</button>
-      </div>
-      ${isExp?`<div style="padding:0 8px 8px;">
-        ${breakdownHTML}
-        <button id="demo-leg-copy-${item.id}" onclick="_demoCopyLegTable('${item.id}')"
-          style="margin-top:5px;font-size:10px;padding:3px 10px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);width:100%;">
-          📋 Copy for Excel
-        </button>
-      </div>`:''}
-    </div>`;
-  }).join('');
+      style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#f8fafd;border:1px solid #e0e8f0;cursor:default;">
+      <span title="Drag to reorder" style="font-size:13px;color:#c0cde0;cursor:grab;flex-shrink:0;line-height:1;padding:0 2px;">⠿</span>
+      <div onclick="_demoOpenColorEdit('${item.id}',this,event)" title="Click to change colour"
+        style="width:26px;height:26px;border-radius:5px;background:${item.color};cursor:pointer;flex-shrink:0;border:2px solid ${item.color}99;"></div>
+      <span onclick="_demoInlineEditLabel('${item.id}',this)" title="Click to rename"
+        style="flex:1;font-size:11px;font-weight:600;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;min-width:0;">${item.label}</span>
+      <span style="font-size:11px;font-weight:700;color:#224F93;min-width:22px;text-align:center;background:#e8f0fb;border-radius:10px;padding:1px 6px;flex-shrink:0;">${_demoCountPanels(item.id)}</span>
+      <button onclick="_demoRemoveLegendItem('${item.id}')" style="border:none;background:none;cursor:pointer;color:#c0cde0;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0;" title="Remove">✕</button>
+    </div>
+  `).join('');
 
   el.querySelectorAll('.demo-leg-row').forEach(row=>{
     row.addEventListener('dragstart',e=>{
@@ -13625,7 +13616,7 @@ function _demoRenderOverview(area){
   const totalZonePanels=ZONES.reduce((s,z)=>s+z.floors.length*z.colNums.length,0);
   const totalColored=Object.keys(_demoData.panels).length;
   area.innerHTML=`
-    <div style="padding:28px 32px;max-width:640px;">
+    <div style="padding:28px 32px;max-width:720px;">
       <div style="font-size:13px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">Demo Overview</div>
       <div style="font-size:11px;color:#8099b0;margin-bottom:24px;">${totalColored} of ${totalZonePanels} panels colored</div>
       ${!_demoData.legend.length
@@ -13633,17 +13624,28 @@ function _demoRenderOverview(area){
         :_demoData.legend.map(item=>{
             const count=_demoCountPanels(item.id);
             const pct=totalZonePanels?Math.round(count/totalZonePanels*100):0;
-            return `<div style="margin-bottom:14px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <div style="width:14px;height:14px;border-radius:3px;background:${item.color};flex-shrink:0;"></div>
-                  <span style="font-size:12px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+            const isExp=_demoExpandedLegId===item.id;
+            return `<div style="margin-bottom:${isExp?'18':'14'}px;border-radius:8px;border:1px solid ${isExp?'#a855f7':'transparent'};padding:${isExp?'10px 14px':'0'};background:${isExp?'#fdf8ff':'transparent'};">
+              <div onclick="_demoToggleLegendBreakdown('${item.id}')" style="cursor:pointer;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:14px;height:14px;border-radius:3px;background:${item.color};flex-shrink:0;"></div>
+                    <span style="font-size:12px;font-weight:600;color:#1e3a5f;">${item.label}</span>
+                    <span style="font-size:10px;color:${isExp?'#a855f7':'#b0bdd0'};transform:rotate(${isExp?'180':'0'}deg);display:inline-block;transition:transform 0.15s;">▼</span>
+                  </div>
+                  <span style="font-size:12px;font-weight:700;color:#224F93;">${count} panels &nbsp;·&nbsp; ${pct}%</span>
                 </div>
-                <span style="font-size:12px;font-weight:700;color:#224F93;">${count} panels &nbsp;·&nbsp; ${pct}%</span>
+                <div style="height:9px;background:#e8f0fb;border-radius:5px;overflow:hidden;">
+                  <div style="height:100%;width:${pct}%;background:${item.color};border-radius:5px;"></div>
+                </div>
               </div>
-              <div style="height:9px;background:#e8f0fb;border-radius:5px;overflow:hidden;">
-                <div style="height:100%;width:${pct}%;background:${item.color};border-radius:5px;"></div>
-              </div>
+              ${isExp?`<div style="margin-top:10px;">
+                ${_demoLegendBreakdown(item.id)}
+                <button id="demo-leg-copy-${item.id}" onclick="_demoCopyLegTable('${item.id}')"
+                  style="margin-top:6px;font-size:10px;padding:4px 14px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);">
+                  📋 Copy for Excel
+                </button>
+              </div>`:''}
             </div>`;
           }).join('')
       }
