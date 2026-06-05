@@ -13286,6 +13286,8 @@ function _demoCountPanels(lid){
   return Object.entries(_demoData.panels).filter(([pid,v])=>v===lid&&!_isMirror.test(pid)).length;
 }
 
+let _demoDragId=null;
+
 function _demoRenderLegend(){
   const el=document.getElementById('demo-legend-list');
   if(!el) return;
@@ -13294,7 +13296,9 @@ function _demoRenderLegend(){
     return;
   }
   el.innerHTML=_demoData.legend.map(item=>`
-    <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#f8fafd;border:1px solid #e0e8f0;">
+    <div class="demo-leg-row" data-lid="${item.id}" draggable="true"
+      style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#f8fafd;border:1px solid #e0e8f0;cursor:default;">
+      <span title="Drag to reorder" style="font-size:13px;color:#c0cde0;cursor:grab;flex-shrink:0;line-height:1;padding:0 2px;">⠿</span>
       <div onclick="_demoOpenColorEdit('${item.id}',this,event)" title="Click to change colour"
         style="width:26px;height:26px;border-radius:5px;background:${item.color};cursor:pointer;flex-shrink:0;border:2px solid ${item.color}99;"></div>
       <span onclick="_demoInlineEditLabel('${item.id}',this)" title="Click to rename"
@@ -13303,6 +13307,39 @@ function _demoRenderLegend(){
       <button onclick="_demoRemoveLegendItem('${item.id}')" style="border:none;background:none;cursor:pointer;color:#c0cde0;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0;" title="Remove">✕</button>
     </div>
   `).join('');
+
+  el.querySelectorAll('.demo-leg-row').forEach(row=>{
+    row.addEventListener('dragstart',e=>{
+      _demoDragId=row.dataset.lid;
+      e.dataTransfer.effectAllowed='move';
+      setTimeout(()=>row.style.opacity='0.4',0);
+    });
+    row.addEventListener('dragend',()=>{
+      row.style.opacity='';
+      el.querySelectorAll('.demo-leg-row').forEach(r=>r.style.borderTop='');
+    });
+    row.addEventListener('dragover',e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      el.querySelectorAll('.demo-leg-row').forEach(r=>r.style.borderTop='');
+      row.style.borderTop='2px solid #a855f7';
+    });
+    row.addEventListener('dragleave',()=>{
+      row.style.borderTop='';
+    });
+    row.addEventListener('drop',e=>{
+      e.preventDefault();
+      row.style.borderTop='';
+      if(!_demoDragId||_demoDragId===row.dataset.lid) return;
+      const fromIdx=_demoData.legend.findIndex(l=>l.id===_demoDragId);
+      const toIdx=_demoData.legend.findIndex(l=>l.id===row.dataset.lid);
+      if(fromIdx<0||toIdx<0) return;
+      const [moved]=_demoData.legend.splice(fromIdx,1);
+      _demoData.legend.splice(toIdx,0,moved);
+      _demoDragId=null;
+      _demoRenderLegend();
+    });
+  });
 }
 
 function _demoInlineEditLabel(lid,span){
