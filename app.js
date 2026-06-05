@@ -13287,6 +13287,104 @@ function _demoCountPanels(lid){
 }
 
 let _demoDragId=null;
+let _demoExpandedLegId=null;
+
+function _demoToggleLegendBreakdown(lid){
+  _demoExpandedLegId=(_demoExpandedLegId===lid)?null:lid;
+  _demoRenderLegend();
+}
+
+function _demoLegendBreakdown(lid){
+  const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
+  const map={};
+  Object.entries(_demoData.panels).forEach(([pid,v])=>{
+    if(v!==lid||_isMirror.test(pid)) return;
+    const dashIdx=pid.indexOf('-'); if(dashIdx<0) return;
+    const zoneId=pid.slice(0,dashIdx);
+    const rest=pid.slice(dashIdx+1);
+    const colMatch=rest.match(/-C(\d.*)$/); if(!colMatch) return;
+    const colStr=colMatch[1];
+    const floor=rest.slice(0,rest.length-colMatch[0].length);
+    const zone=ZONES.find(z=>z.id===zoneId); if(!zone) return;
+    const colNum=isNaN(colStr)?colStr:parseInt(colStr);
+    const ci=zone.colNums.indexOf(colNum); if(ci<0) return;
+    const type=(zone.types[floor]||[])[ci]||''; if(!type) return;
+    if(!map[zoneId]) map[zoneId]={};
+    if(!map[zoneId][floor]) map[zoneId][floor]={};
+    map[zoneId][floor][type]=(map[zoneId][floor][type]||0)+1;
+  });
+  if(!Object.keys(map).length) return '<div style="font-size:10px;color:#8099b0;padding:6px 4px;text-align:center;">No panels assigned.</div>';
+
+  const rows=[['Facade','Floor','Type','Qty']]; // for clipboard
+  let html=`<table id="demo-leg-tbl-${lid}" style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--font);">
+    <thead><tr style="background:#f0f4fb;">
+      <th style="text-align:left;padding:3px 5px;border:1px solid #dde3ee;color:#224F93;">Facade</th>
+      <th style="text-align:left;padding:3px 5px;border:1px solid #dde3ee;color:#224F93;">Floor</th>
+      <th style="text-align:left;padding:3px 5px;border:1px solid #dde3ee;color:#224F93;">Type</th>
+      <th style="text-align:center;padding:3px 5px;border:1px solid #dde3ee;color:#224F93;">Qty</th>
+    </tr></thead><tbody>`;
+
+  const combined={};
+  let totalAll=0;
+  ['NF','SF','EF','WF'].forEach(zid=>{
+    if(!map[zid]) return;
+    const zone=ZONES.find(z=>z.id===zid);
+    const zoneName=zone?zone.name:zid;
+    const zoneColor=zone?zone.color:'#224F93';
+    const floorOrder=zone?zone.floors:[];
+    const floors=Object.keys(map[zid]).sort((a,b)=>floorOrder.indexOf(a)-floorOrder.indexOf(b));
+    let zoneTotal=0;
+    floors.forEach(floor=>{
+      Object.keys(map[zid][floor]).sort().forEach(type=>{
+        const qty=map[zid][floor][type];
+        zoneTotal+=qty;
+        combined[type]=(combined[type]||0)+qty;
+        html+=`<tr><td style="padding:3px 5px;border:1px solid #dde3ee;font-weight:600;color:${zoneColor};">${zoneName}</td>
+          <td style="padding:3px 5px;border:1px solid #dde3ee;">${floor}</td>
+          <td style="padding:3px 5px;border:1px solid #dde3ee;">${type}</td>
+          <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:600;">${qty}</td></tr>`;
+        rows.push([zoneName,floor,type,qty]);
+      });
+    });
+    totalAll+=zoneTotal;
+    html+=`<tr style="background:#f5f8ff;"><td colspan="3" style="padding:3px 5px;border:1px solid #dde3ee;font-weight:700;color:${zoneColor};">${zoneName} — Total</td>
+      <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:700;color:${zoneColor};">${zoneTotal}</td></tr>`;
+    rows.push([zoneName+' — Total','','',zoneTotal]);
+  });
+
+  // Combined
+  html+=`<tr style="background:#fff3e0;"><td colspan="4" style="padding:3px 5px;border:1px solid #dde3ee;font-weight:700;color:#a05000;">All Facades Combined</td></tr>`;
+  rows.push(['All Facades Combined','','','']);
+  Object.keys(combined).sort().forEach(type=>{
+    html+=`<tr style="background:#fffbf5;"><td style="padding:3px 5px;border:1px solid #dde3ee;"></td>
+      <td style="padding:3px 5px;border:1px solid #dde3ee;"></td>
+      <td style="padding:3px 5px;border:1px solid #dde3ee;">${type}</td>
+      <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:600;">${combined[type]}</td></tr>`;
+    rows.push(['','',type,combined[type]]);
+  });
+  html+=`<tr style="background:#fff8e1;"><td colspan="3" style="padding:3px 5px;border:1px solid #dde3ee;font-weight:700;">TOTAL</td>
+    <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:700;">${totalAll}</td></tr>`;
+  rows.push(['TOTAL','','',totalAll]);
+  html+=`</tbody></table>`;
+
+  // Store rows for clipboard
+  window['_demoLegRows_'+lid]=rows;
+  return html;
+}
+
+function _demoCopyLegTable(lid){
+  const rows=window['_demoLegRows_'+lid]||[];
+  const tsv=rows.map(r=>r.join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(()=>{
+    const btn=document.getElementById('demo-leg-copy-'+lid);
+    if(btn){const o=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent=o,2000);}
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=tsv;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const btn=document.getElementById('demo-leg-copy-'+lid);
+    if(btn){const o=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent=o,2000);}
+  });
+}
 
 function _demoRenderLegend(){
   const el=document.getElementById('demo-legend-list');
@@ -13295,18 +13393,32 @@ function _demoRenderLegend(){
     el.innerHTML='<div style="font-size:11px;color:#8099b0;text-align:center;padding:20px 8px;line-height:1.6;">No items yet.<br>Click <strong>+ Add</strong><br>to build your legend.</div>';
     return;
   }
-  el.innerHTML=_demoData.legend.map(item=>`
+  el.innerHTML=_demoData.legend.map(item=>{
+    const isExp=_demoExpandedLegId===item.id;
+    const breakdownHTML=isExp?_demoLegendBreakdown(item.id):'';
+    return `
     <div class="demo-leg-row" data-lid="${item.id}" draggable="true"
-      style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;margin-bottom:4px;background:#f8fafd;border:1px solid #e0e8f0;cursor:default;">
-      <span title="Drag to reorder" style="font-size:13px;color:#c0cde0;cursor:grab;flex-shrink:0;line-height:1;padding:0 2px;">⠿</span>
-      <div onclick="_demoOpenColorEdit('${item.id}',this,event)" title="Click to change colour"
-        style="width:26px;height:26px;border-radius:5px;background:${item.color};cursor:pointer;flex-shrink:0;border:2px solid ${item.color}99;"></div>
-      <span onclick="_demoInlineEditLabel('${item.id}',this)" title="Click to rename"
-        style="flex:1;font-size:11px;font-weight:600;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;min-width:0;">${item.label}</span>
-      <span style="font-size:11px;font-weight:700;color:#224F93;min-width:22px;text-align:center;background:#e8f0fb;border-radius:10px;padding:1px 6px;flex-shrink:0;">${_demoCountPanels(item.id)}</span>
-      <button onclick="_demoRemoveLegendItem('${item.id}')" style="border:none;background:none;cursor:pointer;color:#c0cde0;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0;" title="Remove">✕</button>
-    </div>
-  `).join('');
+      style="border-radius:7px;margin-bottom:4px;background:#f8fafd;border:1px solid ${isExp?'#a855f7':'#e0e8f0'};">
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 8px;cursor:default;">
+        <span title="Drag to reorder" style="font-size:13px;color:#c0cde0;cursor:grab;flex-shrink:0;line-height:1;padding:0 2px;">⠿</span>
+        <div onclick="_demoOpenColorEdit('${item.id}',this,event)" title="Click to change colour"
+          style="width:26px;height:26px;border-radius:5px;background:${item.color};cursor:pointer;flex-shrink:0;border:2px solid ${item.color}99;"></div>
+        <span onclick="_demoInlineEditLabel('${item.id}',this)" title="Click to rename"
+          style="flex:1;font-size:11px;font-weight:600;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;min-width:0;">${item.label}</span>
+        <span style="font-size:11px;font-weight:700;color:#224F93;min-width:22px;text-align:center;background:#e8f0fb;border-radius:10px;padding:1px 6px;flex-shrink:0;">${_demoCountPanels(item.id)}</span>
+        <button onclick="event.stopPropagation();_demoToggleLegendBreakdown('${item.id}')" title="${isExp?'Collapse':'Expand breakdown'}"
+          style="border:none;background:none;cursor:pointer;color:${isExp?'#a855f7':'#c0cde0'};font-size:12px;line-height:1;padding:0 2px;flex-shrink:0;transition:transform 0.15s;transform:rotate(${isExp?'180':'0'}deg);">▼</button>
+        <button onclick="_demoRemoveLegendItem('${item.id}')" style="border:none;background:none;cursor:pointer;color:#c0cde0;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0;" title="Remove">✕</button>
+      </div>
+      ${isExp?`<div style="padding:0 8px 8px;">
+        ${breakdownHTML}
+        <button id="demo-leg-copy-${item.id}" onclick="_demoCopyLegTable('${item.id}')"
+          style="margin-top:5px;font-size:10px;padding:3px 10px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);width:100%;">
+          📋 Copy for Excel
+        </button>
+      </div>`:''}
+    </div>`;
+  }).join('');
 
   el.querySelectorAll('.demo-leg-row').forEach(row=>{
     row.addEventListener('dragstart',e=>{
