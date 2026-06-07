@@ -262,7 +262,7 @@ async function openProject(id){
   window._activeProjectName = customProj ? customProj.name : (PROJECT_META[id]?.name||id);
 
   // ── phone_only routing ──────────────────────────────────────────────────────
-  if(sbProfile?.role==='phone_only'){
+  if(sbProfile?.role==='phone_only' && (typeof _isOnPhone==='function' ? _isOnPhone() : false)){
     document.getElementById('project-screen').style.display='none';
     if(id==='shift-tower'){
       // Shift Tower has a phone UI — open it
