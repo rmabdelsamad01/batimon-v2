@@ -261,32 +261,34 @@ function openAdminEdit(userId){
     b.style.color = active ? '#224F93' : '#1a2a3a';
   });
 
-  // Build unified project list: hardcoded + custom, sorted by display order
+  // Build unified project list: hardcoded + custom
   const customProjects = typeof getCustomProjects==='function' ? getCustomProjects() : [];
   const customIds = customProjects.map(p=>p.id);
   const allProjIds = [...ALL_PROJECTS, ...customIds];
 
+  // Combine into one list and sort by _PROJECT_DISPLAY_ORDER
+  const order = typeof _PROJECT_DISPLAY_ORDER!=='undefined' ? _PROJECT_DISPLAY_ORDER : [];
+  const sortKey = name => { const i=order.indexOf((name||'').toLowerCase().trim()); return i>=0?i:999; };
+
+  const metaEntries = ALL_PROJECTS.map(id=>({
+    id, name:(typeof PROJECT_META!=='undefined'&&PROJECT_META[id])?PROJECT_META[id].name:id, isCustom:false
+  }));
+  const customEntries = customProjects.map(p=>({ id:p.id, name:p.name, isCustom:true }));
+  const combined = [...metaEntries, ...customEntries].sort((a,b)=>sortKey(a.name)-sortKey(b.name));
+
   // Render all projects into one grid
   const projGrid = document.getElementById('aem-projects');
   if(projGrid){
-    // Hardcoded projects
-    const metaHTML = ALL_PROJECTS.map(id=>{
-      const name = (typeof PROJECT_META!=='undefined'&&PROJECT_META[id]) ? PROJECT_META[id].name : id;
-      const checked = aemProjects.includes(id);
-      return `<label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid ${checked?'#224F93':'rgba(34,79,147,0.15)'};background:${checked?'rgba(34,79,147,0.07)':'#f4f8fd'};cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-        <input type="checkbox" value="${id}" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#224F93;cursor:pointer;" ${checked?'checked':''}>
-        <span>${name}</span>
-      </label>`;
-    }).join('');
-    // Custom projects
-    const customHTML = customProjects.map(p=>{
+    projGrid.innerHTML = combined.map(p=>{
       const checked = aemProjects.includes(p.id);
-      return `<label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid ${checked?'#1a9458':'rgba(26,148,88,0.2)'};background:${checked?'rgba(26,148,88,0.07)':'#f4faf7'};cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-        <input type="checkbox" value="${p.id}" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#1a9458;cursor:pointer;" ${checked?'checked':''}>
+      const border = checked?(p.isCustom?'#1a9458':'#224F93'):(p.isCustom?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)');
+      const bg = checked?(p.isCustom?'rgba(26,148,88,0.07)':'rgba(34,79,147,0.07)'):(p.isCustom?'#f4faf7':'#f4f8fd');
+      const accent = p.isCustom?'#1a9458':'#224F93';
+      return `<label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid ${border};background:${bg};cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
+        <input type="checkbox" value="${p.id}" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:${accent};cursor:pointer;" ${checked?'checked':''}>
         <span>${p.name}</span>
       </label>`;
     }).join('');
-    projGrid.innerHTML = metaHTML + customHTML;
   }
 
   // Sync Select All button label
