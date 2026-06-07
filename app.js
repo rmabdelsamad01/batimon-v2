@@ -306,7 +306,7 @@ function getCustomFacadeNames(projId){
 function saveCustomFacadeNames(projId, names){
   _sbFacadeNamesCache[projId]=names;
   try{ localStorage.setItem('bm_facade_names__'+projId, JSON.stringify(names)); }catch(e){}
-  if(projId&&projId!=='shift-tower') sb.from('project_info').upsert({project:projId,key:'facade_names',value:JSON.stringify(names),updated_at:new Date().toISOString()},{onConflict:'project,key'}).catch(()=>{});
+  if(projId&&projId!=='shift-tower')(async()=>{ try{ await sb.from('project_info').upsert({project:projId,key:'facade_names',value:JSON.stringify(names),updated_at:new Date().toISOString()},{onConflict:'project,key'}); }catch(e){} })();
 }
 // Returns facade names for the active project (null for Shift Tower — uses fixed labels)
 function activeFacadeNames(){
@@ -775,7 +775,7 @@ function getProjectCategories(projId){
 function saveProjectCategories(projId,cats){
   _sbCatsCache[projId]=cats;
   localStorage.setItem('bm_cats__'+projId,JSON.stringify(cats));
-  if(projId&&projId!=='shift-tower') sb.from('project_info').upsert({project:projId,key:'categories',value:JSON.stringify(cats),updated_at:new Date().toISOString()},{onConflict:'project,key'}).catch(()=>{});
+  if(projId&&projId!=='shift-tower')(async()=>{ try{ await sb.from('project_info').upsert({project:projId,key:'categories',value:JSON.stringify(cats),updated_at:new Date().toISOString()},{onConflict:'project,key'}); }catch(e){} })();
 }
 function initProjectCategories(projId){
   let cats=getProjectCategories(projId);
