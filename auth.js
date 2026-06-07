@@ -216,22 +216,16 @@ async function afterLogin(user){
   if(checkAdminRedirect(prof)) return;
   // Show project screen
   document.getElementById('auth-screen').style.display='none';
+  document.getElementById('project-screen').style.display='flex';
+  if(typeof _diagnoseSyncPermission==='function') _diagnoseSyncPermission();
+  const displayName = prof?.full_name||prof?.username||user.email||'';
+  const projUser = document.getElementById('proj-user');
+  if(projUser) projUser.textContent = displayName;
+  copyLogoToProjectScreen();
   await loadCustomProjects();
   await checkApprovedDeletions();
-  if(_isOnPhone()){
-    // Phone → always use mobile project list (desktop grid is PC only)
-    if(typeof renderMobileProjectList==='function') await renderMobileProjectList();
-  } else {
-    // PC → desktop project screen
-    document.getElementById('project-screen').style.display='flex';
-    if(typeof _diagnoseSyncPermission==='function') _diagnoseSyncPermission();
-    const displayName = prof?.full_name||prof?.username||user.email||'';
-    const projUser = document.getElementById('proj-user');
-    if(projUser) projUser.textContent = displayName;
-    copyLogoToProjectScreen();
-    renderProjectScreen();
-    updateUserChip(displayName);
-  }
+  renderProjectScreen();
+  updateUserChip(displayName);
 }
 
 // Open Batidoc in new tab at the specified folder
