@@ -295,11 +295,180 @@ async function openProject(id){
 }
 
 // ── Mobile project menu (Full App mode on phone) ────────────────────────────
+
+function _mobileShowNav(){
+  const mob = document.getElementById('mobile-screen');
+  if(mob) mob.style.display = 'none';
+  if(!document.getElementById('mobile-menu-btn')){
+    const navTabs = document.querySelector('nav.nav-tabs');
+    if(navTabs){
+      const btn = document.createElement('button');
+      btn.id = 'mobile-menu-btn';
+      btn.className = 'nt';
+      btn.textContent = '← Menu';
+      btn.style.cssText = 'color:#224F93;font-weight:700;border-right:1px solid var(--border2);flex-shrink:0;';
+      btn.onclick = _showMobileProjectMenu;
+      navTabs.insertBefore(btn, navTabs.firstChild);
+    }
+  }
+}
+
+window.mobileOpenSection = function(pageId){ _mobileShowNav(); goPage(pageId); };
+
+window.mobileNavKey = function(key){
+  _mobileShowNav();
+  const fn = window._mobNavMap && window._mobNavMap[key];
+  if(fn) fn();
+};
+
+window.mobToggle = function(id){
+  const sub = document.getElementById('mob-sub-'+id);
+  const arr = document.getElementById('mob-arr-'+id);
+  if(!sub) return;
+  const open = sub.style.display !== 'none';
+  sub.style.display = open ? 'none' : 'block';
+  if(arr) arr.style.transform = open ? '' : 'rotate(90deg)';
+};
+
 function _showMobileProjectMenu(){
   const projName = window._activeProjectName || 'Project';
-  // Remove any lingering "← Menu" button from nav
   const old = document.getElementById('mobile-menu-btn');
   if(old) old.remove();
+
+  const _sbn = (typeof activeFacadeNames==='function' && activeFacadeNames()) ||
+    {NF:'North Facade', SF:'South Facade', EF:'East Facade', WF:'West Facade'};
+
+  window._mobNavMap = {
+    'proj-general':     ()=>goPage('proj-general'),
+    'proj-bati-org':    ()=>goPage('proj-bati-org'),
+    'proj-org':         ()=>goPage('proj-org'),
+    'proj-financial':   ()=>goPage('proj-financial'),
+    'bm-overview':      ()=>{ navMode='bracket'; goPage('BM-dashboard'); },
+    'bm-nf':            ()=>{ navMode='bracket'; goPage('BM-NF'); },
+    'bm-sf':            ()=>{ navMode='bracket'; goPage('BM-SF'); },
+    'bm-ef':            ()=>{ navMode='bracket'; goPage('BM-EF'); },
+    'bm-wf':            ()=>{ navMode='bracket'; goPage('BM-WF'); },
+    'ucw-overview':     ()=>{ navMode='ucw'; goPage('dashboard'); setTimeout(()=>{if(typeof activateUCWMonitoring==='function')activateUCWMonitoring();},80); },
+    'ucw-nf':           ()=>{ navMode='ucw'; goPage('NF'); setTimeout(()=>{if(typeof activateUCWMonitoring==='function')activateUCWMonitoring();},80); },
+    'ucw-sf':           ()=>{ navMode='ucw'; goPage('SF'); setTimeout(()=>{if(typeof activateUCWMonitoring==='function')activateUCWMonitoring();},80); },
+    'ucw-ef':           ()=>{ navMode='ucw'; goPage('EF'); setTimeout(()=>{if(typeof activateUCWMonitoring==='function')activateUCWMonitoring();},80); },
+    'ucw-wf':           ()=>{ navMode='ucw'; goPage('WF'); setTimeout(()=>{if(typeof activateUCWMonitoring==='function')activateUCWMonitoring();},80); },
+    'fab-rate':         ()=>{ if(typeof openFabRateModal==='function') openFabRateModal(); },
+    'del-rate':         ()=>{ if(typeof openDeliveryRateModal==='function') openDeliveryRateModal(); },
+    'inst-rate':        ()=>{ if(typeof openInstallRateModal==='function') openInstallRateModal(); },
+    'fab-counting':     ()=>{ if(typeof openFabCountingModal==='function') openFabCountingModal(); },
+    'of-log':           ()=>goPage('of-log'),
+    'deliverables':     ()=>{ if(typeof openBatidoc==='function') openBatidoc('deliverables',null); },
+    'payments':         ()=>{ if(typeof openBatidoc==='function') openBatidoc('payments',null); },
+    'planning':         ()=>goPage('planning'),
+    'po-log':           ()=>goPage('po-log'),
+    'aging-report':     ()=>goPage('aging-report'),
+    'cash-in':          ()=>goPage('cash-in'),
+    'monthly-cost':     ()=>goPage('monthly-cost'),
+    'fournitures':      ()=>goPage('fournitures'),
+    'other-costs':      ()=>goPage('other-costs'),
+    'cash-flow':        ()=>goPage('cash-flow'),
+    'demo':             ()=>{ if(typeof _demoGate==='function') _demoGate(); },
+    'agenda':           ()=>goPage('agenda'),
+    'qc-bracket':       ()=>{ if(typeof openQCChecklist==='function') openQCChecklist('bracket-installation','Bracket Installation'); },
+    'qc-panel-assy':    ()=>{ if(typeof openQCChecklist==='function') openQCChecklist('panel-assembly','Panel Assembly'); },
+    'qc-panel-prep':    ()=>{ if(typeof openQCChecklist==='function') openQCChecklist('panel-preparation','Panel Prep et Inst'); },
+    'signed-bracket':   ()=>{ if(typeof openSignedChecklistsView==='function') openSignedChecklistsView('bracket-installation','Signed Bracket Installation'); },
+    'signed-panel-assy':()=>{ if(typeof openSignedChecklistsView==='function') openSignedChecklistsView('panel-assembly','Signed Panel Assembly'); },
+    'signed-panel-prep':()=>{ if(typeof openSignedChecklistsView==='function') openSignedChecklistsView('panel-preparation','Signed Panel Prep et Inst'); },
+    'ncr':              ()=>{ if(typeof openNCRModal==='function') openNCRModal(); },
+    'supabase':         ()=>{ if(typeof _supaPasswordGate==='function') _supaPasswordGate(); },
+  };
+
+  const sections = [
+    { id:'projinfo',  label:'Project Info',          icon:'🏗️', color:'#2d6a8f',
+      subs:[{label:'General Description',nav:'proj-general'},{label:'Batiglobe Organigram',nav:'proj-bati-org'},{label:'Project Organigram',nav:'proj-org'},{label:'Financial Info',nav:'proj-financial'}]},
+    { id:'monitoring',label:'Monitoring Sheet',       icon:'📊', color:'#6d35d9',
+      subs:[
+        {label:'Bracket Monitoring', subs:[{label:'Overview',nav:'bm-overview'},{label:_sbn.NF,nav:'bm-nf'},{label:_sbn.SF,nav:'bm-sf'},{label:_sbn.EF,nav:'bm-ef'},{label:_sbn.WF,nav:'bm-wf'}]},
+        {label:'UCW Monitoring',     subs:[{label:'Overview',nav:'ucw-overview'},{label:_sbn.NF,nav:'ucw-nf'},{label:_sbn.SF,nav:'ucw-sf'},{label:_sbn.EF,nav:'ucw-ef'},{label:_sbn.WF,nav:'ucw-wf'}]},
+      ]},
+    { id:'cadence',   label:'Cadence',               icon:'📈', color:'#1a9458',
+      subs:[{label:'Fabrication Rate',nav:'fab-rate'},{label:'Delivery Rate',nav:'del-rate'},{label:'Installation Rate',nav:'inst-rate'},{label:'Fabrication Counting',nav:'fab-counting'}]},
+    { id:'of-log',    label:'OF Logs',               icon:'🏭', color:'#e65100', nav:'of-log'},
+    { id:'eng',       label:'List of Deliverables',  icon:'📋', color:'#1a5fa8', nav:'deliverables'},
+    { id:'pay',       label:'Payments',              icon:'💳', color:'#1a7a3a', nav:'payments'},
+    { id:'plan',      label:'Planning',              icon:'📅', color:'#e05c00', nav:'planning'},
+    { id:'logs',      label:'Procurement Logs',      icon:'🗂️', color:'#c02020',
+      subs:[{label:'CF Logs (PO)',nav:'po-log'},{label:'BR Logs (Aging Report)',nav:'aging-report'}]},
+    { id:'cashflow',  label:'Cash Flow',             icon:'💰', color:'#00796b',
+      subs:[
+        {label:'Cash-In',nav:'cash-in'},
+        {label:'Cash-Out',subs:[{label:'Employees Cost',nav:'monthly-cost'},{label:'Material Cost',nav:'fournitures'},{label:'Other Costs',nav:'other-costs'}]},
+        {label:'Cash-Flow',nav:'cash-flow'},
+      ]},
+    { id:'demo',      label:'Demo',                 icon:'🎬', color:'#a855f7', nav:'demo'},
+    { id:'agenda',    label:'Agenda',               icon:'📅', color:'#10b981', nav:'agenda'},
+    { id:'qc',        label:'Quality Control',      icon:'✅', color:'#0097a7',
+      subs:[
+        {label:'Template Checklist',subs:[{label:'Bracket Installation',nav:'qc-bracket'},{label:'Panel Assembly',nav:'qc-panel-assy'},{label:'Panel Prep et Inst',nav:'qc-panel-prep'}]},
+        {label:'Signed Checklist',  subs:[{label:'Signed Bracket Installation',nav:'signed-bracket'},{label:'Signed Panel Assembly',nav:'signed-panel-assy'},{label:'Signed Panel Prep et Inst',nav:'signed-panel-prep'}]},
+        {label:'NCR',nav:'ncr'},
+      ]},
+    { id:'supabase',  label:'My Database',          icon:'⚡', color:'#3ecf8e', nav:'supabase'},
+  ];
+
+  function renderSubSub(items, color){
+    return items.map(item=>`
+      <div onclick="mobileNavKey('${item.nav}')"
+        style="display:flex;align-items:center;padding:10px 14px;border-radius:7px;cursor:pointer;"
+        ontouchstart="this.style.background='${color}18'" ontouchend="this.style.background='transparent'">
+        <span style="width:5px;height:5px;border-radius:50%;background:${color};flex-shrink:0;margin-right:10px;"></span>
+        <span style="font-size:13px;color:#1a2a3a;font-family:'Barlow',sans-serif;font-weight:500;">${item.label}</span>
+      </div>`).join('');
+  }
+
+  function renderSub(subs, color, pid){
+    return subs.map((sub,i)=>{
+      const sid = pid+'-s'+i;
+      if(sub.subs) return `
+        <div style="margin-bottom:2px;">
+          <div onclick="mobToggle('${sid}')"
+            style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:8px;cursor:pointer;"
+            ontouchstart="this.style.background='${color}18'" ontouchend="this.style.background='transparent'">
+            <span style="font-size:13px;color:#1a2a3a;font-family:'Barlow',sans-serif;font-weight:600;">${sub.label}</span>
+            <span id="mob-arr-${sid}" style="font-size:10px;color:#8099b0;transition:transform 0.2s;">▸</span>
+          </div>
+          <div id="mob-sub-${sid}" style="display:none;padding-left:8px;border-left:2px solid ${color}30;margin-left:6px;">
+            ${renderSubSub(sub.subs, color)}
+          </div>
+        </div>`;
+      return `
+        <div onclick="mobileNavKey('${sub.nav}')"
+          style="display:flex;align-items:center;padding:11px 14px;border-radius:8px;cursor:pointer;"
+          ontouchstart="this.style.background='${color}18'" ontouchend="this.style.background='transparent'">
+          <span style="font-size:13px;color:#1a2a3a;font-family:'Barlow',sans-serif;font-weight:500;">${sub.label}</span>
+        </div>`;
+    }).join('');
+  }
+
+  function renderSection(s, i){
+    const hasSubs = s.subs && s.subs.length;
+    const click = s.nav ? `onclick="mobileNavKey('${s.nav}')"` : hasSubs ? `onclick="mobToggle('sec-${i}')"` : '';
+    return `
+      <div style="margin-bottom:8px;">
+        <div ${click}
+          style="display:flex;align-items:center;gap:12px;padding:13px 16px;background:#fff;border-radius:10px;border:1.5px solid rgba(34,79,147,0.12);cursor:pointer;"
+          ontouchstart="this.style.background='${s.color}12'" ontouchend="this.style.background='#fff'">
+          <div style="width:38px;height:38px;background:${s.color}18;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="font-size:19px;line-height:1;">${s.icon}</span>
+          </div>
+          <span style="flex:1;font-size:15px;font-weight:600;color:#1a2a3a;font-family:'Barlow',sans-serif;">${s.label}</span>
+          ${hasSubs
+            ? `<span id="mob-arr-sec-${i}" style="font-size:12px;color:#8099b0;transition:transform 0.2s;">▸</span>`
+            : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`}
+        </div>
+        ${hasSubs ? `
+        <div id="mob-sub-sec-${i}" style="display:none;background:${s.color}08;border-radius:0 0 10px 10px;padding:6px 8px 8px;border:1.5px solid ${s.color}20;border-top:none;margin-top:-4px;">
+          ${renderSub(s.subs, s.color, 'sec-'+i)}
+        </div>` : ''}
+      </div>`;
+  }
 
   const mob = document.getElementById('mobile-screen');
   mob.style.display = 'flex';
@@ -307,45 +476,14 @@ function _showMobileProjectMenu(){
     <div style="background:#224F93;color:#fff;flex-shrink:0;padding-top:env(safe-area-inset-top,0px);">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;">
         <button onclick="mobileBackToProjects()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">← Projects</button>
-        <div style="font-size:15px;font-weight:700;letter-spacing:0.03em;">${projName}</div>
+        <div style="font-size:15px;font-weight:700;letter-spacing:0.03em;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${projName}</div>
         <div style="width:72px;"></div>
       </div>
     </div>
-    <div style="flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;background:#f0f4f9;padding:16px;">
-      <div style="font-size:12px;font-weight:700;color:#8099b0;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;padding:0 4px;">Sections</div>
-      <div onclick="mobileOpenSection('dashboard')"
-        style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;margin-bottom:8px;background:#fff;border-radius:10px;border:1.5px solid rgba(34,79,147,0.15);cursor:pointer;-webkit-tap-highlight-color:rgba(34,79,147,0.08);"
-        ontouchstart="this.style.background='#eaf0fb'" ontouchend="this.style.background='#fff'">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="width:36px;height:36px;background:rgba(34,79,147,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-          </div>
-          <span style="font-size:15px;font-weight:600;color:#1a2a3a;font-family:'Barlow',sans-serif;">Project Info</span>
-        </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-    </div>
-  `;
+    <div style="flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;background:#f0f4f9;padding:12px 16px 32px;">
+      ${sections.map((s,i)=>renderSection(s,i)).join('')}
+    </div>`;
 }
-
-window.mobileOpenSection = function(pageId){
-  const mob = document.getElementById('mobile-screen');
-  if(mob) mob.style.display = 'none';
-
-  // Inject "← Menu" button into the nav-tabs bar
-  const navTabs = document.querySelector('nav.nav-tabs');
-  if(navTabs && !document.getElementById('mobile-menu-btn')){
-    const btn = document.createElement('button');
-    btn.id = 'mobile-menu-btn';
-    btn.className = 'nt';
-    btn.innerHTML = '← Menu';
-    btn.style.cssText = 'color:#224F93;font-weight:700;border-right:1px solid var(--border2);flex-shrink:0;';
-    btn.onclick = function(){ _showMobileProjectMenu(); };
-    navTabs.insertBefore(btn, navTabs.firstChild);
-  }
-
-  goPage(pageId);
-};
 // ────────────────────────────────────────────────────────────────────────────
 
 // ── Mobile project list (phone_only multi-project) ──────────────────────────
