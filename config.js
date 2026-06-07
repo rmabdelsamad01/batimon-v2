@@ -7,6 +7,4 @@ let sbProfile = null;
 
 const PROJECT_META = {
   'shift-tower':     {name:'Shift Tower',     active:true,  members:['raed']},
-  'riad-el-andalous':{name:'Riad El Andalous', active:false, members:['anas']},
-  'taghazout':       {name:'Taghazout',       active:false, members:['anas']},
 };
