@@ -172,6 +172,7 @@ function renderProjectScreen(){
     ? profile.projects : Object.keys(PROJECT_META);
   const isDev = (sbProfile?.role === 'developer');
   const userAssignedProjects = Array.isArray(profile.projects) ? profile.projects : [];
+  const userViewerProjects = Array.isArray(profile.viewer_projects) ? profile.viewer_projects : [];
 
   // Build unified list of all visible projects
   const allProjects = [];
@@ -180,14 +181,16 @@ function renderProjectScreen(){
   Object.entries(PROJECT_META).forEach(([id, meta]) => {
     if(!userProjects.includes(id)) return;
     if(_projFilter && !(meta.members||[]).includes(_projFilter)) return;
-    allProjects.push({ id, name: meta.name, type: 'meta', meta });
+    allProjects.push({ id, name: meta.name, type: 'meta', meta, viewerOnly: false });
   });
 
   // Custom projects
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
-    if(!isDev && !userAssignedProjects.includes(proj.id)) return;
-    allProjects.push({ id: proj.id, name: proj.name, type: 'custom', proj });
+    const hasFullAccess = isDev || userAssignedProjects.includes(proj.id);
+    const hasViewerAccess = userViewerProjects.includes(proj.id);
+    if(!hasFullAccess && !hasViewerAccess) return;
+    allProjects.push({ id: proj.id, name: proj.name, type: 'custom', proj, viewerOnly: !hasFullAccess && hasViewerAccess });
   });
 
   // Sort by defined order
@@ -223,10 +226,14 @@ function renderProjectScreen(){
              onmouseover="this.style.background='#224F93'" onmouseout="this.style.background='#f0f4f9'">
              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
            </button>` : '';
-      return `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-        <div style="position:absolute;top:14px;right:14px;background:${isPendingDel?'#c02020':'#1a9458'};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">${isPendingDel?'Pending deletion':'Active'}</div>
+      const borderColor = isPendingDel?'#c02020':p.viewerOnly?'#8099b0':'#1a9458';
+      const badgeText = isPendingDel?'Pending deletion':p.viewerOnly?'Viewer':'Active';
+      const badgeBg = isPendingDel?'#c02020':p.viewerOnly?'#8099b0':'#1a9458';
+      const iconColor = p.viewerOnly?'#8099b0':'#1a9458';
+      return `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${borderColor};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="position:absolute;top:14px;right:14px;background:${badgeBg};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">${badgeText}</div>
         <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         </div>
         <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
         ${editBtn}
