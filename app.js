@@ -16271,20 +16271,16 @@ window.mobileLogout=async function(){
 };
 
 // Switch from phone_only → full user app
-window.mobileSwitchToUser=async function(){
+window.mobileSwitchToUser=function(){
   if(!sbProfile||!sbUser) return;
   sbProfile.role='user';
-  if(typeof loadCustomProjects==='function') await loadCustomProjects();
-  if(typeof checkApprovedDeletions==='function') await checkApprovedDeletions();
-  if(typeof renderMobileProjectList==='function') await renderMobileProjectList();
+  if(typeof renderMobileProjectList==='function') renderMobileProjectList();
 };
 
 // Switch from full user app → phone_only
-window.mobileSwitchToPhoneOnly=async function(){
+window.mobileSwitchToPhoneOnly=function(){
   if(!sbProfile||!sbUser) return;
   sbProfile.role='phone_only';
-  if(typeof loadCustomProjects==='function') await loadCustomProjects();
-  if(typeof checkApprovedDeletions==='function') await checkApprovedDeletions();
   const _userProjs = Array.isArray(sbProfile.projects) ? sbProfile.projects : [];
   const _hasAllProjs = _userProjs.includes('*');
   const _nonStarProjs = _userProjs.filter(p=>p!=='*');
@@ -16293,7 +16289,7 @@ window.mobileSwitchToPhoneOnly=async function(){
     document.getElementById('project-screen').style.display='none';
     if(typeof renderMobileApp==='function') renderMobileApp(sbProfile);
   } else {
-    if(typeof renderMobileProjectList==='function') await renderMobileProjectList();
+    if(typeof renderMobileProjectList==='function') renderMobileProjectList();
   }
 };
 
