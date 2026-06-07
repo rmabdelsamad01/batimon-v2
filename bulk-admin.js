@@ -9,6 +9,7 @@ let aemUserId = null;
 let aemStatus = 'pending';
 let aemRole = 'viewer';
 let aemProjects = [];
+let aemViewerProjects = [];
 
 // Called after login — check if username is Admin
 function checkAdminRedirect(profile){
@@ -240,6 +241,7 @@ function openAdminEdit(userId){
   aemStatus = u.status||'pending';
   aemRole = u.role||'viewer';
   aemProjects = Array.isArray(u.projects) ? [...u.projects] : [];
+  aemViewerProjects = Array.isArray(u.viewer_projects) ? [...u.viewer_projects] : [];
 
   document.getElementById('aem-subtitle').textContent = `${u.full_name||''}  @${u.username||''}`;
   document.getElementById('aem-err').style.display='none';
@@ -280,14 +282,18 @@ function openAdminEdit(userId){
   const projGrid = document.getElementById('aem-projects');
   if(projGrid){
     projGrid.innerHTML = combined.map(p=>{
-      const checked = aemProjects.includes(p.id);
-      const border = checked?(p.isCustom?'#1a9458':'#224F93'):(p.isCustom?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)');
-      const bg = checked?(p.isCustom?'rgba(26,148,88,0.07)':'rgba(34,79,147,0.07)'):(p.isCustom?'#f4faf7':'#f4f8fd');
+      const isViewer = aemViewerProjects.includes(p.id);
+      const hasAccess = aemProjects.includes(p.id) || isViewer;
+      const border = hasAccess?(p.isCustom?'#1a9458':'#224F93'):(p.isCustom?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)');
+      const bg = hasAccess?(p.isCustom?'rgba(26,148,88,0.07)':'rgba(34,79,147,0.07)'):(p.isCustom?'#f4faf7':'#f4f8fd');
       const accent = p.isCustom?'#1a9458':'#224F93';
-      return `<label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid ${border};background:${bg};cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-        <input type="checkbox" value="${p.id}" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:${accent};cursor:pointer;" ${checked?'checked':''}>
-        <span>${p.name}</span>
-      </label>`;
+      const eyeColor = isViewer ? '#224F93' : '#c0cde0';
+      const eyeBg = isViewer ? 'rgba(34,79,147,0.1)' : 'transparent';
+      return `<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;border:2px solid ${border};background:${bg};transition:all 0.15s;" id="aem-proj-row-${p.id}">
+        <input type="checkbox" value="${p.id}" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:${accent};cursor:pointer;flex-shrink:0;" ${hasAccess?'checked':''}>
+        <span style="flex:1;font-size:12px;font-weight:600;color:#1a2a3a;cursor:pointer;" onclick="document.querySelector('#aem-proj-row-${p.id} input').click()">${p.name}</span>
+        <button onclick="aemToggleViewer('${p.id}',event)" title="Viewer only" style="border:none;background:${eyeBg};border-radius:5px;padding:3px 5px;cursor:pointer;color:${eyeColor};font-size:13px;line-height:1;flex-shrink:0;transition:all 0.15s;" id="aem-eye-${p.id}">👁</button>
+      </div>`;
     }).join('');
   }
 
@@ -324,23 +330,55 @@ function aemSetRole(val, el){
   });
 }
 
+function _aemRefreshProjRow(id){
+  const isCustom = !ALL_PROJECTS.includes(id);
+  const isViewer = aemViewerProjects.includes(id);
+  const hasAccess = aemProjects.includes(id) || isViewer;
+  const row = document.getElementById('aem-proj-row-'+id);
+  const eye = document.getElementById('aem-eye-'+id);
+  const cb = row?.querySelector('input[type=checkbox]');
+  if(row){
+    row.style.borderColor = hasAccess?(isCustom?'#1a9458':'#224F93'):(isCustom?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)');
+    row.style.background = hasAccess?(isCustom?'rgba(26,148,88,0.07)':'rgba(34,79,147,0.07)'):(isCustom?'#f4faf7':'#f4f8fd');
+  }
+  if(cb) cb.checked = hasAccess;
+  if(eye){
+    eye.style.color = isViewer?'#224F93':'#c0cde0';
+    eye.style.background = isViewer?'rgba(34,79,147,0.1)':'transparent';
+  }
+}
+
 function aemToggleProject(cb){
   const val = cb.value;
-  const isCustom = !ALL_PROJECTS.includes(val);
   if(cb.checked){
+    // Grant full access — remove from viewer list
+    aemViewerProjects = aemViewerProjects.filter(p=>p!==val);
     if(!aemProjects.includes(val)) aemProjects.push(val);
   } else {
+    // Remove all access
     aemProjects = aemProjects.filter(p=>p!==val);
+    aemViewerProjects = aemViewerProjects.filter(p=>p!==val);
   }
-  const lbl = cb.closest('label');
-  if(lbl){
-    lbl.style.borderColor = cb.checked ? (isCustom?'#1a9458':'#224F93') : (isCustom?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)');
-    lbl.style.background = cb.checked ? (isCustom?'rgba(26,148,88,0.07)':'rgba(34,79,147,0.07)') : (isCustom?'#f4faf7':'#f4f8fd');
-  }
+  _aemRefreshProjRow(val);
   const customIds = (typeof getCustomProjects==='function' ? getCustomProjects() : []).map(p=>p.id);
   const allProjIds = [...ALL_PROJECTS, ...customIds];
   const btn = document.getElementById('aem-all-btn');
-  if(btn) btn.textContent = allProjIds.every(p=>aemProjects.includes(p)) ? 'Deselect All' : 'Select All';
+  if(btn) btn.textContent = allProjIds.every(p=>aemProjects.includes(p)||aemViewerProjects.includes(p)) ? 'Deselect All' : 'Select All';
+}
+
+function aemToggleViewer(id, e){
+  e.preventDefault(); e.stopPropagation();
+  const isViewer = aemViewerProjects.includes(id);
+  if(isViewer){
+    // Switch from viewer to full access
+    aemViewerProjects = aemViewerProjects.filter(p=>p!==id);
+    if(!aemProjects.includes(id)) aemProjects.push(id);
+  } else {
+    // Switch to viewer only (remove from full access)
+    aemProjects = aemProjects.filter(p=>p!==id);
+    if(!aemViewerProjects.includes(id)) aemViewerProjects.push(id);
+  }
+  _aemRefreshProjRow(id);
 }
 
 function aemSelectOwner(owner){
@@ -368,24 +406,17 @@ function aemSelectOwner(owner){
 function aemToggleAllProjects(){
   const customIds = (typeof getCustomProjects==='function' ? getCustomProjects() : []).map(p=>p.id);
   const allProjIds = [...ALL_PROJECTS, ...customIds];
-  const allChecked = allProjIds.every(p=>aemProjects.includes(p));
+  const allChecked = allProjIds.every(p=>aemProjects.includes(p)||aemViewerProjects.includes(p));
   if(allChecked){
-    aemProjects = [];
-    document.querySelectorAll('#aem-projects input[type=checkbox]').forEach(cb=>{
-      const isCustom = !ALL_PROJECTS.includes(cb.value);
-      cb.checked = false;
-      const lbl = cb.closest('label');
-      if(lbl){ lbl.style.borderColor=isCustom?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)'; lbl.style.background=isCustom?'#f4faf7':'#f4f8fd'; }
-    });
+    aemProjects = []; aemViewerProjects = [];
+    allProjIds.forEach(id=>_aemRefreshProjRow(id));
     const btn = document.getElementById('aem-all-btn');
     if(btn) btn.textContent = 'Select All';
   } else {
-    aemProjects = [...allProjIds];
-    document.querySelectorAll('#aem-projects input[type=checkbox]').forEach(cb=>{
-      const isCustom = !ALL_PROJECTS.includes(cb.value);
-      cb.checked = true;
-      const lbl = cb.closest('label');
-      if(lbl){ lbl.style.borderColor=isCustom?'#1a9458':'#224F93'; lbl.style.background=isCustom?'rgba(26,148,88,0.07)':'rgba(34,79,147,0.07)'; }
+    // Grant full access to all (keep viewer flags as-is, just add missing ones to projects)
+    allProjIds.forEach(id=>{
+      if(!aemViewerProjects.includes(id) && !aemProjects.includes(id)) aemProjects.push(id);
+      _aemRefreshProjRow(id);
     });
     const btn = document.getElementById('aem-all-btn');
     if(btn) btn.textContent = 'Deselect All';
@@ -427,6 +458,7 @@ async function saveAdminEdit(){
       status: aemStatus,
       role: aemRole,
       projects: aemProjects,
+      viewer_projects: aemViewerProjects,
       updated_at: new Date().toISOString()
     }).eq('id', aemUserId);
 
