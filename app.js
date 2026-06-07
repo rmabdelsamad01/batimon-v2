@@ -16207,12 +16207,18 @@ function _buildMobileShell(prof){
   const _switchBtn = _canSwitchToUser
     ? `<button onclick="mobileSwitchToUser()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Full App</button>`
     : '';
+  // Show back button only if user has multiple projects (came from project list)
+  const _userProjs = Array.isArray(prof?.projects) ? prof.projects : [];
+  const _hasMultiProjs = _userProjs.includes('*') || _userProjs.filter(p=>p!=='*').length > 1;
+  const _backBtn = _hasMultiProjs
+    ? `<button onclick="mobileBackToProjects()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">← Back</button>`
+    : `<div style="font-size:16px;font-weight:700;letter-spacing:0.05em;">BATIMON</div>`;
   mob.innerHTML=`
     <div style="background:#224F93;color:#fff;flex-shrink:0;padding-top:env(safe-area-inset-top,0px);">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;">
-        <div style="font-size:16px;font-weight:700;letter-spacing:0.05em;">BATIMON</div>
+        ${_backBtn}
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:11px;opacity:0.75;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+          <span style="font-size:11px;opacity:0.75;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
           ${_switchBtn}
           <button onclick="mobileLogout()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Logout</button>
         </div>

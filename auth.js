@@ -190,17 +190,11 @@ async function afterLogin(user){
       else document.getElementById('mobile-screen').style.display='flex';
       return;
     }
-    // Multiple or all projects — go to project selection screen
+    // Multiple or all projects — go to mobile project list
     document.getElementById('auth-screen').style.display='none';
-    document.getElementById('project-screen').style.display='flex';
-    const _dn = prof?.full_name||prof?.username||sbUser?.email||'';
-    const _pu = document.getElementById('proj-user');
-    if(_pu) _pu.textContent = _dn;
-    if(typeof copyLogoToProjectScreen==='function') copyLogoToProjectScreen();
     await loadCustomProjects();
     await checkApprovedDeletions();
-    if(typeof renderProjectScreen==='function') renderProjectScreen();
-    if(typeof updateUserChip==='function') updateUserChip(_dn);
+    if(typeof renderMobileProjectList==='function') await renderMobileProjectList();
     return;
   }
   // Block pending (not yet approved) users

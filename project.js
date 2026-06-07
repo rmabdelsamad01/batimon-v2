@@ -284,6 +284,108 @@ async function openProject(id){
   goPage('dashboard');
 }
 
+// ── Mobile project list (phone_only multi-project) ──────────────────────────
+let _mobileAllProjects = [];
+let _mobileDirectorFilter = null;
+
+async function renderMobileProjectList(){
+  const prof = sbProfile || {};
+  const userAssignedProjects = Array.isArray(prof.projects) ? prof.projects : [];
+  const hasAllProjects = userAssignedProjects.includes('*');
+  const userViewerProjects = Array.isArray(prof.viewer_projects) ? prof.viewer_projects : [];
+  _userViewerProjectsList = userViewerProjects;
+
+  // Build full project list
+  _mobileAllProjects = [];
+  Object.entries(PROJECT_META).forEach(([id, meta]) => {
+    if(!hasAllProjects && !userAssignedProjects.includes(id)) return;
+    _mobileAllProjects.push({ id, name: meta.name, active: meta.active, members: meta.members||[] });
+  });
+  getCustomProjects().forEach(proj => {
+    const hasFullAccess = hasAllProjects || userAssignedProjects.includes(proj.id);
+    const hasViewerAccess = userViewerProjects.includes(proj.id);
+    if(!hasFullAccess && !hasViewerAccess) return;
+    _mobileAllProjects.push({ id: proj.id, name: proj.name, active: true, members: proj.owner ? [proj.owner] : [] });
+  });
+  _mobileAllProjects.sort((a,b) => _projSortKey(a.name) - _projSortKey(b.name));
+  _mobileDirectorFilter = null;
+
+  const name = prof?.full_name || prof?.username || '';
+  const _allRoles = Array.isArray(prof?.roles) && prof.roles.length ? prof.roles : [prof?.role];
+  const _canSwitch = _allRoles.includes('user') && _allRoles.includes('phone_only');
+  const switchBtn = _canSwitch
+    ? `<button onclick="mobileSwitchToUser()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Full App</button>`
+    : '';
+
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('project-screen').style.display = 'none';
+  const mob = document.getElementById('mobile-screen');
+  mob.style.display = 'flex';
+  mob.innerHTML = `
+    <div style="background:#224F93;color:#fff;flex-shrink:0;padding-top:env(safe-area-inset-top,0px);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;">
+        <div style="font-size:16px;font-weight:700;letter-spacing:0.05em;">BATIMON</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;opacity:0.75;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+          ${switchBtn}
+          <button onclick="mobileLogout()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Logout</button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 16px 10px;flex-shrink:0;background:#f0f4f9;border-bottom:1px solid #e0e8f0;">
+      <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:12px;">Select a Director</div>
+      <div style="display:flex;gap:8px;">
+        <button id="mpf-raed"  onclick="setMobileProjectFilter('raed')"  style="flex:1;padding:9px 4px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Raed</button>
+        <button id="mpf-anas"  onclick="setMobileProjectFilter('anas')"  style="flex:1;padding:9px 4px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Anas</button>
+        <button id="mpf-nabil" onclick="setMobileProjectFilter('nabil')" style="flex:1;padding:9px 4px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Nabil</button>
+      </div>
+    </div>
+    <div id="mob-proj-list" style="flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;background:#f0f4f9;padding:12px 16px 24px;"></div>
+  `;
+  _renderMobileProjItems();
+}
+
+function _renderMobileProjItems(){
+  const list = document.getElementById('mob-proj-list');
+  if(!list) return;
+  const filtered = _mobileDirectorFilter
+    ? _mobileAllProjects.filter(p => (p.members||[]).includes(_mobileDirectorFilter))
+    : _mobileAllProjects;
+
+  if(!filtered.length){
+    list.innerHTML = `<div style="text-align:center;color:#8099b0;font-family:'Barlow',sans-serif;font-size:13px;padding:48px 0;">No projects found</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
+    if(!p.active){
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;margin-bottom:8px;background:#fff;border-radius:10px;border:1px solid #e0e8f0;opacity:0.5;">
+        <span style="font-size:15px;font-weight:600;color:#8099b0;font-family:'Barlow',sans-serif;">${p.name}</span>
+        <span style="font-size:10px;font-weight:700;color:#8099b0;background:#f0f4f9;padding:3px 8px;border-radius:10px;letter-spacing:0.06em;text-transform:uppercase;">Coming Soon</span>
+      </div>`;
+    }
+    return `<div onclick="openProject('${p.id}')"
+      style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;margin-bottom:8px;background:#fff;border-radius:10px;border:1.5px solid rgba(34,79,147,0.15);cursor:pointer;-webkit-tap-highlight-color:rgba(34,79,147,0.08);"
+      ontouchstart="this.style.background='#eaf0fb'" ontouchend="this.style.background='#fff'">
+      <span style="font-size:15px;font-weight:600;color:#1a2a3a;font-family:'Barlow',sans-serif;">${p.name}</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+}
+
+window.setMobileProjectFilter = function(person){
+  _mobileDirectorFilter = (_mobileDirectorFilter === person) ? null : person;
+  ['raed','anas','nabil'].forEach(d => {
+    const btn = document.getElementById('mpf-'+d);
+    if(!btn) return;
+    const on = _mobileDirectorFilter === d;
+    btn.style.background   = on ? '#224F93' : '#fff';
+    btn.style.color        = on ? '#fff'     : '#1a2a3a';
+    btn.style.borderColor  = on ? '#224F93'  : 'rgba(34,79,147,0.25)';
+  });
+  _renderMobileProjItems();
+};
+
 function _showMobileComingSoon(projectId){
   const name = PROJECT_META[projectId]?.name || getCustomProjects().find(p=>p.id===projectId)?.name || projectId;
   const mob = document.getElementById('mobile-screen');
@@ -307,8 +409,7 @@ function _showMobileComingSoon(projectId){
 }
 
 window.mobileBackToProjects = function(){
-  document.getElementById('mobile-screen').style.display = 'none';
-  document.getElementById('project-screen').style.display = 'flex';
+  renderMobileProjectList();
 };
 
 // Copy logo to project screen — called explicitly when screen is shown
