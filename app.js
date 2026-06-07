@@ -16202,12 +16202,18 @@ async function renderMobileApp(prof){
 function _buildMobileShell(prof){
   const mob=document.getElementById('mobile-screen');
   const name=prof?.full_name||prof?.username||'';
+  const _profRoles = Array.isArray(prof?.roles) && prof.roles.length ? prof.roles : [prof?.role];
+  const _canSwitchToUser = _profRoles.includes('user') && _profRoles.includes('phone_only');
+  const _switchBtn = _canSwitchToUser
+    ? `<button onclick="mobileSwitchToUser()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Full App</button>`
+    : '';
   mob.innerHTML=`
     <div style="background:#224F93;color:#fff;flex-shrink:0;padding-top:env(safe-area-inset-top,0px);">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;">
         <div style="font-size:16px;font-weight:700;letter-spacing:0.05em;">BATIMON</div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-size:11px;opacity:0.75;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;opacity:0.75;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+          ${_switchBtn}
           <button onclick="mobileLogout()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Logout</button>
         </div>
       </div>
@@ -16229,6 +16235,22 @@ window.mobileLogout=async function(){
   await sb.auth.signOut();
   document.getElementById('mobile-screen').style.display='none';
   document.getElementById('auth-screen').style.display='flex';
+};
+
+// Switch from phone_only mode to full user app (only for user+phone_only dual-role)
+window.mobileSwitchToUser=async function(){
+  if(!sbProfile||!sbUser) return;
+  sbProfile.role='user';
+  document.getElementById('mobile-screen').style.display='none';
+  document.getElementById('project-screen').style.display='flex';
+  const dn=sbProfile.full_name||sbProfile.username||sbUser?.email||'';
+  const pu=document.getElementById('proj-user');
+  if(pu) pu.textContent=dn;
+  if(typeof copyLogoToProjectScreen==='function') copyLogoToProjectScreen();
+  if(typeof loadCustomProjects==='function') await loadCustomProjects();
+  if(typeof checkApprovedDeletions==='function') await checkApprovedDeletions();
+  if(typeof renderProjectScreen==='function') renderProjectScreen();
+  if(typeof updateUserChip==='function') updateUserChip(dn);
 };
 
 window.mobileSetTab=function(tab){

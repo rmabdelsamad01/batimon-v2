@@ -1,3 +1,8 @@
+function _isOnPhone(){
+  return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    || (window.innerWidth <= 768 && ('ontouchstart' in window));
+}
+
 function switchTab(tab){
   const isLogin=tab==='login';
   document.getElementById('form-login').style.display=isLogin?'block':'none';
@@ -140,6 +145,16 @@ async function afterLogin(user){
   }
   sbProfile=prof;
 
+  // ── Phone auto-switch for dual-role users (user + phone_only) ──────────────
+  // If on a phone and the user has phone_only in their roles array,
+  // default to phone_only for this session (in-memory only, no DB write).
+  const _allRoles = Array.isArray(prof.roles) && prof.roles.length ? prof.roles : [prof.role];
+  if(_isOnPhone() && _allRoles.includes('phone_only') && prof.role !== 'phone_only'){
+    sbProfile.role = 'phone_only';
+    prof.role = 'phone_only';
+  }
+  // ──────────────────────────────────────────────────────────────
+
   // ── phone_only safety net ──────────────────────────────────────
   // If this user was previously phone_only (stored in their auth metadata)
   // and the DB now shows a different role, silently fix it back and
@@ -162,11 +177,30 @@ async function afterLogin(user){
     err.style.display='block';
     return;
   }
-  // Redirect phone_only users to the mobile app
+  // Redirect phone_only users
   if(prof?.role==='phone_only'){
+    const _userProjs = Array.isArray(prof.projects) ? prof.projects : [];
+    const _hasAllProjs = _userProjs.includes('*');
+    const _nonStarProjs = _userProjs.filter(p=>p!=='*');
+    // Direct to mobile monitoring only if Shift Tower is the sole project (no '*', no other projects)
+    const _shiftOnly = !_hasAllProjs && _nonStarProjs.length <= 1 && (_nonStarProjs.length===0 || _nonStarProjs[0]==='shift-tower');
+    if(_shiftOnly){
+      document.getElementById('auth-screen').style.display='none';
+      if(typeof renderMobileApp==='function') renderMobileApp(prof);
+      else document.getElementById('mobile-screen').style.display='flex';
+      return;
+    }
+    // Multiple or all projects — go to project selection screen
     document.getElementById('auth-screen').style.display='none';
-    if(typeof renderMobileApp==='function') renderMobileApp(prof);
-    else document.getElementById('mobile-screen').style.display='flex';
+    document.getElementById('project-screen').style.display='flex';
+    const _dn = prof?.full_name||prof?.username||sbUser?.email||'';
+    const _pu = document.getElementById('proj-user');
+    if(_pu) _pu.textContent = _dn;
+    if(typeof copyLogoToProjectScreen==='function') copyLogoToProjectScreen();
+    await loadCustomProjects();
+    await checkApprovedDeletions();
+    if(typeof renderProjectScreen==='function') renderProjectScreen();
+    if(typeof updateUserChip==='function') updateUserChip(_dn);
     return;
   }
   // Block pending (not yet approved) users

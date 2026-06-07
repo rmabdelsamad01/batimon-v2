@@ -260,6 +260,22 @@ async function openProject(id){
   else document.body.classList.remove('viewer-mode');
   const customProj = getCustomProjects().find(p=>p.id===id);
   window._activeProjectName = customProj ? customProj.name : (PROJECT_META[id]?.name||id);
+
+  // ── phone_only routing ──────────────────────────────────────────────────────
+  if(sbProfile?.role==='phone_only'){
+    document.getElementById('project-screen').style.display='none';
+    if(id==='shift-tower'){
+      // Shift Tower has a phone UI — open it
+      if(typeof renderMobileApp==='function') renderMobileApp(sbProfile);
+      else document.getElementById('mobile-screen').style.display='flex';
+    } else {
+      // No phone UI yet for this project
+      _showMobileComingSoon(id);
+    }
+    return;
+  }
+  // ───────────────────────────────────────────────────────────────────────────
+
   document.getElementById('project-screen').style.display='none';
   if(sbProfile) updateUserChip(sbProfile.full_name||sbProfile.username||sbUser?.email||'');
   // Load project metadata (categories + facade names) from Supabase before rendering
@@ -267,6 +283,33 @@ async function openProject(id){
   await load();
   goPage('dashboard');
 }
+
+function _showMobileComingSoon(projectId){
+  const name = PROJECT_META[projectId]?.name || getCustomProjects().find(p=>p.id===projectId)?.name || projectId;
+  const mob = document.getElementById('mobile-screen');
+  mob.style.display = 'flex';
+  mob.innerHTML = `
+    <div style="background:#224F93;color:#fff;flex-shrink:0;padding-top:env(safe-area-inset-top,0px);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;">
+        <button onclick="mobileBackToProjects()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">← Back</button>
+        <div style="font-size:16px;font-weight:700;letter-spacing:0.05em;">${name}</div>
+        <div style="width:60px;"></div>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px;text-align:center;background:#f0f4f9;">
+      <div style="width:72px;height:72px;background:rgba(34,79,147,0.08);border-radius:18px;display:flex;align-items:center;justify-content:center;">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div style="font-size:24px;font-weight:700;color:#1a2a3a;font-family:'Barlow',sans-serif;letter-spacing:0.02em;">Coming Soon</div>
+      <div style="font-size:14px;color:#8099b0;font-family:'Barlow',sans-serif;line-height:1.7;max-width:280px;">The mobile view for <strong style="color:#224F93;">${name}</strong> is currently under development.</div>
+    </div>
+  `;
+}
+
+window.mobileBackToProjects = function(){
+  document.getElementById('mobile-screen').style.display = 'none';
+  document.getElementById('project-screen').style.display = 'flex';
+};
 
 // Copy logo to project screen — called explicitly when screen is shown
 function copyLogoToProjectScreen(){
