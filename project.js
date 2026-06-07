@@ -285,8 +285,68 @@ async function openProject(id){
   // Load project metadata (categories + facade names) from Supabase before rendering
   if(typeof _loadProjectMetaFromSB==='function') await _loadProjectMetaFromSB(id);
   await load();
+
+  // On phone (Full App mode) → show mobile project menu instead of going straight to dashboard
+  if(typeof _isOnPhone==='function' && _isOnPhone()){
+    _showMobileProjectMenu();
+    return;
+  }
   goPage('dashboard');
 }
+
+// ── Mobile project menu (Full App mode on phone) ────────────────────────────
+function _showMobileProjectMenu(){
+  const projName = window._activeProjectName || 'Project';
+  // Remove any lingering "← Menu" button from nav
+  const old = document.getElementById('mobile-menu-btn');
+  if(old) old.remove();
+
+  const mob = document.getElementById('mobile-screen');
+  mob.style.display = 'flex';
+  mob.innerHTML = `
+    <div style="background:#224F93;color:#fff;flex-shrink:0;padding-top:env(safe-area-inset-top,0px);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;">
+        <button onclick="mobileBackToProjects()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">← Projects</button>
+        <div style="font-size:15px;font-weight:700;letter-spacing:0.03em;">${projName}</div>
+        <div style="width:72px;"></div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;background:#f0f4f9;padding:16px;">
+      <div style="font-size:12px;font-weight:700;color:#8099b0;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;padding:0 4px;">Sections</div>
+      <div onclick="mobileOpenSection('dashboard')"
+        style="display:flex;align-items:center;justify-content:space-between;padding:15px 16px;margin-bottom:8px;background:#fff;border-radius:10px;border:1.5px solid rgba(34,79,147,0.15);cursor:pointer;-webkit-tap-highlight-color:rgba(34,79,147,0.08);"
+        ontouchstart="this.style.background='#eaf0fb'" ontouchend="this.style.background='#fff'">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;background:rgba(34,79,147,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <span style="font-size:15px;font-weight:600;color:#1a2a3a;font-family:'Barlow',sans-serif;">Project Info</span>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>
+  `;
+}
+
+window.mobileOpenSection = function(pageId){
+  const mob = document.getElementById('mobile-screen');
+  if(mob) mob.style.display = 'none';
+
+  // Inject "← Menu" button into the nav-tabs bar
+  const navTabs = document.querySelector('nav.nav-tabs');
+  if(navTabs && !document.getElementById('mobile-menu-btn')){
+    const btn = document.createElement('button');
+    btn.id = 'mobile-menu-btn';
+    btn.className = 'nt';
+    btn.innerHTML = '← Menu';
+    btn.style.cssText = 'color:#224F93;font-weight:700;border-right:1px solid var(--border2);flex-shrink:0;';
+    btn.onclick = function(){ _showMobileProjectMenu(); };
+    navTabs.insertBefore(btn, navTabs.firstChild);
+  }
+
+  goPage(pageId);
+};
+// ────────────────────────────────────────────────────────────────────────────
 
 // ── Mobile project list (phone_only multi-project) ──────────────────────────
 let _mobileAllProjects = [];
