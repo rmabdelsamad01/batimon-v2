@@ -16247,16 +16247,9 @@ window.mobileLogout=async function(){
 window.mobileSwitchToUser=async function(){
   if(!sbProfile||!sbUser) return;
   sbProfile.role='user';
-  document.getElementById('mobile-screen').style.display='none';
-  document.getElementById('project-screen').style.display='flex';
-  const dn=sbProfile.full_name||sbProfile.username||sbUser?.email||'';
-  const pu=document.getElementById('proj-user');
-  if(pu) pu.textContent=dn;
-  if(typeof copyLogoToProjectScreen==='function') copyLogoToProjectScreen();
   if(typeof loadCustomProjects==='function') await loadCustomProjects();
   if(typeof checkApprovedDeletions==='function') await checkApprovedDeletions();
-  if(typeof renderProjectScreen==='function') renderProjectScreen();
-  if(typeof updateUserChip==='function') updateUserChip(dn);
+  if(typeof renderMobileProjectList==='function') await renderMobileProjectList();
 };
 
 window.mobileSetTab=function(tab){

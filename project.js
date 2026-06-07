@@ -295,14 +295,16 @@ async function renderMobileProjectList(){
   const userViewerProjects = Array.isArray(prof.viewer_projects) ? prof.viewer_projects : [];
   _userViewerProjectsList = userViewerProjects;
 
+  const isDev = prof.role === 'developer';
+
   // Build full project list
   _mobileAllProjects = [];
   Object.entries(PROJECT_META).forEach(([id, meta]) => {
-    if(!hasAllProjects && !userAssignedProjects.includes(id)) return;
+    if(!isDev && !hasAllProjects && !userAssignedProjects.includes(id)) return;
     _mobileAllProjects.push({ id, name: meta.name, active: meta.active, members: meta.members||[] });
   });
   getCustomProjects().forEach(proj => {
-    const hasFullAccess = hasAllProjects || userAssignedProjects.includes(proj.id);
+    const hasFullAccess = isDev || hasAllProjects || userAssignedProjects.includes(proj.id);
     const hasViewerAccess = userViewerProjects.includes(proj.id);
     if(!hasFullAccess && !hasViewerAccess) return;
     _mobileAllProjects.push({ id: proj.id, name: proj.name, active: true, members: proj.owner ? [proj.owner] : [] });
