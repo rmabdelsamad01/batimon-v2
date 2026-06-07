@@ -284,13 +284,15 @@ async function openProject(id){
   if(sbProfile) updateUserChip(sbProfile.full_name||sbProfile.username||sbUser?.email||'');
   // Load project metadata (categories + facade names) from Supabase before rendering
   if(typeof _loadProjectMetaFromSB==='function') await _loadProjectMetaFromSB(id);
-  await load();
 
-  // On phone (Full App mode) → show mobile project menu instead of going straight to dashboard
+  // On phone (Full App mode) → show menu immediately, load data in background
   if(typeof _isOnPhone==='function' && _isOnPhone()){
     _showMobileProjectMenu();
+    load(); // non-blocking — data ready by the time user taps a section
     return;
   }
+
+  await load();
   goPage('dashboard');
 }
 
