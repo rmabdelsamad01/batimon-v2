@@ -740,6 +740,7 @@ window._btRecalc = function() {
 };
 
 window._btAddOF = function(data) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   const list = document.getElementById('bt-of-list');
   if (!list) return;
   const row = document.createElement('div');
@@ -795,6 +796,7 @@ window._btRefreshOfLivresPreview = function() {
 };
 
 window._btAddBlocage = function(data) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   const list = document.getElementById('bt-blocage-list');
   if (!list) return;
   const row = document.createElement('div');
@@ -808,6 +810,7 @@ window._btAddBlocage = function(data) {
 };
 
 window._btAddDemande = function(data) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   const list = document.getElementById('bt-demande-list');
   if (!list) return;
   const row = document.createElement('div');
@@ -838,6 +841,7 @@ window._btAddDemande = function(data) {
 
 window.btSubmitReport = async function(e) {
   e.preventDefault();
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   const form = e.target;
   const fd = new FormData(form);
   const data = Object.fromEntries(fd.entries());
@@ -949,6 +953,7 @@ window._btFilterReports = function() {
 };
 
 window._btDeleteReportConfirm = async function(id) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   const r = _btReports.find(x=>x.id===id);
   if (!r) return;
   if (!confirm(`Supprimer le rapport "${r.projet}" du ${_btFmtDate(r.dateReporting)} ?`)) return;
@@ -1514,6 +1519,7 @@ window._btEditAffCell = function(cellSpan, projectId, field, type) {
 };
 
 window._btAddAffRow = async function() {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   const p = {
     id: 'aff-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
     numLigne:'', numAff:'', projet:'Nouveau projet', directeurProjet:'',
@@ -1613,6 +1619,7 @@ window._btImportExcel = function() {
 };
 
 window._btDeleteAff = async function(id) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   const p = _btAffectation.find(x=>x.id===id);
   if (!p || !confirm(`Supprimer le projet "${p.projet}" ?`)) return;
   _btAffectation = _btAffectation.filter(x=>x.id!==id);
@@ -1818,6 +1825,7 @@ function _btMgrGetArr(key) {
 }
 
 function btMgrAdd(key) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   var inp = document.getElementById('bt-mgr-add-' + key);
   if (!inp) return;
   var val = inp.value.trim();
@@ -1831,6 +1839,7 @@ function btMgrAdd(key) {
 }
 
 function btMgrDel(key, idx) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   var arr = _btMgrGetArr(key);
   arr.splice(idx, 1);
   _btSaveRtList(key, arr);
@@ -1851,6 +1860,7 @@ function btMgrEdit(key, idx) {
 }
 
 function btMgrSaveEdit(key, idx) {
+  if(window._projectViewerMode){ if(typeof toast==='function') toast('Viewer access — read only'); return; }
   var inp = document.getElementById('bt-mgr-edit-inp');
   if (!inp) return;
   var val = inp.value.trim();

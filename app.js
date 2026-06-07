@@ -280,6 +280,10 @@ function projKey(base){
   return base+'__'+id;
 }
 
+// ── Viewer mode guard ──────────────────────────────────────────────────────
+function _isViewer(){ return !!window._projectViewerMode; }
+function _viewerToast(){ if(typeof toast==='function') toast('Viewer access — read only'); }
+
 // ── Custom facade name storage ─────────────────────────────────────────────
 const _DEFAULT_FACADE_NAMES = {NF:'North Facade', SF:'South Facade', EF:'East Facade', WF:'West Facade'};
 // In-memory caches for Supabase-stored project metadata (shared across computers)
@@ -459,6 +463,7 @@ function _typesCalcSurf(i){
   if(c)c.textContent=l&&h?(l*h).toFixed(3):'';
 }
 function _typesDeleteSelected(pid){
+  if(_isViewer()){_viewerToast();return;}
   const checked=[...document.querySelectorAll('.types-row-chk:checked')].map(cb=>parseInt(cb.dataset.idx));
   if(!checked.length){alert('No rows selected. Tick the checkboxes of the rows you want to delete.');return;}
   if(!confirm(`Delete ${checked.length} selected row${checked.length>1?'s':''}?`))return;
@@ -467,6 +472,7 @@ function _typesDeleteSelected(pid){
   _renderTypesTable(pid,true);
 }
 function _typesAddRow(pid){
+  if(_isViewer()){_viewerToast();return;}
   if(!_custTypesCache[pid])_custTypesCache[pid]=[];
   _custTypesCache[pid].push({id:'new-'+Date.now(),panelType:'',designation:'',type_composition:'',ouvrants_type:'',ouvrants_nombre:'',type_vitrage:'',gamme:'',traitement_surface:'',finition:'',couleur:'',largeur:'',hauteur:'',surface:'',_isNew:true});
   _renderTypesTable(pid);
@@ -480,6 +486,7 @@ function _typesNextRevName(types,base){
   return `${stripped} Rev.${String(max+1).padStart(2,'0')}`;
 }
 async function _typesSave(pid){
+  if(_isViewer()){_viewerToast();return;}
   const types=_custTypesCache[pid]||[];
   const read=(i,key)=>document.getElementById(`ti-${i}-${key}`)?.value||'';
   const readN=(i,key)=>{ const v=document.getElementById(`ti-${i}-${key}`)?.value; return v!==undefined&&v!==''?v:''; };
@@ -548,6 +555,7 @@ function _typesImportExcel(ev,pid){
   reader.readAsArrayBuffer(file);
 }
 async function custDeleteFacadeFromToolbar(pid){
+  if(_isViewer()){_viewerToast();return;}
   const extras=_custExtraFacadesCache[pid]||[];
   if(!extras.length){alert('No extra facades to delete.');return;}
   // If currently viewing an extra facade, pre-select it
@@ -805,6 +813,7 @@ function initProjectCategories(projId){
   return cats;
 }
 function addNewCategory(){
+  if(_isViewer()){_viewerToast();return;}
   const projId=window._activeProjectId;
   if(!projId||projId==='shift-tower') return;
   const cats=initProjectCategories(projId);
@@ -821,6 +830,7 @@ function addNewCategory(){
 }
 
 function deleteCategory(){
+  if(_isViewer()){_viewerToast();return;}
   const projId=window._activeProjectId;
   if(!projId||projId==='shift-tower') return;
   const cats=getProjectCategories(projId);
@@ -933,6 +943,7 @@ function editCatNick(catNum){
 }
 
 function saveCatNick(catNum){
+  if(_isViewer()){_viewerToast();return;}
   const input=document.getElementById('cat-nick-input');
   if(!input) return;
   const newNick=input.value.trim();
@@ -951,6 +962,7 @@ function saveCatNick(catNum){
 }
 
 function saveFacadeNick(pid, facadeDir, catNum){
+  if(_isViewer()){_viewerToast();return;}
   const input=document.getElementById('nick-edit-input');
   if(!input) return;
   const newNick=input.value.trim();
@@ -1492,6 +1504,7 @@ async function _saveExtraFacades(pid){
   try{await sb.from('project_info').upsert({project:pid,key:'extra_facades',value:JSON.stringify(_custExtraFacadesCache[pid]||[]),updated_at:new Date().toISOString()},{onConflict:'project,key'});}catch(e){}
 }
 async function custAddExtraFacade(pid){
+  if(_isViewer()){_viewerToast();return;}
   const arr=await _loadExtraFacades(pid);
   const next=_nextExtraFacadeId(arr);
   if(!next){alert('Maximum facades reached.');return;}
@@ -1502,6 +1515,7 @@ async function custAddExtraFacade(pid){
   _renderPage(cur);
 }
 async function custDeleteExtraFacade(pid,facadeId,ev){
+  if(_isViewer()){_viewerToast();return;}
   if(ev){ev.stopPropagation();}
   if(!confirm('Delete Facade '+facadeId+'? All cell data will be permanently lost.'))return;
   const arr=_custExtraFacadesCache[pid]||[];
@@ -2128,6 +2142,7 @@ function _cgPrint(){
 
 // Add / Delete rows & columns
 function custGridAddRow(pid,facade,atIdx){
+  if(_isViewer()){_viewerToast();return;}
   const meta=_custGetMeta(pid,facade); const n=meta.rows.length;
   const idx=atIdx!=null?atIdx:n;
   _custRemapCells(pid,facade,(r,c)=>r>=idx?`r${r+1}_c${c}`:`r${r}_c${c}`);
@@ -2149,6 +2164,7 @@ function custGridDelRow(pid,facade,rowIdx){
   _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
 function custGridAddCol(pid,facade,atIdx){
+  if(_isViewer()){_viewerToast();return;}
   const meta=_custGetMeta(pid,facade); const n=meta.cols.length;
   const idx=atIdx!=null?atIdx:n;
   _custRemapCells(pid,facade,(r,c)=>c>=idx?`r${r}_c${c+1}`:`r${r}_c${c}`);
@@ -2433,6 +2449,7 @@ function _custHideCtx(){ if(_cgCtxMenu){_cgCtxMenu.remove();_cgCtxMenu=null;} do
 let _cgPanelCtx = null; // {pid, facade, key, cellRef}
 
 async function custCellOpenPanel(e, pid, facade, key, cellRef){
+  if(_isViewer()){_viewerToast();return;}
   e.preventDefault();
   _custHideCtx();
   _cgPanelCtx = {pid, facade, key, cellRef};
@@ -2621,6 +2638,7 @@ function _cpTypeAutoFill(typeName, pid){
 }
 
 async function custCellSavePanel(){
+  if(_isViewer()){_viewerToast();return;}
   if(!_cgPanelCtx) return;
   const {pid, facade, key} = _cgPanelCtx;
   const k = pid+'|'+facade;
@@ -10346,6 +10364,7 @@ window.arFilter=function(){
 
 // ── BR LOG ADD ROW & PAYE TOGGLE ───────────────────────────────
 window.toggleBRPaye=async function(br){
+  if(_isViewer()){_viewerToast();return;}
   const cur=brLogPayeOverrides[br]||(window._brAllRows||[]).find(r=>r.br===br)?.paye||'Non';
   brLogPayeOverrides[br]=cur.toLowerCase()==='oui'?'Non':'OUI';
   await saveBRLogPayeOverrides();
@@ -10357,6 +10376,7 @@ window.toggleBRPaye=async function(br){
 };
 
 function openAddBRRowModal(allRows){
+  if(_isViewer()){_viewerToast();return;}
   const supplierTerms=window._brSupplierTerms||{};
   const suppliers=Object.keys(supplierTerms).sort();
   const nextSqn=allRows.length+1;
@@ -10484,6 +10504,7 @@ window.abrCalcDatePaye=function(){
 };
 
 window.saveNewBRRow=async function(sqn){
+  if(_isViewer()){_viewerToast();return;}
   const fourn=document.getElementById('abr-fourn').value.trim();
   const po=document.getElementById('abr-po').value.trim();
   const br=document.getElementById('abr-br').value.trim();
@@ -10512,6 +10533,7 @@ window.saveNewBRRow=async function(sqn){
 };
 
 window.openEditBRRowModal=function(sqn,isCustom,customIdx){
+  if(_isViewer()){_viewerToast();return;}
   const allRows=window._brAllRows||[];
   const r=allRows.find(x=>x.sqn===sqn);
   if(!r) return;
@@ -10601,6 +10623,7 @@ window.ebrCalcDatePaye=function(){
 };
 
 window.saveEditedBRRow=async function(sqn,isCustom,customIdx){
+  if(_isViewer()){_viewerToast();return;}
   const fourn=document.getElementById('ebr-fourn').value.trim().toUpperCase();
   const po=document.getElementById('ebr-po').value.trim();
   const br=document.getElementById('ebr-br').value.trim();
@@ -10628,6 +10651,7 @@ window.saveEditedBRRow=async function(sqn,isCustom,customIdx){
 };
 
 window.deleteBRRow=async function(customIdx){
+  if(_isViewer()){_viewerToast();return;}
   if(!confirm('Delete this row?')) return;
   brLogCustomRows.splice(customIdx,1);
   await saveBRLogCustomRows();
@@ -10636,6 +10660,7 @@ window.deleteBRRow=async function(customIdx){
 };
 
 window.deleteBRBaseRow=async function(sqn){
+  if(_isViewer()){_viewerToast();return;}
   if(!confirm('Delete this row?')) return;
   if(!brLogDeletedSqns.includes(sqn)) brLogDeletedSqns.push(sqn);
   await saveBRLogDeletedSqns();
@@ -10718,6 +10743,7 @@ async function savePOLogDeletedSqns(){
 }
 
 function openAddPORowModal(allRows){
+  if(_isViewer()){_viewerToast();return;}
   // Build unique supplier→terms map from all existing rows
   const supplierTerms={};
   allRows.forEach(r=>{ if(r.supplier) supplierTerms[r.supplier.toUpperCase()]=r.terms; });
@@ -10817,6 +10843,7 @@ window.apoCalcRem=function(){
 };
 
 window.saveNewPORow=async function(sqn){
+  if(_isViewer()){_viewerToast();return;}
   const cf=document.getElementById('apo-cf').value.trim();
   const alloc=document.getElementById('apo-alloc').value.trim();
   const supplier=document.getElementById('apo-supplier').value.trim();
@@ -10843,6 +10870,7 @@ window.saveNewPORow=async function(sqn){
 };
 
 window.openEditPORowModal=function(sqn,isCustom,customIdx){
+  if(_isViewer()){_viewerToast();return;}
   const allRows=window._poAllRows||[];
   const r=allRows.find(x=>x.sqn===sqn);
   if(!r) return;
@@ -10922,6 +10950,7 @@ window.epoCalcRem=function(){
 };
 
 window.saveEditedPORow=async function(sqn,isCustom,customIdx){
+  if(_isViewer()){_viewerToast();return;}
   const cf=document.getElementById('epo-cf').value.trim();
   const alloc=document.getElementById('epo-alloc').value.trim();
   const supplier=document.getElementById('epo-supplier').value.trim().toUpperCase();
@@ -10956,6 +10985,7 @@ window.saveEditedPORow=async function(sqn,isCustom,customIdx){
 };
 
 window.deletePORow=async function(customIdx){
+  if(_isViewer()){_viewerToast();return;}
   if(!confirm('Delete this row?')) return;
   poLogCustomRows.splice(customIdx,1);
   await savePOLogCustomRows();
@@ -10964,6 +10994,7 @@ window.deletePORow=async function(customIdx){
 };
 
 window.deletePOBaseRow=async function(sqn){
+  if(_isViewer()){_viewerToast();return;}
   if(!confirm('Delete this row?')) return;
   if(!poLogDeletedSqns.includes(sqn)) poLogDeletedSqns.push(sqn);
   await savePOLogDeletedSqns();
@@ -12112,6 +12143,7 @@ function _renderCustPlanHTML(pid, projName, cont){
 
 // Inline date edit — all users
 window.custPlanEditDate = function(pid, rowId, field, cell){
+  if(_isViewer()){_viewerToast();return;}
   const row=_custPlanRows.find(r=>r.id===rowId); if(!row) return;
   const cur=row[field]||'';
   const fmt=d=>{ if(!d) return null; const dt=new Date(d); return ('0'+dt.getDate()).slice(-2)+'/'+('0'+(dt.getMonth()+1)).slice(-2)+'/'+String(dt.getFullYear()).slice(-2); };
@@ -12188,6 +12220,7 @@ window.custPlanShowAddRow = function(pid, section){
 };
 
 window.custPlanConfirmAdd = function(pid, section, ref){
+  if(_isViewer()){_viewerToast();return;}
   const desc=(document.getElementById('cpar-desc')?.value||'').trim();
   const debut=document.getElementById('cpar-debut')?.value||null;
   const fin=document.getElementById('cpar-fin')?.value||null;
@@ -12198,6 +12231,7 @@ window.custPlanConfirmAdd = function(pid, section, ref){
 };
 
 window.custPlanDeleteRow = function(pid, rowId){
+  if(_isViewer()){_viewerToast();return;}
   if(!confirm('Delete row '+rowId+'?')) return;
   const section=parseInt(rowId.split('.')[0]);
   _custPlanRows=_custPlanRows.filter(r=>r.id!==rowId);

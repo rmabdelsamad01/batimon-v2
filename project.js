@@ -148,6 +148,9 @@ function setProjectFilter(person){
   renderProjectScreen();
 }
 
+// Tracks which project IDs the current user has viewer-only access to
+let _userViewerProjectsList = [];
+
 // Desired display order — names matched case-insensitively; unknowns append at end
 const _PROJECT_DISPLAY_ORDER = [
   'shift tower','casaone','coeur d\'anfa','gaiapolis','my way ii',
@@ -173,6 +176,7 @@ function renderProjectScreen(){
   const isDev = (sbProfile?.role === 'developer');
   const userAssignedProjects = Array.isArray(profile.projects) ? profile.projects : [];
   const userViewerProjects = Array.isArray(profile.viewer_projects) ? profile.viewer_projects : [];
+  _userViewerProjectsList = userViewerProjects;
 
   // Build unified list of all visible projects
   const allProjects = [];
@@ -249,6 +253,9 @@ function renderProjectScreen(){
 
 async function openProject(id){
   window._activeProjectId = id;
+  window._projectViewerMode = _userViewerProjectsList.includes(id);
+  if(window._projectViewerMode) document.body.classList.add('viewer-mode');
+  else document.body.classList.remove('viewer-mode');
   const customProj = getCustomProjects().find(p=>p.id===id);
   window._activeProjectName = customProj ? customProj.name : (PROJECT_META[id]?.name||id);
   document.getElementById('project-screen').style.display='none';

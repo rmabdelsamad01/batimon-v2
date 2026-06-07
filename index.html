@@ -19,6 +19,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=20260502c">
+<style>
+/* Viewer mode — hide all add/edit/delete action buttons */
+body.viewer-mode .bt-add-btn,
+body.viewer-mode .bt-submit-btn,
+body.viewer-mode .bt-del-btn,
+body.viewer-mode .bt-btn-danger { display: none !important; }
+</style>
 <!-- ── Service Worker registration ──────────────────────────────── -->
 <script>
   if('serviceWorker' in navigator){
