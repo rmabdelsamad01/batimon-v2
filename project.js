@@ -390,16 +390,19 @@ function _showMobileProjectMenu(){
     'signed-panel-prep':()=>{ if(typeof openSignedChecklistsView==='function') openSignedChecklistsView('panel-preparation','Signed Panel Prep et Inst'); },
     'ncr':              ()=>{ if(typeof openNCRModal==='function') openNCRModal(); },
     'supabase':         ()=>{ if(typeof _supaPasswordGate==='function') _supaPasswordGate(); },
+    'monitoring':       ()=>{
+      // Go straight to the phone monitoring view — undo section-view first
+      document.body.classList.remove('mobile-section-view');
+      const bar = document.getElementById('mob-section-bar');
+      if(bar) bar.remove();
+      if(typeof renderMobileApp==='function') renderMobileApp(sbProfile);
+    },
   };
 
   const sections = [
     { id:'projinfo',  label:'Project Info',          icon:'🏗️', color:'#2d6a8f',
       subs:[{label:'General Description',nav:'proj-general'},{label:'Batiglobe Organigram',nav:'proj-bati-org'},{label:'Project Organigram',nav:'proj-org'},{label:'Financial Info',nav:'proj-financial'}]},
-    { id:'monitoring',label:'Monitoring Sheet',       icon:'📊', color:'#6d35d9',
-      subs:[
-        {label:'Bracket Monitoring', subs:[{label:'Overview',nav:'bm-overview'},{label:_sbn.NF,nav:'bm-nf'},{label:_sbn.SF,nav:'bm-sf'},{label:_sbn.EF,nav:'bm-ef'},{label:_sbn.WF,nav:'bm-wf'}]},
-        {label:'UCW Monitoring',     subs:[{label:'Overview',nav:'ucw-overview'},{label:_sbn.NF,nav:'ucw-nf'},{label:_sbn.SF,nav:'ucw-sf'},{label:_sbn.EF,nav:'ucw-ef'},{label:_sbn.WF,nav:'ucw-wf'}]},
-      ]},
+    { id:'monitoring',label:'Monitoring Sheet',       icon:'📊', color:'#6d35d9', nav:'monitoring'},
     { id:'cadence',   label:'Cadence',               icon:'📈', color:'#1a9458',
       subs:[{label:'Fabrication Rate',nav:'fab-rate'},{label:'Delivery Rate',nav:'del-rate'},{label:'Installation Rate',nav:'inst-rate'},{label:'Fabrication Counting',nav:'fab-counting'}]},
     { id:'of-log',    label:'OF Logs',               icon:'🏭', color:'#e65100', nav:'of-log'},
