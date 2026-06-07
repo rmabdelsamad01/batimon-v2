@@ -4815,6 +4815,52 @@ function renderSimpleGrid(zone){
 }
 
 // COMPLEX FACADES (EF, WF) — from PDF data, table layout
+function _cfGetPassword(){
+  const pid=window._activeProjectId;
+  if(!pid) return null;
+  const custom=getCustomProjects().find(p=>p.id===pid);
+  if(custom&&custom.owner) return custom.owner.split(' ')[0].toUpperCase();
+  const meta=PROJECT_META[pid];
+  if(meta&&meta.members&&meta.members.length) return meta.members[0].toUpperCase();
+  return null;
+}
+
+function _cfPasswordGate(btn){
+  const pwd=_cfGetPassword();
+  if(!pwd){ toggleEFSub('cashflow',btn); return; }
+  const backdrop=document.createElement('div');
+  backdrop.id='_cf-pwd-backdrop';
+  backdrop.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  backdrop.innerHTML=`
+    <div style="background:#fff;border-radius:12px;padding:28px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.22);font-family:var(--font);" onclick="event.stopPropagation()">
+      <div style="font-size:15px;font-weight:700;color:#1e3a5f;margin-bottom:6px;">💰 Cash Flow</div>
+      <div style="font-size:12px;color:#8099b0;margin-bottom:16px;">Enter password to access this section.</div>
+      <input id="_cf-pwd-inp" type="password" placeholder="Password"
+        style="width:100%;box-sizing:border-box;border:1.5px solid #dde3ee;border-radius:7px;padding:8px 10px;font-size:13px;font-family:var(--font);color:#1e3a5f;outline:none;margin-bottom:8px;"
+        onkeydown="if(event.key==='Enter')document.getElementById('_cf-pwd-confirm').click();if(event.key==='Escape')document.getElementById('_cf-pwd-backdrop').remove();">
+      <div id="_cf-pwd-err" style="display:none;font-size:11px;color:#c02020;margin-bottom:8px;">Incorrect password.</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('_cf-pwd-backdrop').remove()"
+          style="padding:7px 16px;border-radius:7px;border:1.5px solid #dde3ee;background:#f0f4f9;color:#1e3a5f;font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
+        <button id="_cf-pwd-confirm"
+          style="padding:7px 18px;border-radius:7px;border:none;background:#00796b;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">Enter</button>
+      </div>
+    </div>`;
+  backdrop.onclick=()=>backdrop.remove();
+  document.body.appendChild(backdrop);
+  const inp=backdrop.querySelector('#_cf-pwd-inp');
+  inp.focus();
+  backdrop.querySelector('#_cf-pwd-confirm').onclick=()=>{
+    if(inp.value.trim().toUpperCase()===pwd){
+      backdrop.remove();
+      toggleEFSub('cashflow',btn);
+    } else {
+      backdrop.querySelector('#_cf-pwd-err').style.display='block';
+      inp.value=''; inp.focus();
+    }
+  };
+}
+
 function efSidebarHTML(){
   // Use stored facade names for custom projects; fall back to defaults for Shift Tower
   const isCustomProject = !!(window._activeProjectId && window._activeProjectId !== 'shift-tower');
@@ -4894,7 +4940,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:${s.soon?'var(--surface)':'var(--surface2)'};cursor:${s.soon?'default':'pointer'};transition:border-color 0.15s,background 0.15s;${s.soon?'opacity:0.7;':''}"
              ${s.soon?'':`onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"`}
              ${s.soon?'':`onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"`}
-             ${s.soon?'':(s.subs.length||s.customSubHTML?`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:s.id==='of-log'?`onclick="goPage('of-log')"`:'')}
+             ${s.soon?'':(s.subs.length||s.customSubHTML?s.id==='cashflow'?`onclick="_cfPasswordGate(this)"`:`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:s.id==='of-log'?`onclick="goPage('of-log')"`:'')}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
