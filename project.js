@@ -324,6 +324,8 @@ window._mobileCloseSection = function(){
   document.body.classList.remove('mobile-section-view');
   const bar = document.getElementById('mob-section-bar');
   if(bar) bar.remove();
+  // Close any open modal backdrops
+  document.querySelectorAll('.mbk').forEach(m => { m.style.display = 'none'; });
   _showMobileProjectMenu();
 };
 
