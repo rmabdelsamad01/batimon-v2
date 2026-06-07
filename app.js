@@ -16353,6 +16353,7 @@ window.mobileSetFacade=function(f){
   window._mobFacade=f;
   window._mobFilter='all';
   _refreshMobileContent();
+  _fixMobContentHeight();
 };
 
 window.mobileSetFilter=function(f){
@@ -16376,6 +16377,13 @@ function _refreshMobileContent(){
 function _renderMobileOverview(){
   const cont=document.getElementById('mob-content');
   if(!cont) return;
+  // Grid renderers set overflow:hidden + touchAction:none for pinch-zoom.
+  // Reset them so normal finger-scroll works in the overview.
+  cont.style.overflow='';
+  cont.style.overflowY='scroll';
+  cont.style.touchAction='pan-y';
+  cont.style.position='';
+  cont.scrollTop=0;
   const isB=window._mobTab==='brackets';
   const ss=[
     {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
