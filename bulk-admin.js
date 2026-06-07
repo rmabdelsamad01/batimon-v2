@@ -88,7 +88,12 @@ async function rejectDelRequest(reqId){
 
 function renderAdminUsers(){
   const pending = adminUsers.filter(u=>!u.status || u.status==='pending');
-  const all = adminUsers;
+  const q = (document.getElementById('admin-search')?.value||'').toLowerCase().trim();
+  const all = q ? adminUsers.filter(u=>{
+    return (u.full_name||'').toLowerCase().includes(q)
+        || (u.username||'').toLowerCase().includes(q)
+        || (u.email||'').toLowerCase().includes(q);
+  }) : adminUsers;
 
   // Stats bar
   const total = all.length;
