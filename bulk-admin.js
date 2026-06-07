@@ -8,9 +8,14 @@ let adminUsers = [];
 let aemUserId = null;
 let aemStatus = 'pending';
 let aemRole = 'viewer';
+let aemRoles = [];
 let aemProjects = [];
 let aemViewerProjects = [];
 let aemAllProjects = false;
+
+const AEM_EXCLUSIVE_ROLES = ['admin', 'batidoc_user'];
+const AEM_ROLE_COLORS = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'};
+const AEM_ROLE_LABELS = {admin:'Admin', user:'User', viewer:'Viewer', batidoc_user:'BatiGED Only', phone_only:'Phone Only', developer:'Developer'};
 
 // Called after login — check if username is Admin
 function checkAdminRedirect(profile){
@@ -136,8 +141,8 @@ function adminUserCard(u){
   const statusColor = {approved:'#1a9458', pending:'#e05c00', suspended:'#c02020'}[u.status]||'#8099b0';
   const statusBg = {approved:'rgba(26,148,88,0.08)', pending:'rgba(224,92,0,0.08)', suspended:'rgba(192,32,32,0.08)'}[u.status]||'rgba(128,153,176,0.08)';
   const statusLabel = {approved:'Approved', pending:'Pending', suspended:'Suspended'}[u.status]||'Pending';
-  const roleColor = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'}[u.role]||'#8099b0';
-  const roleLabel = {admin:'Admin', user:'User', viewer:'Viewer', batidoc_user:'Batidoc Only', phone_only:'Phone Only', developer:'Developer'}[u.role]||u.role||'Viewer';
+  const allRoles = (Array.isArray(u.roles) && u.roles.length) ? u.roles : [u.role||'viewer'];
+  const roleBadges = allRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(34,79,147,0.07);color:${AEM_ROLE_COLORS[r]||'#8099b0'};">${AEM_ROLE_LABELS[r]||r}</span>`).join('');
   const projects = (u.projects||[]);
   const projStr = projects.length ? projects.map(p=>{
     if(PROJECT_META[p]) return PROJECT_META[p].name;
@@ -159,7 +164,7 @@ function adminUserCard(u){
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(34,79,147,0.07);color:${roleColor};">${roleLabel}</span>
+        ${roleBadges}
         <span style="font-size:10px;color:#8099b0;font-family:'DM Mono',monospace;">${projStr}</span>
       </div>
     </div>
@@ -246,6 +251,7 @@ function openAdminEdit(userId){
   aemUserId = userId;
   aemStatus = u.status||'pending';
   aemRole = u.role||'viewer';
+  aemRoles = Array.isArray(u.roles) && u.roles.length ? [...u.roles] : [aemRole];
   aemProjects = Array.isArray(u.projects) ? [...u.projects] : [];
   aemViewerProjects = Array.isArray(u.viewer_projects) ? [...u.viewer_projects] : [];
   aemAllProjects = aemProjects.includes('*');
@@ -264,12 +270,7 @@ function openAdminEdit(userId){
   });
 
   // Highlight role buttons
-  document.querySelectorAll('.aem-role-btn').forEach(b=>{
-    const active = b.dataset.val===aemRole;
-    b.style.borderColor = active ? '#224F93' : 'rgba(34,79,147,0.15)';
-    b.style.background = active ? 'rgba(34,79,147,0.09)' : '#f4f8fd';
-    b.style.color = active ? '#224F93' : '#1a2a3a';
-  });
+  _aemRefreshRoleButtons();
 
   // Build unified project list: hardcoded + custom
   const customProjects = typeof getCustomProjects==='function' ? getCustomProjects() : [];
@@ -331,8 +332,36 @@ function aemSetStatus(val, el){
   });
 }
 
+function _aemRefreshRoleButtons(){
+  document.querySelectorAll('.aem-role-btn').forEach(b=>{
+    const active = aemRoles.includes(b.dataset.val);
+    const isPrimary = b.dataset.val === aemRole;
+    const color = AEM_ROLE_COLORS[b.dataset.val] || '#224F93';
+    b.style.borderColor = active ? color : 'rgba(34,79,147,0.15)';
+    b.style.background = active ? color+'18' : '#f4f8fd';
+    b.style.color = active ? color : '#1a2a3a';
+    b.style.fontWeight = isPrimary ? '800' : '600';
+  });
+}
+
+function aemToggleRole(val){
+  const isExclusive = AEM_EXCLUSIVE_ROLES.includes(val);
+  if(isExclusive){
+    // Toggle: if this is the only selected role, deselect it; otherwise set exclusively
+    aemRoles = (aemRoles.length===1 && aemRoles[0]===val) ? [] : [val];
+  } else {
+    // Combinable: clear any exclusive, then toggle this role
+    aemRoles = aemRoles.filter(r=>!AEM_EXCLUSIVE_ROLES.includes(r));
+    if(aemRoles.includes(val)) aemRoles = aemRoles.filter(r=>r!==val);
+    else aemRoles.push(val);
+  }
+  aemRole = aemRoles[0] || 'viewer';
+  _aemRefreshRoleButtons();
+}
+
+// Legacy - kept for any lingering references
 function aemSetRole(val, el){
-  aemRole=val;
+  aemRoles=[val]; aemRole=val;
   document.querySelectorAll('.aem-role-btn').forEach(b=>{
     const active = b.dataset.val===val;
     b.style.borderColor = active ? '#224F93' : 'rgba(34,79,147,0.15)';
@@ -504,9 +533,11 @@ async function saveAdminEdit(){
   try{
     // Try full update first
     const projectsToSave = aemAllProjects ? ['*'] : aemProjects;
+    const rolesToSave = aemRoles.length ? aemRoles : [aemRole];
     const {error} = await sb.from('profiles').update({
       status: aemStatus,
       role: aemRole,
+      roles: rolesToSave,
       projects: projectsToSave,
       viewer_projects: aemViewerProjects,
       updated_at: new Date().toISOString()
@@ -550,7 +581,7 @@ async function saveAdminEdit(){
 
     ok.textContent='✓ Saved successfully';
     const idx = adminUsers.findIndex(u=>u.id===aemUserId);
-    if(idx>=0){ adminUsers[idx].status=aemStatus; adminUsers[idx].role=aemRole; adminUsers[idx].projects=projectsToSave; adminUsers[idx].viewer_projects=aemViewerProjects; }
+    if(idx>=0){ adminUsers[idx].status=aemStatus; adminUsers[idx].role=aemRole; adminUsers[idx].roles=rolesToSave; adminUsers[idx].projects=projectsToSave; adminUsers[idx].viewer_projects=aemViewerProjects; }
     setTimeout(()=>{ closeAdminEdit(); renderAdminUsers(); }, 900);
   } catch(e){
     ok.style.display='none';

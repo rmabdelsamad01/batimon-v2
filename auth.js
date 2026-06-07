@@ -218,6 +218,9 @@ function openBatidoc(folder, el){
   window.open(url,'_blank');
 }
 
+const _ROLE_COLORS = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'};
+const _ROLE_LABELS = {admin:'Admin', user:'User', viewer:'Viewer', batidoc_user:'BatiGED Only', phone_only:'Phone Only', developer:'Developer'};
+
 function updateUserChip(name){
   const chip=document.getElementById('user-chip');
   if(chip)chip.textContent=name;
@@ -227,6 +230,39 @@ function updateUserChip(name){
   if(dn)dn.textContent=name;
   const pu=document.getElementById('proj-user');
   if(pu)pu.textContent=name;
+  // Role switcher
+  const section=document.getElementById('role-switcher-section');
+  const pills=document.getElementById('role-switcher-pills');
+  if(section&&pills&&typeof sbProfile!=='undefined'&&sbProfile){
+    const roles=(Array.isArray(sbProfile.roles)&&sbProfile.roles.length>1)?sbProfile.roles:[];
+    if(roles.length>1){
+      section.style.display='block';
+      pills.innerHTML=roles.map(r=>{
+        const isActive=r===sbProfile.role;
+        const color=_ROLE_COLORS[r]||'#8099b0';
+        return `<button onclick="switchActiveRole('${r}')" style="padding:4px 12px;border-radius:20px;border:1.5px solid ${isActive?color:'rgba(34,79,147,0.18)'};background:${isActive?color+'18':'transparent'};color:${isActive?color:'#8099b0'};font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;">${_ROLE_LABELS[r]||r}</button>`;
+      }).join('');
+    }else{
+      section.style.display='none';
+    }
+  }
+}
+
+async function switchActiveRole(role){
+  if(!sbProfile||!sbUser) return;
+  sbProfile.role=role;
+  try{ await sb.from('profiles').update({role}).eq('id',sbUser.id); }catch(e){}
+  updateUserChip(sbProfile.full_name||sbProfile.username||sbUser?.email||'');
+  document.getElementById('user-dropdown').style.display='none';
+  // Navigate back to project screen so changes take effect
+  const ps=document.getElementById('project-screen');
+  if(ps&&ps.style.display!=='none'){
+    if(typeof renderProjectScreen==='function') renderProjectScreen();
+  } else {
+    // Inside a project — go back to project list
+    if(ps){ ps.style.display='flex'; if(typeof renderProjectScreen==='function') renderProjectScreen(); }
+  }
+  if(typeof toast==='function') toast('Switched to '+(_ROLE_LABELS[role]||role)+' mode');
 }
 
 function toggleUserDropdown(){

@@ -202,6 +202,11 @@ body.viewer-mode .bt-btn-danger { display: none !important; }
             ← Projects
           </button>
         </div>
+        <!-- Role switcher — shown only when user has multiple roles -->
+        <div id="role-switcher-section" style="display:none;border-top:1px solid rgba(34,79,147,0.08);padding:10px 12px 6px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8099b0;margin-bottom:7px;">Switch Mode</div>
+          <div id="role-switcher-pills" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+        </div>
         <div style="border-top:1px solid rgba(34,79,147,0.08);padding:6px;">
           <button onclick="doLogout()" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#c02020;text-align:left;" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='transparent'">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c02020" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1224,24 +1229,30 @@ body.viewer-mode .bt-btn-danger { display: none !important; }
       <!-- Role -->
       <div style="margin-bottom:20px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Role</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <button class="aem-role-btn" data-val="admin" onclick="aemSetRole('admin',this)" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
+        <!-- Exclusive roles -->
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#c02020;margin-bottom:5px;">Exclusive — one only</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+          <button class="aem-role-btn" data-val="admin" onclick="aemToggleRole('admin')" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin
           </button>
-          <button class="aem-role-btn" data-val="user" onclick="aemSetRole('user',this)" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User
-          </button>
-          <button class="aem-role-btn" data-val="viewer" onclick="aemSetRole('viewer',this)" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Viewer
-          </button>
-          <button class="aem-role-btn" data-val="batidoc_user" onclick="aemSetRole('batidoc_user',this)" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
+          <button class="aem-role-btn" data-val="batidoc_user" onclick="aemToggleRole('batidoc_user')" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>BatiGED Only
           </button>
-          <button class="aem-role-btn" data-val="phone_only" onclick="aemSetRole('phone_only',this)" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Phone Only
+        </div>
+        <!-- Combinable roles -->
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1a9458;margin-bottom:5px;">Combinable — select multiple</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button class="aem-role-btn" data-val="user" onclick="aemToggleRole('user')" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>User
           </button>
-          <button class="aem-role-btn" data-val="developer" onclick="aemSetRole('developer',this)" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
+          <button class="aem-role-btn" data-val="viewer" onclick="aemToggleRole('viewer')" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Viewer
+          </button>
+          <button class="aem-role-btn" data-val="developer" onclick="aemToggleRole('developer')" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Developer
+          </button>
+          <button class="aem-role-btn" data-val="phone_only" onclick="aemToggleRole('phone_only')" style="padding:9px 10px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;display:flex;align-items:center;gap:7px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Phone Only
           </button>
         </div>
       </div>
