@@ -10,6 +10,7 @@ let aemStatus = 'pending';
 let aemRole = 'viewer';
 let aemProjects = [];
 let aemViewerProjects = [];
+let aemAllProjects = false;
 
 // Called after login — check if username is Admin
 function checkAdminRedirect(profile){
@@ -242,6 +243,8 @@ function openAdminEdit(userId){
   aemRole = u.role||'viewer';
   aemProjects = Array.isArray(u.projects) ? [...u.projects] : [];
   aemViewerProjects = Array.isArray(u.viewer_projects) ? [...u.viewer_projects] : [];
+  aemAllProjects = aemProjects.includes('*');
+  if(aemAllProjects) aemProjects = [];
 
   document.getElementById('aem-subtitle').textContent = `${u.full_name||''}  @${u.username||''}`;
   document.getElementById('aem-err').style.display='none';
@@ -302,6 +305,9 @@ function openAdminEdit(userId){
   const allBtn = document.getElementById('aem-all-btn');
   if(allBtn) allBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
 
+  // Sync All Projects button and apply disabled state if active
+  _aemRefreshAllProjectsBtn();
+
   document.getElementById('admin-edit-modal').style.display='flex';
 }
 
@@ -332,16 +338,18 @@ function aemSetRole(val, el){
 
 function _aemRefreshProjRow(id){
   const isCustom = !ALL_PROJECTS.includes(id);
-  const isViewer = aemViewerProjects.includes(id);
-  const hasAccess = aemProjects.includes(id) || isViewer;
+  const isViewer = !aemAllProjects && aemViewerProjects.includes(id);
+  const hasAccess = aemAllProjects || aemProjects.includes(id) || aemViewerProjects.includes(id);
   const row = document.getElementById('aem-proj-row-'+id);
   const eye = document.getElementById('aem-eye-'+id);
   const cb = row?.querySelector('input[type=checkbox]');
   if(row){
     row.style.borderColor = hasAccess?(isCustom?'#1a9458':'#224F93'):(isCustom?'rgba(26,148,88,0.2)':'rgba(34,79,147,0.15)');
     row.style.background = hasAccess?(isCustom?'rgba(26,148,88,0.07)':'rgba(34,79,147,0.07)'):(isCustom?'#f4faf7':'#f4f8fd');
+    row.style.opacity = aemAllProjects ? '0.6' : '1';
+    row.style.pointerEvents = aemAllProjects ? 'none' : '';
   }
-  if(cb) cb.checked = hasAccess;
+  if(cb){ cb.checked = hasAccess; cb.disabled = aemAllProjects; }
   if(eye){
     eye.style.color = isViewer?'#224F93':'#c0cde0';
     eye.style.background = isViewer?'rgba(34,79,147,0.1)':'transparent';
@@ -380,6 +388,42 @@ function aemToggleViewer(id, e){
   }
   _aemRefreshProjRow(id);
 }
+
+function _aemRefreshAllProjectsBtn(){
+  const btn = document.getElementById('aem-allprojects-btn');
+  if(!btn) return;
+  if(aemAllProjects){
+    btn.style.background = '#6d35d9';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#6d35d9';
+    btn.textContent = '⭐ All Projects (Active)';
+  } else {
+    btn.style.background = '#f4f8fd';
+    btn.style.color = '#6d35d9';
+    btn.style.borderColor = 'rgba(109,53,217,0.3)';
+    btn.textContent = '⭐ All Projects';
+  }
+  // Refresh all rows to apply/remove disabled state
+  const customProjects = typeof getCustomProjects==='function' ? getCustomProjects() : [];
+  const allIds = [...ALL_PROJECTS, ...customProjects.map(p=>p.id)];
+  allIds.forEach(id=>_aemRefreshProjRow(id));
+}
+
+function aemToggleAllProjectsFlag(){
+  aemAllProjects = !aemAllProjects;
+  if(aemAllProjects){
+    // Turning ON: individual lists are overridden by '*'
+    // Keep aemProjects/aemViewerProjects as-is for if they turn it back off
+  } else {
+    // Turning OFF: pre-fill with all projects so user can selectively remove
+    const customProjects = typeof getCustomProjects==='function' ? getCustomProjects() : [];
+    const allIds = [...ALL_PROJECTS, ...customProjects.map(p=>p.id)];
+    aemProjects = [...allIds];
+    aemViewerProjects = [];
+  }
+  _aemRefreshAllProjectsBtn();
+}
+
 
 function aemSelectOwner(owner){
   const customProjects = typeof getCustomProjects==='function' ? getCustomProjects() : [];
@@ -454,10 +498,11 @@ async function saveAdminEdit(){
 
   try{
     // Try full update first
+    const projectsToSave = aemAllProjects ? ['*'] : aemProjects;
     const {error} = await sb.from('profiles').update({
       status: aemStatus,
       role: aemRole,
-      projects: aemProjects,
+      projects: projectsToSave,
       viewer_projects: aemViewerProjects,
       updated_at: new Date().toISOString()
     }).eq('id', aemUserId);
@@ -500,7 +545,7 @@ async function saveAdminEdit(){
 
     ok.textContent='✓ Saved successfully';
     const idx = adminUsers.findIndex(u=>u.id===aemUserId);
-    if(idx>=0){ adminUsers[idx].status=aemStatus; adminUsers[idx].role=aemRole; adminUsers[idx].projects=aemProjects; adminUsers[idx].viewer_projects=aemViewerProjects; }
+    if(idx>=0){ adminUsers[idx].status=aemStatus; adminUsers[idx].role=aemRole; adminUsers[idx].projects=projectsToSave; adminUsers[idx].viewer_projects=aemViewerProjects; }
     setTimeout(()=>{ closeAdminEdit(); renderAdminUsers(); }, 900);
   } catch(e){
     ok.style.display='none';

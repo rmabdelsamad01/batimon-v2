@@ -1250,6 +1250,9 @@ body.viewer-mode .bt-btn-danger { display: none !important; }
           <button onclick="aemSelectOwner('nabil')" title="Nabil's projects" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#224F93;cursor:pointer;font-family:'Barlow',sans-serif;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">N</button>
           <button onclick="aemToggleAllProjects()" id="aem-all-btn" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#224F93;cursor:pointer;font-family:'Barlow',sans-serif;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">Select All</button>
         </div>
+        <div style="margin-bottom:8px;">
+          <button onclick="aemToggleAllProjectsFlag()" id="aem-allprojects-btn" style="width:100%;padding:7px 12px;border-radius:8px;border:2px solid rgba(109,53,217,0.3);background:#f4f8fd;color:#6d35d9;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;letter-spacing:0.03em;transition:all 0.15s;">⭐ All Projects</button>
+        </div>
         <!-- All projects injected dynamically by openAdminEdit() -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="aem-projects"></div>
       </div>

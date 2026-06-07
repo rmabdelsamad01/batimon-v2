@@ -171,10 +171,12 @@ function renderProjectScreen(){
 
   if(isAdmin){ grid.innerHTML=''; return; }
 
-  const userProjects = (Array.isArray(profile.projects) && profile.projects.length > 0)
-    ? profile.projects : Object.keys(PROJECT_META);
   const isDev = (sbProfile?.role === 'developer');
   const userAssignedProjects = Array.isArray(profile.projects) ? profile.projects : [];
+  const hasAllProjects = !isDev && userAssignedProjects.includes('*');
+  const userProjects = hasAllProjects
+    ? Object.keys(PROJECT_META)
+    : (userAssignedProjects.length > 0 ? userAssignedProjects : Object.keys(PROJECT_META));
   const userViewerProjects = Array.isArray(profile.viewer_projects) ? profile.viewer_projects : [];
   _userViewerProjectsList = userViewerProjects;
 
@@ -183,7 +185,7 @@ function renderProjectScreen(){
 
   // PROJECT_META entries
   Object.entries(PROJECT_META).forEach(([id, meta]) => {
-    if(!userProjects.includes(id)) return;
+    if(!hasAllProjects && !userProjects.includes(id)) return;
     if(_projFilter && !(meta.members||[]).includes(_projFilter)) return;
     allProjects.push({ id, name: meta.name, type: 'meta', meta, viewerOnly: false });
   });
@@ -191,7 +193,7 @@ function renderProjectScreen(){
   // Custom projects
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
-    const hasFullAccess = isDev || userAssignedProjects.includes(proj.id);
+    const hasFullAccess = isDev || hasAllProjects || userAssignedProjects.includes(proj.id);
     const hasViewerAccess = userViewerProjects.includes(proj.id);
     if(!hasFullAccess && !hasViewerAccess) return;
     allProjects.push({ id: proj.id, name: proj.name, type: 'custom', proj, viewerOnly: !hasFullAccess && hasViewerAccess });
