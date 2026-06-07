@@ -3520,7 +3520,7 @@ async function renderProjFinancial(){
 
   if(typeof _isOnPhone==='function' && _isOnPhone()){
     cont.innerHTML=`<div class="fpw"><div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:auto;">
-      <div style="padding:12px 16px 24px;">
+      <div style="padding:62px 16px 24px;">
         ${sections.map(s=>`
           <div style="margin-bottom:20px;">
             <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">${s.title}</div>
@@ -4027,7 +4027,7 @@ async function renderProjGeneral(){
   ];
   if(typeof _isOnPhone==='function' && _isOnPhone()){
     cont.innerHTML=`<div class="fpw"><div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:auto;">
-      <div style="padding:12px 16px 24px;">
+      <div style="padding:62px 16px 24px;">
         ${rows.map((r,i)=>`
         <div style="border-bottom:${i<rows.length-1?'1px solid var(--border)':'none'};padding:12px 0;">
           <div style="font-size:11px;font-weight:700;color:#8099b0;letter-spacing:0.04em;margin-bottom:5px;text-transform:uppercase;">${r.label}</div>
