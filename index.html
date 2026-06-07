@@ -1236,38 +1236,15 @@
 
       <!-- Project Access -->
       <div style="margin-bottom:24px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8099b0;">Project Access</div>
-          <button onclick="aemToggleAllProjects()" id="aem-all-btn" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#224F93;cursor:pointer;font-family:'Barlow',sans-serif;transition:all 0.15s;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">Select All</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8099b0;flex:1;">Project Access</div>
+          <button onclick="aemSelectOwner('raed')" title="Raed's projects" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#224F93;cursor:pointer;font-family:'Barlow',sans-serif;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">R</button>
+          <button onclick="aemSelectOwner('anas')" title="Anas's projects" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#224F93;cursor:pointer;font-family:'Barlow',sans-serif;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">A</button>
+          <button onclick="aemSelectOwner('nabil')" title="Nabil's projects" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#224F93;cursor:pointer;font-family:'Barlow',sans-serif;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">N</button>
+          <button onclick="aemToggleAllProjects()" id="aem-all-btn" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(34,79,147,0.25);background:#f0f4f9;color:#224F93;cursor:pointer;font-family:'Barlow',sans-serif;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">Select All</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="aem-projects">
-          <label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-            <input type="checkbox" value="shift-tower" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#224F93;cursor:pointer;">
-            <span>Shift Tower</span>
-          </label>
-          <label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-            <input type="checkbox" value="tanger-med" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#224F93;cursor:pointer;">
-            <span>Tanger MED</span>
-          </label>
-          <label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-            <input type="checkbox" value="riad-el-andalous" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#224F93;cursor:pointer;">
-            <span>Riad El Andalous</span>
-          </label>
-          <label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-            <input type="checkbox" value="anp" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#224F93;cursor:pointer;">
-            <span>ANP</span>
-          </label>
-          <label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-            <input type="checkbox" value="taghazout" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#224F93;cursor:pointer;">
-            <span>Taghazout</span>
-          </label>
-          <label class="aem-proj-label" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:8px;border:2px solid rgba(34,79,147,0.15);background:#f4f8fd;cursor:pointer;font-size:12px;font-weight:600;color:#1a2a3a;transition:all 0.15s;">
-            <input type="checkbox" value="casaone" onchange="aemToggleProject(this)" style="width:15px;height:15px;accent-color:#224F93;cursor:pointer;">
-            <span>Casaone</span>
-          </label>
-        </div>
-        <!-- Custom projects injected dynamically by openAdminEdit() -->
-        <div id="aem-custom-projects" style="display:none;"></div>
+        <!-- All projects injected dynamically by openAdminEdit() -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="aem-projects"></div>
       </div>
 
       <!-- Feedback -->
