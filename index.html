@@ -26,12 +26,13 @@ body.viewer-mode .bt-submit-btn,
 body.viewer-mode .bt-del-btn,
 body.viewer-mode .bt-btn-danger { display: none !important; }
 /* Mobile section view — full-screen content, no nav bar or sidebars */
+body.mobile-section-view header { display: none !important; }
 body.mobile-section-view nav.nav-tabs { display: none !important; }
 body.mobile-section-view .sb { display: none !important; }
 body.mobile-section-view #root {
   padding-top: 50px !important;
   overflow-y: auto !important;
-  height: calc(100vh - 50px) !important;
+  height: 100vh !important;
   -webkit-overflow-scrolling: touch;
 }
 body.mobile-section-view .fpw {
