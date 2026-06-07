@@ -2254,6 +2254,7 @@ function custGridUnmerge(pid,facade,r,c){
 
 // Cell click handler
 function custGridCellClick(e,pid,facade,r,c){
+  if(_isViewer()) return;
   if(_gridMode==='merge'){
     if(!_gridMergeStart){
       _gridMergeStart={r,c};
@@ -2449,7 +2450,6 @@ function _custHideCtx(){ if(_cgCtxMenu){_cgCtxMenu.remove();_cgCtxMenu=null;} do
 let _cgPanelCtx = null; // {pid, facade, key, cellRef}
 
 async function custCellOpenPanel(e, pid, facade, key, cellRef){
-  if(_isViewer()){_viewerToast();return;}
   e.preventDefault();
   _custHideCtx();
   _cgPanelCtx = {pid, facade, key, cellRef};
@@ -2458,6 +2458,16 @@ async function custCellOpenPanel(e, pid, facade, key, cellRef){
   panel.style.transform = 'translateX(0)';
   await _loadProjectTypes(pid);
   _cgRenderPanelBody(pid, facade, key, cellRef);
+  // Viewer mode: lock all inputs and hide Save button
+  if(_isViewer()){
+    const pb = document.getElementById('cg-right-panel-body');
+    if(pb) pb.querySelectorAll('input,select,textarea').forEach(el=>{
+      el.readOnly = true; el.disabled = true;
+      el.style.pointerEvents = 'none'; el.style.opacity = '0.75';
+    });
+    const pf = document.getElementById('cg-right-panel-footer');
+    if(pf) pf.style.display = 'none';
+  }
 }
 
 function custCellClosePanel(){
