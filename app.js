@@ -1461,7 +1461,7 @@ function _renderPage(id){
     if(isCustom && facadeIds.includes(id)){
       renderCustomMonitoring(id);
     } else {
-      const z=ZONES.find(z=>z.id===id);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);
+      const z=ZONES.find(z=>z.id===id);if(z){if(z.simple)renderSimpleFP(z);else renderComplexFP(z);}
     }
   }
 }
