@@ -296,27 +296,39 @@ async function openProject(id){
 
 // ── Mobile project menu (Full App mode on phone) ────────────────────────────
 
-function _mobileShowNav(){
+function _mobileShowNav(title){
+  // Hide mobile screen (the project menu overlay)
   const mob = document.getElementById('mobile-screen');
   if(mob) mob.style.display = 'none';
-  if(!document.getElementById('mobile-menu-btn')){
-    const navTabs = document.querySelector('nav.nav-tabs');
-    if(navTabs){
-      const btn = document.createElement('button');
-      btn.id = 'mobile-menu-btn';
-      btn.className = 'nt';
-      btn.textContent = '← Menu';
-      btn.style.cssText = 'color:#224F93;font-weight:700;border-right:1px solid var(--border2);flex-shrink:0;';
-      btn.onclick = _showMobileProjectMenu;
-      navTabs.insertBefore(btn, navTabs.firstChild);
-    }
-  }
+
+  // Remove any old top bar
+  const oldBar = document.getElementById('mob-section-bar');
+  if(oldBar) oldBar.remove();
+
+  // Activate mobile section view: hides nav.nav-tabs and .sb via CSS
+  document.body.classList.add('mobile-section-view');
+
+  // Create fixed top bar with back button + page title
+  const bar = document.createElement('div');
+  bar.id = 'mob-section-bar';
+  bar.innerHTML = `
+    <button onclick="_mobileCloseSection()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;flex-shrink:0;letter-spacing:0.02em;">← Menu</button>
+    <span style="font-size:13px;font-weight:700;color:#fff;font-family:'Barlow',sans-serif;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.95;">${title||''}</span>
+  `;
+  document.body.appendChild(bar);
 }
 
-window.mobileOpenSection = function(pageId){ _mobileShowNav(); goPage(pageId); };
+window._mobileCloseSection = function(){
+  document.body.classList.remove('mobile-section-view');
+  const bar = document.getElementById('mob-section-bar');
+  if(bar) bar.remove();
+  _showMobileProjectMenu();
+};
 
-window.mobileNavKey = function(key){
-  _mobileShowNav();
+window.mobileOpenSection = function(pageId, title){ _mobileShowNav(title); goPage(pageId); };
+
+window.mobileNavKey = function(key, title){
+  _mobileShowNav(title);
   const fn = window._mobNavMap && window._mobNavMap[key];
   if(fn) fn();
 };
@@ -415,7 +427,7 @@ function _showMobileProjectMenu(){
 
   function renderSubSub(items, color){
     return items.map(item=>`
-      <div onclick="mobileNavKey('${item.nav}')"
+      <div onclick="mobileNavKey('${item.nav}','${item.label.replace(/'/g,"\\'")}')"
         style="display:flex;align-items:center;padding:10px 14px;border-radius:7px;cursor:pointer;"
         ontouchstart="this.style.background='${color}18'" ontouchend="this.style.background='transparent'">
         <span style="width:5px;height:5px;border-radius:50%;background:${color};flex-shrink:0;margin-right:10px;"></span>
@@ -439,7 +451,7 @@ function _showMobileProjectMenu(){
           </div>
         </div>`;
       return `
-        <div onclick="mobileNavKey('${sub.nav}')"
+        <div onclick="mobileNavKey('${sub.nav}','${sub.label.replace(/'/g,"\\'")}')"
           style="display:flex;align-items:center;padding:11px 14px;border-radius:8px;cursor:pointer;"
           ontouchstart="this.style.background='${color}18'" ontouchend="this.style.background='transparent'">
           <span style="font-size:13px;color:#1a2a3a;font-family:'Barlow',sans-serif;font-weight:500;">${sub.label}</span>
@@ -449,7 +461,7 @@ function _showMobileProjectMenu(){
 
   function renderSection(s, i){
     const hasSubs = s.subs && s.subs.length;
-    const click = s.nav ? `onclick="mobileNavKey('${s.nav}')"` : hasSubs ? `onclick="mobToggle('sec-${i}')"` : '';
+    const click = s.nav ? `onclick="mobileNavKey('${s.nav}','${s.label.replace(/'/g,"\\'")}')"` : hasSubs ? `onclick="mobToggle('sec-${i}')"` : '';
     return `
       <div style="margin-bottom:8px;">
         <div ${click}

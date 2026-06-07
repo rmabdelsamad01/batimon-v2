@@ -25,6 +25,38 @@ body.viewer-mode .bt-add-btn,
 body.viewer-mode .bt-submit-btn,
 body.viewer-mode .bt-del-btn,
 body.viewer-mode .bt-btn-danger { display: none !important; }
+/* Mobile section view — full-screen content, no nav bar or sidebars */
+body.mobile-section-view nav.nav-tabs { display: none !important; }
+body.mobile-section-view .sb { display: none !important; }
+body.mobile-section-view #root {
+  padding-top: 50px !important;
+  overflow-y: auto !important;
+  height: calc(100vh - 50px) !important;
+  -webkit-overflow-scrolling: touch;
+}
+body.mobile-section-view .fpw {
+  flex-direction: column !important;
+  overflow: visible !important;
+}
+body.mobile-section-view .fpm {
+  overflow: visible !important;
+  min-height: 0;
+}
+#mob-section-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #224F93;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  z-index: 9999;
+  height: 50px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(34,79,147,0.25);
+}
 </style>
 <!-- ── Service Worker registration ──────────────────────────────── -->
 <script>

@@ -2,7 +2,7 @@
 // Every change to the website is immediately reflected in the app.
 // Offline fallback: cached version is shown when there is no connection.
 
-const CACHE_NAME = 'batimon-v5';
+const CACHE_NAME = 'batimon-v6';
 
 // Files that should NEVER be cached — always fetched fresh from server
 const NO_CACHE = ['/app.js', '/index.html', '/auth.js', '/project.js'];
