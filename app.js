@@ -3518,6 +3518,32 @@ async function renderProjFinancial(){
       </div>
     </div>`).join('');
 
+  if(typeof _isOnPhone==='function' && _isOnPhone()){
+    cont.innerHTML=`<div class="fpw"><div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:auto;">
+      <div style="padding:12px 16px 24px;">
+        ${sections.map(s=>`
+          <div style="margin-bottom:20px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">${s.title}</div>
+            ${s.rows.map((r,i)=>`
+            <div style="border-bottom:${i<s.rows.length-1?'1px solid var(--border)':'none'};padding:12px 0;">
+              <div style="font-size:11px;font-weight:700;color:#8099b0;letter-spacing:0.04em;margin-bottom:5px;text-transform:uppercase;">${r.label}</div>
+              <div id="proj-val-${r.key}"
+                ${canEdit?`contenteditable="true"
+                onblur="saveProjInfoField('${r.key}',this.textContent.trim())"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                style="font-size:14px;color:var(--text);line-height:1.5;outline:none;min-height:22px;border-radius:6px;padding:4px 6px;margin:-4px -6px;cursor:text;"
+                onfocus="this.style.background='rgba(34,79,147,0.07)';this.style.boxShadow='0 0 0 2px #224F9340';"
+                onblur="this.style.background='transparent';this.style.boxShadow='none';saveProjInfoField('${r.key}',this.textContent.trim());"
+                `:`style="font-size:14px;color:var(--text);line-height:1.5;min-height:22px;"`}
+              >${projInfoData[r.key]||r.def||'—'}</div>
+              <span id="proj-save-${r.key}" style="font-size:10px;color:#1a9458;font-family:var(--mono);"></span>
+            </div>`).join('')}
+          </div>`).join('')}
+      </div>
+    </div></div>`;
+    return;
+  }
+
   cont.innerHTML=`<div class="fpw">${efSidebarHTML()}
     <div class="fpm" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
       <div style="padding:14px 28px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
