@@ -319,9 +319,15 @@ async function renderMobileProjectList(){
   const name = prof?.full_name || prof?.username || '';
   const _allRoles = Array.isArray(prof?.roles) && prof.roles.length ? prof.roles : [prof?.role];
   const _canSwitch = _allRoles.includes('user') && _allRoles.includes('phone_only');
-  const switchBtn = _canSwitch
-    ? `<button onclick="mobileSwitchToUser()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Full App</button>`
-    : '';
+  const _isFullApp = prof.role === 'user';
+  const switchBtn = _canSwitch ? `
+    <div style="display:flex;align-items:center;gap:5px;">
+      <span style="font-size:10px;color:rgba(255,255,255,0.8);font-family:'Barlow',sans-serif;font-weight:600;">Full App</span>
+      <div onclick="${_isFullApp ? 'mobileSwitchToPhoneOnly()' : 'mobileSwitchToUser()'}"
+        style="width:40px;height:22px;background:${_isFullApp ? '#4cd964' : 'rgba(255,255,255,0.25)'};border-radius:11px;position:relative;cursor:pointer;flex-shrink:0;transition:background 0.25s;">
+        <div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:${_isFullApp ? '20px' : '2px'};box-shadow:0 1px 3px rgba(0,0,0,0.25);transition:left 0.25s;"></div>
+      </div>
+    </div>` : '';
 
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('project-screen').style.display = 'none';

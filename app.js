@@ -16205,7 +16205,12 @@ function _buildMobileShell(prof){
   const _profRoles = Array.isArray(prof?.roles) && prof.roles.length ? prof.roles : [prof?.role];
   const _canSwitchToUser = _profRoles.includes('user') && _profRoles.includes('phone_only');
   const _switchBtn = _canSwitchToUser
-    ? `<button onclick="mobileSwitchToUser()" style="background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;">Full App</button>`
+    ? `<div style="display:flex;align-items:center;gap:5px;">
+        <span style="font-size:10px;color:rgba(255,255,255,0.8);font-family:'Barlow',sans-serif;font-weight:600;">Full App</span>
+        <div onclick="mobileSwitchToUser()" style="width:40px;height:22px;background:rgba(255,255,255,0.25);border-radius:11px;position:relative;cursor:pointer;flex-shrink:0;">
+          <div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;box-shadow:0 1px 3px rgba(0,0,0,0.25);"></div>
+        </div>
+      </div>`
     : '';
   // Show back button only if user has multiple projects (came from project list)
   const _userProjs = Array.isArray(prof?.projects) ? prof.projects : [];
@@ -16243,13 +16248,31 @@ window.mobileLogout=async function(){
   document.getElementById('auth-screen').style.display='flex';
 };
 
-// Switch from phone_only mode to full user app (only for user+phone_only dual-role)
+// Switch from phone_only → full user app
 window.mobileSwitchToUser=async function(){
   if(!sbProfile||!sbUser) return;
   sbProfile.role='user';
   if(typeof loadCustomProjects==='function') await loadCustomProjects();
   if(typeof checkApprovedDeletions==='function') await checkApprovedDeletions();
   if(typeof renderMobileProjectList==='function') await renderMobileProjectList();
+};
+
+// Switch from full user app → phone_only
+window.mobileSwitchToPhoneOnly=async function(){
+  if(!sbProfile||!sbUser) return;
+  sbProfile.role='phone_only';
+  if(typeof loadCustomProjects==='function') await loadCustomProjects();
+  if(typeof checkApprovedDeletions==='function') await checkApprovedDeletions();
+  const _userProjs = Array.isArray(sbProfile.projects) ? sbProfile.projects : [];
+  const _hasAllProjs = _userProjs.includes('*');
+  const _nonStarProjs = _userProjs.filter(p=>p!=='*');
+  const _shiftOnly = !_hasAllProjs && _nonStarProjs.length<=1 && (_nonStarProjs.length===0||_nonStarProjs[0]==='shift-tower');
+  if(_shiftOnly){
+    document.getElementById('project-screen').style.display='none';
+    if(typeof renderMobileApp==='function') renderMobileApp(sbProfile);
+  } else {
+    if(typeof renderMobileProjectList==='function') await renderMobileProjectList();
+  }
 };
 
 window.mobileSetTab=function(tab){
