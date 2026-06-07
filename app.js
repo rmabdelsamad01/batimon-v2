@@ -16279,7 +16279,7 @@ function _buildMobileShell(prof){
     </div>
     <div id="mob-facade-bar" style="background:#fff;border-bottom:1px solid #e0e8f0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
     <div id="mob-filter-bar" style="background:#f7f9fc;border-bottom:1px solid #e0e8f0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 12px;"></div>
-    <div id="mob-content" style="flex:1;min-height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;background:#f7f9fc;"></div>
+    <div id="mob-content" style="flex:1;height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;touch-action:pan-y;background:#f7f9fc;"></div>
     <div style="background:#fff;border-top:2px solid #e0e8f0;display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);">
       <button id="mob-btn-brackets" onclick="mobileSetTab('brackets')" style="flex:1;padding:10px 0 8px;border:none;border-top:3px solid #224F93;background:transparent;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;color:#224F93;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Brackets
@@ -16451,7 +16451,7 @@ function _renderMobileOverview(){
       </div>
     </div>`;
   }).join('');
-  cont.innerHTML=`<div style="padding:14px 14px 24px;">
+  cont.innerHTML=`<div style="padding:14px 14px 24px;touch-action:pan-y;">
     <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Project Summary</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">${globalCards}${totalCard}</div>
     <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Facades</div>
