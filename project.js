@@ -148,71 +148,92 @@ function setProjectFilter(person){
   renderProjectScreen();
 }
 
+// Desired display order — names matched case-insensitively; unknowns append at end
+const _PROJECT_DISPLAY_ORDER = [
+  'shift tower','casaone','coeur d\'anfa','gaiapolis','my way ii',
+  'anp','tmpa','riad el andalous','taghazout'
+];
+
+function _projSortKey(name){
+  const n = (name||'').toLowerCase().trim();
+  const idx = _PROJECT_DISPLAY_ORDER.indexOf(n);
+  return idx >= 0 ? idx : 999;
+}
+
 function renderProjectScreen(){
   const profile = sbProfile || {};
   const isAdmin = profile.role === 'admin' || profile.username === 'Admin';
   const grid = document.getElementById('projects-grid');
   if(!grid) return;
 
-  // Admins should never reach here — handled in afterLogin
   if(isAdmin){ grid.innerHTML=''; return; }
 
-  // If no projects assigned, default to all known projects (admin can restrict via panel)
   const userProjects = (Array.isArray(profile.projects) && profile.projects.length > 0)
-    ? profile.projects
-    : Object.keys(PROJECT_META);
-
-  // Build cards — PROJECT_META entries
-  let cards = Object.entries(PROJECT_META).map(([id, meta]) => {
-    if(!userProjects.includes(id)) return '';
-    if(_projFilter && !(meta.members||[]).includes(_projFilter)) return '';
-
-    if(!meta.active){
-      return `<div style="background:#fff;border:1px solid rgba(34,79,147,0.12);border-radius:14px;padding:24px;cursor:not-allowed;opacity:0.5;position:relative;">
-        <div style="position:absolute;top:14px;right:14px;background:#b0bec5;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">Coming soon</div>
-        <div style="width:48px;height:48px;background:#f0f4f9;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-        </div>
-        <div style="font-size:17px;font-weight:700;color:#8099b0;margin-bottom:5px;">${meta.name}</div>
-      </div>`;
-    }
-
-    return `<div onclick="openProject('${id}')" style="background:#fff;border:2px solid #224F93;border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(34,79,147,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="position:absolute;top:14px;right:14px;background:#224F93;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">Active</div>
-      <div style="width:48px;height:48px;background:rgba(34,79,147,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      </div>
-      <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${meta.name}</div>
-    </div>`;
-  }).join('');
-
-  // Custom projects
+    ? profile.projects : Object.keys(PROJECT_META);
   const isDev = (sbProfile?.role === 'developer');
   const userAssignedProjects = Array.isArray(profile.projects) ? profile.projects : [];
-  getCustomProjects().forEach(proj => {
-    if(_projFilter && proj.owner !== _projFilter) return;
-    // Access control: developers see all custom projects; others need explicit assignment
-    if(!isDev && !userAssignedProjects.includes(proj.id)) return;
-    const isPendingDel = proj.deletion_requested;
-    const editBtn = isDev
-      ? `<button onclick="event.stopPropagation();showRenameProjectModal('${proj.id}','${proj.name.replace(/'/g,"\\'")}')"
-           title="Rename project"
-           style="position:absolute;bottom:14px;right:14px;width:28px;height:28px;border-radius:6px;border:1px solid rgba(34,79,147,0.2);background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"
-           onmouseover="this.style.background='#224F93'" onmouseout="this.style.background='#f0f4f9'">
-           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-         </button>`
-      : '';
-    cards += `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-      <div style="position:absolute;top:14px;right:14px;background:${isPendingDel?'#c02020':'#1a9458'};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">${isPendingDel?'Pending deletion':'Active'}</div>
-      <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      </div>
-      <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
-      ${editBtn}
-    </div>`;
+
+  // Build unified list of all visible projects
+  const allProjects = [];
+
+  // PROJECT_META entries
+  Object.entries(PROJECT_META).forEach(([id, meta]) => {
+    if(!userProjects.includes(id)) return;
+    if(_projFilter && !(meta.members||[]).includes(_projFilter)) return;
+    allProjects.push({ id, name: meta.name, type: 'meta', meta });
   });
 
-  // Show/hide action buttons for developers
+  // Custom projects
+  getCustomProjects().forEach(proj => {
+    if(_projFilter && proj.owner !== _projFilter) return;
+    if(!isDev && !userAssignedProjects.includes(proj.id)) return;
+    allProjects.push({ id: proj.id, name: proj.name, type: 'custom', proj });
+  });
+
+  // Sort by defined order
+  allProjects.sort((a,b) => _projSortKey(a.name) - _projSortKey(b.name));
+
+  // Generate cards
+  const cards = allProjects.map(p => {
+    if(p.type === 'meta'){
+      const meta = p.meta;
+      if(!meta.active){
+        return `<div style="background:#fff;border:1px solid rgba(34,79,147,0.12);border-radius:14px;padding:24px;cursor:not-allowed;opacity:0.5;position:relative;">
+          <div style="position:absolute;top:14px;right:14px;background:#b0bec5;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">Coming soon</div>
+          <div style="width:48px;height:48px;background:#f0f4f9;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <div style="font-size:17px;font-weight:700;color:#8099b0;margin-bottom:5px;">${meta.name}</div>
+        </div>`;
+      }
+      return `<div onclick="openProject('${p.id}')" style="background:#fff;border:2px solid #224F93;border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(34,79,147,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="position:absolute;top:14px;right:14px;background:#224F93;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">Active</div>
+        <div style="width:48px;height:48px;background:rgba(34,79,147,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#224F93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${meta.name}</div>
+      </div>`;
+    } else {
+      const proj = p.proj;
+      const isPendingDel = proj.deletion_requested;
+      const editBtn = isDev
+        ? `<button onclick="event.stopPropagation();showRenameProjectModal('${proj.id}','${proj.name.replace(/'/g,"\\'")}')"
+             title="Rename project"
+             style="position:absolute;bottom:14px;right:14px;width:28px;height:28px;border-radius:6px;border:1px solid rgba(34,79,147,0.2);background:#f0f4f9;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;"
+             onmouseover="this.style.background='#224F93'" onmouseout="this.style.background='#f0f4f9'">
+             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+           </button>` : '';
+      return `<div onclick="openProject('${proj.id}')" style="background:#fff;border:2px solid ${isPendingDel?'#c02020':'#1a9458'};border-radius:14px;padding:24px;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 28px rgba(26,148,88,0.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="position:absolute;top:14px;right:14px;background:${isPendingDel?'#c02020':'#1a9458'};color:#fff;font-size:9px;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:20px;text-transform:uppercase;">${isPendingDel?'Pending deletion':'Active'}</div>
+        <div style="width:48px;height:48px;background:rgba(26,148,88,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1a9458" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <div style="font-size:17px;font-weight:700;color:#1a2a3a;margin-bottom:5px;">${proj.name}</div>
+        ${editBtn}
+      </div>`;
+    }
+  }).join('');
+
   const actionBtns = document.getElementById('proj-action-btns');
   if(actionBtns) actionBtns.style.display = isDev ? 'flex' : 'none';
 
