@@ -261,6 +261,10 @@ async function openProject(id){
   const customProj = getCustomProjects().find(p=>p.id===id);
   window._activeProjectName = customProj ? customProj.name : (PROJECT_META[id]?.name||id);
 
+  // Hide mobile screen if navigating from mobile project list
+  const _mob = document.getElementById('mobile-screen');
+  if(_mob && _mob.style.display !== 'none') _mob.style.display = 'none';
+
   // ── phone_only routing ──────────────────────────────────────────────────────
   if(sbProfile?.role==='phone_only' && (typeof _isOnPhone==='function' ? _isOnPhone() : false)){
     document.getElementById('project-screen').style.display='none';
