@@ -176,12 +176,12 @@ async function afterLogin(user){
     err.style.display='block';
     return;
   }
-  // Redirect phone_only users
-  if(prof?.role==='phone_only'){
+  // Redirect phone_only users — mobile routing only applies on actual phones
+  if(prof?.role==='phone_only' && _isOnPhone()){
     const _userProjs = Array.isArray(prof.projects) ? prof.projects : [];
     const _hasAllProjs = _userProjs.includes('*');
     const _nonStarProjs = _userProjs.filter(p=>p!=='*');
-    // Direct to mobile monitoring only if Shift Tower is the sole project (no '*', no other projects)
+    // Direct to mobile monitoring only if Shift Tower is the sole project
     const _shiftOnly = !_hasAllProjs && _nonStarProjs.length <= 1 && (_nonStarProjs.length===0 || _nonStarProjs[0]==='shift-tower');
     if(_shiftOnly){
       document.getElementById('auth-screen').style.display='none';
