@@ -176,8 +176,8 @@ async function afterLogin(user){
     err.style.display='block';
     return;
   }
-  // Redirect phone_only users — mobile routing only applies on actual phones
-  if(prof?.role==='phone_only' && _isOnPhone()){
+  // Redirect phone_only users — always get mobile view regardless of device
+  if(prof?.role==='phone_only'){
     const _userProjs = Array.isArray(prof.projects) ? prof.projects : [];
     const _hasAllProjs = _userProjs.includes('*');
     const _nonStarProjs = _userProjs.filter(p=>p!=='*');

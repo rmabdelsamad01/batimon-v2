@@ -265,8 +265,8 @@ async function openProject(id){
   const _mob = document.getElementById('mobile-screen');
   if(_mob && _mob.style.display !== 'none') _mob.style.display = 'none';
 
-  // ── phone_only routing ──────────────────────────────────────────────────────
-  if(sbProfile?.role==='phone_only' && (typeof _isOnPhone==='function' ? _isOnPhone() : false)){
+  // ── phone_only always gets mobile view regardless of device ─────────────────
+  if(sbProfile?.role==='phone_only'){
     document.getElementById('project-screen').style.display='none';
     if(id==='shift-tower'){
       // Shift Tower has a phone UI — open it
