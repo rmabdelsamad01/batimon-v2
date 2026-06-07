@@ -30,16 +30,23 @@ body.mobile-section-view header { display: none !important; }
 body.mobile-section-view nav.nav-tabs { display: none !important; }
 body.mobile-section-view .sb { display: none !important; }
 body.mobile-section-view #root {
-  overflow-y: auto !important;
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
   height: 100vh !important;
-  -webkit-overflow-scrolling: touch;
 }
 body.mobile-section-view .fpw {
   flex-direction: column !important;
   overflow: visible !important;
+  min-height: 0;
 }
 body.mobile-section-view .fpm {
   overflow: visible !important;
+  min-height: 0;
+}
+body.mobile-section-view .dash {
+  overflow: visible !important;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 62px !important;
   min-height: 0;
 }
 #mob-section-bar {
