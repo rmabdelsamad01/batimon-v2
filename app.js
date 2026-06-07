@@ -16245,6 +16245,23 @@ async function renderMobileApp(prof){
   window._mobProf=prof;
   _buildMobileShell(prof);
   _refreshMobileContent();
+  _fixMobContentHeight();
+}
+
+function _fixMobContentHeight(){
+  requestAnimationFrame(()=>{
+    const mob=document.getElementById('mobile-screen');
+    const mc=document.getElementById('mob-content');
+    if(!mob||!mc) return;
+    let used=0;
+    for(const child of mob.children){
+      if(child.id!=='mob-content') used+=child.getBoundingClientRect().height;
+    }
+    const h=Math.max(0, window.innerHeight-used);
+    mc.style.height=h+'px';
+    mc.style.flex='none';
+    mc.style.minHeight='';
+  });
 }
 
 function _buildMobileShell(prof){
@@ -16329,6 +16346,7 @@ window.mobileSetTab=function(tab){
   document.getElementById('mob-btn-ucw').style.color=!isB?'#224F93':'#8099b0';
   document.getElementById('mob-btn-ucw').style.borderTopColor=!isB?'#224F93':'transparent';
   _refreshMobileContent();
+  _fixMobContentHeight();
 };
 
 window.mobileSetFacade=function(f){
