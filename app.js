@@ -1907,6 +1907,7 @@ async function renderCustomCatOverview(catNum){
 
 async function _loadCustomFacade(projectId, facade){
   const key = projectId+'|'+facade;
+  if(_custFacadeCache[key] !== undefined) return; // already in memory — don't overwrite pending saves
   try{
     const {data} = await sb.from('custom_project_facades').select('cells').eq('project_id',projectId).eq('facade',facade).single();
     _custFacadeCache[key] = data?.cells || {};
