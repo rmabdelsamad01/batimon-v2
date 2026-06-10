@@ -1935,7 +1935,8 @@ async function _saveCustomFacadeCell(projectId, facade, cellKey, status){
 const _DEFAULT_GRID_META = ()=>({
   rows: Array.from({length:10},(_,i)=>({label:String(i+1).padStart(2,'0'),height:40})),
   cols: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>({label:c,width:80})),
-  merges:[]
+  merges:[],
+  upperRow:{enabled:false,spans:[]}
 });
 
 function _custGetMeta(pid,facade){
@@ -1962,7 +1963,7 @@ function _custRemapCells(pid,facade,mapFn){
   _custFacadeCache[k]=out;
 }
 
-let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null;
+let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null; let _urMergeStart=null; let _cgSplitView=false;
 let _cgZoomIdx=5; const _CG_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2,2.5,3,4,5,6,8];
 let _cgFilterStatus='all';
 function _cgZoomIn(){_cgZoomIdx=Math.min(_CG_ZOOM_LEVELS.length-1,_cgZoomIdx+1);_cgApplyZoom();}
@@ -2231,8 +2232,8 @@ function custGridStartUnmerge(){
   const h=document.getElementById('cg-hint'); if(h)h.textContent='Click a merged cell to unmerge it.';
 }
 function custGridCancelMode(){
-  _gridMode=null; _gridMergeStart=null;
-  ['cg-merge-btn','cg-unmerge-btn'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
+  _gridMode=null; _gridMergeStart=null; _urMergeStart=null;
+  ['cg-merge-btn','cg-unmerge-btn','cg-ur-merge-btn'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
   const h=document.getElementById('cg-hint'); if(h)h.textContent='';
 }
 function custGridMerge(pid,facade,r1,c1,r2,c2){
@@ -2251,6 +2252,61 @@ function custGridUnmerge(pid,facade,r,c){
   if(idx<0){custGridCancelMode();return;}
   meta.merges.splice(idx,1);
   _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
+}
+
+// ── Upper Row ─────────────────────────────────────────────────────────────────
+function custToggleUpperRow(pid,facade){
+  if(_isViewer()){_viewerToast();return;}
+  const meta=_custGetMeta(pid,facade);
+  if(!meta.upperRow)meta.upperRow={enabled:false,spans:[]};
+  meta.upperRow.enabled=!meta.upperRow.enabled;
+  _custSetMeta(pid,facade,meta);renderCustomMonitoring(window._currentCustomPage);
+}
+function custUrStartMerge(){
+  _gridMode='ur-merge';_urMergeStart=null;
+  const b=document.getElementById('cg-ur-merge-btn');if(b){b.style.background='#224F93';b.style.color='#fff';}
+  const h=document.getElementById('cg-hint');if(h)h.textContent='Click the first column in the upper row, then the last column of the group.';
+}
+function custUrCellClick(e,pid,facade,ci){
+  e.stopPropagation();
+  if(_gridMode==='ur-merge'){
+    if(_urMergeStart===null){
+      _urMergeStart=ci;
+      const el=document.getElementById('ur-cell-'+ci);if(el)el.style.outline='3px solid #fff';
+      const h=document.getElementById('cg-hint');if(h)h.textContent='First column selected — now click the last column of the group.';
+    }else{
+      const c1=Math.min(_urMergeStart,ci),c2=Math.max(_urMergeStart,ci);
+      _urMergeStart=null;custGridCancelMode();
+      const label=prompt('Group label (e.g. North):','');
+      if(label!==null)custUrMerge(pid,facade,c1,c2,label.trim()||'—');
+    }
+    return;
+  }
+  // Normal click → edit label of existing span
+  const meta=_custGetMeta(pid,facade);if(!meta.upperRow)return;
+  const s=meta.upperRow.spans.find(sp=>ci>=sp.c&&ci<sp.c+sp.colspan);
+  if(!s){const h=document.getElementById('cg-hint');if(h){h.textContent='Use "Group Merge" to assign this column to a group first.';setTimeout(()=>{if(h)h.textContent='';},2500);}return;}
+  const nl=prompt('Group label:',s.label||'');
+  if(nl!==null){s.label=nl.trim()||'—';_custSetMeta(pid,facade,meta);renderCustomMonitoring(window._currentCustomPage);}
+}
+function custUrMerge(pid,facade,c1,c2,label){
+  if(_isViewer()){_viewerToast();return;}
+  const meta=_custGetMeta(pid,facade);
+  if(!meta.upperRow)meta.upperRow={enabled:true,spans:[]};
+  meta.upperRow.spans=meta.upperRow.spans.filter(s=>s.c+s.colspan-1<c1||s.c>c2);
+  meta.upperRow.spans.push({c:c1,colspan:c2-c1+1,label});
+  meta.upperRow.spans.sort((a,b)=>a.c-b.c);
+  _custSetMeta(pid,facade,meta);renderCustomMonitoring(window._currentCustomPage);
+}
+function custUrClear(pid,facade,ci){
+  if(_isViewer()){_viewerToast();return;}
+  const meta=_custGetMeta(pid,facade);if(!meta.upperRow)return;
+  meta.upperRow.spans=meta.upperRow.spans.filter(s=>!(ci>=s.c&&ci<s.c+s.colspan));
+  _custSetMeta(pid,facade,meta);renderCustomMonitoring(window._currentCustomPage);
+}
+function _cgToggleSplitView(){
+  _cgSplitView=!_cgSplitView;
+  renderCustomMonitoring(window._currentCustomPage);
 }
 
 // Cell click handler
@@ -2741,6 +2797,31 @@ async function renderCustomMonitoring(pageId){
 
   const bs=`padding:5px 11px;border:1px solid rgba(34,79,147,0.18);border-radius:6px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;`;
 
+  // ── Upper row ──
+  const _ur=meta.upperRow||{enabled:false,spans:[]};
+  const _urEnabled=!!_ur.enabled;
+  const _urSpans=_ur.spans||[];
+  const _urSpanAt=ci=>_urSpans.find(s=>ci>=s.c&&ci<s.c+s.colspan);
+
+  // Upper row header row (single-table mode)
+  let _urHdrRow='';
+  if(_urEnabled){
+    let _urCells='',_ci2=0;
+    while(_ci2<meta.cols.length){
+      const _s=_urSpans.find(sp=>sp.c===_ci2);
+      if(_s){
+        _urCells+=`<th id="ur-cell-${_ci2}" colspan="${_s.colspan}" ${_isDev?`onclick="custUrCellClick(event,'${pid}','${facade}',${_ci2})" oncontextmenu="custUrClear('${pid}','${facade}',${_ci2});return false;" title="Click to rename · Right-click to clear"`:''}
+          style="padding:7px 8px;background:#0f2d6b;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.15);letter-spacing:0.04em;${_isDev?'cursor:pointer;':''}">${_s.label||'—'}</th>`;
+        _ci2+=_s.colspan;
+      }else{
+        _urCells+=`<th id="ur-cell-${_ci2}" ${_isDev?`onclick="custUrCellClick(event,'${pid}','${facade}',${_ci2})" title="Click after using Group Merge"`:''}
+          style="padding:7px 8px;background:#1a3060;color:rgba(255,255,255,0.25);font-size:10px;text-align:center;border:1px solid rgba(255,255,255,0.06);${_isDev?'cursor:pointer;':''}">·</th>`;
+        _ci2++;
+      }
+    }
+    _urHdrRow=`<tr><th style="padding:6px 8px;background:#0f2d6b;color:rgba(255,255,255,0.5);font-size:9px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;letter-spacing:0.07em;text-transform:uppercase;">Group</th>${_urCells}</tr>`;
+  }
+
   const colHdrs = meta.cols.map((col,ci)=>`
     <th oncontextmenu="custGridCtx(event,'${pid}','${facade}','col',${ci})"
         ondblclick="custGridRenameCol('${pid}','${facade}',${ci})"
@@ -2771,6 +2852,20 @@ async function renderCustomMonitoring(pageId){
         </td>`;
       }).join('')}
     </tr>`).join('');
+
+  // ── Split view builder ──
+  const _isSplit=_urEnabled&&_cgSplitView&&_urSpans.length>0;
+  let _splitHTML='';
+  if(_isSplit){
+    const _isCoveredInGroup=(r,c,c1)=>meta.merges.some(m=>!(m.r===r&&m.c===c)&&r>=m.r&&r<m.r+m.rowspan&&c>=m.c&&c<m.c+m.colspan&&m.c>=c1);
+    _splitHTML=_urSpans.map(span=>{
+      const sc1=span.c,sc2=Math.min(span.c+span.colspan-1,meta.cols.length-1);
+      const sCols=meta.cols.slice(sc1,sc2+1);
+      const sColHdrs=sCols.map((col,lci)=>{const ci=sc1+lci;return`<th oncontextmenu="custGridCtx(event,'${pid}','${facade}','col',${ci})" ondblclick="custGridRenameCol('${pid}','${facade}',${ci})" style="padding:6px 8px;background:#224F93;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.12);width:${col.width}px;min-width:${col.width}px;cursor:pointer;user-select:none;" title="Double-click to rename · Right-click for more options">${col.label}</th>`;}).join('');
+      const sBodyRows=meta.rows.map((row,ri)=>`<tr><td oncontextmenu="custGridCtx(event,'${pid}','${facade}','row',${ri})" ondblclick="custGridRenameRow('${pid}','${facade}',${ri})" style="padding:4px 8px;background:#f0f4f9;font-size:11px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;user-select:none;cursor:pointer;min-width:36px;height:${row.height}px;" title="Double-click to rename · Right-click for more options">${row.label}</td>${sCols.map((col,lci)=>{const ci=sc1+lci;if(_isCoveredInGroup(ri,ci,sc1))return'';const merge=getMerge(ri,ci);const rs=merge?merge.rowspan:1;const cs=merge?Math.min(merge.colspan,sc2-ci+1):1;const key=`r${ri}_c${ci}`;const st=(cells[key]?.status)||'pending';const cellRef=`${catNick}-${nick}-${row.label}-${col.label}`;const displayRef=(cells[key]?.panelRef)||cellRef;return`<td id="cpcell-${ri}_${ci}" data-status="${st}" data-key="${key}" data-cellref="${cellRef}" onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})" oncontextmenu="custCellOpenPanel(event,'${pid}','${facade}','${key}','${cellRef}');return false;" ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}  title="${cellRef} — ${_custStLabel[st]}" style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;"><div style="font-size:${cells[key]?.panelRef?'15px':'7px'};font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayRef}</div></td>`;}).join('')}</tr>`).join('');
+      return`<div style="margin-bottom:28px;"><div style="background:#0f2d6b;color:#fff;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px 8px 0 0;letter-spacing:0.05em;">${span.label||'Group'}</div><div style="overflow-x:auto;border-radius:0 0 8px 8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);"><table style="border-collapse:collapse;"><thead><tr><th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>${sColHdrs}</tr></thead><tbody>${sBodyRows}</tbody></table></div></div>`;
+    }).join('');
+  }
 
   // Count cells by status for legend totals
   const _stTotals={};
@@ -2829,27 +2924,35 @@ async function renderCustomMonitoring(pageId){
             <button onclick="custGridCancelMode()" style="${bs}color:#8099b0;" title="Cancel current mode (Esc)">✕</button>
             <span id="cg-hint" style="font-size:11px;color:#224F93;font-style:italic;"></span>
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
+            <button onclick="custToggleUpperRow('${pid}','${facade}')" style="${bs}${_urEnabled?'background:#0f2d6b;color:#fff;':''}" title="Toggle upper grouping row">${_urEnabled?'▲ Upper Row ✓':'▲ Upper Row'}</button>
+            ${_urEnabled?`<button id="cg-ur-merge-btn" onclick="custUrStartMerge()" style="${bs}" title="Click two columns to define a group" onmouseover="this.style.background='#e0e8f5'" onmouseout="if(_gridMode!=='ur-merge')this.style.background='#f0f4f9'">↔ Group Merge</button>`:''}
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
             ${_filterBtns}
+            ${_urEnabled?`<div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div><button onclick="_cgToggleSplitView()" style="${bs}${_cgSplitView?'background:#224F93;color:#fff;':''}" title="Toggle split / single table view">${_cgSplitView?'⊞ 1 Table':'⊟ Split View'}</button>`:''}
             ${_zoomControls}
             ${_printBtn}
           `:`
             <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
             ${_filterBtns}
+            ${_urEnabled?`<div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div><button onclick="_cgToggleSplitView()" style="${bs}${_cgSplitView?'background:#224F93;color:#fff;':''}">${_cgSplitView?'⊞ 1 Table':'⊟ Split View'}</button>`:''}
             ${_zoomControls}
             ${_printBtn}
           `}
         </div>
         <div id="pv-facade-view" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
           <div style="flex:1;overflow:auto;padding:14px 20px;">
-            <div id="cg-grid-wrap" style="overflow:auto;border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);display:inline-block;">
-              <table style="border-collapse:collapse;">
-                <thead><tr>
-                  <th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>
-                  ${colHdrs}
-                </tr></thead>
+            <div id="cg-grid-wrap" style="overflow:auto;${_isSplit?'':'border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);'}display:${_isSplit?'block':'inline-block'};">
+              ${_isSplit?_splitHTML:`<table style="border-collapse:collapse;">
+                <thead>
+                  ${_urHdrRow}
+                  <tr>
+                    <th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>
+                    ${colHdrs}
+                  </tr>
+                </thead>
                 <tbody>${bodyRows}</tbody>
-              </table>
+              </table>`}
             </div>
           </div>
           <div style="padding:10px 20px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);">
