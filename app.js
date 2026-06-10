@@ -2796,6 +2796,7 @@ async function renderCustomMonitoring(pageId){
   const getMerge  = (r,c) => meta.merges.find(m=>m.r===r&&m.c===c);
 
   const bs=`padding:5px 11px;border:1px solid rgba(34,79,147,0.18);border-radius:6px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;`;
+  const _isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
 
   // ── Upper row ──
   const _ur=meta.upperRow||{enabled:false,spans:[]};
@@ -2882,7 +2883,6 @@ async function renderCustomMonitoring(pageId){
       <span style="font-size:11px;font-family:var(--mono);font-weight:700;color:var(--text);background:var(--surface2);border-radius:4px;padding:1px 5px;">${_stTotals[s]||0}</span>
     </div>`).join('');
 
-  const _isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
   const _fbStyle='padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;';
   const _filterBtns=['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'].map(f=>{
     const lbl=f==='all'?'All':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1);
