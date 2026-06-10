@@ -1963,7 +1963,7 @@ function _custRemapCells(pid,facade,mapFn){
   _custFacadeCache[k]=out;
 }
 
-let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null; let _urMergeStart=null; let _cgSplitView=false;
+let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null; let _urMergeStart=null; let _cgSplitView=false; let _cgMergeHover=null;
 let _cgZoomIdx=5; const _CG_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2,2.5,3,4,5,6,8];
 let _cgFilterStatus='all';
 function _cgZoomIn(){_cgZoomIdx=Math.min(_CG_ZOOM_LEVELS.length-1,_cgZoomIdx+1);_cgApplyZoom();}
@@ -2232,9 +2232,21 @@ function custGridStartUnmerge(){
   const h=document.getElementById('cg-hint'); if(h)h.textContent='Click a merged cell to unmerge it.';
 }
 function custGridCancelMode(){
-  _gridMode=null; _gridMergeStart=null; _urMergeStart=null;
+  _gridMode=null; _gridMergeStart=null; _urMergeStart=null; _cgMergeHover=null;
   ['cg-merge-btn','cg-unmerge-btn','cg-ur-merge-btn'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
+  document.querySelectorAll('[data-mhov]').forEach(el=>{el.style.outline='';el.removeAttribute('data-mhov');});
   const h=document.getElementById('cg-hint'); if(h)h.textContent='';
+}
+function custGridMergeHover(r,c){
+  if(_gridMode!=='merge'||!_gridMergeStart) return;
+  _cgMergeHover={r,c};
+  document.querySelectorAll('[data-mhov]').forEach(el=>{el.style.outline='';el.removeAttribute('data-mhov');});
+  const r1=Math.min(_gridMergeStart.r,r),r2=Math.max(_gridMergeStart.r,r);
+  const c1=Math.min(_gridMergeStart.c,c),c2=Math.max(_gridMergeStart.c,c);
+  for(let ri=r1;ri<=r2;ri++){for(let ci=c1;ci<=c2;ci++){
+    const td=document.getElementById(`cpcell-${ri}_${ci}`);
+    if(td){td.style.outline='2px solid #224F93';td.setAttribute('data-mhov','1');}
+  }}
 }
 function custGridMerge(pid,facade,r1,c1,r2,c2){
   if(r1===r2&&c1===c2)return;
@@ -2845,6 +2857,7 @@ async function renderCustomMonitoring(pageId){
         const displayRef=(cells[key]?.panelRef)||cellRef;
         return `<td id="cpcell-${ri}_${ci}" data-status="${st}" data-key="${key}" data-cellref="${cellRef}"
           onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})"
+          onmouseover="custGridMergeHover(${ri},${ci})"
           oncontextmenu="custCellOpenPanel(event,'${pid}','${facade}','${key}','${cellRef}');return false;"
           ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
           title="${cellRef} — ${_custStLabel[st]}"
