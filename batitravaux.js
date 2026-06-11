@@ -409,8 +409,7 @@ async function _btLoadAffectation() {
         observations: ''
       }));
     } else {
-      _btAffectation = BT_AFFECTATION_SEED.map((p, i) => ({ id: 'aff-'+Date.now()+'-'+i, ...p }));
-      await _btSaveAllAffectation();
+      _btAffectation = [];
     }
   } catch(e) {
     console.warn('[BT] loadAffectation failed', e);
