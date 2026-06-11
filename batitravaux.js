@@ -1564,10 +1564,10 @@ window._btImportExcel = function() {
         }
 
         // Flexible column mapping (case-insensitive, accent-insensitive)
-        function norm(s) { return String(s||'').toLowerCase().replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[ùû]/g,'u').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').trim(); }
+        function norm(s) { return String(s||'').toLowerCase().replace(/[°º]/g,'').replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[ùû]/g,'u').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/\s+/g,' ').trim(); }
         const COL_MAP = {
-          'num_ligne':         ['num ligne','numligne','n ligne','n°ligne','no ligne','num_ligne'],
-          'num_aff':           ['num aff','numaff','n aff','numero affectation','num_aff'],
+          'num_ligne':         ['#','num ligne','numligne','n ligne','noligne','no ligne','num_ligne'],
+          'num_aff':           ['n aff','num aff','numaff','numero affaire','num affaire','n affaire','numero affectation','num_aff'],
           'projet':            ['projet','project','nom projet'],
           'client':            ['client'],
           'directeurProjet':   ['directeur','directeur projet','dir projet','directeurprojet'],
@@ -1575,10 +1575,11 @@ window._btImportExcel = function() {
           'conducteurTravaux': ['conducteur','conducteur travaux','conducteurtravaux','ct'],
           'chefChantier':      ['chef chantier','chefchantier','cc'],
           'effectif':          ['effectif'],
-          'dateDebut':         ['date debut','datedebut','debut','date de debut','date début'],
+          'dateDebut':         ['date debut','datedebut','debut','date de debut','date debut'],
           'dateFin':           ['date fin','datefin','fin','date de fin'],
-          'montantMarche':     ['montant marche','montantmarche','montant','marche','montant marché'],
-          'cumulAttache':      ['cumul attache','cumulattache','cumul','attache','cumul attaché'],
+          'montantMarche':     ['montant marche','montant marche ht','montantmarche','montantmarcheht','montant ht','marche','montant'],
+          'cumulAttache':      ['cumul attache','cumulattache','cumul','attache'],
+          'avancement':        ['% avancement','avancement','% av','pct avancement','pourcentage avancement'],
           'bet':               ['bet'],
           'achat':             ['achat'],
           'production':        ['production'],
@@ -1609,7 +1610,7 @@ window._btImportExcel = function() {
             const val = String(row[h]||'').trim();
             if (['chefProjet','conducteurTravaux','chefChantier'].includes(field)) {
               p[field] = val ? val.split(/[,;]+/).map(s=>s.trim()).filter(Boolean) : [];
-            } else if (['montantMarche','cumulAttache'].includes(field)) {
+            } else if (['montantMarche','cumulAttache','avancement'].includes(field)) {
               p[field] = parseFloat(val.replace(/\s/g,'').replace(',','.')) || 0;
             } else {
               p[field] = val;
