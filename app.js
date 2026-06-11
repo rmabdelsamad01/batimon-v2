@@ -2200,7 +2200,7 @@ function custGridSetColWidth(pid,facade,colIdx){
   const meta=_custGetMeta(pid,facade);
   const cur=meta.cols[colIdx]?.width||80;
   const val=prompt('Column width (px):',cur); if(!val)return;
-  const w=parseInt(val); if(isNaN(w)||w<30||w>500){alert('Width must be 30–500 px.');return;}
+  const w=parseInt(val); if(isNaN(w)||w<2||w>500){alert('Width must be 2–500 px.');return;}
   meta.cols[colIdx].width=w; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
 function custGridRenameRow(pid,facade,rowIdx){
