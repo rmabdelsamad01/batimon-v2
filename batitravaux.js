@@ -1564,7 +1564,8 @@ window._btImportExcel = function() {
         }
 
         // Flexible column mapping (case-insensitive, accent-insensitive)
-        function norm(s) { return String(s||'').toLowerCase().replace(/[°º]/g,'').replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[ùû]/g,'u').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/\s+/g,' ').trim(); }
+        function norm(s) { return String(s||'').replace(/^'+|'+$/g,'').toLowerCase().replace(/[°º]/g,'').replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[ùû]/g,'u').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/\s+/g,' ').trim(); }
+        function stripApos(s) { return String(s||'').replace(/^'+/,'').trim(); }
         const COL_MAP = {
           'num_ligne':         ['#','num ligne','numligne','n ligne','noligne','no ligne','num_ligne'],
           'num_aff':           ['nb aff','nbaff','n aff','num aff','numaff','numero affaire','num affaire','n affaire','numero affectation','num_aff'],
@@ -1607,7 +1608,7 @@ window._btImportExcel = function() {
             bet:'', achat:'', production:'', pose:'', observations:''
           };
           for (const [h, field] of Object.entries(headerMap)) {
-            const val = String(row[h]||'').trim();
+            const val = stripApos(String(row[h]||'').trim());
             if (['chefProjet','conducteurTravaux','chefChantier'].includes(field)) {
               p[field] = val ? val.split(/[,;]+/).map(s=>s.trim()).filter(Boolean) : [];
             } else if (['montantMarche','cumulAttache','avancement'].includes(field)) {
@@ -1616,7 +1617,9 @@ window._btImportExcel = function() {
               p[field] = val;
             }
           }
-          if (!p.projet) continue; // skip empty rows
+          // skip rows where every mapped field is empty
+          const hasData = Object.values(p).some(v => Array.isArray(v) ? v.length>0 : (v && v!==0 && v!==''));
+          if (!hasData) continue;
           _btAffectation.push(p);
           await _btSaveAffRow(p, null, null, null);
           await _btLogHistory('CREATE','bt_affectation',p.id,p.projet,null,null,null);
