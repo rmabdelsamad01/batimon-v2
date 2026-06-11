@@ -1551,6 +1551,19 @@ window._btImportExcel = function() {
         const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
         if (!rows.length) { _btToast('Aucune donnée trouvée dans le fichier'); return; }
 
+        // Ask replace vs append only if existing data present
+        let replaceMode = false;
+        if (_btAffectation.length > 0) {
+          const choice = confirm(`Le tableau contient déjà ${_btAffectation.length} ligne(s).\n\nCliquer OK pour REMPLACER tout le tableau avec le fichier importé.\nCliquer Annuler pour AJOUTER les nouvelles lignes à la suite.`);
+          replaceMode = choice;
+        }
+        if (replaceMode) {
+          const db = _btSb();
+          const oldIds = _btAffectation.map(x=>x.id);
+          _btAffectation = [];
+          if (db && oldIds.length) await db.from('bt_affectation').delete().in('id', oldIds);
+        }
+
         // Flexible column mapping (case-insensitive, accent-insensitive)
         function norm(s) { return String(s||'').toLowerCase().replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[ùû]/g,'u').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').trim(); }
         const COL_MAP = {
