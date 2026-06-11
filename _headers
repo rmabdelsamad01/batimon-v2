@@ -13,6 +13,21 @@
 /app.js
   Cache-Control: no-store, no-cache, must-revalidate
 
+/batitravaux.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/planview.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/auth.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/profile.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/project.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /viewer3d.html
   Cache-Control: no-store, no-cache, must-revalidate
 
