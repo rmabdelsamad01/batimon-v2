@@ -1650,14 +1650,11 @@ window._btDeleteSelectedAff = async function() {
   const ids = checked.map(c => c.dataset.id);
   const names = ids.map(id => _btAffectation.find(x=>x.id===id)?.projet||id).join(', ');
   if (!confirm(`Supprimer ${ids.length} projet(s) ?\n${names}`)) return;
+  _btAffectation = _btAffectation.filter(x => !ids.includes(x.id));
   const db = _btSb();
-  for (const id of ids) {
-    const p = _btAffectation.find(x=>x.id===id);
-    _btAffectation = _btAffectation.filter(x=>x.id!==id);
-    if (db && p) {
-      await db.from('bt_affectation').delete().eq('id', id);
-      await _btLogHistory('DELETE','bt_affectation',id,p.projet,null,null,null);
-    }
+  if (db) {
+    await db.from('bt_affectation').delete().in('id', ids);
+    await _btLogHistory('DELETE','bt_affectation',ids.join(','),`${ids.length} projets supprimés`,null,null,null);
   }
   _btApplyAffFilters();
   _btToast(`${ids.length} projet(s) supprimé(s)`);
