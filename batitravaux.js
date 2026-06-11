@@ -1115,7 +1115,6 @@ window.btInitAffectation = async function() {
           <thead><tr>
             <th class="sticky-col" style="width:32px;min-width:32px;text-align:center;padding:4px;"><input type="checkbox" id="bt-aff-chk-all" title="Tout sélectionner" onclick="_btAffToggleAll(this)" style="cursor:pointer;accent-color:#224F93;width:14px;height:14px;"></th>
             <th class="sticky-col">#</th>
-            <th id="th-numaff" class="bt-sortable" style="min-width:80px;" onclick="_btSortAff('numAff')">Nb Aff <span class="bt-sort-ind">⇅</span></th>
             <th id="th-projet" class="bt-sortable sticky-col-2" style="min-width:200px;" onclick="_btSortAff('projet')">Projet <span class="bt-sort-ind">⇅</span></th>
             <th id="th-client" class="bt-sortable" style="min-width:200px;" onclick="_btSortAff('client')">Client <span class="bt-sort-ind">⇅</span></th>
             <th id="th-dir" class="bt-sortable" style="min-width:80px;white-space:normal;" onclick="_btSortAff('directeurProjet')">Directeur <span class="bt-sort-ind">⇅</span></th>
@@ -1128,9 +1127,9 @@ window.btInitAffectation = async function() {
             <th id="th-av" class="bt-sortable" style="min-width:120px;" onclick="_btSortAff('avancement')">Avancement <span class="bt-sort-ind">⇅</span></th>
             <th style="min-width:36px;"></th>
           </tr></thead>
-          <tbody id="bt-aff-tbody"><tr><td colspan="13" style="text-align:center;padding:30px;color:#8099b0;">Chargement…</td></tr></tbody>
+          <tbody id="bt-aff-tbody"><tr><td colspan="12" style="text-align:center;padding:30px;color:#8099b0;">Chargement…</td></tr></tbody>
           <tfoot><tr class="bt-tot-row">
-            <td colspan="9" id="bt-aff-tot-label" style="font-weight:700;text-align:right;">TOTAL</td>
+            <td colspan="8" id="bt-aff-tot-label" style="font-weight:700;text-align:right;">TOTAL</td>
             <td id="bt-aff-tot-marche" style="text-align:right;font-size:11px;"></td>
             <td id="bt-aff-tot-attache" style="text-align:right;font-size:11px;color:#224F93;"></td>
             <td id="bt-aff-tot-av" style="font-size:11px;font-weight:700;"></td>
@@ -1299,7 +1298,7 @@ window._btSortAff = function(field) {
 
 function _btUpdateAffSortHeaders() {
   const cols = [
-    { id:'th-numaff',   field:'numAff',           label:'Nb Aff' },
+
     { id:'th-projet',   field:'projet',            label:'Projet' },
     { id:'th-client',   field:'client',            label:'Client' },
     { id:'th-dir',      field:'directeurProjet',   label:'Directeur' },
@@ -1328,7 +1327,7 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
   const isVide = v => Array.isArray(v) ? v.filter(Boolean).length===0 : (!v||v==='VIDE');
   const showArr = v => { const a=_btFlatArr(v).filter(Boolean); return a.length>0 ? a.map(_btH).join(', ') : '—'; };
   tbody.innerHTML = rows.length===0 ?
-    `<tr><td colspan="13" style="text-align:center;padding:40px;color:#8099b0;font-style:italic;">Aucun projet ne correspond aux filtres</td></tr>` :
+    `<tr><td colspan="12" style="text-align:center;padding:40px;color:#8099b0;font-style:italic;">Aucun projet ne correspond aux filtres</td></tr>` :
     rows.map((p, idx) => {
       const caInfo = _btLinkedCa(p);
       const mm = parseFloat(p.montantMarche)||0;
@@ -1338,7 +1337,6 @@ function _btRenderAffRows(rows, totMm, totCa, avgAv) {
       return `<tr data-id="${p.id}">
         <td class="sticky-col" style="text-align:center;padding:4px;"><input type="checkbox" class="bt-aff-row-chk" data-id="${p.id}" onclick="_btAffRowChkChange()" style="cursor:pointer;accent-color:#224F93;width:14px;height:14px;"></td>
         <td class="sticky-col">${idx+1}</td>
-        <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','numAff')">${_btH(p.numAff||'—')}</span></td>
         <td class="sticky-col-2"><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','projet')" style="font-weight:600;">${_btH(p.projet||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','client')" style="font-weight:600;">${_btH(p.client||'—')}</span></td>
         <td><span class="bt-aff-cell" onclick="_btEditAffCell(this,'${p.id}','directeurProjet')" ${isVide(p.directeurProjet)?'style="color:#8099b0;font-style:italic;"':''}>${_btH(p.directeurProjet||'—')}</span></td>
@@ -1945,7 +1943,7 @@ async function _btRenameInAffectation(key, oldName, newName) {
 window._btExportAff = function() {
   // Export the rows exactly as currently displayed (same filter + sort order)
   const source = _btLastAffRows.length > 0 ? _btLastAffRows : _btAffectation;
-  const headers = ['#','Nb Aff','Projet','Client','Directeur','Chef Projet','Conducteur Travaux','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
+  const headers = ['#','Projet','Client','Directeur','Chef Projet','Conducteur Travaux','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
   const rows = source.map((p, i) => {
     const caInfo = _btLinkedCa(p);
     const mm = parseFloat(p.montantMarche)||0;
