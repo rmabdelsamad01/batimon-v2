@@ -657,7 +657,7 @@ function _btRenderForm(body) {
       <div class="bt-form-body">
         <div class="bt-field-grid">
           <div class="bt-field"><label>Projet *</label><input name="projet" required placeholder="Nom du projet"></div>
-          <div class="bt-field"><label>N° Affectation</label><input name="numAff" placeholder="Ex: AF25-49" style="font-family:monospace;"></div>
+          <div class="bt-field"><label>Nb Aff</label><input name="numAff" placeholder="Ex: AF25-49" style="font-family:monospace;"></div>
           <div class="bt-field"><label>Client</label><input name="client" placeholder="Nom du client"></div>
           <div class="bt-field"><label>Lot</label><input name="lot" placeholder="Ex: Menuiserie Aluminium"></div>
           <div class="bt-field"><label>Chef de projet</label><input name="cp" value="${_btH(currentCp)}" readonly></div>
@@ -1115,7 +1115,7 @@ window.btInitAffectation = async function() {
           <thead><tr>
             <th class="sticky-col" style="width:32px;min-width:32px;text-align:center;padding:4px;"><input type="checkbox" id="bt-aff-chk-all" title="Tout sélectionner" onclick="_btAffToggleAll(this)" style="cursor:pointer;accent-color:#224F93;width:14px;height:14px;"></th>
             <th class="sticky-col">#</th>
-            <th id="th-numaff" class="bt-sortable" style="min-width:80px;" onclick="_btSortAff('numAff')">N° Aff <span class="bt-sort-ind">⇅</span></th>
+            <th id="th-numaff" class="bt-sortable" style="min-width:80px;" onclick="_btSortAff('numAff')">Nb Aff <span class="bt-sort-ind">⇅</span></th>
             <th id="th-projet" class="bt-sortable sticky-col-2" style="min-width:200px;" onclick="_btSortAff('projet')">Projet <span class="bt-sort-ind">⇅</span></th>
             <th id="th-client" class="bt-sortable" style="min-width:200px;" onclick="_btSortAff('client')">Client <span class="bt-sort-ind">⇅</span></th>
             <th id="th-dir" class="bt-sortable" style="min-width:80px;white-space:normal;" onclick="_btSortAff('directeurProjet')">Directeur <span class="bt-sort-ind">⇅</span></th>
@@ -1299,7 +1299,7 @@ window._btSortAff = function(field) {
 
 function _btUpdateAffSortHeaders() {
   const cols = [
-    { id:'th-numaff',   field:'numAff',           label:'N° Aff' },
+    { id:'th-numaff',   field:'numAff',           label:'Nb Aff' },
     { id:'th-projet',   field:'projet',            label:'Projet' },
     { id:'th-client',   field:'client',            label:'Client' },
     { id:'th-dir',      field:'directeurProjet',   label:'Directeur' },
@@ -1567,7 +1567,7 @@ window._btImportExcel = function() {
         function norm(s) { return String(s||'').toLowerCase().replace(/[°º]/g,'').replace(/[éèê]/g,'e').replace(/[àâ]/g,'a').replace(/[ùû]/g,'u').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/\s+/g,' ').trim(); }
         const COL_MAP = {
           'num_ligne':         ['#','num ligne','numligne','n ligne','noligne','no ligne','num_ligne'],
-          'num_aff':           ['n aff','num aff','numaff','numero affaire','num affaire','n affaire','numero affectation','num_aff'],
+          'num_aff':           ['nb aff','nbaff','n aff','num aff','numaff','numero affaire','num affaire','n affaire','numero affectation','num_aff'],
           'projet':            ['projet','project','nom projet'],
           'client':            ['client'],
           'directeurProjet':   ['directeur','directeur projet','dir projet','directeurprojet'],
@@ -1942,7 +1942,7 @@ async function _btRenameInAffectation(key, oldName, newName) {
 window._btExportAff = function() {
   // Export the rows exactly as currently displayed (same filter + sort order)
   const source = _btLastAffRows.length > 0 ? _btLastAffRows : _btAffectation;
-  const headers = ['#','N° Aff','Projet','Client','Directeur','Chef Projet','Conducteur Travaux','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
+  const headers = ['#','Nb Aff','Projet','Client','Directeur','Chef Projet','Conducteur Travaux','Chef Chantier','Effectif','Montant Marché HT','Cumul Attaché','% Avancement'];
   const rows = source.map((p, i) => {
     const caInfo = _btLinkedCa(p);
     const mm = parseFloat(p.montantMarche)||0;
