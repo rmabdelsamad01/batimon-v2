@@ -2796,6 +2796,8 @@ async function renderCustomMonitoring(pageId){
 
   const page = document.getElementById(`page-${pageId}`);
   if(!page) return;
+  const _prevScroll=document.getElementById('cg-scroll-wrap');
+  const _savedSX=_prevScroll?.scrollLeft||0, _savedSY=_prevScroll?.scrollTop||0;
   page.innerHTML=`<div style="padding:40px;font-family:'Barlow',sans-serif;color:#8099b0;font-size:13px;">Loading…</div>`;
 
   await _loadCustomFacade(pid, facade);
@@ -2954,7 +2956,7 @@ async function renderCustomMonitoring(pageId){
           `}
         </div>
         <div id="pv-facade-view" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
-          <div style="flex:1;overflow:auto;padding:14px 20px;">
+          <div id="cg-scroll-wrap" style="flex:1;overflow:auto;padding:14px 20px;">
             <div id="cg-grid-wrap" style="overflow:auto;${_isSplit?'':'border-radius:8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);'}display:${_isSplit?'block':'inline-block'};">
               ${_isSplit?_splitHTML:`<table style="border-collapse:collapse;">
                 <thead>
@@ -2994,6 +2996,8 @@ async function renderCustomMonitoring(pageId){
   setTimeout(()=>{
     const wrap=document.getElementById('cg-grid-wrap');
     if(wrap) wrap.style.zoom=_CG_ZOOM_LEVELS[_cgZoomIdx];
+    const sw=document.getElementById('cg-scroll-wrap');
+    if(sw&&(_savedSX||_savedSY)){sw.scrollLeft=_savedSX;sw.scrollTop=_savedSY;}
     // Re-apply active filter if any
     if(_cgFilterStatus!=='all'){
       document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
