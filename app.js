@@ -1914,18 +1914,32 @@ async function _loadCustomFacade(projectId, facade){
   }catch(e){ _custFacadeCache[key] = {}; }
 }
 
+function _custShowSaveError(facade, error){
+  console.error('[PCO] save FAILED — facade:',facade,'error:',error);
+  const existing=document.getElementById('_custSaveErrToast');
+  if(existing) existing.remove();
+  const t=document.createElement('div');
+  t.id='_custSaveErrToast';
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#c02020;color:#fff;padding:10px 20px;border-radius:8px;font-family:Barlow,sans-serif;font-size:12px;font-weight:600;z-index:99999;max-width:90vw;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);cursor:pointer;';
+  t.textContent='⚠ Save failed ['+facade+']: '+(error?.message||error?.code||JSON.stringify(error));
+  t.onclick=()=>t.remove();
+  document.body.appendChild(t);
+  setTimeout(()=>{ if(t.parentNode) t.remove(); },10000);
+}
+
 async function _saveCustomFacadeCell(projectId, facade, cellKey, status){
   const key = projectId+'|'+facade;
   if(!_custFacadeCache[key]) _custFacadeCache[key]={};
   _custFacadeCache[key][cellKey] = {status};
   try{
-    await sb.from('custom_project_facades').upsert({
+    const {error}=await sb.from('custom_project_facades').upsert({
       project_id: projectId,
       facade,
       cells: _custFacadeCache[key],
       updated_at: new Date().toISOString()
     },{onConflict:'project_id,facade'});
-  }catch(e){}
+    if(error) _custShowSaveError(facade, error);
+  }catch(e){ _custShowSaveError(facade, e); }
 }
 
 // ─── CUSTOM GRID ENGINE ───────────────────────────────────────────────────
@@ -1946,17 +1960,8 @@ function _custGetMeta(pid,facade){
 async function _custSaveFull(pid,facade){
   try{
     const {error}=await sb.from('custom_project_facades').upsert({project_id:pid,facade,cells:_custFacadeCache[pid+'|'+facade]||{},updated_at:new Date().toISOString()},{onConflict:'project_id,facade'});
-    if(error){
-      console.error('[PCO] _custSaveFull FAILED — pid:',pid,'facade:',facade,'error:',error);
-      const t=document.createElement('div');
-      t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#c02020;color:#fff;padding:10px 20px;border-radius:8px;font-family:Barlow,sans-serif;font-size:12px;font-weight:600;z-index:99999;max-width:90vw;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
-      t.textContent='⚠ Grid save failed ['+facade+']: '+(error.message||error.code||JSON.stringify(error));
-      document.body.appendChild(t);
-      setTimeout(()=>t.remove(),8000);
-    }
-  }catch(e){
-    console.error('[PCO] _custSaveFull EXCEPTION — pid:',pid,'facade:',facade,'exception:',e);
-  }
+    if(error) _custShowSaveError(facade, error);
+  }catch(e){ _custShowSaveError(facade, e); }
 }
 function _custSetMeta(pid,facade,meta){
   const k=pid+'|'+facade;
