@@ -589,10 +589,11 @@ async function saveAdminEdit(){
 
     if(error){
       // If 'projects' column missing, retry without it but keep status
-      if(error.message.includes('projects')){
+      if(/column.*\bprojects\b/.test(error.message) && !/ged_projects/.test(error.message)){
         const {error:e2} = await sb.from('profiles').update({
           status: aemStatus,
           role: aemRole,
+          ged_projects: aemGedProjects,
           updated_at: new Date().toISOString()
         }).eq('id', aemUserId);
         if(!e2){
@@ -625,7 +626,7 @@ async function saveAdminEdit(){
 
     ok.textContent='✓ Saved successfully';
     const idx = adminUsers.findIndex(u=>u.id===aemUserId);
-    if(idx>=0){ adminUsers[idx].status=aemStatus; adminUsers[idx].role=aemRole; adminUsers[idx].roles=rolesToSave; adminUsers[idx].projects=projectsToSave; adminUsers[idx].viewer_projects=aemViewerProjects; }
+    if(idx>=0){ adminUsers[idx].status=aemStatus; adminUsers[idx].role=aemRole; adminUsers[idx].roles=rolesToSave; adminUsers[idx].projects=projectsToSave; adminUsers[idx].viewer_projects=aemViewerProjects; adminUsers[idx].ged_projects=aemGedProjects; }
     setTimeout(()=>{ closeAdminEdit(); renderAdminUsers(); }, 900);
   } catch(e){
     ok.style.display='none';
