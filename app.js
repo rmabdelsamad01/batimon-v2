@@ -2069,12 +2069,8 @@ window.custApplyDuplicateLayout=async function(){
 // ── Text Direction Panel ──────────────────────────────────────────────────────
 window._cgOpenTextDirPanel=function(btn,pid,facade){
   const existing=document.getElementById('_cgTextDirPanel');
-  if(existing){existing.remove();return;}
-  if(_custMultiSel.size===0){
-    const h=document.getElementById('cg-hint');
-    if(h){h.textContent='Ctrl+click cells to select them first.';setTimeout(()=>{if(h)h.textContent='';},2500);}
-    return;
-  }
+  if(existing){existing.remove(); if(_gridMode==='textdir'){custGridCancelMode();return;}}
+  custGridCancelMode();
   const panel=document.createElement('div');
   panel.id='_cgTextDirPanel';
   const rect=btn.getBoundingClientRect();
@@ -2085,31 +2081,35 @@ window._cgOpenTextDirPanel=function(btn,pid,facade){
     {dir:'up',      label:'↑  Rotate Up'},
     {dir:'down',    label:'↓  Rotate Down'},
   ];
-  panel.innerHTML=opts.map(o=>`<div onclick="_custApplyTextDir('${pid}','${facade}','${o.dir}')" style="padding:9px 16px;font-size:12px;font-weight:600;color:#1a2a3a;cursor:pointer;border-bottom:1px solid #f0f2f5;" onmouseover="this.style.background='#eef3fb'" onmouseout="this.style.background=''">${o.label}</div>`).join('');
+  panel.innerHTML=opts.map(o=>`<div onclick="_cgEnterTextDirMode('${pid}','${facade}','${o.dir}')" style="padding:9px 16px;font-size:12px;font-weight:600;color:#1a2a3a;cursor:pointer;border-bottom:1px solid #f0f2f5;" onmouseover="this.style.background='#eef3fb'" onmouseout="this.style.background=''">${o.label}</div>`).join('');
   document.body.appendChild(panel);
   setTimeout(()=>document.addEventListener('click',function _dtp(e){if(!panel.contains(e.target)){panel.remove();document.removeEventListener('click',_dtp);}}),0);
 };
 
-window._custApplyTextDir=function(pid,facade,dir){
+window._cgEnterTextDirMode=function(pid,facade,dir){
   document.getElementById('_cgTextDirPanel')?.remove();
-  if(_custMultiSel.size===0)return;
-  const fk=pid+'|'+facade;
+  _gridMode='textdir'; _cgTextDirMode={pid,facade,dir};
+  const btn=document.getElementById('cg-textdir-btn');
+  if(btn){btn.style.background='#224F93';btn.style.color='#fff';}
+  const dirLabels={normal:'Normal',vertical:'Vertical Text',up:'Rotate Up',down:'Rotate Down'};
+  const h=document.getElementById('cg-hint');
+  if(h) h.textContent=`${dirLabels[dir]||dir} armed — click cells to apply. ✕ to cancel.`;
+};
+
+window._custApplyTextDirToCell=function(pid,facade,ri,ci){
+  const dir=_cgTextDirMode?.dir; if(!dir) return;
+  const fk=pid+'|'+facade; const key=`r${ri}_c${ci}`;
   if(!_custFacadeCache[fk])_custFacadeCache[fk]={};
-  _custMultiSel.forEach(k=>{
-    if(!_custFacadeCache[fk][k])_custFacadeCache[fk][k]={};
-    if(dir==='normal')delete _custFacadeCache[fk][k].textDir;
-    else _custFacadeCache[fk][k].textDir=dir;
-    const m=k.match(/^r(\d+)_c(\d+)$/);
-    if(m){
-      const inner=document.getElementById(`cginner-${m[1]}_${m[2]}`);
-      if(inner){
-        inner.style.writingMode=''; inner.style.textOrientation=''; inner.style.transform='';
-        if(dir==='vertical'){inner.style.writingMode='vertical-lr';inner.style.textOrientation='upright';}
-        else if(dir==='up'){inner.style.writingMode='vertical-lr';inner.style.transform='rotate(180deg)';}
-        else if(dir==='down'){inner.style.writingMode='vertical-lr';}
-      }
-    }
-  });
+  if(!_custFacadeCache[fk][key])_custFacadeCache[fk][key]={};
+  if(dir==='normal') delete _custFacadeCache[fk][key].textDir;
+  else _custFacadeCache[fk][key].textDir=dir;
+  const inner=document.getElementById(`cginner-${ri}_${ci}`);
+  if(inner){
+    inner.style.writingMode=''; inner.style.textOrientation=''; inner.style.transform='';
+    if(dir==='vertical'){inner.style.writingMode='vertical-lr';inner.style.textOrientation='upright';}
+    else if(dir==='up'){inner.style.writingMode='vertical-lr';inner.style.transform='rotate(180deg)';}
+    else if(dir==='down'){inner.style.writingMode='vertical-lr';}
+  }
   _custSaveFull(pid,facade);
 };
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2138,7 +2138,7 @@ function _custRemapCells(pid,facade,mapFn){
   _custFacadeCache[k]=out;
 }
 
-let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null; let _urMergeStart=null; let _cgSplitView=false; let _cgMergeHover=null;
+let _gridMode=null; let _gridMergeStart=null; let _cgCtxMenu=null; let _urMergeStart=null; let _cgSplitView=false; let _cgMergeHover=null; let _cgTextDirMode=null;
 let _cgZoomIdx=5; const _CG_ZOOM_LEVELS=[0.25,0.35,0.5,0.65,0.8,1,1.25,1.5,2,2.5,3,4,5,6,8];
 let _cgFilterStatus='all';
 function _cgZoomIn(){_cgZoomIdx=Math.min(_CG_ZOOM_LEVELS.length-1,_cgZoomIdx+1);_cgApplyZoom();}
@@ -2407,8 +2407,8 @@ function custGridStartUnmerge(){
   const h=document.getElementById('cg-hint'); if(h)h.textContent='Click a merged cell to unmerge it.';
 }
 function custGridCancelMode(){
-  _gridMode=null; _gridMergeStart=null; _urMergeStart=null; _cgMergeHover=null;
-  ['cg-merge-btn','cg-unmerge-btn','cg-ur-merge-btn'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
+  _gridMode=null; _gridMergeStart=null; _urMergeStart=null; _cgMergeHover=null; _cgTextDirMode=null;
+  ['cg-merge-btn','cg-unmerge-btn','cg-ur-merge-btn','cg-textdir-btn'].forEach(id=>{const b=document.getElementById(id);if(b){b.style.background='';b.style.color='';}});
   document.querySelectorAll('[data-mhov]').forEach(el=>{el.style.outline='';el.removeAttribute('data-mhov');});
   const h=document.getElementById('cg-hint'); if(h)h.textContent='';
 }
@@ -2513,6 +2513,7 @@ function custGridCellClick(e,pid,facade,r,c){
     return;
   }
   if(_gridMode==='unmerge'){ custGridUnmerge(pid,facade,r,c); custGridCancelMode(); return; }
+  if(_gridMode==='textdir'){ _custApplyTextDirToCell(pid,facade,r,c); return; }
   // Ctrl+click → multi-select
   if(ctrlHeld||e.ctrlKey||e.metaKey){
     e.stopPropagation();
@@ -3108,7 +3109,7 @@ async function renderCustomMonitoring(pageId){
           ${_isDev?`
             <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
             <button onclick="custGridAddCol('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Column</button>
-            <button id="cg-textdir-btn" onclick="_cgOpenTextDirPanel(this,'${pid}','${facade}')" style="${bs}" title="Rotate text of selected cells — Ctrl+click to select">↕ Text</button>
+            <button id="cg-textdir-btn" onclick="_cgOpenTextDirPanel(this,'${pid}','${facade}')" style="${bs}" title="Rotate text direction of cells">↕ Text</button>
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <button id="cg-merge-btn" onclick="custGridStartMerge()" style="${bs}" title="Click two cells to merge them" onmouseover="this.style.background='#e0e8f5'" onmouseout="if(_gridMode!=='merge')this.style.background='#f0f4f9'">⊞ Merge</button>
             <button id="cg-unmerge-btn" onclick="custGridStartUnmerge()" style="${bs}" title="Click a merged cell to split it" onmouseover="this.style.background='#fff0f0'" onmouseout="if(_gridMode!=='unmerge')this.style.background='#f0f4f9'">⊟ Unmerge</button>
