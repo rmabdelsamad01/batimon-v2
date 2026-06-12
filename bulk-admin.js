@@ -41,6 +41,11 @@ async function adminRefresh(){
   document.getElementById('admin-list-all').innerHTML='<div style="text-align:center;padding:20px;color:#8099b0;font-size:12px;">Loading…</div>';
   // Load custom projects so their names show in user cards
   if(typeof loadCustomProjects==='function') await loadCustomProjects();
+  // Load GED projects for batidoc_user card display
+  try{
+    const {data} = await sb.from('ged_projects').select('id,name').order('created_at');
+    _allGedProjects = [{id:'shift-tower',name:'Shift Tower'}, ...(data||[]).filter(p=>p.id!=='shift-tower')];
+  }catch(e){ _allGedProjects = [{id:'shift-tower',name:'Shift Tower'}]; }
   try{
     const {data,error}=await sb.from('profiles').select('*').order('updated_at',{ascending:false});
     if(error) throw error;
@@ -145,12 +150,20 @@ function adminUserCard(u){
   const statusLabel = {approved:'Approved', pending:'Pending', suspended:'Suspended'}[u.status]||'Pending';
   const allRoles = (Array.isArray(u.roles) && u.roles.length) ? u.roles : [u.role||'viewer'];
   const roleBadges = allRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(34,79,147,0.07);color:${AEM_ROLE_COLORS[r]||'#8099b0'};">${AEM_ROLE_LABELS[r]||r}</span>`).join('');
-  const projects = (u.projects||[]);
-  const projStr = projects.length ? projects.map(p=>{
-    if(PROJECT_META[p]) return PROJECT_META[p].name;
-    const cp = (typeof getCustomProjects==='function'?getCustomProjects():[]).find(c=>c.id===p);
-    return cp ? cp.name : p;
-  }).join(', ') : '—';
+  const allRoles2 = (Array.isArray(u.roles) && u.roles.length) ? u.roles : [u.role||'viewer'];
+  const isBatidocOnly = allRoles2.includes('batidoc_user') && allRoles2.length===1;
+  let projStr;
+  if(isBatidocOnly){
+    const gp = Array.isArray(u.ged_projects) ? u.ged_projects : [];
+    projStr = gp.length ? gp.map(id=>{ const found=_allGedProjects.find(p=>p.id===id); return found?found.name:id; }).join(', ') : '—';
+  } else {
+    const projects = (u.projects||[]);
+    projStr = projects.length ? projects.map(p=>{
+      if(PROJECT_META[p]) return PROJECT_META[p].name;
+      const cp = (typeof getCustomProjects==='function'?getCustomProjects():[]).find(c=>c.id===p);
+      return cp ? cp.name : p;
+    }).join(', ') : '—';
+  }
   const isSelf = sbUser && u.id === sbUser.id;
 
   const safeName = (u.full_name||u.username||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
