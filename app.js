@@ -819,12 +819,18 @@ function addNewCategory(){
   const cats=initProjectCategories(projId);
   const n=cats.length+1;
   const _base=getCustomFacadeNames(projId)||_DEFAULT_FACADE_NAMES;
-  cats.push({num:n,name:'Category '+n,facadeNames:{
+  const _newFN={
     NF:(_base.NF||'North Facade')+'     ('+n+')',
     SF:(_base.SF||'South Facade')+'     ('+n+')',
     EF:(_base.EF||'East Facade')+'     ('+n+')',
     WF:(_base.WF||'West Facade')+'     ('+n+')'
-  }});
+  };
+  const _cat1=cats[0];
+  (_custExtraFacadesCache[projId]||[]).forEach(xf=>{
+    const raw=(_cat1?.facadeNames?.[xf])||('Facade '+xf);
+    _newFN[xf]=(_stripTrailingNum(raw)||('Facade '+xf))+'     ('+n+')';
+  });
+  cats.push({num:n,name:'Category '+n,facadeNames:_newFN});
   saveProjectCategories(projId,cats);
   goPage('c'+n+'-overview');
 }
