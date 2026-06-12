@@ -130,6 +130,21 @@ async function confirmAddProject(){
   const {error} = await sb.from('custom_projects').insert(proj);
   if(error){ err.textContent='Failed to create project: '+error.message; err.style.display='block'; return; }
   _customProjectsCache.push(proj);
+
+  // Auto-sync to BatiGED
+  await sb.from('ged_projects').insert({id, name, director: _projFilter||'', active: true});
+  // Create default deliverables structure for new project
+  const _defDeliv=[
+    {id:1,code:'PEC-RAP-ESS',name:"Piece Ecrite - Rapport et Rapports d'essais",blue:false,date:''},
+    {id:2,code:'FTC',name:'Fiche Technique',blue:false,date:''},
+    {id:3,code:'ECH',name:'Fiche Echantillon',blue:false,date:''},
+    {id:4,code:'NDC',name:'Note de Calcul',blue:false,date:''},
+    {id:5,code:'PLA',name:"Plans D'execution, Elevation et Details",blue:false,date:''},
+    {id:6,code:'',name:'Rapports Topographiques',blue:false,date:''},
+    {id:7,code:'DOE',name:'DOE (Dossiers Ouvrage Exécutés)',blue:false,date:''},
+  ];
+  await sb.from('project_info').insert({project:id, key:'deliverables', value:JSON.stringify(_defDeliv), updated_at:new Date().toISOString()});
+
   closeAddProjectModal();
   renderProjectScreen();
 }

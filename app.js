@@ -16514,11 +16514,13 @@ async function openBatidocPage(){
     _batidocLoaded = true;
     const {data:{session}} = await sb.auth.getSession();
     if(!session) return;
+    const _isCustomProj = window._activeProjectId && window._activeProjectId !== 'shift-tower';
     const payload = btoa(JSON.stringify({
       at: session.access_token,
       rt: session.refresh_token,
       page: _batidocPage,
-      projects: sbProfile?.projects || null
+      projects: sbProfile?.projects || null,
+      projectId: _isCustomProj ? window._activeProjectId : 'shift-tower'
     }));
     const batidocBase = window.location.hostname === 'localhost' ? 'http://localhost:4000' : 'https://ged.batimon.com';
     frame.src = batidocBase + '#bd=' + payload;

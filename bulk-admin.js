@@ -12,6 +12,8 @@ let aemRoles = [];
 let aemProjects = [];
 let aemViewerProjects = [];
 let aemAllProjects = false;
+let aemGedProjects = [];
+let _allGedProjects = [];
 
 const AEM_EXCLUSIVE_ROLES = ['admin', 'batidoc_user'];
 const AEM_ROLE_COLORS = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'};
@@ -245,7 +247,7 @@ async function executeDeleteUser(){
   }
 }
 
-function openAdminEdit(userId){
+async function openAdminEdit(userId){
   const u = adminUsers.find(u=>u.id===userId);
   if(!u) return;
   aemUserId = userId;
@@ -256,6 +258,13 @@ function openAdminEdit(userId){
   aemViewerProjects = Array.isArray(u.viewer_projects) ? [...u.viewer_projects] : [];
   aemAllProjects = aemProjects.includes('*');
   if(aemAllProjects) aemProjects = [];
+  aemGedProjects = Array.isArray(u.ged_projects) ? [...u.ged_projects] : [];
+
+  // Load GED projects list
+  try{
+    const {data} = await sb.from('ged_projects').select('id,name,director').order('created_at');
+    _allGedProjects = [{id:'shift-tower',name:'Shift Tower',director:'raed'}, ...(data||[]).filter(p=>p.id!=='shift-tower')];
+  }catch(e){ _allGedProjects = [{id:'shift-tower',name:'Shift Tower',director:'raed'}]; }
 
   document.getElementById('aem-subtitle').textContent = `${u.full_name||''}  @${u.username||''}`;
   document.getElementById('aem-err').style.display='none';
@@ -314,6 +323,9 @@ function openAdminEdit(userId){
   // Sync All Projects button and apply disabled state if active
   _aemRefreshAllProjectsBtn();
 
+  // Render GED project access section (visible only for batidoc_user role)
+  _aemRenderGedSection();
+
   document.getElementById('admin-edit-modal').style.display='flex';
 }
 
@@ -344,6 +356,36 @@ function _aemRefreshRoleButtons(){
   });
 }
 
+function _aemRenderGedSection(){
+  const wrap = document.getElementById('aem-ged-section');
+  if(!wrap) return;
+  const isBatidocUser = aemRoles.includes('batidoc_user');
+  wrap.style.display = isBatidocUser ? 'block' : 'none';
+  if(!isBatidocUser) return;
+  const grid = document.getElementById('aem-ged-projects');
+  if(!grid) return;
+  grid.innerHTML = _allGedProjects.map(p=>{
+    const checked = aemGedProjects.includes(p.id);
+    const border = checked ? '#a07800' : 'rgba(160,120,0,0.2)';
+    const bg = checked ? 'rgba(160,120,0,0.07)' : '#fdfaf0';
+    return `<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;border:2px solid ${border};background:${bg};transition:all 0.15s;" id="aem-ged-row-${p.id}">
+      <input type="checkbox" value="${p.id}" onchange="aemToggleGedProject(this)" style="width:15px;height:15px;accent-color:#a07800;cursor:pointer;flex-shrink:0;" ${checked?'checked':''}>
+      <span style="flex:1;font-size:12px;font-weight:600;color:#1a2a3a;cursor:pointer;" onclick="document.querySelector('#aem-ged-row-${p.id} input').click()">${p.name}</span>
+    </div>`;
+  }).join('');
+}
+
+function aemToggleGedProject(cb){
+  const val = cb.value;
+  if(cb.checked){ if(!aemGedProjects.includes(val)) aemGedProjects.push(val); }
+  else { aemGedProjects = aemGedProjects.filter(p=>p!==val); }
+  const row = document.getElementById('aem-ged-row-'+val);
+  if(row){
+    row.style.borderColor = cb.checked ? '#a07800' : 'rgba(160,120,0,0.2)';
+    row.style.background = cb.checked ? 'rgba(160,120,0,0.07)' : '#fdfaf0';
+  }
+}
+
 function aemToggleRole(val){
   const isExclusive = AEM_EXCLUSIVE_ROLES.includes(val);
   if(isExclusive){
@@ -357,6 +399,7 @@ function aemToggleRole(val){
   }
   aemRole = aemRoles[0] || 'viewer';
   _aemRefreshRoleButtons();
+  _aemRenderGedSection();
 }
 
 // Legacy - kept for any lingering references
@@ -540,6 +583,7 @@ async function saveAdminEdit(){
       roles: rolesToSave,
       projects: projectsToSave,
       viewer_projects: aemViewerProjects,
+      ged_projects: aemGedProjects,
       updated_at: new Date().toISOString()
     }).eq('id', aemUserId);
 
