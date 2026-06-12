@@ -1944,7 +1944,19 @@ function _custGetMeta(pid,facade){
   return m?JSON.parse(JSON.stringify(m)):_DEFAULT_GRID_META();
 }
 async function _custSaveFull(pid,facade){
-  try{ await sb.from('custom_project_facades').upsert({project_id:pid,facade,cells:_custFacadeCache[pid+'|'+facade]||{},updated_at:new Date().toISOString()},{onConflict:'project_id,facade'}); }catch(e){}
+  try{
+    const {error}=await sb.from('custom_project_facades').upsert({project_id:pid,facade,cells:_custFacadeCache[pid+'|'+facade]||{},updated_at:new Date().toISOString()},{onConflict:'project_id,facade'});
+    if(error){
+      console.error('[PCO] _custSaveFull FAILED — pid:',pid,'facade:',facade,'error:',error);
+      const t=document.createElement('div');
+      t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#c02020;color:#fff;padding:10px 20px;border-radius:8px;font-family:Barlow,sans-serif;font-size:12px;font-weight:600;z-index:99999;max-width:90vw;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+      t.textContent='⚠ Grid save failed ['+facade+']: '+(error.message||error.code||JSON.stringify(error));
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(),8000);
+    }
+  }catch(e){
+    console.error('[PCO] _custSaveFull EXCEPTION — pid:',pid,'facade:',facade,'exception:',e);
+  }
 }
 function _custSetMeta(pid,facade,meta){
   const k=pid+'|'+facade;
