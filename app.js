@@ -1969,6 +1969,101 @@ async function _custSaveFull(pid,facade){
     if(error) _custShowSaveError(facade, error);
   }catch(e){ _custShowSaveError(facade, e); }
 }
+
+// ── Duplicate Layout ──────────────────────────────────────────────────────────
+window.custOpenDuplicateModal = function(pid, facade, srcCatNum, srcFacadeDir){
+  const cats=getProjectCategories(pid);
+  const extras=_custExtraFacadesCache[pid]||[];
+  const srcCat=cats.find(c=>c.num===srcCatNum);
+  const srcCatNick=srcCat?.nick||('CAT'+srcCatNum);
+  const srcNick=(srcCat?.facadeNicks?.[srcFacadeDir])||(srcFacadeDir+srcCatNum);
+  window._dupCtx={pid,facade,srcCatNum,srcFacadeDir,srcCatNick,srcNick,cats,extras};
+  const allDirs=['NF','SF','EF','WF',...extras];
+  const facOpts=(tCatNum)=>allDirs.map(d=>{const tc=cats.find(c=>c.num===tCatNum);const raw=(tc?.facadeNames?.[d])||('Facade '+d);return`<option value="${d}">${_fmtFacadeDisplay(raw)||d}</option>`;}).join('');
+  const catOpts=cats.map(c=>`<option value="${c.num}">${c.nick||'CAT'+c.num} — ${c.name||'Category '+c.num}</option>`).join('');
+  const ov=document.createElement('div');
+  ov.id='_dupLayoutOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:10000;display:flex;align-items:center;justify-content:center;';
+  ov.innerHTML=`<div style="background:#fff;border-radius:14px;padding:28px 32px;min-width:380px;max-width:94vw;box-shadow:0 8px 40px rgba(0,0,0,0.22);font-family:Barlow,sans-serif;">
+    <div style="font-size:15px;font-weight:700;color:#1a2a3a;margin-bottom:18px;">⧉ Duplicate Layout</div>
+    <div style="font-size:11px;color:#8099b0;margin-bottom:4px;">Copying FROM</div>
+    <div style="font-size:12px;font-weight:600;color:#224F93;background:#eef3fb;border-radius:7px;padding:8px 12px;margin-bottom:20px;">${srcCatNick} / ${srcNick}</div>
+    <div style="font-size:11px;color:#8099b0;margin-bottom:4px;">Target Category</div>
+    <select id="_dupToCat" onchange="_dupRefreshFacades()" style="width:100%;padding:8px 10px;border:1.5px solid #dde3ee;border-radius:7px;font-family:Barlow,sans-serif;font-size:12px;margin-bottom:12px;outline:none;">${catOpts}</select>
+    <div style="font-size:11px;color:#8099b0;margin-bottom:4px;">Target Facade</div>
+    <select id="_dupToFacade" onchange="_dupRefreshPreview()" style="width:100%;padding:8px 10px;border:1.5px solid #dde3ee;border-radius:7px;font-family:Barlow,sans-serif;font-size:12px;margin-bottom:14px;outline:none;">${facOpts(cats[0]?.num||1)}</select>
+    <div id="_dupPreview" style="font-size:11px;color:#555;background:#f8f9fb;border-radius:7px;padding:8px 12px;margin-bottom:14px;"></div>
+    <div style="font-size:10px;color:#c02020;margin-bottom:20px;">⚠ Existing layout in the target will be overwritten. All statuses reset to Pending.</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="document.getElementById('_dupLayoutOv').remove()" style="padding:8px 18px;border:1.5px solid #dde3ee;border-radius:7px;background:#fff;color:#8099b0;font-family:Barlow,sans-serif;font-size:12px;cursor:pointer;font-weight:600;">Cancel</button>
+      <button onclick="custApplyDuplicateLayout()" style="padding:8px 18px;background:#224F93;color:#fff;border:none;border-radius:7px;font-family:Barlow,sans-serif;font-size:12px;cursor:pointer;font-weight:700;">Apply →</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('mousedown',e=>{if(e.target===ov)ov.remove();});
+  _dupRefreshPreview();
+};
+
+window._dupRefreshFacades=function(){
+  const ctx=window._dupCtx;if(!ctx)return;
+  const catSel=document.getElementById('_dupToCat');
+  const facSel=document.getElementById('_dupToFacade');
+  if(!catSel||!facSel)return;
+  const tCatNum=parseInt(catSel.value);
+  const tc=ctx.cats.find(c=>c.num===tCatNum);
+  const allDirs=['NF','SF','EF','WF',...ctx.extras];
+  facSel.innerHTML=allDirs.map(d=>{const raw=(tc?.facadeNames?.[d])||('Facade '+d);return`<option value="${d}">${_fmtFacadeDisplay(raw)||d}</option>`;}).join('');
+  _dupRefreshPreview();
+};
+
+window._dupRefreshPreview=function(){
+  const ctx=window._dupCtx;if(!ctx)return;
+  const catSel=document.getElementById('_dupToCat');
+  const facSel=document.getElementById('_dupToFacade');
+  const prev=document.getElementById('_dupPreview');
+  if(!catSel||!facSel||!prev)return;
+  const tCatNum=parseInt(catSel.value);
+  const tFacadeDir=facSel.value;
+  const tc=ctx.cats.find(c=>c.num===tCatNum);
+  const tCatNick=tc?.nick||('CAT'+tCatNum);
+  const tNick=(tc?.facadeNicks?.[tFacadeDir])||(tFacadeDir+tCatNum);
+  prev.innerHTML=`Reference: <b style="color:#224F93;">${ctx.srcCatNick}-${ctx.srcNick}-…</b> → <b style="color:#1a9458;">${tCatNick}-${tNick}-…</b>`;
+};
+
+window.custApplyDuplicateLayout=async function(){
+  const ctx=window._dupCtx;if(!ctx)return;
+  const catSel=document.getElementById('_dupToCat');
+  const facSel=document.getElementById('_dupToFacade');
+  if(!catSel||!facSel)return;
+  const tCatNum=parseInt(catSel.value);
+  const tFacadeDir=facSel.value;
+  const tFacade=tCatNum===1?tFacadeDir:'c'+tCatNum+'-'+tFacadeDir;
+  const tc=ctx.cats.find(c=>c.num===tCatNum);
+  const tCatNick=tc?.nick||('CAT'+tCatNum);
+  const tNick=(tc?.facadeNicks?.[tFacadeDir])||(tFacadeDir+tCatNum);
+  const srcCells=_custFacadeCache[ctx.pid+'|'+ctx.facade]||{};
+  const srcMeta=srcCells['__meta__'];
+  if(!srcMeta){alert('Source facade has no layout to copy.');return;}
+  await _loadCustomFacade(ctx.pid,tFacade);
+  const tExisting=_custFacadeCache[ctx.pid+'|'+tFacade];
+  if(tExisting&&tExisting['__meta__']&&!confirm('Target facade already has a layout. Overwrite it?'))return;
+  const oldPfx=ctx.srcCatNick+'-'+ctx.srcNick;
+  const newPfx=tCatNick+'-'+tNick;
+  const newCells={};
+  newCells['__meta__']=JSON.parse(JSON.stringify(srcMeta));
+  Object.entries(srcCells).forEach(([k,v])=>{
+    if(k==='__meta__')return;
+    if(typeof v==='object'&&v!==null&&v.panelRef)
+      newCells[k]={status:'pending',panelRef:v.panelRef.split(oldPfx).join(newPfx)};
+  });
+  _custFacadeCache[ctx.pid+'|'+tFacade]=newCells;
+  await _custSaveFull(ctx.pid,tFacade);
+  document.getElementById('_dupLayoutOv')?.remove();
+  if(confirm('Layout duplicated!\n\nNavigate to the target facade now?')) goPage('c'+tCatNum+'-'+tFacadeDir);
+  else renderCustomMonitoring(window._currentCustomPage);
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 function _custSetMeta(pid,facade,meta){
   const k=pid+'|'+facade;
   if(!_custFacadeCache[k])_custFacadeCache[k]={};
@@ -2970,6 +3065,8 @@ async function renderCustomMonitoring(pageId){
             ${_urEnabled?`<div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div><button onclick="_cgToggleSplitView()" style="${bs}${_cgSplitView?'background:#224F93;color:#fff;':''}" title="Toggle split / single table view">${_cgSplitView?'⊞ 1 Table':'⊟ Split View'}</button>`:''}
             ${_zoomControls}
             ${_printBtn}
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
+            <button onclick="custOpenDuplicateModal('${pid}','${facade}',${catNum},'${facadeDir}')" style="${bs}" title="Copy this grid layout to another category or facade">⧉ Duplicate Layout</button>
           `:`
             <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
             ${_filterBtns}
