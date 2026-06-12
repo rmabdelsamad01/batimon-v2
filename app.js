@@ -2053,14 +2053,64 @@ window.custApplyDuplicateLayout=async function(){
   newCells['__meta__']=JSON.parse(JSON.stringify(srcMeta));
   Object.entries(srcCells).forEach(([k,v])=>{
     if(k==='__meta__')return;
-    if(typeof v==='object'&&v!==null&&v.panelRef)
-      newCells[k]={status:'pending',panelRef:v.panelRef.split(oldPfx).join(newPfx)};
+    if(typeof v==='object'&&v!==null&&(v.panelRef||v.textDir)){
+      const nc={status:'pending'};
+      if(v.panelRef) nc.panelRef=v.panelRef.split(oldPfx).join(newPfx);
+      if(v.textDir) nc.textDir=v.textDir;
+      newCells[k]=nc;
+    }
   });
   _custFacadeCache[ctx.pid+'|'+tFacade]=newCells;
   await _custSaveFull(ctx.pid,tFacade);
   document.getElementById('_dupLayoutOv')?.remove();
   if(confirm('Layout duplicated!\n\nNavigate to the target facade now?')) goPage('c'+tCatNum+'-'+tFacadeDir);
   else renderCustomMonitoring(window._currentCustomPage);
+};
+// ── Text Direction Panel ──────────────────────────────────────────────────────
+window._cgOpenTextDirPanel=function(btn,pid,facade){
+  const existing=document.getElementById('_cgTextDirPanel');
+  if(existing){existing.remove();return;}
+  if(_custMultiSel.size===0){
+    const h=document.getElementById('cg-hint');
+    if(h){h.textContent='Ctrl+click cells to select them first.';setTimeout(()=>{if(h)h.textContent='';},2500);}
+    return;
+  }
+  const panel=document.createElement('div');
+  panel.id='_cgTextDirPanel';
+  const rect=btn.getBoundingClientRect();
+  panel.style.cssText=`position:fixed;top:${rect.bottom+4}px;left:${rect.left}px;background:#fff;border:1.5px solid #dde3ee;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.14);z-index:9999;min-width:180px;font-family:Barlow,sans-serif;overflow:hidden;`;
+  const opts=[
+    {dir:'normal',  label:'↔  Normal'},
+    {dir:'vertical',label:'↕  Vertical Text'},
+    {dir:'up',      label:'↑  Rotate Up'},
+    {dir:'down',    label:'↓  Rotate Down'},
+  ];
+  panel.innerHTML=opts.map(o=>`<div onclick="_custApplyTextDir('${pid}','${facade}','${o.dir}')" style="padding:9px 16px;font-size:12px;font-weight:600;color:#1a2a3a;cursor:pointer;border-bottom:1px solid #f0f2f5;" onmouseover="this.style.background='#eef3fb'" onmouseout="this.style.background=''">${o.label}</div>`).join('');
+  document.body.appendChild(panel);
+  setTimeout(()=>document.addEventListener('click',function _dtp(e){if(!panel.contains(e.target)){panel.remove();document.removeEventListener('click',_dtp);}}),0);
+};
+
+window._custApplyTextDir=function(pid,facade,dir){
+  document.getElementById('_cgTextDirPanel')?.remove();
+  if(_custMultiSel.size===0)return;
+  const fk=pid+'|'+facade;
+  if(!_custFacadeCache[fk])_custFacadeCache[fk]={};
+  _custMultiSel.forEach(k=>{
+    if(!_custFacadeCache[fk][k])_custFacadeCache[fk][k]={};
+    if(dir==='normal')delete _custFacadeCache[fk][k].textDir;
+    else _custFacadeCache[fk][k].textDir=dir;
+    const m=k.match(/^r(\d+)_c(\d+)$/);
+    if(m){
+      const inner=document.getElementById(`cginner-${m[1]}_${m[2]}`);
+      if(inner){
+        inner.style.writingMode=''; inner.style.textOrientation=''; inner.style.transform='';
+        if(dir==='vertical'){inner.style.writingMode='vertical-lr';inner.style.textOrientation='upright';}
+        else if(dir==='up'){inner.style.writingMode='vertical-lr';inner.style.transform='rotate(180deg)';}
+        else if(dir==='down'){inner.style.writingMode='vertical-lr';}
+      }
+    }
+  });
+  _custSaveFull(pid,facade);
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2069,6 +2119,13 @@ function _custSetMeta(pid,facade,meta){
   if(!_custFacadeCache[k])_custFacadeCache[k]={};
   _custFacadeCache[k]['__meta__']=meta;
   _custSaveFull(pid,facade);
+}
+function _cgTextDirStyle(dir){
+  if(!dir||dir==='normal') return '';
+  if(dir==='vertical') return 'writing-mode:vertical-lr;text-orientation:upright;';
+  if(dir==='up') return 'writing-mode:vertical-lr;transform:rotate(180deg);';
+  if(dir==='down') return 'writing-mode:vertical-lr;';
+  return '';
 }
 function _custRemapCells(pid,facade,mapFn){
   const k=pid+'|'+facade; const cells=_custFacadeCache[k]||{}; const out={};
@@ -2982,7 +3039,7 @@ async function renderCustomMonitoring(pageId){
           ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}
           title="${cellRef} — ${_custStLabel[st]}"
           style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;">
-          <div style="font-size:${cells[key]?.panelRef?'15px':'7px'};font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayRef}</div>
+          <div id="cginner-${ri}_${ci}" style="font-size:${cells[key]?.panelRef?'15px':'7px'};font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_isDev?_cgTextDirStyle(cells[key]?.textDir):''}">${displayRef}</div>
         </td>`;
       }).join('')}
     </tr>`).join('');
@@ -2996,7 +3053,7 @@ async function renderCustomMonitoring(pageId){
       const sc1=span.c,sc2=Math.min(span.c+span.colspan-1,meta.cols.length-1);
       const sCols=meta.cols.slice(sc1,sc2+1);
       const sColHdrs=sCols.map((col,lci)=>{const ci=sc1+lci;return`<th oncontextmenu="custGridCtx(event,'${pid}','${facade}','col',${ci})" ondblclick="custGridRenameCol('${pid}','${facade}',${ci})" style="padding:6px 8px;background:#224F93;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.12);width:${col.width}px;min-width:${col.width}px;cursor:pointer;user-select:none;" title="Double-click to rename · Right-click for more options">${col.label}</th>`;}).join('');
-      const sBodyRows=meta.rows.map((row,ri)=>`<tr><td oncontextmenu="custGridCtx(event,'${pid}','${facade}','row',${ri})" ondblclick="custGridRenameRow('${pid}','${facade}',${ri})" style="padding:4px 8px;background:#f0f4f9;font-size:11px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;user-select:none;cursor:pointer;min-width:36px;height:${row.height}px;" title="Double-click to rename · Right-click for more options">${row.label}</td>${sCols.map((col,lci)=>{const ci=sc1+lci;if(_isCoveredInGroup(ri,ci,sc1))return'';const merge=getMerge(ri,ci);const rs=merge?merge.rowspan:1;const cs=merge?Math.min(merge.colspan,sc2-ci+1):1;const key=`r${ri}_c${ci}`;const st=(cells[key]?.status)||'pending';const cellRef=`${catNick}-${nick}-${row.label}-${col.label}`;const displayRef=(cells[key]?.panelRef)||cellRef;return`<td id="cpcell-${ri}_${ci}" data-status="${st}" data-key="${key}" data-cellref="${cellRef}" onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})" oncontextmenu="custCellOpenPanel(event,'${pid}','${facade}','${key}','${cellRef}');return false;" ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}  title="${cellRef} — ${_custStLabel[st]}" style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;"><div style="font-size:${cells[key]?.panelRef?'15px':'7px'};font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${displayRef}</div></td>`;}).join('')}</tr>`).join('');
+      const sBodyRows=meta.rows.map((row,ri)=>`<tr><td oncontextmenu="custGridCtx(event,'${pid}','${facade}','row',${ri})" ondblclick="custGridRenameRow('${pid}','${facade}',${ri})" style="padding:4px 8px;background:#f0f4f9;font-size:11px;font-weight:700;color:#224F93;text-align:center;border:1px solid #dde6f0;user-select:none;cursor:pointer;min-width:36px;height:${row.height}px;" title="Double-click to rename · Right-click for more options">${row.label}</td>${sCols.map((col,lci)=>{const ci=sc1+lci;if(_isCoveredInGroup(ri,ci,sc1))return'';const merge=getMerge(ri,ci);const rs=merge?merge.rowspan:1;const cs=merge?Math.min(merge.colspan,sc2-ci+1):1;const key=`r${ri}_c${ci}`;const st=(cells[key]?.status)||'pending';const cellRef=`${catNick}-${nick}-${row.label}-${col.label}`;const displayRef=(cells[key]?.panelRef)||cellRef;return`<td id="cpcell-${ri}_${ci}" data-status="${st}" data-key="${key}" data-cellref="${cellRef}" onclick="custGridCellClick(event,'${pid}','${facade}',${ri},${ci})" oncontextmenu="custCellOpenPanel(event,'${pid}','${facade}','${key}','${cellRef}');return false;" ${rs>1?`rowspan="${rs}"`:''}${cs>1?`colspan="${cs}"`:''}  title="${cellRef} — ${_custStLabel[st]}" style="padding:2px 3px;border:1px solid #dde6f0;background:${_custStBg[st]};color:${_custStText[st]};width:${col.width}px;min-width:${col.width}px;height:${row.height}px;text-align:center;cursor:pointer;user-select:none;vertical-align:middle;"><div id="cginner-${ri}_${ci}" style="font-size:${cells[key]?.panelRef?'15px':'7px'};font-weight:600;opacity:0.75;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${_isDev?_cgTextDirStyle(cells[key]?.textDir):''}">${displayRef}</div></td>`;}).join('')}</tr>`).join('');
       return`<div style="margin-bottom:28px;"><div style="background:#0f2d6b;color:#fff;font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px 8px 0 0;letter-spacing:0.05em;">${span.label||'Group'}</div><div style="overflow-x:auto;border-radius:0 0 8px 8px;box-shadow:0 2px 12px rgba(34,79,147,0.08);"><table style="border-collapse:collapse;"><thead><tr><th style="padding:6px 8px;background:#1a3d72;color:#fff;font-size:11px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.1);min-width:36px;">Row</th>${sColHdrs}</tr></thead><tbody>${sBodyRows}</tbody></table></div></div>`;
     }).join('');
   }
@@ -3051,6 +3108,7 @@ async function renderCustomMonitoring(pageId){
           ${_isDev?`
             <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
             <button onclick="custGridAddCol('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Column</button>
+            <button id="cg-textdir-btn" onclick="_cgOpenTextDirPanel(this,'${pid}','${facade}')" style="${bs}" title="Rotate text of selected cells — Ctrl+click to select">↕ Text</button>
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <button id="cg-merge-btn" onclick="custGridStartMerge()" style="${bs}" title="Click two cells to merge them" onmouseover="this.style.background='#e0e8f5'" onmouseout="if(_gridMode!=='merge')this.style.background='#f0f4f9'">⊞ Merge</button>
             <button id="cg-unmerge-btn" onclick="custGridStartUnmerge()" style="${bs}" title="Click a merged cell to split it" onmouseover="this.style.background='#fff0f0'" onmouseout="if(_gridMode!=='unmerge')this.style.background='#f0f4f9'">⊟ Unmerge</button>
