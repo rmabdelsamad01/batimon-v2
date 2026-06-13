@@ -112,19 +112,39 @@ function _adminGetAllProjects(){
   const sortKey = n => { const i=order.indexOf((n||'').toLowerCase().trim()); return i>=0?i:999; };
   const meta = ALL_PROJECTS.map(id=>({id, name:(typeof PROJECT_META!=='undefined'&&PROJECT_META[id])?PROJECT_META[id].name:id}));
   const cust = custom.map(p=>({id:p.id, name:p.name}));
-  return [...meta, ...cust].sort((a,b)=>sortKey(a.name)-sortKey(b.name));
+  const sorted = [...meta, ...cust].sort((a,b)=>sortKey(a.name)-sortKey(b.name));
+  return [{id:'*', name:'All'},...sorted];
 }
 
 function _adminCellState(u, projId){
   const roles = Array.isArray(u.roles)&&u.roles.length ? u.roles : [u.role||'viewer'];
+  const projs = Array.isArray(u.projects)?u.projects:[];
+  if(projId==='*') return projs.includes('*') ? 'full' : 'none';
   if(roles.includes('batidoc_user')){
     return (Array.isArray(u.ged_projects)&&u.ged_projects.includes(projId)) ? 'full' : 'none';
   }
-  const projs = Array.isArray(u.projects)?u.projects:[];
   const viewers = Array.isArray(u.viewer_projects)?u.viewer_projects:[];
   if(projs.includes('*')||projs.includes(projId)) return 'full';
   if(viewers.includes(projId)) return 'viewer';
   return 'none';
+}
+
+function _adminRefreshUserProjectCells(userId){
+  const dirty = _adminDirty[userId]||{};
+  const u = adminUsers.find(x=>x.id===userId);
+  if(!u) return;
+  const eu = {...u,...dirty};
+  _adminGetAllProjects().forEach(p=>{
+    const sid = p.id.replace(/[^a-zA-Z0-9]/g,'-');
+    const cell = document.getElementById(`admin-cell-${userId}-${sid}`);
+    if(!cell) return;
+    const state = _adminCellState(eu, p.id);
+    const isAll = p.id==='*';
+    const bg = state==='full'?(isAll?'#e8d8ff':'#d4edda'):state==='viewer'?'#d4e4f7':'#e8e8e8';
+    const col = state==='full'?(isAll?'#6d35d9':'#1a9458'):state==='viewer'?'#224F93':'#999';
+    const lbl = state==='full'?(isAll?'All':'Full'):state==='viewer'?'View':'—';
+    cell.innerHTML = `<span style='display:inline-block;min-width:42px;padding:3px 7px;border-radius:10px;background:${bg};color:${col};font-size:10px;font-weight:700;'>${lbl}</span>`;
+  });
 }
 
 function _adminRenderGrid(users, projects){
@@ -154,11 +174,19 @@ function _adminRenderGrid(users, projects){
     const projCells = projects.map(p=>{
       const state = _adminCellState(eu, p.id);
       const sid = p.id.replace(/[^a-zA-Z0-9]/g,'-');
-      const bg = state==='full'?'#d4edda':state==='viewer'?'#d4e4f7':'#e8e8e8';
-      const col = state==='full'?'#1a9458':state==='viewer'?'#224F93':'#999';
-      const lbl = state==='full'?'Full':state==='viewer'?'View':'—';
-      return `<td id='admin-cell-${u.id}-${sid}' onclick='adminCycleCell("${u.id}","${p.id}")' style='cursor:pointer;padding:8px 6px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'><span style='display:inline-block;min-width:42px;padding:3px 7px;border-radius:10px;background:${bg};color:${col};font-size:10px;font-weight:700;'>${lbl}</span></td>`;
+      const isAll = p.id==='*';
+      const bg = state==='full'?(isAll?'#e8d8ff':'#d4edda'):state==='viewer'?'#d4e4f7':'#e8e8e8';
+      const col = state==='full'?(isAll?'#6d35d9':'#1a9458'):state==='viewer'?'#224F93':'#999';
+      const lbl = state==='full'?(isAll?'All':'Full'):state==='viewer'?'View':'—';
+      const cellBorder = isAll ? 'border-right:2px solid rgba(34,79,147,0.12);' : '';
+      return `<td id='admin-cell-${u.id}-${sid}' onclick='adminCycleCell("${u.id}","${p.id}")' style='cursor:pointer;padding:8px 6px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;${cellBorder}'><span style='display:inline-block;min-width:42px;padding:3px 7px;border-radius:10px;background:${bg};color:${col};font-size:10px;font-weight:700;'>${lbl}</span></td>`;
     }).join('');
+
+    const roleBadges = roles.map(r=>{
+      const rc = AEM_ROLE_COLORS[r]||'#8099b0';
+      const rl = AEM_ROLE_LABELS[r]||r;
+      return `<span style='font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:${rc}18;color:${rc};white-space:nowrap;display:inline-block;'>${rl}</span>`;
+    }).join('<br>');
 
     return `<tr data-admin-uid='${u.id}' onclick='_adminSelectRow("${u.id}")' style='background:${rowBg};cursor:pointer;transition:background 0.1s;'>
       <td style='padding:8px 10px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;' onclick='event.stopPropagation();_adminSelectRow("${u.id}")'>
@@ -171,8 +199,8 @@ function _adminRenderGrid(users, projects){
       <td style='padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'>
         <span style='font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${sBg};color:${sColor};white-space:nowrap;'>${sLabel}</span>
       </td>
-      <td style='padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'>
-        <span style='font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${roleColor}18;color:${roleColor};white-space:nowrap;'>${roleLabel}</span>
+      <td style='padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;line-height:1.6;'>
+        ${roleBadges}
       </td>
       ${projCells}
     </tr>`;
@@ -722,13 +750,26 @@ function adminCycleCell(userId, projId){
   _adminTouched.add(touchKey);
 
   if(!_adminDirty[userId]) _adminDirty[userId]={};
-  if(isBatidoc){
+  if(projId==='*'){
+    // "All projects" wildcard — 2-state toggle, refresh all cells
+    if(next==='full'){ _adminDirty[userId].projects=['*']; _adminDirty[userId].viewer_projects=[]; }
+    else { _adminDirty[userId].projects=[]; _adminDirty[userId].viewer_projects=[]; }
+    _adminRefreshUserProjectCells(userId);
+  } else if(isBatidoc){
     let gp = Array.isArray(eu.ged_projects)?[...eu.ged_projects]:[];
     if(next==='full'){ if(!gp.includes(projId)) gp.push(projId); }
     else gp=gp.filter(p=>p!==projId);
     _adminDirty[userId].ged_projects=gp;
+    // Update cell in-place
+    const sid = projId.replace(/[^a-zA-Z0-9]/g,'-');
+    const cell = document.getElementById(`admin-cell-${userId}-${sid}`);
+    if(cell){
+      const bg=next==='full'?'#d4edda':'#e8e8e8'; const col=next==='full'?'#1a9458':'#999'; const lbl=next==='full'?'Full':'—';
+      cell.innerHTML=`<span style='display:inline-block;min-width:42px;padding:3px 7px;border-radius:10px;background:${bg};color:${col};font-size:10px;font-weight:700;'>${lbl}</span>`;
+    }
   } else {
-    let projs = Array.isArray(eu.projects)?eu.projects.filter(p=>p!=='*'):[...[]];
+    // If the user currently has '*', toggling any individual project first removes '*'
+    let projs = Array.isArray(eu.projects)?eu.projects.filter(p=>p!=='*'):[];
     let viewers = Array.isArray(eu.viewer_projects)?[...eu.viewer_projects]:[];
     projs = projs.filter(p=>p!==projId);
     viewers = viewers.filter(p=>p!==projId);
@@ -736,16 +777,8 @@ function adminCycleCell(userId, projId){
     else if(next==='viewer') viewers.push(projId);
     _adminDirty[userId].projects=projs;
     _adminDirty[userId].viewer_projects=viewers;
-  }
-
-  // Update cell in-place
-  const sid = projId.replace(/[^a-zA-Z0-9]/g,'-');
-  const cell = document.getElementById(`admin-cell-${userId}-${sid}`);
-  if(cell){
-    const bg = next==='full'?'#d4edda':next==='viewer'?'#d4e4f7':'#e8e8e8';
-    const col = next==='full'?'#1a9458':next==='viewer'?'#224F93':'#999';
-    const lbl = next==='full'?'Full':next==='viewer'?'View':'—';
-    cell.innerHTML = `<span style='display:inline-block;min-width:42px;padding:3px 7px;border-radius:10px;background:${bg};color:${col};font-size:10px;font-weight:700;'>${lbl}</span>`;
+    // Refresh all cells so the "All" column badge also updates
+    _adminRefreshUserProjectCells(userId);
   }
 
   // Enable save button
