@@ -17,6 +17,7 @@ let _allGedProjects = [];
 let _adminSelected = null;
 let _adminDirty = {};
 let _adminTouched = new Set();
+let _adminRolePickerUserId = null;
 
 const AEM_EXCLUSIVE_ROLES = ['admin', 'batidoc_user'];
 const AEM_ROLE_COLORS = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'};
@@ -196,10 +197,10 @@ function _adminRenderGrid(users, projects){
         <div style='font-size:12px;font-weight:700;color:#1a2a3a;'>${u.full_name||'—'}${isSelf?' <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;background:rgba(109,53,217,0.1);color:#6d35d9;">You</span>':''}</div>
         <div style='font-size:10px;color:#8099b0;font-family:"DM Mono",monospace;'>@${u.username||'—'}</div>
       </td>
-      <td style='padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'>
+      <td id='admin-status-cell-${u.id}' onclick='adminCycleStatus("${u.id}")' style='cursor:pointer;padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'>
         <span style='font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${sBg};color:${sColor};white-space:nowrap;'>${sLabel}</span>
       </td>
-      <td style='padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;line-height:1.6;'>
+      <td id='admin-role-cell-${u.id}' onclick='_adminShowRolePicker("${u.id}",event)' style='cursor:pointer;padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;line-height:1.8;'>
         ${roleBadges}
       </td>
       ${projCells}
@@ -786,9 +787,106 @@ function adminCycleCell(userId, projId){
   if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.style.pointerEvents='auto'; }
 }
 
-function adminEditSelected(){
-  if(!_adminSelected) return;
-  openAdminEdit(_adminSelected);
+function adminCycleStatus(userId){
+  const dirty = _adminDirty[userId]||{};
+  const u = adminUsers.find(x=>x.id===userId);
+  if(!u) return;
+  const eu = {...u,...dirty};
+  const cycle = ['pending','approved','suspended'];
+  const next = cycle[(cycle.indexOf(eu.status||'pending')+1)%cycle.length];
+  if(!_adminDirty[userId]) _adminDirty[userId]={};
+  _adminDirty[userId].status = next;
+  const cell = document.getElementById(`admin-status-cell-${userId}`);
+  if(cell){
+    const sColor = {approved:'#1a9458',pending:'#e05c00',suspended:'#c02020'}[next]||'#8099b0';
+    const sBg = {approved:'rgba(26,148,88,0.08)',pending:'rgba(224,92,0,0.08)',suspended:'rgba(192,32,32,0.08)'}[next];
+    const sLabel = {approved:'Approved',pending:'Pending',suspended:'Suspended'}[next];
+    cell.innerHTML = `<span style='font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${sBg};color:${sColor};white-space:nowrap;'>${sLabel}</span>`;
+  }
+  const saveBtn = document.getElementById('admin-save-btn');
+  if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.style.pointerEvents='auto'; }
+}
+
+function _adminShowRolePicker(userId, event){
+  event.stopPropagation();
+  if(_adminRolePickerUserId===userId){ _adminCloseRolePicker(); return; }
+  _adminCloseRolePicker();
+  _adminRolePickerUserId = userId;
+  const td = event.currentTarget;
+  const rect = td.getBoundingClientRect();
+  const picker = document.createElement('div');
+  picker.id = 'admin-role-picker';
+  picker.onclick = e => e.stopPropagation();
+  picker.style.cssText = `position:fixed;z-index:10000;left:${rect.left}px;top:${rect.bottom+4}px;background:#fff;border:1px solid rgba(34,79,147,0.18);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,0.14);padding:8px;min-width:175px;font-family:'Barlow',sans-serif;`;
+  document.body.appendChild(picker);
+  _adminRenderRolePicker(userId);
+  setTimeout(()=>{ document.addEventListener('click', _adminCloseRolePicker, {once:true}); }, 0);
+}
+
+function _adminRenderRolePicker(userId){
+  const picker = document.getElementById('admin-role-picker');
+  if(!picker) return;
+  const dirty = _adminDirty[userId]||{};
+  const u = adminUsers.find(x=>x.id===userId);
+  if(!u) return;
+  const eu = {...u,...dirty};
+  const roles = Array.isArray(eu.roles)&&eu.roles.length ? eu.roles : [eu.role||'viewer'];
+  const allRoles = ['admin','user','developer','viewer','batidoc_user','phone_only'];
+  picker.innerHTML = allRoles.map(r=>{
+    const isActive = roles.includes(r);
+    const color = AEM_ROLE_COLORS[r]||'#8099b0';
+    const label = AEM_ROLE_LABELS[r]||r;
+    return `<div onclick="_adminPickerToggleRole('${userId}','${r}')" style="display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;cursor:pointer;background:${isActive?color+'14':'transparent'};margin-bottom:1px;">
+      <div style="width:13px;height:13px;border-radius:3px;border:2px solid ${color};background:${isActive?color:'transparent'};flex-shrink:0;"></div>
+      <span style="font-size:12px;font-weight:${isActive?700:600};color:${isActive?color:'#1a2a3a'};">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+function _adminCloseRolePicker(){
+  const p = document.getElementById('admin-role-picker');
+  if(p) p.remove();
+  _adminRolePickerUserId = null;
+}
+
+function _adminPickerToggleRole(userId, role){
+  const dirty = _adminDirty[userId]||{};
+  const u = adminUsers.find(x=>x.id===userId);
+  if(!u) return;
+  const eu = {...u,...dirty};
+  let roles = Array.isArray(eu.roles)&&eu.roles.length ? [...eu.roles] : [eu.role||'viewer'];
+  const isExclusive = AEM_EXCLUSIVE_ROLES.includes(role);
+  if(isExclusive){
+    roles = (roles.length===1&&roles[0]===role) ? ['viewer'] : [role];
+  } else {
+    roles = roles.filter(r=>!AEM_EXCLUSIVE_ROLES.includes(r));
+    if(roles.includes(role)) roles = roles.filter(r=>r!==role);
+    else roles.push(role);
+    if(!roles.length) roles=['viewer'];
+  }
+  if(!_adminDirty[userId]) _adminDirty[userId]={};
+  _adminDirty[userId].roles = roles;
+  _adminDirty[userId].role = roles[0];
+  _adminRenderRolePicker(userId);
+  _adminRefreshRoleCell(userId);
+  _adminRefreshUserProjectCells(userId);
+  const saveBtn = document.getElementById('admin-save-btn');
+  if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.style.pointerEvents='auto'; }
+}
+
+function _adminRefreshRoleCell(userId){
+  const cell = document.getElementById(`admin-role-cell-${userId}`);
+  if(!cell) return;
+  const dirty = _adminDirty[userId]||{};
+  const u = adminUsers.find(x=>x.id===userId);
+  if(!u) return;
+  const eu = {...u,...dirty};
+  const roles = Array.isArray(eu.roles)&&eu.roles.length ? eu.roles : [eu.role||'viewer'];
+  cell.innerHTML = roles.map(r=>{
+    const rc = AEM_ROLE_COLORS[r]||'#8099b0';
+    const rl = AEM_ROLE_LABELS[r]||r;
+    return `<span style='font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:${rc}18;color:${rc};white-space:nowrap;display:inline-block;'>${rl}</span>`;
+  }).join('<br>');
 }
 
 function adminDeleteSelected(){
