@@ -19,6 +19,8 @@ let _adminDirty = {};
 let _adminTouched = new Set();
 let _adminRolePickerUserId = null;
 const _adminSaveTimers = {};
+let _adminSortCol = null;
+let _adminSortDir = 'asc';
 
 const AEM_EXCLUSIVE_ROLES = ['admin', 'batidoc_user'];
 const AEM_ROLE_COLORS = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'};
@@ -135,6 +137,35 @@ async function rejectDelRequest(reqId){
   await adminRefresh();
 }
 
+function _adminSetSort(col){
+  if(_adminSortCol===col) _adminSortDir = _adminSortDir==='asc'?'desc':'asc';
+  else { _adminSortCol=col; _adminSortDir='asc'; }
+  renderAdminUsers();
+}
+
+function _adminSortUsers(users){
+  if(!_adminSortCol) return users;
+  const dir = _adminSortDir==='asc' ? 1 : -1;
+  const col = _adminSortCol;
+  return [...users].sort((a,b)=>{
+    let va, vb;
+    if(col==='name'){
+      va=(a.full_name||a.username||'').toLowerCase();
+      vb=(b.full_name||b.username||'').toLowerCase();
+    } else if(col==='status'){
+      const o={approved:0,pending:1,suspended:2};
+      return ((o[a.status]??3)-(o[b.status]??3))*dir;
+    } else if(col==='role'){
+      va=((Array.isArray(a.roles)&&a.roles.length?a.roles[0]:a.role)||'').toLowerCase();
+      vb=((Array.isArray(b.roles)&&b.roles.length?b.roles[0]:b.role)||'').toLowerCase();
+    } else {
+      const o={full:0,viewer:1,none:2};
+      return ((o[_adminCellState(a,col)]??3)-(o[_adminCellState(b,col)]??3))*dir;
+    }
+    return va<vb?-dir:va>vb?dir:0;
+  });
+}
+
 function _adminGetAllProjects(){
   const custom = typeof getCustomProjects==='function' ? getCustomProjects() : [];
   const order = typeof _PROJECT_DISPLAY_ORDER!=='undefined' ? _PROJECT_DISPLAY_ORDER : [];
@@ -178,12 +209,16 @@ function _adminRefreshUserProjectCells(userId){
 
 function _adminRenderGrid(users, projects){
   if(!users.length) return '';
+  const sortCols = ['name','status','role',...projects.map(p=>p.id)];
+  const arrow = col => _adminSortCol!==col ? `<span style='margin-left:3px;color:#d0d8e4;'>↕</span>` : _adminSortDir==='asc' ? `<span style='margin-left:3px;color:#224F93;'>↑</span>` : `<span style='margin-left:3px;color:#224F93;'>↓</span>`;
   const ths = ['','Name','Status','Role',...projects.map(p=>p.name)].map((h,i)=>{
     const base = `padding:9px 8px;border-bottom:2px solid rgba(34,79,147,0.12);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8099b0;white-space:nowrap;background:#f8fafd;`;
     if(i===0) return `<th style='${base}width:36px;text-align:center;'></th>`;
-    if(i===1) return `<th style='${base}text-align:left;min-width:150px;'>${h}</th>`;
-    if(i===2||i===3) return `<th style='${base}text-align:center;min-width:80px;'>${h}</th>`;
-    return `<th style='${base}text-align:center;min-width:68px;'>${h}</th>`;
+    const sc = sortCols[i-1];
+    const clickBase = `${base}cursor:pointer;user-select:none;`;
+    if(i===1) return `<th onclick="_adminSetSort('${sc}')" style='${clickBase}text-align:left;min-width:150px;'>${h}${arrow(sc)}</th>`;
+    if(i===2||i===3) return `<th onclick="_adminSetSort('${sc}')" style='${clickBase}text-align:center;min-width:80px;'>${h}${arrow(sc)}</th>`;
+    return `<th onclick="_adminSetSort('${sc}')" style='${clickBase}text-align:center;min-width:68px;'>${h}${arrow(sc)}</th>`;
   }).join('');
 
   const rows = users.map(u=>{
@@ -279,8 +314,8 @@ function renderAdminUsers(){
   document.getElementById('badge-all').textContent=total;
 
   const projects = _adminGetAllProjects();
-  document.getElementById('admin-list-pending').innerHTML = pending.length ? _adminRenderGrid(pending, projects) : '';
-  document.getElementById('admin-list-all').innerHTML = all.length ? _adminRenderGrid(all, projects) : '<div style="text-align:center;padding:24px;color:#8099b0;font-size:12px;">No users found.</div>';
+  document.getElementById('admin-list-pending').innerHTML = pending.length ? _adminRenderGrid(_adminSortUsers(pending), projects) : '';
+  document.getElementById('admin-list-all').innerHTML = all.length ? _adminRenderGrid(_adminSortUsers(all), projects) : '<div style="text-align:center;padding:24px;color:#8099b0;font-size:12px;">No users found.</div>';
 }
 
 // Delete user confirmation + execution
