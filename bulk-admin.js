@@ -14,6 +14,9 @@ let aemViewerProjects = [];
 let aemAllProjects = false;
 let aemGedProjects = [];
 let _allGedProjects = [];
+let _adminSelected = null;
+let _adminDirty = {};
+let _adminTouched = new Set();
 
 const AEM_EXCLUSIVE_ROLES = ['admin', 'batidoc_user'];
 const AEM_ROLE_COLORS = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'};
@@ -37,6 +40,11 @@ async function showAdminScreen(){
 }
 
 async function adminRefresh(){
+  _adminSelected = null;
+  _adminDirty = {};
+  _adminTouched = new Set();
+  const saveBtn = document.getElementById('admin-save-btn');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.style.opacity='0.4'; saveBtn.style.pointerEvents='none'; saveBtn.textContent='Save'; }
   document.getElementById('admin-list-pending').innerHTML='<div style="text-align:center;padding:20px;color:#8099b0;font-size:12px;">Loading…</div>';
   document.getElementById('admin-list-all').innerHTML='<div style="text-align:center;padding:20px;color:#8099b0;font-size:12px;">Loading…</div>';
   // Load custom projects so their names show in user cards
@@ -98,97 +106,124 @@ async function rejectDelRequest(reqId){
   await adminRefresh();
 }
 
-function renderAdminUsers(){
-  const pending = adminUsers.filter(u=>!u.status || u.status==='pending');
-  const q = (document.getElementById('admin-search')?.value||'').toLowerCase().trim();
-  const all = q ? adminUsers.filter(u=>{
-    return (u.full_name||'').toLowerCase().includes(q)
-        || (u.username||'').toLowerCase().includes(q)
-        || (u.email||'').toLowerCase().includes(q);
-  }) : adminUsers;
+function _adminGetAllProjects(){
+  const custom = typeof getCustomProjects==='function' ? getCustomProjects() : [];
+  const order = typeof _PROJECT_DISPLAY_ORDER!=='undefined' ? _PROJECT_DISPLAY_ORDER : [];
+  const sortKey = n => { const i=order.indexOf((n||'').toLowerCase().trim()); return i>=0?i:999; };
+  const meta = ALL_PROJECTS.map(id=>({id, name:(typeof PROJECT_META!=='undefined'&&PROJECT_META[id])?PROJECT_META[id].name:id}));
+  const cust = custom.map(p=>({id:p.id, name:p.name}));
+  return [...meta, ...cust].sort((a,b)=>sortKey(a.name)-sortKey(b.name));
+}
 
-  // Stats bar
+function _adminCellState(u, projId){
+  const roles = Array.isArray(u.roles)&&u.roles.length ? u.roles : [u.role||'viewer'];
+  if(roles.includes('batidoc_user')){
+    return (Array.isArray(u.ged_projects)&&u.ged_projects.includes(projId)) ? 'full' : 'none';
+  }
+  const projs = Array.isArray(u.projects)?u.projects:[];
+  const viewers = Array.isArray(u.viewer_projects)?u.viewer_projects:[];
+  if(projs.includes('*')||projs.includes(projId)) return 'full';
+  if(viewers.includes(projId)) return 'viewer';
+  return 'none';
+}
+
+function _adminRenderGrid(users, projects){
+  if(!users.length) return '';
+  const ths = ['','Name','Status','Role',...projects.map(p=>p.name)].map((h,i)=>{
+    const base = `padding:9px 8px;border-bottom:2px solid rgba(34,79,147,0.12);font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#8099b0;white-space:nowrap;background:#f8fafd;`;
+    if(i===0) return `<th style='${base}width:36px;text-align:center;'></th>`;
+    if(i===1) return `<th style='${base}text-align:left;min-width:150px;'>${h}</th>`;
+    if(i===2||i===3) return `<th style='${base}text-align:center;min-width:80px;'>${h}</th>`;
+    return `<th style='${base}text-align:center;min-width:68px;'>${h}</th>`;
+  }).join('');
+
+  const rows = users.map(u=>{
+    const dirty = _adminDirty[u.id]||{};
+    const eu = {...u,...dirty};
+    const isSelected = _adminSelected===u.id;
+    const isSelf = sbUser&&u.id===sbUser.id;
+    const roles = Array.isArray(eu.roles)&&eu.roles.length ? eu.roles : [eu.role||'viewer'];
+    const roleKey = roles[0];
+    const roleColor = AEM_ROLE_COLORS[roleKey]||'#8099b0';
+    const roleLabel = AEM_ROLE_LABELS[roleKey]||roleKey;
+    const sColor = {approved:'#1a9458',pending:'#e05c00',suspended:'#c02020'}[eu.status]||'#8099b0';
+    const sBg = {approved:'rgba(26,148,88,0.08)',pending:'rgba(224,92,0,0.08)',suspended:'rgba(192,32,32,0.08)'}[eu.status]||'rgba(128,153,176,0.08)';
+    const sLabel = {approved:'Approved',pending:'Pending',suspended:'Suspended'}[eu.status]||'Pending';
+    const rowBg = isSelected ? 'rgba(34,79,147,0.06)' : '';
+
+    const projCells = projects.map(p=>{
+      const state = _adminCellState(eu, p.id);
+      const sid = p.id.replace(/[^a-zA-Z0-9]/g,'-');
+      const bg = state==='full'?'#d4edda':state==='viewer'?'#d4e4f7':'#e8e8e8';
+      const col = state==='full'?'#1a9458':state==='viewer'?'#224F93':'#999';
+      const lbl = state==='full'?'Full':state==='viewer'?'View':'—';
+      return `<td id='admin-cell-${u.id}-${sid}' onclick='adminCycleCell("${u.id}","${p.id}")' style='cursor:pointer;padding:8px 6px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'><span style='display:inline-block;min-width:42px;padding:3px 7px;border-radius:10px;background:${bg};color:${col};font-size:10px;font-weight:700;'>${lbl}</span></td>`;
+    }).join('');
+
+    return `<tr data-admin-uid='${u.id}' onclick='_adminSelectRow("${u.id}")' style='background:${rowBg};cursor:pointer;transition:background 0.1s;'>
+      <td style='padding:8px 10px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;' onclick='event.stopPropagation();_adminSelectRow("${u.id}")'>
+        <input type='checkbox' data-admin-select='${u.id}' ${isSelected?'checked':''} onchange='_adminSelectRow("${u.id}")' style='cursor:pointer;width:14px;height:14px;accent-color:#224F93;'>
+      </td>
+      <td style='padding:8px 12px;border-bottom:1px solid rgba(34,79,147,0.07);'>
+        <div style='font-size:12px;font-weight:700;color:#1a2a3a;'>${u.full_name||'—'}${isSelf?' <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;background:rgba(109,53,217,0.1);color:#6d35d9;">You</span>':''}</div>
+        <div style='font-size:10px;color:#8099b0;font-family:"DM Mono",monospace;'>@${u.username||'—'}</div>
+      </td>
+      <td style='padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'>
+        <span style='font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${sBg};color:${sColor};white-space:nowrap;'>${sLabel}</span>
+      </td>
+      <td style='padding:8px 8px;border-bottom:1px solid rgba(34,79,147,0.07);text-align:center;'>
+        <span style='font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${roleColor}18;color:${roleColor};white-space:nowrap;'>${roleLabel}</span>
+      </td>
+      ${projCells}
+    </tr>`;
+  }).join('');
+
+  return `<div style='overflow-x:auto;border:1px solid rgba(34,79,147,0.1);border-radius:10px;background:#fff;margin-bottom:8px;'>
+    <table style='width:100%;border-collapse:collapse;'>
+      <thead><tr>${ths}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderAdminUsers(){
+  const pending = adminUsers.filter(u=>!u.status||u.status==='pending');
+  const q = (document.getElementById('admin-search')?.value||'').toLowerCase().trim();
+  const all = q ? adminUsers.filter(u=>
+    (u.full_name||'').toLowerCase().includes(q)||
+    (u.username||'').toLowerCase().includes(q)||
+    (u.email||'').toLowerCase().includes(q)
+  ) : adminUsers;
+
   const total = all.length;
   const approved = all.filter(u=>u.status==='approved').length;
   const suspended = all.filter(u=>u.status==='suspended').length;
   const admins = all.filter(u=>u.role==='admin').length;
   document.getElementById('admin-stats').innerHTML = [
-    {label:'Total Users', value:total, color:'#224F93'},
-    {label:'Approved', value:approved, color:'#1a9458'},
-    {label:'Pending', value:pending.length, color:'#e05c00'},
-    {label:'Suspended', value:suspended, color:'#c02020'},
-    {label:'Admins', value:admins, color:'#6d35d9'},
-  ].map(s=>`
-    <div style="flex:1;padding:14px 20px;border-right:1px solid rgba(34,79,147,0.1);">
-      <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:4px;">${s.label}</div>
-      <div style="font-size:22px;font-weight:700;color:${s.color};font-family:'DM Mono',monospace;">${s.value}</div>
-    </div>`).join('');
+    {label:'Total Users',value:total,color:'#224F93'},
+    {label:'Approved',value:approved,color:'#1a9458'},
+    {label:'Pending',value:pending.length,color:'#e05c00'},
+    {label:'Suspended',value:suspended,color:'#c02020'},
+    {label:'Admins',value:admins,color:'#6d35d9'},
+  ].map(s=>`<div style='flex:1;padding:14px 20px;border-right:1px solid rgba(34,79,147,0.1);'><div style='font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:4px;'>${s.label}</div><div style='font-size:22px;font-weight:700;color:${s.color};font-family:"DM Mono",monospace;'>${s.value}</div></div>`).join('');
 
-  // Pending banner
   const banner = document.getElementById('admin-pending-banner');
-  const pendingText = document.getElementById('admin-pending-text');
   const pendingSection = document.getElementById('admin-section-pending');
   const badgePending = document.getElementById('badge-pending');
   if(pending.length>0){
     banner.style.display='flex';
-    pendingText.textContent = `${pending.length} account${pending.length>1?'s':''} waiting for approval`;
+    document.getElementById('admin-pending-text').textContent=`${pending.length} account${pending.length>1?'s':''} waiting for approval`;
     pendingSection.style.display='block';
-    badgePending.textContent=pending.length;
+    if(badgePending) badgePending.textContent=pending.length;
   } else {
     banner.style.display='none';
     pendingSection.style.display='none';
   }
-
   document.getElementById('badge-all').textContent=total;
-  document.getElementById('admin-list-pending').innerHTML = pending.length ? pending.map(u=>adminUserCard(u)).join('') : '';
-  document.getElementById('admin-list-all').innerHTML = all.length ? all.map(u=>adminUserCard(u)).join('') : '<div style="text-align:center;padding:24px;color:#8099b0;font-size:12px;">No users found.</div>';
-}
 
-function adminUserCard(u){
-  const statusColor = {approved:'#1a9458', pending:'#e05c00', suspended:'#c02020'}[u.status]||'#8099b0';
-  const statusBg = {approved:'rgba(26,148,88,0.08)', pending:'rgba(224,92,0,0.08)', suspended:'rgba(192,32,32,0.08)'}[u.status]||'rgba(128,153,176,0.08)';
-  const statusLabel = {approved:'Approved', pending:'Pending', suspended:'Suspended'}[u.status]||'Pending';
-  const allRoles = (Array.isArray(u.roles) && u.roles.length) ? u.roles : [u.role||'viewer'];
-  const roleBadges = allRoles.map(r=>`<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(34,79,147,0.07);color:${AEM_ROLE_COLORS[r]||'#8099b0'};">${AEM_ROLE_LABELS[r]||r}</span>`).join('');
-  const allRoles2 = (Array.isArray(u.roles) && u.roles.length) ? u.roles : [u.role||'viewer'];
-  const isBatidocOnly = allRoles2.includes('batidoc_user') && allRoles2.length===1;
-  let projStr;
-  if(isBatidocOnly){
-    const gp = Array.isArray(u.ged_projects) ? u.ged_projects : [];
-    projStr = gp.length ? gp.map(id=>{ const found=_allGedProjects.find(p=>p.id===id); return found?found.name:id; }).join(', ') : '—';
-  } else {
-    const projects = (u.projects||[]);
-    projStr = projects.length ? projects.map(p=>{
-      if(PROJECT_META[p]) return PROJECT_META[p].name;
-      const cp = (typeof getCustomProjects==='function'?getCustomProjects():[]).find(c=>c.id===p);
-      return cp ? cp.name : p;
-    }).join(', ') : '—';
-  }
-  const isSelf = sbUser && u.id === sbUser.id;
-
-  const safeName = (u.full_name||u.username||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  return `<div style="background:#fff;border:1px solid rgba(34,79,147,0.12);border-radius:12px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 18px rgba(34,79,147,0.09)'" onmouseout="this.style.boxShadow='none'">
-    <!-- Avatar -->
-    <div style="width:42px;height:42px;border-radius:50%;background:rgba(34,79,147,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:700;color:#224F93;text-transform:uppercase;">${(u.full_name||u.username||'?')[0]}</div>
-    <!-- Info -->
-    <div style="flex:1;min-width:0;">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
-        <span style="font-size:13px;font-weight:700;color:#1a2a3a;">${u.full_name||'—'}</span>
-        <span style="font-size:10px;font-family:'DM Mono',monospace;color:#8099b0;">@${u.username||'—'}</span>
-        ${isSelf?'<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(109,53,217,0.1);color:#6d35d9;">You</span>':''}
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-        ${roleBadges}
-        <span style="font-size:10px;color:#8099b0;font-family:'DM Mono',monospace;">${projStr}</span>
-      </div>
-    </div>
-    <!-- Actions -->
-    <div style="display:flex;gap:7px;flex-shrink:0;">
-      <button onclick="openAdminEdit('${u.id}')" style="padding:7px 14px;background:#f0f4f9;border:1px solid rgba(34,79,147,0.18);border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;color:#224F93;transition:all 0.15s;" onmouseover="this.style.background='#224F93';this.style.color='#fff'" onmouseout="this.style.background='#f0f4f9';this.style.color='#224F93'">Edit</button>
-      ${!isSelf?`<button onclick="confirmDeleteUser('${u.id}','${safeName}')" style="padding:7px 10px;background:#fff5f5;border:1px solid rgba(192,32,32,0.2);border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;color:#c02020;transition:all 0.15s;" onmouseover="this.style.background='#c02020';this.style.color='#fff'" onmouseout="this.style.background='#fff5f5';this.style.color='#c02020'">Delete</button>`:''}
-    </div>
-  </div>`;
+  const projects = _adminGetAllProjects();
+  document.getElementById('admin-list-pending').innerHTML = pending.length ? _adminRenderGrid(pending, projects) : '';
+  document.getElementById('admin-list-all').innerHTML = all.length ? _adminRenderGrid(all, projects) : '<div style="text-align:center;padding:24px;color:#8099b0;font-size:12px;">No users found.</div>';
 }
 
 // Delete user confirmation + execution
@@ -651,4 +686,103 @@ async function adminLogout(){
   document.getElementById('admin-screen').style.display='none';
   document.getElementById('auth-screen').style.display='flex';
   sbUser=null; sbProfile=null;
+}
+
+function _adminSelectRow(userId){
+  _adminSelected = _adminSelected===userId ? null : userId;
+  document.querySelectorAll('tr[data-admin-uid]').forEach(row=>{
+    row.style.background = row.dataset.adminUid===_adminSelected ? 'rgba(34,79,147,0.06)' : '';
+  });
+  document.querySelectorAll('input[data-admin-select]').forEach(cb=>{
+    cb.checked = cb.dataset.adminSelect===_adminSelected;
+  });
+}
+
+function adminCycleCell(userId, projId){
+  const u = adminUsers.find(x=>x.id===userId);
+  if(!u) return;
+  const dirty = _adminDirty[userId]||{};
+  const eu = {...u,...dirty};
+  const roles = Array.isArray(eu.roles)&&eu.roles.length ? eu.roles : [eu.role||'viewer'];
+  const isBatidoc = roles.includes('batidoc_user');
+  const current = _adminCellState(eu, projId);
+  const touchKey = `${userId}-${projId}`;
+  const isTouched = _adminTouched.has(touchKey);
+
+  let next;
+  if(isBatidoc){
+    next = current==='full' ? 'none' : 'full';
+  } else {
+    // Cycle: (initial none) → full → none → viewer → full → none → viewer …
+    if(current==='none' && !isTouched) next='full';
+    else if(current==='full') next='none';
+    else if(current==='none') next='viewer';
+    else next='full'; // viewer → full
+  }
+  _adminTouched.add(touchKey);
+
+  if(!_adminDirty[userId]) _adminDirty[userId]={};
+  if(isBatidoc){
+    let gp = Array.isArray(eu.ged_projects)?[...eu.ged_projects]:[];
+    if(next==='full'){ if(!gp.includes(projId)) gp.push(projId); }
+    else gp=gp.filter(p=>p!==projId);
+    _adminDirty[userId].ged_projects=gp;
+  } else {
+    let projs = Array.isArray(eu.projects)?eu.projects.filter(p=>p!=='*'):[...[]];
+    let viewers = Array.isArray(eu.viewer_projects)?[...eu.viewer_projects]:[];
+    projs = projs.filter(p=>p!==projId);
+    viewers = viewers.filter(p=>p!==projId);
+    if(next==='full') projs.push(projId);
+    else if(next==='viewer') viewers.push(projId);
+    _adminDirty[userId].projects=projs;
+    _adminDirty[userId].viewer_projects=viewers;
+  }
+
+  // Update cell in-place
+  const sid = projId.replace(/[^a-zA-Z0-9]/g,'-');
+  const cell = document.getElementById(`admin-cell-${userId}-${sid}`);
+  if(cell){
+    const bg = next==='full'?'#d4edda':next==='viewer'?'#d4e4f7':'#e8e8e8';
+    const col = next==='full'?'#1a9458':next==='viewer'?'#224F93':'#999';
+    const lbl = next==='full'?'Full':next==='viewer'?'View':'—';
+    cell.innerHTML = `<span style='display:inline-block;min-width:42px;padding:3px 7px;border-radius:10px;background:${bg};color:${col};font-size:10px;font-weight:700;'>${lbl}</span>`;
+  }
+
+  // Enable save button
+  const saveBtn = document.getElementById('admin-save-btn');
+  if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.style.pointerEvents='auto'; }
+}
+
+function adminEditSelected(){
+  if(!_adminSelected) return;
+  openAdminEdit(_adminSelected);
+}
+
+function adminDeleteSelected(){
+  if(!_adminSelected) return;
+  const u = adminUsers.find(x=>x.id===_adminSelected);
+  if(!u) return;
+  const safeName = (u.full_name||u.username||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  confirmDeleteUser(u.id, safeName);
+}
+
+async function adminSaveGrid(){
+  const ids = Object.keys(_adminDirty);
+  if(!ids.length) return;
+  const saveBtn = document.getElementById('admin-save-btn');
+  if(saveBtn){ saveBtn.textContent='Saving…'; saveBtn.disabled=true; }
+  const errors = [];
+  for(const userId of ids){
+    const update = {updated_at: new Date().toISOString(), ..._adminDirty[userId]};
+    const {error} = await sb.from('profiles').update(update).eq('id',userId);
+    if(error){
+      const u = adminUsers.find(x=>x.id===userId);
+      errors.push(`${u?.full_name||userId}: ${error.message}`);
+    }
+  }
+  _adminDirty={};
+  _adminTouched=new Set();
+  if(saveBtn){ saveBtn.textContent='Save'; saveBtn.disabled=true; saveBtn.style.opacity='0.4'; saveBtn.style.pointerEvents='none'; }
+  if(errors.length) alert('Some saves failed:\n'+errors.join('\n'));
+  await adminRefresh();
 }

@@ -1197,6 +1197,18 @@ body.mobile-section-view .dash {
   <div style="flex:1;overflow-y:auto;padding:28px 32px;">
     <div style="max-width:1100px;margin:0 auto;">
 
+      <!-- Action bar -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <div style="position:relative;flex:1;min-width:180px;max-width:260px;">
+          <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8099b0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="admin-search" type="text" placeholder="Search users…" oninput="renderAdminUsers()" style="width:100%;box-sizing:border-box;padding:7px 9px 7px 30px;border:1px solid rgba(34,79,147,0.2);border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;background:#fff;outline:none;" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='rgba(34,79,147,0.2)'">
+        </div>
+        <div style="flex:1;"></div>
+        <button id="admin-save-btn" onclick="adminSaveGrid()" disabled style="padding:7px 18px;border:none;border-radius:8px;background:#1a9458;color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;opacity:0.4;pointer-events:none;">Save</button>
+        <button onclick="adminEditSelected()" style="padding:7px 18px;border:1px solid rgba(34,79,147,0.2);border-radius:8px;background:#f0f4f9;color:#224F93;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Edit</button>
+        <button onclick="adminDeleteSelected()" style="padding:7px 18px;border:1px solid rgba(192,32,32,0.2);border-radius:8px;background:#fff5f5;color:#c02020;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Delete</button>
+      </div>
+
       <!-- Pending approvals banner -->
       <div id="admin-pending-banner" style="display:none;background:rgba(224,92,0,0.08);border:1px solid rgba(224,92,0,0.3);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e05c00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -1229,11 +1241,6 @@ body.mobile-section-view .dash {
           <div style="width:8px;height:8px;border-radius:50%;background:#224F93;flex-shrink:0;"></div>
           <div style="font-size:13px;font-weight:700;color:#1a2a3a;letter-spacing:0.04em;text-transform:uppercase;">All Users</div>
           <div id="badge-all" style="font-size:10px;font-weight:700;font-family:'DM Mono',monospace;background:#224F93;color:#fff;padding:2px 7px;border-radius:20px;flex-shrink:0;"></div>
-          <div style="flex:1;"></div>
-          <div style="position:relative;width:220px;">
-            <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8099b0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input id="admin-search" type="text" placeholder="Search users…" oninput="renderAdminUsers()" style="width:100%;box-sizing:border-box;padding:7px 9px 7px 30px;border:1px solid rgba(34,79,147,0.2);border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;background:#fff;outline:none;" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='rgba(34,79,147,0.2)'">
-          </div>
         </div>
         <div id="admin-list-all"></div>
       </div>
