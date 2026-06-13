@@ -638,9 +638,7 @@ async function saveAdminEdit(){
     }
 
     ok.textContent='✓ Saved successfully';
-    const idx = adminUsers.findIndex(u=>u.id===aemUserId);
-    if(idx>=0){ adminUsers[idx].status=aemStatus; adminUsers[idx].role=aemRole; adminUsers[idx].roles=rolesToSave; adminUsers[idx].projects=projectsToSave; adminUsers[idx].viewer_projects=aemViewerProjects; adminUsers[idx].ged_projects=aemGedProjects; }
-    setTimeout(()=>{ closeAdminEdit(); renderAdminUsers(); }, 900);
+    setTimeout(async()=>{ closeAdminEdit(); await adminRefresh(); }, 900);
   } catch(e){
     ok.style.display='none';
     err.textContent='Error: '+e.message;
