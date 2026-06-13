@@ -18,6 +18,7 @@ let _adminSelected = null;
 let _adminDirty = {};
 let _adminTouched = new Set();
 let _adminRolePickerUserId = null;
+const _adminSaveTimers = {};
 
 const AEM_EXCLUSIVE_ROLES = ['admin', 'batidoc_user'];
 const AEM_ROLE_COLORS = {admin:'#6d35d9', user:'#224F93', viewer:'#8099b0', batidoc_user:'#a07800', phone_only:'#0a7a5a', developer:'#c2410c'};
@@ -40,12 +41,39 @@ async function showAdminScreen(){
   await adminRefresh();
 }
 
+function _adminScheduleSave(userId){
+  const ind = document.getElementById('admin-save-indicator');
+  if(ind){ ind.textContent='Saving…'; ind.style.color='#8099b0'; }
+  clearTimeout(_adminSaveTimers[userId]);
+  _adminSaveTimers[userId] = setTimeout(()=>_adminAutoSave(userId), 600);
+}
+
+async function _adminAutoSave(userId){
+  if(!_adminDirty[userId]) return;
+  const update = {updated_at: new Date().toISOString(), ..._adminDirty[userId]};
+  const {error} = await sb.from('profiles').update(update).eq('id', userId);
+  const ind = document.getElementById('admin-save-indicator');
+  if(error){
+    if(ind){ ind.textContent='Save failed — '+error.message; ind.style.color='#c02020'; }
+  } else {
+    // Merge changes into local cache so dirty state is clean
+    const idx = adminUsers.findIndex(x=>x.id===userId);
+    if(idx>=0) adminUsers[idx] = {...adminUsers[idx], ..._adminDirty[userId]};
+    delete _adminDirty[userId];
+    if(ind){
+      ind.textContent='Saved ✓'; ind.style.color='#1a9458';
+      setTimeout(()=>{ if(ind.textContent==='Saved ✓') ind.textContent=''; }, 2000);
+    }
+  }
+}
+
 async function adminRefresh(){
   _adminSelected = null;
   _adminDirty = {};
   _adminTouched = new Set();
-  const saveBtn = document.getElementById('admin-save-btn');
-  if(saveBtn){ saveBtn.disabled=true; saveBtn.style.opacity='0.4'; saveBtn.style.pointerEvents='none'; saveBtn.textContent='Save'; }
+  Object.keys(_adminSaveTimers).forEach(k=>{ clearTimeout(_adminSaveTimers[k]); delete _adminSaveTimers[k]; });
+  const ind = document.getElementById('admin-save-indicator');
+  if(ind) ind.textContent='';
   document.getElementById('admin-list-pending').innerHTML='<div style="text-align:center;padding:20px;color:#8099b0;font-size:12px;">Loading…</div>';
   document.getElementById('admin-list-all').innerHTML='<div style="text-align:center;padding:20px;color:#8099b0;font-size:12px;">Loading…</div>';
   // Load custom projects so their names show in user cards
@@ -782,9 +810,7 @@ function adminCycleCell(userId, projId){
     _adminRefreshUserProjectCells(userId);
   }
 
-  // Enable save button
-  const saveBtn = document.getElementById('admin-save-btn');
-  if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.style.pointerEvents='auto'; }
+  _adminScheduleSave(userId);
 }
 
 function adminCycleStatus(userId){
@@ -803,8 +829,7 @@ function adminCycleStatus(userId){
     const sLabel = {approved:'Approved',pending:'Pending',suspended:'Suspended'}[next];
     cell.innerHTML = `<span style='font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:${sBg};color:${sColor};white-space:nowrap;'>${sLabel}</span>`;
   }
-  const saveBtn = document.getElementById('admin-save-btn');
-  if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.style.pointerEvents='auto'; }
+  _adminScheduleSave(userId);
 }
 
 function _adminShowRolePicker(userId, event){
@@ -870,8 +895,7 @@ function _adminPickerToggleRole(userId, role){
   _adminRenderRolePicker(userId);
   _adminRefreshRoleCell(userId);
   _adminRefreshUserProjectCells(userId);
-  const saveBtn = document.getElementById('admin-save-btn');
-  if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.style.pointerEvents='auto'; }
+  _adminScheduleSave(userId);
 }
 
 function _adminRefreshRoleCell(userId){
@@ -897,23 +921,3 @@ function adminDeleteSelected(){
   confirmDeleteUser(u.id, safeName);
 }
 
-async function adminSaveGrid(){
-  const ids = Object.keys(_adminDirty);
-  if(!ids.length) return;
-  const saveBtn = document.getElementById('admin-save-btn');
-  if(saveBtn){ saveBtn.textContent='Saving…'; saveBtn.disabled=true; }
-  const errors = [];
-  for(const userId of ids){
-    const update = {updated_at: new Date().toISOString(), ..._adminDirty[userId]};
-    const {error} = await sb.from('profiles').update(update).eq('id',userId);
-    if(error){
-      const u = adminUsers.find(x=>x.id===userId);
-      errors.push(`${u?.full_name||userId}: ${error.message}`);
-    }
-  }
-  _adminDirty={};
-  _adminTouched=new Set();
-  if(saveBtn){ saveBtn.textContent='Save'; saveBtn.disabled=true; saveBtn.style.opacity='0.4'; saveBtn.style.pointerEvents='none'; }
-  if(errors.length) alert('Some saves failed:\n'+errors.join('\n'));
-  await adminRefresh();
-}
