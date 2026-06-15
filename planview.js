@@ -11,13 +11,23 @@ const _pvBgs     = {};   // "pid|facade|floor" → dataURL
 
 let _pvState = {
   pid:null, facade:null, floor:null,
-  drawMode:false, selectedId:null,
+  drawMode:null,        // null | 'rect' | 'poly'
+  selectedId:null,
 };
-let _pvMouse = {down:false, mode:null}; // mode: 'draw'|'drag'|'resize'
-let _pvPendingRect = null;
+let _pvMouse = {down:false, mode:null};
+let _pvPendingRect  = null;
 let _pvEditingRectId = null;
+let _pvPolyPoints  = [];   // in-progress polyline [{x,y}] percentages
+let _pvPolyNamePos = 'above'; // 'above' | 'inside'
 
-// ── showToast shim (uses existing global if available) ─────────────────────
+function _pvIsDev(){
+  if(typeof sbProfile==='undefined'||!sbProfile) return false;
+  const r=sbProfile.roles;
+  if(Array.isArray(r)) return r.includes('developer')||r.includes('admin');
+  return sbProfile.role==='developer'||sbProfile.role==='admin';
+}
+
+// ── showToast shim ──────────────────────────────────────────────────────────
 function _pvToast(msg){ if(typeof showToast==='function') showToast(msg); else alert(msg); }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -69,14 +79,15 @@ async function pvSaveBg(pid,facade,floor,dataUrl){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MAIN ENTRY — called to render plan view into #pv-container
+// MAIN ENTRY
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function renderPlanView(pid, facade, container){
   _pvState.pid=pid; _pvState.facade=facade;
-  _pvState.drawMode=false; _pvState.selectedId=null;
+  _pvState.drawMode=null; _pvState.selectedId=null;
+  _pvPolyPoints=[];
 
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  const isDev=_pvIsDev();
   const meta=_custGetMeta(pid,facade);
   const floors=meta.rows.map(r=>r.label);
   if(!_pvState.floor||!floors.includes(_pvState.floor)) _pvState.floor=floors[0];
@@ -89,18 +100,14 @@ async function renderPlanView(pid, facade, container){
 function _pvBuild(container, isDev, floors){
   const {pid,facade,floor}=_pvState;
   const layout=_pvLayouts[`${pid}|${facade}`]||{};
-  const floorData=layout[floor]||{};
-  const rects=floorData.rects||[];
   const bgUrl=_pvBgs[`${pid}|${facade}|${floor}`]||'';
 
-  // Floor selector buttons
   const floorBtns=floors.map(f=>`
     <button onclick="pvSelectFloor('${f}')"
       style="padding:3px 10px;border-radius:5px;font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.12s;
       ${f===floor?'background:#224F93;color:#fff;border:1px solid #224F93;':'background:var(--surface);color:var(--text2);border:1px solid var(--border);'}">${f}</button>
   `).join('');
 
-  // Dev toolbar
   const devBar=isDev?`
     <div id="pv-devbar" style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:#fffbea;border-bottom:1px solid #f0d060;flex-shrink:0;flex-wrap:wrap;">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a07800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -111,10 +118,15 @@ function _pvBuild(container, isDev, floors){
         Upload Plan
         <input type="file" id="pv-bg-input" accept="image/*,application/pdf" onchange="pvUploadBg(this)" style="display:none;">
       </label>
-      <button id="pv-draw-btn" onclick="pvToggleDraw()"
+      <button id="pv-draw-rect-btn" onclick="pvToggleDrawRect()"
         style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Draw Element
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        Draw Rect
+      </button>
+      <button id="pv-draw-poly-btn" onclick="pvToggleDrawPoly()"
+        style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 20 2 20"/></svg>
+        Draw Poly
       </button>
       <button onclick="pvDeleteSelected()"
         style="padding:3px 9px;border:1px solid rgba(192,32,32,0.25);border-radius:5px;background:#fff5f5;color:#c02020;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;">Delete</button>
@@ -132,7 +144,6 @@ function _pvBuild(container, isDev, floors){
       </div>
     </div>` : '';
 
-  // Background / empty state
   const bgHtml=bgUrl
     ? `<img id="pv-bg-img" src="${bgUrl}" style="display:block;max-width:100%;max-height:calc(100vh - 220px);pointer-events:none;user-select:none;" draggable="false">`
     : `<div style="width:700px;height:480px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#8099b0;background:#f8fafd;border:2px dashed rgba(34,79,147,0.15);border-radius:8px;">
@@ -140,9 +151,6 @@ function _pvBuild(container, isDev, floors){
         <div style="font-size:13px;font-weight:600;">${isDev?'Upload a floor plan to begin':'No plan uploaded for this floor'}</div>
         ${isDev?'<div style="font-size:11px;">Use the Upload Plan button above</div>':''}
       </div>`;
-
-  // SVG rectangles
-  const rectsSVG=rects.map(r=>_pvRectSVG(r,pid,facade)).join('');
 
   container.innerHTML=`
     <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
@@ -157,16 +165,20 @@ function _pvBuild(container, isDev, floors){
           <svg id="pv-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;"
             onmousedown="pvMD(event)" onmousemove="pvMM(event)" onmouseup="pvMU(event)"
             oncontextmenu="return false;">
-            ${rectsSVG}
             <rect id="pv-ghost" x="0" y="0" width="0" height="0"
               fill="rgba(34,79,147,0.12)" stroke="#224F93" stroke-width="1.5" stroke-dasharray="5,3"
               style="display:none;pointer-events:none;"/>
+            <polyline id="pv-poly-ghost" points="" fill="none" stroke="#224F93" stroke-width="1.5" stroke-dasharray="5,3"
+              style="display:none;pointer-events:none;"/>
+            <g id="pv-poly-dots" style="pointer-events:none;"></g>
+            <circle id="pv-snap-dot" cx="0" cy="0" r="0" fill="rgba(34,79,147,0.15)" stroke="#224F93" stroke-width="1.5"
+              style="pointer-events:none;"/>
           </svg>
         </div>
       </div>
     </div>
   `;
-  // Mount modals on document.body so position:fixed is never clipped by overflow:hidden ancestors
+
   ['pv-link-modal','pv-dup-modal'].forEach(id=>{
     const old=document.getElementById(id); if(old) old.remove();
   });
@@ -174,8 +186,16 @@ function _pvBuild(container, isDev, floors){
   _modWrap.id='pv-modals-root';
   _modWrap.innerHTML=_pvLinkModalHTML()+_pvDupModalHTML(pid,facade);
   document.body.appendChild(_modWrap);
-  // Fit labels after initial DOM render
-  requestAnimationFrame(_pvFitLabels);
+
+  // ResizeObserver keeps pixel-based poly rendering accurate on canvas resize
+  const canvasWrap=document.getElementById('pv-canvas-wrap');
+  if(canvasWrap&&window.ResizeObserver&&!canvasWrap._pvRO){
+    const ro=new ResizeObserver(()=>_pvRefreshSVG());
+    ro.observe(canvasWrap);
+    canvasWrap._pvRO=ro;
+  }
+
+  requestAnimationFrame(_pvRefreshSVG);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -187,14 +207,12 @@ function _pvGetTitleLines(pid, facade){
     ? window.PROJECT_META[pid].name
     : (window._activeProjectName||pid||'Project');
   const cats=(typeof getProjectCategories==='function')?getProjectCategories(pid):[];
-  // Mirror renderCustomMonitoring: resolve catNum + facadeDir from _currentCustomPage
   const pageId=window._currentCustomPage||'';
   let catNum=1, facadeDir=facade;
   const catFM=pageId.match(/^c(\d+)-([A-Z]+)$/);
   if(catFM){
     catNum=parseInt(catFM[1]); facadeDir=catFM[2];
   } else {
-    // Cat1 / legacy: pageId is the direction code directly (e.g. 'SF')
     const leg={NF:'NF','BM-NF':'NF',SF:'SF','BM-SF':'SF',EF:'EF','BM-EF':'EF',WF:'WF','BM-WF':'WF'};
     facadeDir=leg[pageId]||pageId; catNum=1;
   }
@@ -228,15 +246,13 @@ function pvInsertTitleBlock(){
 
 function _pvRectSVG(rect, pid, facade){
   const isSel=_pvState.selectedId===rect.id;
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  const isDev=_pvIsDev();
   const x=`${rect.x}%`, y=`${rect.y}%`, w=`${rect.w}%`, h=`${rect.h}%`;
   const handles=(isSel&&isDev)?_pvHandlesSVG(rect):'';
 
-  // ── Title block ─────────────────────────────────────────────────────────────
   if(rect.type==='title'){
     const lines=_pvGetTitleLines(pid,facade);
     const cx=rect.x+rect.w/2, cy=rect.y+rect.h/2;
-    // 4 tspan lines: project (bold), category, facade, floor
     const tspans=lines.map((ln,i)=>{
       const bold=i===0?'font-weight:800;':'font-weight:600;';
       const opacity=i===0?'1':'0.75';
@@ -260,15 +276,12 @@ function _pvRectSVG(rect, pid, facade){
       </g>`;
   }
 
-  // ── Normal cell rect ────────────────────────────────────────────────────────
   const cells=_custFacadeCache[`${pid}|${facade}`]||{};
   const cellData=cells[rect.cellKey]||{};
   const st=cellData.status||'pending';
   const bg=_custStBg[st]||'#f0f4f9';
   const tc=_custStText[st]||'#4a6080';
-  // Mirror facade display: panelRef takes priority, then stored label, then cellKey
   const lbl=cellData.panelRef||rect.label||rect.cellKey;
-  // Rotate text along the long side: portrait rects get -90° rotation
   const isPortrait=rect.h>rect.w;
   const rot=rect.rotation||0;
   const grpRotStyle=rot?`transform-box:fill-box;transform-origin:center;transform:rotate(${rot}deg);`:'';
@@ -293,7 +306,7 @@ function _pvRectSVG(rect, pid, facade){
     </g>`;
 }
 
-const _PV_HW=7; // handle half-width in px — SVG handles need px since % + offset is tricky
+const _PV_HW=7;
 function _pvHandlesSVG(rect){
   const pts=[
     {cx:rect.x,          cy:rect.y,          pos:'nw'},
@@ -311,7 +324,6 @@ function _pvHandlesSVG(rect){
       fill="#fff" stroke="#224F93" stroke-width="1.5"
       style="cursor:${p.pos}-resize;"
       onmousedown="pvHandleMD(event,'${p.pos}');event.stopPropagation();"/>`).join('');
-  // Rotation handle: small circle above top-center with a dashed stem
   const rcx=rect.x+rect.w/2;
   const rcy=rect.y-4;
   const rotHandle=`
@@ -323,6 +335,60 @@ function _pvHandlesSVG(rect){
       style="cursor:grab;"
       onmousedown="pvRotHandleMD(event);event.stopPropagation();"/>`;
   return resizeHandles+rotHandle;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POLYLINE RENDERING
+// ─────────────────────────────────────────────────────────────────────────────
+
+function _pvPolySVG(poly, pid, facade){
+  const isSel=_pvState.selectedId===poly.id;
+  const isDev=_pvIsDev();
+  const svg=document.getElementById('pv-svg');
+  if(!svg||!poly.points||poly.points.length<2) return '';
+  const b=svg.getBoundingClientRect();
+  if(!b||!b.width||!b.height) return '';
+
+  const pxPts=poly.points.map(p=>`${p.x/100*b.width},${p.y/100*b.height}`).join(' ');
+
+  // Centroid
+  const cx=poly.points.reduce((s,p)=>s+p.x,0)/poly.points.length;
+  const cy=poly.points.reduce((s,p)=>s+p.y,0)/poly.points.length;
+  const topY=Math.min(...poly.points.map(p=>p.y));
+  const cxPx=cx/100*b.width;
+  const lblY=(poly.namePos==='inside') ? cy/100*b.height : (topY/100*b.height-14);
+
+  const cells=_custFacadeCache[`${pid}|${facade}`]||{};
+  const cellData=cells[poly.cellKey]||{};
+  const st=cellData.status||'pending';
+  const fillBg=poly.cellKey?(_custStBg[st]||'rgba(34,79,147,0.15)'):'rgba(34,79,147,0.12)';
+  const fillOp=poly.cellKey?(st==='pending'?'0.3':'0.6'):'1';
+  const strokeClr=isSel?'#224F93':(poly.cellKey?(_custStText[st]||'#4a6080'):'#4a6080');
+  const lbl=poly.label||'';
+
+  const vertexHandles=(isSel&&isDev)?poly.points.map((p,i)=>{
+    const px=p.x/100*b.width, py=p.y/100*b.height;
+    return `<circle class="pv-handle pv-poly-vx" data-idx="${i}"
+      cx="${px}" cy="${py}" r="5"
+      fill="#fff" stroke="#224F93" stroke-width="1.5" style="cursor:move;"
+      onmousedown="pvPolyVertexMD(event,${i});event.stopPropagation();"/>`;
+  }).join('') : '';
+
+  return `<g id="pvrg-${poly.id}" class="pv-rg pv-poly-rg" data-id="${poly.id}"
+    onclick="pvPolyClick(event,'${poly.id}','${pid}','${facade}')"
+    oncontextmenu="pvPolyRC(event,'${poly.id}','${pid}','${facade}');return false;"
+    onmousedown="pvPolyMD(event,'${poly.id}');event.stopPropagation();"
+    style="cursor:${isDev?'move':'pointer'};">
+    <polygon points="${pxPts}"
+      fill="${fillBg}" fill-opacity="${fillOp}"
+      stroke="${strokeClr}" stroke-width="${isSel?2:1.5}"
+      ${isSel?'stroke-dasharray="5,3"':''}/>
+    ${lbl?`<text x="${cxPx}" y="${lblY}"
+      text-anchor="middle" dominant-baseline="middle"
+      fill="${isSel?'#224F93':strokeClr}" font-family="Barlow,sans-serif" font-weight="700" font-size="11"
+      style="pointer-events:none;user-select:none;">${lbl}</text>`:''}
+    ${vertexHandles}
+  </g>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -339,23 +405,103 @@ function _pvPct(e){
   };
 }
 
+// Update ghost polyline preview during draw
+function _pvUpdatePolyGhost(pts){
+  const ghost=document.getElementById('pv-poly-ghost');
+  const dots=document.getElementById('pv-poly-dots');
+  if(!ghost) return;
+  const wrap=document.getElementById('pv-canvas-wrap');
+  const b=wrap?wrap.getBoundingClientRect():null;
+  if(!b||!pts||pts.length===0){
+    if(ghost){ghost.style.display='none';ghost.setAttribute('points','');}
+    if(dots) dots.innerHTML='';
+    return;
+  }
+  ghost.style.display='';
+  ghost.setAttribute('points',pts.map(p=>`${p.x/100*b.width},${p.y/100*b.height}`).join(' '));
+  // Committed point markers (all but last which is the live cursor)
+  if(dots){
+    dots.innerHTML=_pvPolyPoints.map(p=>{
+      const px=p.x/100*b.width, py=p.y/100*b.height;
+      return `<circle cx="${px}" cy="${py}" r="3" fill="#224F93" stroke="#fff" stroke-width="1.5"/>`;
+    }).join('');
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MOUSE EVENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function pvMD(e){
   if(e.button!==0) return;
-  if(!_pvState.drawMode) return;
-  // Only on SVG background
-  if(e.target.closest('.pv-rg')) return;
-  const pt=_pvPct(e);
-  _pvMouse={down:true,mode:'draw',startX:pt.x,startY:pt.y};
-  const g=document.getElementById('pv-ghost');
-  if(g){g.style.display='';g.setAttribute('x',pt.x+'%');g.setAttribute('y',pt.y+'%');g.setAttribute('width','0%');g.setAttribute('height','0%');}
-  e.preventDefault();
+
+  // ── Polyline draw mode: click to place points ──────────────────────────────
+  if(_pvState.drawMode==='poly'){
+    if(e.target.closest('.pv-rg')) return;
+    const pt=_pvPct(e);
+    if(_pvPolyPoints.length>=3){
+      // Check proximity to first point
+      const first=_pvPolyPoints[0];
+      const wrap=document.getElementById('pv-canvas-wrap');
+      const b=wrap?wrap.getBoundingClientRect():null;
+      if(b){
+        const dx=(pt.x-first.x)/100*b.width;
+        const dy=(pt.y-first.y)/100*b.height;
+        if(Math.sqrt(dx*dx+dy*dy)<15){
+          // Close the polyline
+          const pts=[..._pvPolyPoints];
+          _pvPolyPoints=[];
+          _pvUpdatePolyGhost([]);
+          const snap=document.getElementById('pv-snap-dot');
+          if(snap) snap.setAttribute('r','0');
+          _pvPolyFinalize(pts);
+          e.preventDefault();
+          return;
+        }
+      }
+    }
+    _pvPolyPoints.push(pt);
+    _pvUpdatePolyGhost([..._pvPolyPoints, pt]);
+    _pvMouse={down:true,mode:'poly-point'};
+    e.preventDefault();
+    return;
+  }
+
+  // ── Rect draw mode: drag to draw ──────────────────────────────────────────
+  if(_pvState.drawMode==='rect'){
+    if(e.target.closest('.pv-rg')) return;
+    const pt=_pvPct(e);
+    _pvMouse={down:true,mode:'draw',startX:pt.x,startY:pt.y};
+    const g=document.getElementById('pv-ghost');
+    if(g){g.style.display='';g.setAttribute('x',pt.x+'%');g.setAttribute('y',pt.y+'%');g.setAttribute('width','0%');g.setAttribute('height','0%');}
+    e.preventDefault();
+  }
 }
 
 function pvMM(e){
+  // Poly ghost preview (runs even without mouse.down)
+  if(_pvState.drawMode==='poly'&&_pvPolyPoints.length>0){
+    const pt=_pvPct(e);
+    const wrap=document.getElementById('pv-canvas-wrap');
+    const b=wrap?wrap.getBoundingClientRect():null;
+    // Snap indicator near first point
+    const snap=document.getElementById('pv-snap-dot');
+    if(snap&&b&&_pvPolyPoints.length>=3){
+      const first=_pvPolyPoints[0];
+      const dx=(pt.x-first.x)/100*b.width;
+      const dy=(pt.y-first.y)/100*b.height;
+      if(Math.sqrt(dx*dx+dy*dy)<15){
+        snap.setAttribute('cx', first.x/100*b.width);
+        snap.setAttribute('cy', first.y/100*b.height);
+        snap.setAttribute('r','10');
+      } else {
+        snap.setAttribute('r','0');
+      }
+    }
+    _pvUpdatePolyGhost([..._pvPolyPoints, pt]);
+    return;
+  }
+
   if(!_pvMouse.down) return;
   const pt=_pvPct(e);
   if(_pvMouse.mode==='draw'){
@@ -368,6 +514,28 @@ function pvMM(e){
     const {pid,facade,floor}=_pvState;
     const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===_pvMouse.rectId);
     if(rect){rect.x=Math.max(0,_pvMouse.origX+dx); rect.y=Math.max(0,_pvMouse.origY+dy); _pvRefreshSVG();}
+  } else if(_pvMouse.mode==='drag-poly'){
+    const dx=pt.x-_pvMouse.startX, dy=pt.y-_pvMouse.startY;
+    const {pid,facade,floor}=_pvState;
+    const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===_pvMouse.rectId);
+    if(poly&&poly.points){
+      poly.points=_pvMouse.origPts.map(p=>({
+        x:Math.max(0,Math.min(100,p.x+dx)),
+        y:Math.max(0,Math.min(100,p.y+dy))
+      }));
+      _pvRefreshSVG();
+    }
+  } else if(_pvMouse.mode==='drag-poly-vertex'){
+    const dx=pt.x-_pvMouse.startX, dy=pt.y-_pvMouse.startY;
+    const {pid,facade,floor}=_pvState;
+    const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===_pvMouse.rectId);
+    if(poly&&poly.points){
+      poly.points[_pvMouse.vertexIdx]={
+        x:Math.max(0,Math.min(100,_pvMouse.origPts[_pvMouse.vertexIdx].x+dx)),
+        y:Math.max(0,Math.min(100,_pvMouse.origPts[_pvMouse.vertexIdx].y+dy))
+      };
+      _pvRefreshSVG();
+    }
   } else if(_pvMouse.mode==='resize'){
     const dx=pt.x-_pvMouse.startX, dy=pt.y-_pvMouse.startY;
     const {pid,facade,floor}=_pvState;
@@ -392,6 +560,10 @@ function pvMM(e){
 
 function pvMU(e){
   if(!_pvMouse.down) return;
+  if(_pvMouse.mode==='poly-point'){
+    _pvMouse={down:false,mode:null};
+    return;
+  }
   if(_pvMouse.mode==='draw'){
     const pt=_pvPct(e);
     const x=Math.min(pt.x,_pvMouse.startX), y=Math.min(pt.y,_pvMouse.startY);
@@ -403,7 +575,8 @@ function pvMU(e){
       _pvEditingRectId=null;
       pvShowLinkModal();
     }
-  } else if(_pvMouse.mode==='drag'||_pvMouse.mode==='resize'||_pvMouse.mode==='rotate'){
+  } else if(_pvMouse.mode==='drag'||_pvMouse.mode==='resize'||_pvMouse.mode==='rotate'||
+            _pvMouse.mode==='drag-poly'||_pvMouse.mode==='drag-poly-vertex'){
     pvSaveLayout(true);
   }
   _pvMouse={down:false,mode:null};
@@ -412,7 +585,7 @@ function pvMU(e){
 function pvRectMD(e,id){
   if(e.button!==0) return;
   if(_pvState.drawMode) return;
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  const isDev=_pvIsDev();
   if(!isDev) return;
   _pvState.selectedId=id;
   const {pid,facade,floor}=_pvState;
@@ -423,10 +596,38 @@ function pvRectMD(e,id){
   _pvRefreshSVG();
 }
 
+function pvPolyMD(e,id){
+  if(e.button!==0) return;
+  if(_pvState.drawMode) return;
+  const isDev=_pvIsDev();
+  if(!isDev){
+    // Non-dev: just select
+    _pvState.selectedId=id;
+    _pvRefreshSVG();
+    return;
+  }
+  _pvState.selectedId=id;
+  const {pid,facade,floor}=_pvState;
+  const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
+  if(!poly) return;
+  const pt=_pvPct(e);
+  _pvMouse={down:true,mode:'drag-poly',rectId:id,startX:pt.x,startY:pt.y,origPts:poly.points.map(p=>({...p}))};
+  _pvRefreshSVG();
+}
+
+function pvPolyVertexMD(e,vertexIdx){
+  if(e.button!==0||!_pvIsDev()) return;
+  const id=_pvState.selectedId; if(!id) return;
+  const {pid,facade,floor}=_pvState;
+  const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id&&r.type==='poly');
+  if(!poly) return;
+  const pt=_pvPct(e);
+  _pvMouse={down:true,mode:'drag-poly-vertex',rectId:id,vertexIdx,startX:pt.x,startY:pt.y,origPts:poly.points.map(p=>({...p}))};
+}
+
 function pvHandleMD(e,pos){
   if(e.button!==0) return;
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
-  if(!isDev) return;
+  if(!_pvIsDev()) return;
   const id=_pvState.selectedId; if(!id) return;
   const {pid,facade,floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
@@ -437,15 +638,13 @@ function pvHandleMD(e,pos){
 
 function pvRotHandleMD(e){
   if(e.button!==0) return;
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
-  if(!isDev) return;
+  if(!_pvIsDev()) return;
   const id=_pvState.selectedId; if(!id) return;
   const {pid,facade,floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
   if(!rect) return;
   const wrap=document.getElementById('pv-canvas-wrap'); if(!wrap) return;
   const b=wrap.getBoundingClientRect();
-  // Pivot = center of rect in client pixels
   const cx=b.left+(rect.x+rect.w/2)/100*b.width;
   const cy=b.top+(rect.y+rect.h/2)/100*b.height;
   const startAngle=Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI;
@@ -454,42 +653,37 @@ function pvRotHandleMD(e){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SVG REFRESH (incremental — no full re-render)
+// SVG REFRESH
 // ─────────────────────────────────────────────────────────────────────────────
 
 function _pvRefreshSVG(){
   const {pid,facade,floor}=_pvState;
-  const rects=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects)||[];
+  const shapes=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects)||[];
   const svg=document.getElementById('pv-svg'); if(!svg) return;
   const ghost=document.getElementById('pv-ghost');
-  // Remove existing rect groups
   svg.querySelectorAll('.pv-rg').forEach(g=>g.remove());
-  // Re-insert
-  rects.forEach(r=>{
+  shapes.forEach(r=>{
     const tmp=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    tmp.innerHTML=_pvRectSVG(r,pid,facade);
+    tmp.innerHTML=(r.type==='poly')?_pvPolySVG(r,pid,facade):_pvRectSVG(r,pid,facade);
     const grp=tmp.querySelector('.pv-rg');
     if(grp) svg.insertBefore(grp,ghost);
   });
   _pvFitLabels();
 }
 
-// Fit each rectangle's label font-size to the actual pixel bounds of its box
 function _pvFitLabels(){
   const svg=document.getElementById('pv-svg'); if(!svg) return;
-  svg.querySelectorAll('.pv-rg').forEach(g=>{
+  svg.querySelectorAll('.pv-rg:not(.pv-poly-rg)').forEach(g=>{
     const r=g.querySelector('rect');
-    const t=g.querySelector('text');  // may be inside nested <svg>
+    const t=g.querySelector('text');
     if(!r||!t) return;
     const rb=r.getBoundingClientRect();
     const rw=rb.width, rh=rb.height;
     if(rw<=0||rh<=0) return;
     const isTitle=g.classList.contains('pv-title-rg');
     if(isTitle){
-      // 4 lines — size based on line height = rh/4 with padding
       let fs=Math.max(6, Math.min(rw*0.18, rh*0.18));
       t.style.fontSize=fs+'px';
-      // Shrink until longest tspan fits
       const tspans=t.querySelectorAll('tspan');
       let i=0;
       while(fs>5&&i<15){
@@ -499,14 +693,12 @@ function _pvFitLabels(){
         fs-=1; t.style.fontSize=fs+'px'; i++;
       }
     } else {
-      // Single-line rect — portrait rects rotate text so long axis is the run direction
       const isPortrait=g.classList.contains('pv-portrait');
-      const run=isPortrait?rh:rw;   // available length along text direction
-      const cap=isPortrait?rw:rh;   // available height perpendicular to text
+      const run=isPortrait?rh:rw;
+      const cap=isPortrait?rw:rh;
       const MIN_FS=1;
       let fs=Math.max(MIN_FS, Math.min(run*0.3, cap*0.6));
       t.style.fontSize=fs+'px';
-      // Shrink until text fits within ~88% of the long side
       let i=0;
       while(typeof t.getComputedTextLength==='function'&&t.getComputedTextLength()>run*0.88&&fs>MIN_FS&&i<20){
         fs=Math.max(MIN_FS,fs-0.5); t.style.fontSize=fs+'px'; i++;
@@ -516,7 +708,7 @@ function _pvFitLabels(){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CELL CLICK HANDLERS (left / right click)
+// CELL CLICK HANDLERS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function pvRectClick(e,id,cellKey,pid,facade){
@@ -546,21 +738,27 @@ function pvRectClick(e,id,cellKey,pid,facade){
   openCustStatusModal(false,curSt,cacheEntry);
 }
 
+function pvPolyClick(e,id,pid,facade){
+  if(_pvState.drawMode) return;
+  if(_pvMouse.mode==='drag-poly'||_pvMouse.mode==='drag-poly-vertex') return;
+  e.stopPropagation();
+  _pvState.selectedId=(_pvState.selectedId===id)?null:id;
+  _pvRefreshSVG();
+}
+
 async function pvRectRC(e,id,cellKey,pid,facade){
   e.preventDefault(); e.stopPropagation();
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  const isDev=_pvIsDev();
   if(isDev){
-    // Dev right-click: always open link editor (skip title blocks)
     const {floor:fl}=_pvState;
     const rectChk=(_pvLayouts[`${pid}|${facade}`]?.[fl]?.rects||[]).find(r=>r.id===id);
     if(rectChk?.type==='title'){_pvState.selectedId=id;_pvRefreshSVG();return;}
     _pvState.selectedId=id;
     _pvEditingRectId=id;
     if(rectChk) _pvPendingRect={...rectChk};
-    pvShowLinkModal(rectChk?.cellKey,rectChk?.label);
+    pvShowLinkModal(rectChk?.cellKey,rectChk?.label,false);
     return;
   }
-  // Normal: open cell detail panel
   const {floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
   if(!rect||!rect.cellKey) return;
@@ -577,18 +775,29 @@ async function pvRectRC(e,id,cellKey,pid,facade){
   await custCellOpenPanel(e,pid,facade,rect.cellKey,cellRef);
 }
 
+function pvPolyRC(e,id,pid,facade){
+  e.preventDefault(); e.stopPropagation();
+  if(!_pvIsDev()) return;
+  const {floor}=_pvState;
+  const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
+  if(!poly) return;
+  _pvState.selectedId=id;
+  _pvEditingRectId=id;
+  _pvPendingRect={...poly};
+  _pvPolyNamePos=poly.namePos||'above';
+  pvShowLinkModal(poly.cellKey,poly.label,true);
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// STATUS SYNC (facade → plan view on status save)
+// STATUS SYNC
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Call this after a status change to refresh plan view colors if it's visible
 function pvSyncStatus(){
   const container=document.getElementById('pv-container');
   if(!container||container.style.display==='none') return;
   _pvRefreshSVG();
 }
 
-// Apply filter to plan view: dim rects whose status doesn't match
 function pvApplyFilter(status){
   const container=document.getElementById('pv-container');
   if(!container||container.style.display==='none') return;
@@ -613,10 +822,11 @@ function pvApplyFilter(status){
 async function pvSelectFloor(floor){
   const {pid,facade}=_pvState;
   _pvState.floor=floor; _pvState.selectedId=null;
+  _pvPolyPoints=[]; _pvUpdatePolyGhost([]);
   await pvLoadBg(pid,facade,floor);
   const meta=_custGetMeta(pid,facade);
   const floors=meta.rows.map(r=>r.label);
-  const isDev=(typeof sbProfile!=='undefined'&&sbProfile?.role==='developer');
+  const isDev=_pvIsDev();
   const container=document.getElementById('pv-container');
   if(container) _pvBuild(container,isDev,floors);
 }
@@ -661,18 +871,66 @@ async function pvUploadBg(input){
 // DRAW MODE TOGGLE
 // ─────────────────────────────────────────────────────────────────────────────
 
-function pvToggleDraw(){
-  _pvState.drawMode=!_pvState.drawMode;
-  const btn=document.getElementById('pv-draw-btn');
+function pvToggleDrawRect(){
+  if(_pvState.drawMode==='rect') _pvSetDrawMode(null);
+  else { _pvPolyPoints=[]; _pvUpdatePolyGhost([]); _pvSetDrawMode('rect'); }
+}
+
+function pvToggleDrawPoly(){
+  if(_pvState.drawMode==='poly'){
+    _pvPolyPoints=[]; _pvUpdatePolyGhost([]);
+    const snap=document.getElementById('pv-snap-dot'); if(snap) snap.setAttribute('r','0');
+    _pvSetDrawMode(null);
+  } else {
+    _pvPolyPoints=[]; _pvSetDrawMode('poly');
+  }
+}
+
+function _pvSetDrawMode(mode){
+  _pvState.drawMode=mode;
+  const rb=document.getElementById('pv-draw-rect-btn');
+  const pb=document.getElementById('pv-draw-poly-btn');
   const svg=document.getElementById('pv-svg');
   const hint=document.getElementById('pv-hint');
-  if(btn){
-    btn.style.background=_pvState.drawMode?'#eef4ff':'var(--surface)';
-    btn.style.color=_pvState.drawMode?'#224F93':'var(--text2)';
-    btn.style.borderColor=_pvState.drawMode?'#224F93':'var(--border)';
+  if(rb){
+    const a=mode==='rect';
+    rb.style.background=a?'#eef4ff':'var(--surface)';
+    rb.style.color=a?'#224F93':'var(--text2)';
+    rb.style.borderColor=a?'#224F93':'var(--border)';
   }
-  if(svg) svg.style.cursor=_pvState.drawMode?'crosshair':'';
-  if(hint) hint.textContent=_pvState.drawMode?'Click and drag on the plan to draw an element':'';
+  if(pb){
+    const a=mode==='poly';
+    pb.style.background=a?'#eef4ff':'var(--surface)';
+    pb.style.color=a?'#224F93':'var(--text2)';
+    pb.style.borderColor=a?'#224F93':'var(--border)';
+  }
+  if(svg) svg.style.cursor=mode?'crosshair':'';
+  if(hint){
+    if(mode==='rect') hint.textContent='Click and drag on the plan to draw a rectangle';
+    else if(mode==='poly') hint.textContent='Click points one by one — click the first point again to close';
+    else hint.textContent='';
+  }
+}
+
+// Legacy alias kept for backwards compatibility with any other callers
+function pvToggleDraw(){ pvToggleDrawRect(); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POLYLINE FINALIZE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function _pvPolyFinalize(points){
+  _pvPendingRect={
+    id:'poly'+Date.now(),
+    type:'poly',
+    points,
+    label:'',
+    namePos:'above',
+    cellKey:'',
+  };
+  _pvPolyNamePos='above';
+  _pvEditingRectId=null;
+  pvShowLinkModal(null,null,true);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -691,7 +949,7 @@ function pvDeleteSelected(){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// LINK MODAL (assign rectangle to a facade cell)
+// LINK / CONFIGURE MODAL
 // ─────────────────────────────────────────────────────────────────────────────
 
 function _pvCellRefFromKey(key){
@@ -729,31 +987,48 @@ function pvGetSelectedCellKey(){
   return `r${ri}_c${ci}`;
 }
 
-function pvShowLinkModal(selectedKey, label){
+function pvSetNamePos(pos){
+  _pvPolyNamePos=pos;
+  const ab=document.getElementById('pv-np-above');
+  const ins=document.getElementById('pv-np-inside');
+  if(ab){ab.style.background=pos==='above'?'#224F93':'#f0f4f9';ab.style.color=pos==='above'?'#fff':'#1a2a3a';}
+  if(ins){ins.style.background=pos==='inside'?'#224F93':'#f0f4f9';ins.style.color=pos==='inside'?'#fff':'#1a2a3a';}
+}
+
+function pvShowLinkModal(selectedKey, label, isPoly){
   const {pid,facade}=_pvState;
   const meta=_custGetMeta(pid,facade);
 
-  // Parse existing key to pre-select floor + col
   let selRi=0, selCi=0;
   if(selectedKey){
     const m=selectedKey.match(/^r(\d+)_c(\d+)$/);
     if(m){selRi=parseInt(m[1]);selCi=parseInt(m[2]);}
   }
 
-  // Floor dropdown
   const floorSel=document.getElementById('pv-floor-select');
   if(floorSel){
     floorSel.innerHTML=meta.rows.map((row,ri)=>`<option value="${ri}"${ri===selRi?' selected':''}>${row.label}</option>`).join('');
   }
-
-  // Col dropdown (for selected floor)
   const colSel=document.getElementById('pv-col-select');
   if(colSel){
     colSel.innerHTML=meta.cols.map((col,ci)=>`<option value="${ci}"${ci===selCi?' selected':''}>${col.label}</option>`).join('');
   }
-
   const li=document.getElementById('pv-label-input');
   if(li) li.value=label||_pvCellRefFromKey(selectedKey)||_pvCellRefFromKey(pvGetSelectedCellKey())||'';
+
+  // Modal title
+  const mt=document.getElementById('pv-modal-title');
+  if(mt) mt.textContent=isPoly?'Configure Polyline':'Link Element to Cell';
+
+  // Name position row (poly only)
+  const npRow=document.getElementById('pv-namepos-row');
+  if(npRow) npRow.style.display=isPoly?'':'none';
+  if(isPoly) pvSetNamePos(_pvPolyNamePos);
+
+  // Cell link hint
+  const clHint=document.getElementById('pv-cell-optional-hint');
+  if(clHint) clHint.style.display=isPoly?'':'none';
+
   const m=document.getElementById('pv-link-modal');
   if(m) m.style.display='flex';
 }
@@ -761,16 +1036,28 @@ function pvShowLinkModal(selectedKey, label){
 function pvLinkSave(){
   const cellKey=pvGetSelectedCellKey();
   const label=(document.getElementById('pv-label-input')?.value||'').trim();
-  if(!cellKey){pvLinkCancel();return;}
   const {pid,facade,floor}=_pvState;
+
+  const isPoly=_pvPendingRect?.type==='poly'||
+    (_pvEditingRectId&&(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===_pvEditingRectId)?.type==='poly');
+
+  if(!cellKey&&!isPoly){pvLinkCancel();return;}
+
   if(!_pvLayouts[`${pid}|${facade}`]) _pvLayouts[`${pid}|${facade}`]={};
   if(!_pvLayouts[`${pid}|${facade}`][floor]) _pvLayouts[`${pid}|${facade}`][floor]={rects:[]};
   const rects=_pvLayouts[`${pid}|${facade}`][floor].rects;
+
   if(_pvEditingRectId){
     const existing=rects.find(r=>r.id===_pvEditingRectId);
-    if(existing){existing.cellKey=cellKey;existing.label=label||cellKey;}
+    if(existing){
+      existing.cellKey=cellKey||'';
+      existing.label=label||(cellKey?_pvCellRefFromKey(cellKey):'');
+      if(existing.type==='poly') existing.namePos=_pvPolyNamePos;
+    }
   } else if(_pvPendingRect){
-    rects.push({..._pvPendingRect,cellKey,label:label||cellKey});
+    const rec={..._pvPendingRect,cellKey:cellKey||'',label:label||(cellKey?_pvCellRefFromKey(cellKey):_pvPendingRect.label||'')};
+    if(isPoly) rec.namePos=_pvPolyNamePos;
+    rects.push(rec);
   }
   _pvPendingRect=null; _pvEditingRectId=null;
   pvLinkCancel();
@@ -784,10 +1071,22 @@ function pvLinkCancel(){
 }
 
 function _pvLinkModalHTML(){
+  const btnBase='padding:8px 0;flex:1;border-radius:7px;font-family:\'Barlow\',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(34,79,147,0.2);';
   return `
     <div id="pv-link-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:15000;align-items:center;justify-content:center;">
-      <div style="background:#fff;border-radius:12px;padding:24px 24px 20px;width:360px;box-shadow:0 8px 32px rgba(34,79,147,0.2);font-family:'Barlow',sans-serif;">
-        <div style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:18px;">Link Element to Cell</div>
+      <div style="background:#fff;border-radius:12px;padding:24px 24px 20px;width:380px;box-shadow:0 8px 32px rgba(34,79,147,0.2);font-family:'Barlow',sans-serif;">
+        <div id="pv-modal-title" style="font-size:14px;font-weight:700;color:#1a2a3a;margin-bottom:18px;">Link Element to Cell</div>
+
+        <div id="pv-namepos-row" style="display:none;margin-bottom:16px;">
+          <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;">Label Position</label>
+          <div style="display:flex;gap:8px;">
+            <button id="pv-np-above" onclick="pvSetNamePos('above')"
+              style="${btnBase}background:#224F93;color:#fff;">Above</button>
+            <button id="pv-np-inside" onclick="pvSetNamePos('inside')"
+              style="${btnBase}background:#f0f4f9;color:#1a2a3a;">Inside</button>
+          </div>
+        </div>
+
         <div style="display:flex;gap:10px;margin-bottom:14px;">
           <div style="flex:1;">
             <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Floor</label>
@@ -798,9 +1097,11 @@ function _pvLinkModalHTML(){
             <select id="pv-col-select" onchange="pvColSelectChanged()" style="width:100%;padding:8px 10px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;outline:none;"></select>
           </div>
         </div>
+        <span id="pv-cell-optional-hint" style="display:none;font-size:10px;color:#8099b0;font-style:italic;margin-bottom:10px;display:block;">Cell link is optional for polylines — you can leave a zone unlabeled to a cell.</span>
+
         <div style="margin-bottom:20px;">
-          <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Label <span style="font-weight:400;text-transform:none;">(optional — shown on the rectangle)</span></label>
-          <input id="pv-label-input" type="text" placeholder="e.g. W-01 or Door-A"
+          <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Label <span style="font-weight:400;text-transform:none;">(shown on the shape)</span></label>
+          <input id="pv-label-input" type="text" placeholder="e.g. Zone A or W-01"
             style="width:100%;padding:8px 10px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;font-family:'Barlow',sans-serif;font-size:12px;color:#1a2a3a;outline:none;box-sizing:border-box;">
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -833,8 +1134,8 @@ function pvDupExecute(){
   checks.forEach(cb=>{
     const tf=cb.value; if(tf===src) return;
     if(!layout[tf]) layout[tf]={rects:[]};
-    // Copy geometry, assign new IDs (statuses are per-cell in facade, not in rects)
-    layout[tf].rects=srcRects.map(r=>({...r,id:'r'+Date.now()+Math.random().toString(36).slice(2,6)}));
+    layout[tf].rects=srcRects.map(r=>({...r,id:'r'+Date.now()+Math.random().toString(36).slice(2,6),
+      points:r.points?r.points.map(p=>({...p})):undefined}));
   });
   pvCloseDupModal();
   pvSaveLayout(false);
@@ -860,7 +1161,7 @@ function _pvDupModalHTML(pid,facade){
         <div style="margin-bottom:20px;">
           <label style="display:block;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Apply To Floors</label>
           <div style="max-height:180px;overflow-y:auto;padding:8px 10px;border:1px solid rgba(34,79,147,0.15);border-radius:7px;background:#fafcff;">${tgts}</div>
-          <div style="font-size:10px;color:#8099b0;margin-top:6px;">Only rectangle positions are copied. Each floor keeps its own statuses.</div>
+          <div style="font-size:10px;color:#8099b0;margin-top:6px;">Only element positions are copied. Each floor keeps its own statuses.</div>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button onclick="pvCloseDupModal()" style="padding:8px 16px;border:1px solid rgba(34,79,147,0.2);border-radius:7px;background:#f0f4f9;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
@@ -871,10 +1172,10 @@ function _pvDupModalHTML(pid,facade){
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VIEW TOGGLE (Facade ↔ Plan)
+// VIEW TOGGLE
 // ─────────────────────────────────────────────────────────────────────────────
 
-let _pvActiveView='facade'; // 'facade' | 'plan'
+let _pvActiveView='facade';
 
 async function pvSwitchView(view){
   _pvActiveView=view;
@@ -894,7 +1195,6 @@ async function pvSwitchView(view){
     pv.style.display='none'; fv.style.display='flex'; fv.style.flexDirection='column';
     if(fb){fb.style.background='#224F93';fb.style.color='#fff';fb.style.borderColor='#224F93';}
     if(pb){pb.style.background='var(--surface)';pb.style.color='var(--text2)';pb.style.borderColor='var(--border)';}
-    // Remove body-mounted modals when leaving plan view
     const mr=document.getElementById('pv-modals-root'); if(mr) mr.remove();
   }
 }
