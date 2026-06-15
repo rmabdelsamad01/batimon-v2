@@ -2350,7 +2350,7 @@ function custGridDelRow(pid,facade,rowIdx){
   meta.merges=meta.merges.map(m=>{
     if(m.r>rowIdx)return{...m,r:m.r-1};
     if(m.r<rowIdx&&m.r+m.rowspan>rowIdx)return{...m,rowspan:m.rowspan-1};
-    if(m.r===rowIdx&&m.rowspan>1)return{...m,r:m.r+1,rowspan:m.rowspan-1};
+    if(m.r===rowIdx&&m.rowspan>1)return{...m,rowspan:m.rowspan-1};
     return null;
   }).filter(Boolean).filter(m=>m.rowspan>0&&m.colspan>0);
   meta.rows.splice(rowIdx,1);
@@ -2376,7 +2376,7 @@ function custGridDelCol(pid,facade,colIdx){
   meta.merges=meta.merges.map(m=>{
     if(m.c>colIdx)return{...m,c:m.c-1};
     if(m.c<colIdx&&m.c+m.colspan>colIdx)return{...m,colspan:m.colspan-1};
-    if(m.c===colIdx&&m.colspan>1)return{...m,c:m.c+1,colspan:m.colspan-1};
+    if(m.c===colIdx&&m.colspan>1)return{...m,colspan:m.colspan-1};
     return null;
   }).filter(Boolean).filter(m=>m.rowspan>0&&m.colspan>0);
   meta.cols.splice(colIdx,1);
