@@ -248,6 +248,7 @@ let _custMultiSel=new Set(); // cell keys "r2_c3"
 let _custMultiPid=null,_custMultiFacade=null;
 let _custCurPid=null,_custCurFacade=null,_custCurCellKey=null;
 let _custCurCellRef='';let _custCurSelStatus='pending';
+let _undoStack=[];
 let assemblyPanelRefs=new Set(); // panel_ref values that have a panel-assembly QC checklist filled
 let prepInstPanelRefs=new Set();  // panel_ref values that have a panel-preparation QC checklist filled
 let _supaUnlocked=false; // true once the correct password has been entered this session
@@ -1959,6 +1960,18 @@ const _DEFAULT_GRID_META = ()=>({
   upperRow:{enabled:false,spans:[]}
 });
 
+function _undoPush(pid,facade){
+  const k=pid+'|'+facade;
+  _undoStack.push({pid,facade,snapshot:JSON.parse(JSON.stringify(_custFacadeCache[k]||{}))});
+  if(_undoStack.length>50) _undoStack.shift();
+}
+function undoLast(){
+  if(!_undoStack.length) return;
+  const {pid,facade,snapshot}=_undoStack.pop();
+  _custFacadeCache[pid+'|'+facade]=snapshot;
+  _custSaveFull(pid,facade);
+  renderCustomMonitoring(window._currentCustomPage);
+}
 function _custGetMeta(pid,facade){
   const m=(_custFacadeCache[pid+'|'+facade]||{})['__meta__'];
   return m?JSON.parse(JSON.stringify(m)):_DEFAULT_GRID_META();
@@ -2098,6 +2111,7 @@ window._cgEnterTextDirMode=function(pid,facade,dir){
 
 window._custApplyTextDirToCell=function(pid,facade,ri,ci){
   const dir=_cgTextDirMode?.dir; if(!dir) return;
+  _undoPush(pid,facade);
   const fk=pid+'|'+facade; const key=`r${ri}_c${ci}`;
   if(!_custFacadeCache[fk])_custFacadeCache[fk]={};
   if(!_custFacadeCache[fk][key])_custFacadeCache[fk][key]={};
@@ -2320,6 +2334,7 @@ function _cgPrint(){
 // Add / Delete rows & columns
 function custGridAddRow(pid,facade,atIdx){
   if(_isViewer()){_viewerToast();return;}
+  _undoPush(pid,facade);
   const meta=_custGetMeta(pid,facade); const n=meta.rows.length;
   const idx=atIdx!=null?atIdx:n;
   _custRemapCells(pid,facade,(r,c)=>r>=idx?`r${r+1}_c${c}`:`r${r}_c${c}`);
@@ -2330,6 +2345,7 @@ function custGridAddRow(pid,facade,atIdx){
 function custGridDelRow(pid,facade,rowIdx){
   const meta=_custGetMeta(pid,facade);
   if(meta.rows.length<=1){alert('Cannot delete the last row.');return;}
+  _undoPush(pid,facade);
   _custRemapCells(pid,facade,(r,c)=>r===rowIdx?null:r>rowIdx?`r${r-1}_c${c}`:`r${r}_c${c}`);
   meta.merges=meta.merges.map(m=>{
     if(m.r>rowIdx)return{...m,r:m.r-1};
@@ -2342,6 +2358,7 @@ function custGridDelRow(pid,facade,rowIdx){
 }
 function custGridAddCol(pid,facade,atIdx){
   if(_isViewer()){_viewerToast();return;}
+  _undoPush(pid,facade);
   const meta=_custGetMeta(pid,facade); const n=meta.cols.length;
   const idx=atIdx!=null?atIdx:n;
   _custRemapCells(pid,facade,(r,c)=>c>=idx?`r${r}_c${c+1}`:`r${r}_c${c}`);
@@ -2354,6 +2371,7 @@ function custGridAddCol(pid,facade,atIdx){
 function custGridDelCol(pid,facade,colIdx){
   const meta=_custGetMeta(pid,facade);
   if(meta.cols.length<=1){alert('Cannot delete the last column.');return;}
+  _undoPush(pid,facade);
   _custRemapCells(pid,facade,(r,c)=>c===colIdx?null:c>colIdx?`r${r}_c${c-1}`:`r${r}_c${c}`);
   meta.merges=meta.merges.map(m=>{
     if(m.c>colIdx)return{...m,c:m.c-1};
@@ -2369,6 +2387,7 @@ function custGridSetRowHeight(pid,facade,rowIdx){
   const cur=meta.rows[rowIdx]?.height||40;
   const val=prompt('Row height (px):',cur); if(!val)return;
   const h=parseInt(val); if(isNaN(h)||h<15||h>400){alert('Height must be 15–400 px.');return;}
+  _undoPush(pid,facade);
   meta.rows[rowIdx].height=h; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
 function custGridSetColWidth(pid,facade,colIdx){
@@ -2376,6 +2395,7 @@ function custGridSetColWidth(pid,facade,colIdx){
   const cur=meta.cols[colIdx]?.width||80;
   const val=prompt('Column width (px):',cur); if(!val)return;
   const w=parseInt(val); if(isNaN(w)||w<2||w>500){alert('Width must be 2–500 px.');return;}
+  _undoPush(pid,facade);
   meta.cols[colIdx].width=w; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
 function custGridRenameRow(pid,facade,rowIdx){
@@ -2383,6 +2403,7 @@ function custGridRenameRow(pid,facade,rowIdx){
   const cur=meta.rows[rowIdx]?.label||String(rowIdx+1);
   const val=prompt('Row label:',cur); if(val===null)return;
   const name=val.trim(); if(!name){alert('Label cannot be empty.');return;}
+  _undoPush(pid,facade);
   meta.rows[rowIdx].label=name; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
 function custGridRenameCol(pid,facade,colIdx){
@@ -2390,6 +2411,7 @@ function custGridRenameCol(pid,facade,colIdx){
   const cur=meta.cols[colIdx]?.label||String.fromCharCode(65+colIdx);
   const val=prompt('Column label:',cur); if(val===null)return;
   const name=val.trim(); if(!name){alert('Label cannot be empty.');return;}
+  _undoPush(pid,facade);
   meta.cols[colIdx].label=name; _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
 
@@ -2425,6 +2447,7 @@ function custGridMergeHover(r,c){
 }
 function custGridMerge(pid,facade,r1,c1,r2,c2){
   if(r1===r2&&c1===c2)return;
+  _undoPush(pid,facade);
   const meta=_custGetMeta(pid,facade);
   meta.merges=meta.merges.filter(m=>{
     const mr2=m.r+m.rowspan-1,mc2=m.c+m.colspan-1;
@@ -2437,6 +2460,7 @@ function custGridUnmerge(pid,facade,r,c){
   const meta=_custGetMeta(pid,facade);
   const idx=meta.merges.findIndex(m=>r>=m.r&&r<m.r+m.rowspan&&c>=m.c&&c<m.c+m.colspan);
   if(idx<0){custGridCancelMode();return;}
+  _undoPush(pid,facade);
   meta.merges.splice(idx,1);
   _custSetMeta(pid,facade,meta); renderCustomMonitoring(window._currentCustomPage);
 }
@@ -2444,6 +2468,7 @@ function custGridUnmerge(pid,facade,r,c){
 // ── Upper Row ─────────────────────────────────────────────────────────────────
 function custToggleUpperRow(pid,facade){
   if(_isViewer()){_viewerToast();return;}
+  _undoPush(pid,facade);
   const meta=_custGetMeta(pid,facade);
   if(!meta.upperRow)meta.upperRow={enabled:false,spans:[]};
   meta.upperRow.enabled=!meta.upperRow.enabled;
@@ -2478,6 +2503,7 @@ function custUrCellClick(e,pid,facade,ci){
 }
 function custUrMerge(pid,facade,c1,c2,label){
   if(_isViewer()){_viewerToast();return;}
+  _undoPush(pid,facade);
   const meta=_custGetMeta(pid,facade);
   if(!meta.upperRow)meta.upperRow={enabled:true,spans:[]};
   meta.upperRow.spans=meta.upperRow.spans.filter(s=>s.c+s.colspan-1<c1||s.c>c2);
@@ -2487,6 +2513,7 @@ function custUrMerge(pid,facade,c1,c2,label){
 }
 function custUrClear(pid,facade,ci){
   if(_isViewer()){_viewerToast();return;}
+  _undoPush(pid,facade);
   const meta=_custGetMeta(pid,facade);if(!meta.upperRow)return;
   meta.upperRow.spans=meta.upperRow.spans.filter(s=>!(ci>=s.c&&ci<s.c+s.colspan));
   _custSetMeta(pid,facade,meta);renderCustomMonitoring(window._currentCustomPage);
@@ -2620,6 +2647,7 @@ function saveCustPanel(){
   if(_custMultiSel.size>0){
     // Bulk apply — only update status, preserve other fields
     const k=_custMultiPid+'|'+_custMultiFacade;
+    _undoPush(_custMultiPid,_custMultiFacade);
     if(!_custFacadeCache[k])_custFacadeCache[k]={};
     _custMultiSel.forEach(key=>{
       const existing=_custFacadeCache[k][key]||{};
@@ -2640,6 +2668,7 @@ function saveCustPanel(){
     _custMultiSel.clear();
   } else if(_custCurPid&&_custCurFacade&&_custCurCellKey){
     // Single cell — save all fields
+    _undoPush(_custCurPid,_custCurFacade);
     const k=_custCurPid+'|'+_custCurFacade;
     if(!_custFacadeCache[k])_custFacadeCache[k]={};
     const fabDate=document.getElementById('cust-pm-fab-date')?.value||'';
@@ -3107,6 +3136,8 @@ async function renderCustomMonitoring(pageId){
         </div>
         <div style="padding:7px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           ${_isDev?`
+            <button onclick="undoLast()" ${_undoStack.length===0?'disabled':''} style="${bs}${_undoStack.length===0?'opacity:0.35;':''}font-weight:700;" title="${_undoStack.length>0?`Undo last action (${_undoStack.length} step${_undoStack.length>1?'s':''} available)`:'Nothing to undo'}">↩ Undo</button>
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
             <button onclick="custGridAddCol('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Column</button>
             <button id="cg-textdir-btn" onclick="_cgOpenTextDirPanel(this,'${pid}','${facade}')" style="${bs}" title="Rotate text direction of cells">↕ Text</button>
