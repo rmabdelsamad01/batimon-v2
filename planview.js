@@ -125,7 +125,7 @@ function _pvBuild(container, isDev, floors){
       </button>
       <button id="pv-draw-poly-btn" onclick="pvToggleDrawPoly()"
         style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 20 2 20"/></svg>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 9.5 18 21 6 21 2 9.5"/></svg>
         Draw Poly
       </button>
       <button onclick="pvDeleteSelected()"
