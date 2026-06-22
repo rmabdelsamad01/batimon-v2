@@ -6,51 +6,67 @@
 <title>Batimon — 3D Demo View</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-html,body { width:100%; height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#0a1628; }
-#c3d { width:100%; height:100%; display:block; }
+html,body { width:100%; height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#0d1117; }
+
+/* ── top bar ── */
 #top-bar {
-  position:fixed; top:0; left:0; right:0; z-index:10;
-  display:flex; align-items:center; justify-content:space-between; padding:14px 18px;
-  pointer-events:none;
+  position:fixed; top:0; left:0; right:0; height:46px; z-index:20;
+  background:#161b22; border-bottom:1px solid #30363d;
+  display:flex; align-items:center; padding:0 14px; gap:10px;
 }
-#title-tag {
-  display:flex; align-items:center; gap:8px;
-  background:rgba(10,22,40,0.8); border:1.5px solid rgba(255,255,255,0.13);
-  padding:7px 16px; border-radius:10px; backdrop-filter:blur(14px);
-  font-size:13px; font-weight:700; color:#fff;
+#top-title { font-size:13px; font-weight:700; color:#e6edf3; display:flex; align-items:center; gap:7px; flex:1; }
+#top-title svg { flex-shrink:0; }
+#mode-badge {
+  font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  padding:2px 8px; border-radius:20px; background:#1f3a1f; color:#3fb950; border:1px solid #238636;
 }
 #close-btn {
-  pointer-events:auto; background:rgba(10,22,40,0.85); border:1.5px solid rgba(255,255,255,0.18);
-  color:#fff; font-size:16px; width:36px; height:36px; border-radius:8px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; backdrop-filter:blur(12px);
-  transition:background 0.15s; line-height:1;
+  background:#21262d; border:1px solid #30363d; color:#8b949e;
+  font-size:13px; height:28px; padding:0 12px; border-radius:6px; cursor:pointer;
+  display:flex; align-items:center; gap:5px; font-weight:600; transition:all .15s;
 }
-#close-btn:hover { background:rgba(255,60,60,0.3); border-color:rgba(255,100,100,0.5); }
+#close-btn:hover { background:#30363d; color:#e6edf3; }
+
+/* ── canvas ── */
+#canvas-wrap { position:fixed; top:46px; left:0; right:0; bottom:0; }
+#canvas-wrap canvas { display:block; width:100%; height:100%; }
+
+/* ── legend ── */
 #legend-panel {
-  position:fixed; bottom:16px; right:16px; z-index:10; display:none;
-  background:rgba(8,18,34,0.88); border:1.5px solid rgba(255,255,255,0.12);
-  border-radius:10px; padding:12px 16px; backdrop-filter:blur(16px);
-  max-height:52vh; overflow-y:auto; min-width:160px; max-width:210px;
+  position:fixed; top:62px; right:14px; z-index:10; display:none;
+  background:#161b22; border:1px solid #30363d; border-radius:10px;
+  padding:12px 14px; max-height:calc(100vh - 100px); overflow-y:auto; min-width:170px; max-width:220px;
 }
 #legend-panel::-webkit-scrollbar { width:4px; }
-#legend-panel::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:2px; }
-.leg-title { font-size:9px; font-weight:700; color:rgba(255,255,255,0.38); letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
-.leg-item { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
-.leg-dot { width:13px; height:13px; border-radius:3px; flex-shrink:0; }
-.leg-lbl { font-size:11px; color:rgba(255,255,255,0.85); font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.leg-cnt { font-size:10px; color:rgba(255,255,255,0.38); flex-shrink:0; }
+#legend-panel::-webkit-scrollbar-thumb { background:#30363d; border-radius:2px; }
+.leg-hd { font-size:9px; font-weight:700; color:#8b949e; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+.leg-row { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+.leg-dot { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+.leg-lbl { font-size:11px; color:#c9d1d9; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.leg-cnt { font-size:10px; color:#8b949e; flex-shrink:0; }
+
+/* ── hint ── */
 #hint {
-  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:10;
-  font-size:10px; color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.05);
+  position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:10;
+  font-size:10px; color:#484f58; background:#161b22; border:1px solid #21262d;
   padding:3px 14px; border-radius:20px; white-space:nowrap; pointer-events:none;
 }
+
+/* ── loading ── */
 #loading {
-  position:fixed; inset:0; background:#0a1628; z-index:50;
+  position:fixed; inset:0; background:#0d1117; z-index:50;
   display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
 }
-.spin { width:34px; height:34px; border:3px solid rgba(168,85,247,0.18); border-top-color:#a855f7; border-radius:50%; animation:sp 0.75s linear infinite; }
+.spin { width:32px; height:32px; border:3px solid #21262d; border-top-color:#a855f7; border-radius:50%; animation:sp .75s linear infinite; }
 @keyframes sp { to { transform:rotate(360deg); } }
-.load-txt { font-size:12px; color:rgba(255,255,255,0.4); }
+.load-txt { font-size:12px; color:#484f58; }
+
+/* ── no-scene info box ── */
+#info-box {
+  position:fixed; bottom:40px; left:14px; z-index:10; display:none;
+  background:#161b22; border:1px solid #30363d; border-radius:8px;
+  padding:9px 13px; font-size:10px; color:#8b949e; max-width:260px; line-height:1.5;
+}
 </style>
 <script type="importmap">
 {
@@ -62,204 +78,307 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:-apple-system,
 </script>
 </head>
 <body>
-<div id="loading"><div class="spin"></div><div class="load-txt">Building 3D view…</div></div>
-<canvas id="c3d"></canvas>
+
+<div id="loading"><div class="spin"></div><div class="load-txt">Loading 3D view…</div></div>
+
 <div id="top-bar">
-  <div id="title-tag">
+  <div id="top-title">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     Demo — 3D View
+    <span id="mode-badge" style="display:none;"></span>
   </div>
-  <button id="close-btn" onclick="window._close3D()" title="Close">✕</button>
+  <button id="close-btn" onclick="window._close3D()">✕ Close</button>
 </div>
+
+<div id="canvas-wrap"></div>
+
 <div id="legend-panel">
-  <div class="leg-title">Legend</div>
+  <div class="leg-hd">Legend</div>
   <div id="leg-items"></div>
 </div>
+
 <div id="hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
+<div id="info-box"></div>
 
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-window._close3D = () => {
-  window.parent.postMessage({ type: 'demo3d-close' }, '*');
+/* ── global close ─────────────────────────────────────────────────────────── */
+window._close3D = () => { window.parent.postMessage({ type:'demo3d-close' }, '*'); };
+
+/* ── geometry factories (mirror builder3d.html) ─────────────────────────── */
+const GEO = {
+  box:      () => new THREE.BoxGeometry(1,1,1),
+  sphere:   () => new THREE.SphereGeometry(0.6,32,24),
+  cylinder: () => new THREE.CylinderGeometry(0.5,0.5,1.5,32),
+  cone:     () => new THREE.ConeGeometry(0.6,1.5,32),
+  pyramid:  () => new THREE.ConeGeometry(0.7,1.2,4),
+  torus:    () => new THREE.TorusGeometry(0.6,0.22,16,60),
+  plane:    () => new THREE.PlaneGeometry(2,2),
 };
 
-// Notify parent we're ready to receive data
-window.parent.postMessage({ type: 'demo3d-ready' }, '*');
-
-window.addEventListener('message', e => {
-  if (e.data?.type === 'demo3d-data') build(e.data.data);
-});
-
-// ── Canvas texture for one facade ──────────────────────────────
-function makeFacadeCanvas(facade) {
-  const { rows, cols, grid } = facade;
-  const CELL = 14, GAP = 2;
-  const cw = cols * (CELL + GAP) - GAP;
-  const ch = rows * (CELL + GAP) - GAP;
-  const cv = document.createElement('canvas');
-  cv.width = Math.max(cw, 2); cv.height = Math.max(ch, 2);
-  const ctx = cv.getContext('2d');
-  ctx.fillStyle = '#0f1e35';
-  ctx.fillRect(0, 0, cv.width, cv.height);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      ctx.fillStyle = grid[r]?.[c] || '#1d304d';
-      ctx.fillRect(c * (CELL + GAP), r * (CELL + GAP), CELL, CELL);
-    }
+/* ── deserialize (mirror builder3d.html _deserializeObj) ─────────────────── */
+function deserObj(od, panelColors) {
+  if (od.isGroup || od.type === 'group') {
+    const g = new THREE.Group();
+    g.userData.elementId = od.elementId || '';
+    if (od.position) g.position.fromArray(od.position);
+    if (od.rotation) g.rotation.set(...od.rotation);
+    if (od.scale)    g.scale.fromArray(od.scale);
+    (od.children || []).forEach(cd => {
+      const c = deserObj(cd, panelColors);
+      if (c) g.add(c);
+    });
+    return g;
   }
-  return cv;
-}
+  if (!GEO[od.type]) return null;
 
-// ── Sprite label ───────────────────────────────────────────────
-function makeSprite(text, borderColor) {
-  const cv = document.createElement('canvas');
-  cv.width = 256; cv.height = 52;
-  const ctx = cv.getContext('2d');
-  ctx.clearRect(0, 0, 256, 52);
-  ctx.fillStyle = 'rgba(8,18,34,0.85)';
-  ctx.beginPath();
-  ctx.roundRect(4, 4, 248, 44, 7);
-  ctx.fill();
-  ctx.strokeStyle = borderColor + 'cc';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(4, 4, 248, 44, 7);
-  ctx.stroke();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 17px system-ui,sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 128, 26);
-  const tex = new THREE.CanvasTexture(cv);
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
-  const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(6.5, 1.3, 1);
-  return sprite;
-}
+  const eid = (od.elementId || '').trim();
+  let color = od.color || '#0ea5e9';
+  if (eid) {
+    color = panelColors[eid] || '#374151'; // has ID but no demo color → slate
+  }
 
-// ── Main build ─────────────────────────────────────────────────
-function build(data) {
-  const fac = data.facades;
-  const NF = fac.NF, SF = fac.SF, EF = fac.EF, WF = fac.WF;
-  const S = 0.5; // units per panel cell
-
-  const bW = Math.max(NF?.cols || 33, SF?.cols || 33) * S;
-  const bD = Math.max(EF?.cols || 15, WF?.cols || 15) * S;
-  const bH = Math.max(NF?.rows || 39, SF?.rows || 37) * S;
-
-  // Scene
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a1628);
-  scene.fog = new THREE.FogExp2(0x0a1628, 0.008);
-
-  // Renderer
-  const canvas = document.getElementById('c3d');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
-
-  // Camera
-  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 800);
-  const dist = Math.max(bW, bD, bH) * 2.4;
-  camera.position.set(dist * 0.65, bH * 0.7, dist * 0.65);
-
-  // Controls
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.07;
-  controls.minDistance = 4;
-  controls.maxDistance = 400;
-  controls.maxPolarAngle = Math.PI * 0.87;
-  controls.target.set(0, bH / 2, 0);
-  controls.update();
-
-  // Lights
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  const sun = new THREE.DirectionalLight(0xfff8f0, 1.0);
-  sun.position.set(40, 80, 50);
-  scene.add(sun);
-  const fill = new THREE.DirectionalLight(0xc0d8ff, 0.3);
-  fill.position.set(-25, 25, -35);
-  scene.add(fill);
-
-  // ── Facades ──
-  const ZONE_COLORS = { NF: '#2d65bd', SF: '#1a9458', EF: '#a07800', WF: '#6d35d9' };
-  const facadeDefs = [
-    { key:'NF', label:'North', d:NF, posX:0,      posZ:-bD/2, rotY:Math.PI      },
-    { key:'SF', label:'South', d:SF, posX:0,      posZ:+bD/2, rotY:0            },
-    { key:'EF', label:'East',  d:EF, posX:+bW/2,  posZ:0,     rotY:-Math.PI/2   },
-    { key:'WF', label:'West',  d:WF, posX:-bW/2,  posZ:0,     rotY:+Math.PI/2   },
-  ];
-
-  facadeDefs.forEach(fc => {
-    if (!fc.d) return;
-    const fW = fc.d.cols * S;
-    const fH = fc.d.rows * S;
-    const posY = fH / 2; // bottom of facade at Y=0
-
-    const tex = new THREE.CanvasTexture(makeFacadeCanvas(fc.d));
-    tex.flipY = false;
-    tex.magFilter = THREE.NearestFilter;
-    tex.minFilter = THREE.LinearFilter;
-
-    const geo = new THREE.PlaneGeometry(fW, fH);
-    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, metalness: 0.05 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(fc.posX, posY, fc.posZ);
-    mesh.rotation.y = fc.rotY;
-    scene.add(mesh);
-
-    // Direction label below facade
-    const sprite = makeSprite(fc.label, ZONE_COLORS[fc.key] || '#fff');
-    sprite.position.set(fc.posX, -1.8, fc.posZ);
-    scene.add(sprite);
+  const geo = GEO[od.type]();
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color),
+    roughness: 0.55,
+    metalness: 0.1,
   });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow    = true;
+  mesh.receiveShadow = true;
+  mesh.userData.elementId = eid;
+  if (od.position) mesh.position.fromArray(od.position);
+  if (od.rotation) mesh.rotation.set(...od.rotation);
+  if (od.scale)    mesh.scale.fromArray(od.scale);
+  return mesh;
+}
 
-  // Ground
-  const gnd = new THREE.Mesh(
-    new THREE.PlaneGeometry(bW * 5, bD * 5),
-    new THREE.MeshStandardMaterial({ color: 0x0c1c32, roughness: 1.0 })
-  );
-  gnd.rotation.x = -Math.PI / 2;
-  gnd.position.y = -0.02;
-  scene.add(gnd);
+/* ── shared Three.js setup ────────────────────────────────────────────────── */
+function createScene() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d1117);
 
-  // Grid
-  const grid = new THREE.GridHelper(bW * 4, 32, 0x182f4a, 0x141f30);
-  grid.position.y = 0.01;
+  // Lights (same as builder3d.html)
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const sun = new THREE.DirectionalLight(0xffd6a5, 1.3);
+  sun.position.set(10, 20, 10);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -30;
+  sun.shadow.camera.right = sun.shadow.camera.top  =  30;
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x6699cc, 0.4);
+  fill.position.set(-10, 5, -10);
+  scene.add(fill);
+  scene.add(new THREE.HemisphereLight(0x223355, 0x111a11, 0.3));
+
+  // Grid (same as builder3d.html)
+  const grid = new THREE.GridHelper(60, 60, 0x1e2a38, 0x1a222e);
   scene.add(grid);
 
-  // ── Legend ──
-  if (data.legend?.length) {
-    const el = document.getElementById('leg-items');
-    el.innerHTML = data.legend.map(l => `
-      <div class="leg-item">
-        <div class="leg-dot" style="background:${l.color};"></div>
-        <div class="leg-lbl">${l.label}</div>
-        <div class="leg-cnt">${l.count != null ? l.count : ''}</div>
-      </div>`).join('');
-    document.getElementById('legend-panel').style.display = 'block';
+  // Shadow ground (same as builder3d.html)
+  const gnd = new THREE.Mesh(
+    new THREE.PlaneGeometry(300, 300),
+    new THREE.ShadowMaterial({ opacity: 0.25 })
+  );
+  gnd.rotation.x    = -Math.PI / 2;
+  gnd.receiveShadow = true;
+  scene.add(gnd);
+
+  return scene;
+}
+
+function createRenderer(wrap) {
+  const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  r.setPixelRatio(Math.min(devicePixelRatio, 2));
+  r.shadowMap.enabled = true;
+  r.shadowMap.type    = THREE.PCFSoftShadowMap;
+  wrap.appendChild(r.domElement);
+  return r;
+}
+
+function createCamera() {
+  return new THREE.PerspectiveCamera(55, 1, 0.01, 5000);
+}
+
+function createControls(camera, domEl) {
+  const c = new OrbitControls(camera, domEl);
+  c.enableDamping  = true;
+  c.dampingFactor  = 0.06;
+  c.minDistance    = 0.3;
+  c.maxDistance    = 800;
+  return c;
+}
+
+function fitCamera(allObjects, camera, controls) {
+  const box = new THREE.Box3();
+  allObjects.forEach(o => box.expandByObject(o));
+  if (box.isEmpty()) return;
+  const size   = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const fov    = camera.fov * (Math.PI / 180);
+  const dist   = Math.abs(maxDim / Math.sin(fov / 2)) * 0.65;
+  camera.position.set(center.x + dist * 0.65, center.y + dist * 0.5, center.z + dist * 0.65);
+  controls.target.copy(center);
+  controls.update();
+}
+
+function startLoop(renderer, scene, camera, controls, wrap) {
+  function resize() {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
   }
-
-  document.getElementById('loading').style.display = 'none';
-
-  // ── Render loop ──
+  resize();
+  window.addEventListener('resize', resize);
   (function loop() {
     requestAnimationFrame(loop);
     controls.update();
     renderer.render(scene, camera);
   })();
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
 }
+
+function buildLegend(legend) {
+  if (!legend?.length) return;
+  const el = document.getElementById('leg-items');
+  el.innerHTML = legend.map(l => `
+    <div class="leg-row">
+      <div class="leg-dot" style="background:${l.color};"></div>
+      <div class="leg-lbl">${l.label}</div>
+      <div class="leg-cnt">${l.count ?? ''}</div>
+    </div>`).join('');
+  document.getElementById('legend-panel').style.display = 'block';
+}
+
+/* ── MODE A: builder3d scene ─────────────────────────────────────────────── */
+function buildFromScene(sceneData, panelColors, legend) {
+  const wrap   = document.getElementById('canvas-wrap');
+  const scene  = createScene();
+  const renderer = createRenderer(wrap);
+  const camera   = createCamera();
+  const controls = createControls(camera, renderer.domElement);
+
+  camera.position.set(7, 5, 7);
+  controls.target.set(0, 0, 0);
+  controls.update();
+
+  const allObjs = [];
+  (sceneData.objects || []).forEach(od => {
+    const obj = deserObj(od, panelColors);
+    if (!obj) return;
+    scene.add(obj);
+    allObjs.push(obj);
+  });
+
+  if (allObjs.length) fitCamera(allObjs, camera, controls);
+
+  // Badge + info
+  const badge = document.getElementById('mode-badge');
+  badge.textContent = '3D Builder Scene';
+  badge.style.display = 'inline-flex';
+
+  const assigned = Object.keys(panelColors).length;
+  if (assigned > 0) {
+    const ib = document.getElementById('info-box');
+    ib.innerHTML = `<strong style="color:#c9d1d9;">${assigned}</strong> panels coloured from demo legend.<br>Objects without a panel ID keep their original colour.`;
+    ib.style.display = 'block';
+  }
+
+  buildLegend(legend);
+  startLoop(renderer, scene, camera, controls, wrap);
+}
+
+/* ── MODE B: auto-generated building ─────────────────────────────────────── */
+function makeFacadeCanvas(facade) {
+  const { rows, cols, grid } = facade;
+  const CELL = 14, GAP = 2;
+  const cw = Math.max(cols * (CELL + GAP) - GAP, 2);
+  const ch = Math.max(rows * (CELL + GAP) - GAP, 2);
+  const cv = document.createElement('canvas');
+  cv.width = cw; cv.height = ch;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#161b22';
+  ctx.fillRect(0, 0, cw, ch);
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++) {
+      ctx.fillStyle = grid[r]?.[c] || '#1f2937';
+      ctx.fillRect(c*(CELL+GAP), r*(CELL+GAP), CELL, CELL);
+    }
+  return cv;
+}
+
+function buildAutoGenerated(facades, legend) {
+  const wrap     = document.getElementById('canvas-wrap');
+  const scene    = createScene();
+  const renderer = createRenderer(wrap);
+  const camera   = createCamera();
+  const controls = createControls(camera, renderer.domElement);
+
+  const NF = facades.NF, SF = facades.SF, EF = facades.EF, WF = facades.WF;
+  const S  = 0.5;
+  const bW = Math.max(NF?.cols||33, SF?.cols||33) * S;
+  const bD = Math.max(EF?.cols||15, WF?.cols||15) * S;
+
+  const defs = [
+    { key:'NF', d:NF, posX:0,     posZ:-bD/2, rotY:Math.PI    },
+    { key:'SF', d:SF, posX:0,     posZ:+bD/2, rotY:0           },
+    { key:'EF', d:EF, posX:+bW/2, posZ:0,     rotY:-Math.PI/2  },
+    { key:'WF', d:WF, posX:-bW/2, posZ:0,     rotY:+Math.PI/2  },
+  ];
+
+  const allObjs = [];
+  defs.forEach(fc => {
+    if (!fc.d) return;
+    const fW  = fc.d.cols * S;
+    const fH  = fc.d.rows * S;
+    const tex = new THREE.CanvasTexture(makeFacadeCanvas(fc.d));
+    tex.flipY = false;
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.LinearFilter;
+    const geo  = new THREE.PlaneGeometry(fW, fH);
+    const mat  = new THREE.MeshStandardMaterial({ map:tex, roughness:0.75, metalness:0.05 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(fc.posX, fH/2, fc.posZ);
+    mesh.rotation.y = fc.rotY;
+    scene.add(mesh);
+    allObjs.push(mesh);
+  });
+
+  if (allObjs.length) fitCamera(allObjs, camera, controls);
+
+  const badge = document.getElementById('mode-badge');
+  badge.textContent = 'Auto-generated';
+  badge.style.color = '#d29922';
+  badge.style.background = '#272115';
+  badge.style.borderColor = '#9e6a03';
+  badge.style.display = 'inline-flex';
+
+  const ib = document.getElementById('info-box');
+  ib.innerHTML = 'No 3D Builder scene found.<br>Showing an auto-generated view.<br><span style="color:#6e7681;">Build a scene in the 3D Builder and link panels with Element IDs to see a real model here.</span>';
+  ib.style.display = 'block';
+
+  buildLegend(legend);
+  startLoop(renderer, scene, camera, controls, wrap);
+}
+
+/* ── message listener ────────────────────────────────────────────────────── */
+window.parent.postMessage({ type:'demo3d-ready' }, '*');
+
+window.addEventListener('message', e => {
+  if (e.data?.type !== 'demo3d-data') return;
+  const { sceneData, panelColors, legend, facades } = e.data;
+  document.getElementById('loading').style.display = 'none';
+  if (sceneData?.objects?.length) {
+    buildFromScene(sceneData, panelColors || {}, legend);
+  } else {
+    buildAutoGenerated(facades, legend);
+  }
+});
 </script>
 </body>
 </html>
