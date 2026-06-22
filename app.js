@@ -14314,44 +14314,17 @@ function _demoBuild3DData(){
   };
 }
 
-async function _demoOpen3D(){
+function _demoOpen3D(){
   if(!_demoData.legend.length){
     alert('No legend items. Add legend items and assign colours to panels first.');
     return;
   }
-
-  // Build panel → hex-color map
-  const legendColors={};
-  _demoData.legend.forEach(l=>{legendColors[l.id]=l.color;});
-  const panelColors={};
-  Object.entries(_demoData.panels).forEach(([pid,lid])=>{
-    if(legendColors[lid]) panelColors[pid]=legendColors[lid];
-  });
-
-  // Try to load a builder3d scene from Supabase
-  let sceneData=null;
-  try{
-    const {data,error}=await sb.from('builder_scenes')
-      .select('id,name,created_at,scene_data')
-      .order('created_at',{ascending:false})
-      .limit(30);
-    if(!error&&data&&data.length>0){
-      sceneData=data.length===1
-        ? data[0].scene_data
-        : await _demo3DPickScene(data);
-      if(sceneData===false) return; // user cancelled picker
-    }
-  }catch(e){ console.warn('[_demoOpen3D] Supabase load:', e); }
-
   const facadeData=_demoBuild3DData();
   const msgData={
     type:'demo3d-data',
-    sceneData,
-    panelColors,
-    legend:_demoData.legend.map(l=>({id:l.id,label:l.label,color:l.color,count:_demoCountPanels(l.id)})),
+    legend:facadeData.legend,
     facades:facadeData.facades
   };
-
   const overlay=document.createElement('div');
   overlay.id='demo3d-overlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:99999;';
@@ -14371,43 +14344,6 @@ async function _demoOpen3D(){
   };
   window.addEventListener('message',handler);
   document.body.appendChild(overlay);
-}
-
-function _demo3DPickScene(scenes){
-  return new Promise(resolve=>{
-    const bd=document.createElement('div');
-    bd.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100000;display:flex;align-items:center;justify-content:center;';
-    bd.innerHTML=`
-      <div style="background:#161b22;border:1.5px solid #30363d;border-radius:14px;padding:24px;width:400px;max-height:72vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,0.55);">
-        <div style="font-size:14px;font-weight:700;color:#e6edf3;margin-bottom:4px;">Choose a 3D Scene</div>
-        <div style="font-size:11px;color:#8b949e;margin-bottom:14px;">Select a scene you built in the 3D Builder to colour with demo data</div>
-        <div id="_3dpick-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;"></div>
-        <div style="margin-top:16px;display:flex;justify-content:space-between;gap:8px;">
-          <button id="_3dpick-cancel" style="padding:7px 16px;border-radius:7px;border:1px solid #30363d;background:#21262d;color:#8b949e;font-size:11px;cursor:pointer;">Cancel</button>
-          <button id="_3dpick-auto" style="padding:7px 14px;border-radius:7px;border:1.5px solid #a855f740;background:transparent;color:#a855f7;font-size:11px;cursor:pointer;">Use Auto-generated</button>
-        </div>
-      </div>`;
-    const list=bd.querySelector('#_3dpick-list');
-    scenes.forEach(s=>{
-      const d=new Date(s.created_at);
-      const cnt=s.scene_data?.objects?.length??'?';
-      const row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #30363d;border-radius:8px;cursor:pointer;background:#0d1117;transition:border-color .15s;';
-      row.innerHTML=`<div style="font-size:18px;">🗂️</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:600;color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.name}</div>
-          <div style="font-size:10px;color:#8b949e;margin-top:2px;">${cnt} object${cnt!==1?'s':''} · ${d.toLocaleDateString()}</div>
-        </div>
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>`;
-      row.onmouseover=()=>{row.style.borderColor='#a855f7';};
-      row.onmouseout=()=>{row.style.borderColor='#30363d';};
-      row.onclick=()=>{document.body.removeChild(bd);resolve(s.scene_data);};
-      list.appendChild(row);
-    });
-    bd.querySelector('#_3dpick-cancel').onclick=()=>{document.body.removeChild(bd);resolve(false);};
-    bd.querySelector('#_3dpick-auto').onclick=()=>{document.body.removeChild(bd);resolve(null);};
-    document.body.appendChild(bd);
-  });
 }
 
 // ══════════════════════════════════════════════════════════════
