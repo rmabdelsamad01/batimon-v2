@@ -3,325 +3,396 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Batimon — 3D Demo View</title>
+<title>Batimon — Demo 3D View</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-html,body { width:100%; height:100%; overflow:hidden;
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#0d1117; }
-#canvas-wrap { position:fixed; inset:0; }
-#canvas-wrap canvas { width:100%!important; height:100%!important; display:block; }
-
+html,body { width:100%; height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+#wrap { width:100%; height:100%; display:flex; flex-direction:column; }
 #top-bar {
-  position:fixed; top:0; left:0; right:0; height:46px; z-index:20;
-  background:#161b22cc; border-bottom:1px solid #30363d; backdrop-filter:blur(10px);
-  display:flex; align-items:center; padding:0 14px; gap:10px;
+  height:46px; flex-shrink:0;
+  background:var(--surface,#f6f8fa); border-bottom:1px solid var(--border,#d0d7de);
+  display:flex; align-items:center; padding:0 14px; gap:10px; flex-wrap:wrap;
 }
-#top-title { font-size:13px; font-weight:700; color:#e6edf3; display:flex; align-items:center; gap:7px; flex:1; }
+#top-title { font-size:13px; font-weight:700; color:var(--text,#1a3d72); display:flex; align-items:center; gap:7px; }
 #close-btn {
-  background:#21262d; border:1px solid #30363d; color:#c9d1d9;
+  margin-left:auto; background:#21262d; border:1px solid #30363d; color:#c9d1d9;
   font-size:12px; height:28px; padding:0 14px; border-radius:6px; cursor:pointer;
-  font-weight:600; transition:all .15s;
+  font-weight:600; transition:all .15s; flex-shrink:0;
 }
 #close-btn:hover { background:#30363d; color:#fff; }
-
-#legend-panel {
-  position:fixed; top:60px; right:14px; z-index:10;
-  background:#161b22e8; border:1px solid #30363d; border-radius:10px;
-  padding:11px 14px; max-height:calc(100vh - 90px); overflow-y:auto;
-  min-width:160px; max-width:210px; backdrop-filter:blur(8px); display:none;
+#legend-wrap { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.leg-dot { width:11px; height:11px; border-radius:2px; border:1px solid rgba(0,0,0,0.12); flex-shrink:0; }
+.leg-item { display:flex; align-items:center; gap:4px; }
+.leg-lbl { font-size:10px; color:#8099b0; white-space:nowrap; }
+#vp {
+  flex:1; min-height:0; overflow:hidden;
+  background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);
+  position:relative; cursor:grab; user-select:none;
 }
-#legend-panel::-webkit-scrollbar { width:4px; }
-#legend-panel::-webkit-scrollbar-thumb { background:#30363d; border-radius:2px; }
-.leg-hd { font-size:9px; font-weight:700; color:#8b949e; letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
-.leg-row { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
-.leg-dot { width:11px; height:11px; border-radius:2px; flex-shrink:0; }
-.leg-lbl { font-size:11px; color:#c9d1d9; font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.leg-cnt { font-size:10px; color:#8b949e; flex-shrink:0; font-variant-numeric:tabular-nums; }
-
+#scene { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; perspective:1400px; perspective-origin:50% 48%; }
+#bld { position:relative; width:0; height:0; transform-style:preserve-3d; transform:rotateX(-22deg) rotateY(30deg); }
 #hint {
-  position:fixed; bottom:12px; left:50%; transform:translateX(-50%); z-index:10;
-  font-size:10px; color:#484f58; background:#161b22cc; border:1px solid #21262d;
-  padding:3px 14px; border-radius:20px; white-space:nowrap; pointer-events:none;
-  backdrop-filter:blur(6px);
+  position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); color:#6b7f96;
+  font-size:11px; padding:5px 16px; border-radius:20px;
+  pointer-events:none; white-space:nowrap; letter-spacing:0.03em;
 }
-#loading {
-  position:fixed; inset:0; background:#0d1117; z-index:50;
-  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
-}
-.spin { width:32px; height:32px; border:3px solid #21262d; border-top-color:#a855f7; border-radius:50%; animation:sp .75s linear infinite; }
-@keyframes sp { to { transform:rotate(360deg); } }
-.load-txt { font-size:12px; color:#484f58; }
 </style>
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
 </head>
 <body>
-<div id="loading"><div class="spin"></div><div class="load-txt">Building 3D view…</div></div>
-<div id="canvas-wrap"></div>
-<div id="top-bar">
-  <div id="top-title">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-    </svg>
-    Demo — 3D View
+<div id="wrap">
+  <div id="top-bar">
+    <div id="top-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+      Demo — 3D View
+    </div>
+    <div id="legend-wrap"></div>
+    <button id="close-btn" onclick="window.parent.postMessage({type:'demo3d-close'},'*')">✕ Close</button>
   </div>
-  <button id="close-btn" onclick="window._close3D()">✕ Close</button>
+  <div id="vp">
+    <div id="scene"><div id="bld"></div></div>
+    <div id="hint">🖱 Left drag: Pan &nbsp;·&nbsp; Right drag: Orbit &nbsp;·&nbsp; Scroll: Zoom</div>
+  </div>
 </div>
-<div id="legend-panel">
-  <div class="leg-hd">Legend</div>
-  <div id="leg-items"></div>
-</div>
-<div id="hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
 
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+<script>
+// ── Zone constants (mirrored from app.js) ────────────────────────────────────
 
-window._close3D = () => window.parent.postMessage({ type:'demo3d-close' }, '*');
-window.parent.postMessage({ type:'demo3d-ready' }, '*');
+const SF_COLS=['15-A','15-B',15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,99,98,97,96,94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+const SF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+function sfRow(l,r){const e='';return[e,e,...l,e,e,e,e,e,e,...(r||Array(12).fill(e))];}
+function sfRowL(l){return sfRow(l,null);}
+const SF_TYPES={
+  'R+34':sfRow(['R3415','R3414','R3413','R3412','R3411','R3410','R3409','R3408','R3407','R3406','R3405','R3404','R3403','R3402','R3401'],['R3499','R3498','R3497','R3496','R4795','','','','','','','']),
+  'R+33':sfRowL(['C02','T02','T12','T02','T12','T06','T04','T06','T04','T02','T02','D06','','','']),
+  'R+32':sfRowL(['C01','T01','T01','T07','T03','T05','T03','T01','T01','T05','T03','D07','','','']),
+  'R+31':sfRowL(['C02','T02','T02','T10','T04','T06','T04','T02','T02','T06','T04','D10','','','']),
+  'R+30':sfRowL(['C01','T01','T01','T09','T01','T09','T05','T03','T05','T03','T05','D08','','','']),
+  'R+29':sfRowL(['C02','T02','T02','T12','T02','T12','T06','T04','T06','T04','T06','D11','','','']),
+  'R+28':sfRowL(['C01','T01','T09','T01','T01','T05','T03','T05','T03','T05','T03','D05','','','']),
+  'R+27':sfRowL(['C02','T02','T12','T02','T02','T06','T04','T06','T04','T06','T04','D06','','','']),
+  'R+26':sfRowL(['C01','T07','T03','T01','T09','T07','T03','T01','T05','T08','T03','D07','','','']),
+  'R+25':['','','C02','T10','T04','T02','T12','T10','T04','T02','T06','T11','T04','D10','','','','','','','','R2594','R2593','R2592','R2591','R2590','R2589','R2588','R2587','R2586','R2585','R2584','R2583','R2582','R2581'],
+  'R+24':sfRow(['C01','T01','T01','T09','T01','T05','T03','T01','T05','T03','T01','D05','','',''],['G05','T03','T05','T05','T03','T09','T01','T07','T03','T01','T01','C03']),
+  'R+23':sfRow(['C02','T02','T02','T12','T02','T06','T04','T02','T06','T04','T02','D06','','',''],['G06','T04','T06','T06','T04','T12','T02','T10','T04','T02','T02','C04']),
+  'R+22':sfRow(['C01','T01','T05','T03','T09','T01','T05','T03','T01','T01','T05','D08','','',''],['G03','T05','T03','T09','T05','T03','T09','T01','T07','T03','T01','C03']),
+  'R+21':sfRow(['C02','T02','T06','T04','T12','T02','T06','T04','T02','T02','T06','D11','','',''],['G04','T06','T04','T12','T06','T04','T12','T02','T10','T04','T02','C04']),
+  'R+20':sfRow(['C01','T05','T03','T01','T01','T05','T08','T08','T03','T05','T03','D05','','',''],['G03','T05','T03','T05','T03','T01','T01','T05','T03','T09','T01','C03']),
+  'R+19':sfRow(['C01','M06','T03','T01','T01','M06','M11','M11','T03','M06','T03','DM06','','',''],['G03','R1807','Door','R1807','T03','T01','T01','M06','T03','M12','T01','C03']),
+  'R+18T':sfRow(['C1801','R1803','R1802','R1801','R1801','R1803','R1805','R1805','R1802','R1803','R1802','D1803','','',''],['R1802','','','','R1802','R1801','R1801','G1853','R1852','R1856','R1851','C1804']),
+  'R+18M':Array(35).fill(''),'R+18MD':Array(35).fill(''),'R+18B':Array(35).fill(''),
+  'R+17T':Array(35).fill(''),
+  'R+17B':sfRow(['C1701','R1704','R1702','R1701','R1701','R1703','R1702','R1704','R1702','R1701','R1703','D1705','','',''],['G1703','R1703','R1702','R1706','R1703','R1702','R1701','G1754','R1752','R1751','R1752','C1704']),
+  'R+16':sfRow(['C02','T10','T04','T02','T02','T06','T04','T10','T04','T02','T06','D11','','',''],['G06','T06','T04','T12','T06','T04','T02','T10','T04','T10','T04','C04']),
+  'R+15':sfRow(['C01','T05','T08','T03','T01','T01','T05','T03','T05','T05','T03','D07','','',''],['G03','T05','T03','T07','T03','T07','T03','T01','T01','T05','T03','C03']),
+  'R+14':sfRow(['C02','T06','T11','T04','T02','T02','T06','T04','T06','T06','T04','D10','','',''],['G04','T06','T04','T10','T04','T10','T04','T02','T02','T06','T04','C04']),
+  'R+13':sfRow(['C01','T01','T05','T03','T07','T03','T05','T03','T01','T05','T03','D05','','',''],['G03','T01','T05','T03','T05','T03','T09','T01','T01','T09','T01','C03']),
+  'R+12':sfRow(['C02','T02','T06','T04','T10','T04','T06','T04','T02','T06','T04','D06','','',''],['G04','T02','T06','T04','T06','T04','T12','T02','T02','T12','T02','C04']),
+  'R+11':sfRow(['C01','T07','T03','T07','T03','T09','T07','T03','T05','T03','T05','D08','','',''],['G05','T08','T03','T05','T03','T09','T05','T03','T09','T01','T01','C03']),
+  'R+10':sfRow(['C02','T10','T04','T10','T04','T12','T10','T04','T06','T04','T06','D11','','',''],['G06','T11','T04','T06','T04','T12','T06','T04','T12','T02','T02','C04']),
+  'R+09':sfRow(['C01','T05','T03','T09','T01','T01','T05','T03','T01','T05','T03','D07','','',''],['G03','T01','T05','T03','T05','T03','T05','T03','T07','T08','T03','C03']),
+  'R+08':sfRow(['C02','T06','T04','T12','T02','T02','T06','T04','T02','T06','T04','D10','','',''],['G04','T02','T06','T04','T06','T04','T06','T04','T10','T11','T04','C04']),
+  'R+07':sfRow(['C01','T01','T09','T01','T01','T01','T01','T05','T03','T01','T01','D05','','',''],['G03','T05','T05','T08','T03','T05','T03','T07','T03','T07','T03','C03']),
+  'R+06':sfRow(['C02','T02','T12','T02','T02','T02','T02','T06','T04','T02','T02','D06','','',''],['G04','T06','T06','T11','T04','T06','T04','T10','T04','T10','T04','C04']),
+  'R+05':sfRow(['C01','T05','T03','T01','T01','T05','T03','T07','T03','T05','T03','D07','','',''],['G05','T05','T03','T09','T05','T03','T01','T01','T09','T01','T01','C03']),
+  'R+04':sfRow(['C02','T06','T04','T02','T02','T06','T04','T10','T04','T06','T04','D10','','',''],['G06','T06','T04','T12','T06','T04','T02','T02','T12','T02','T02','C04']),
+  'R+03':sfRow(['C01','T05','T03','T01','T01','T05','T03','T07','T03','T05','T03','D07','','',''],['G03','T05','T03','T09','T07','T03','T09','T01','T01','T05','T03','C03']),
+  'R+02':sfRow(['C301','R303','R302','R301','R301','R303','R302','R304','R302','R303','R302','D304','','',''],['G04','T06','T04','T12','T10','T04','T12','T02','T02','T06','T04','C04']),
+  'R+01':sfRow(['','','','','','','','','','','','','','',''],['G03','T05','T03','T09','T07','T03','T09','T01','T05','T03','T01','C101']),
+  'RDC': sfRow(['','','','','','','','','','','','','','',''],['R092','R091','R090','R089','R088','R087','R086','R085','R084','R083','R082','C001']),
+};
 
-window.addEventListener('message', e => {
-  if (e.data?.type === 'demo3d-data') build(e.data.facades, e.data.legend);
+const NF_COLS=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31];
+const NF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+function nfB11(l,r){const e='';return[...l,...Array(10).fill(e),...r];}
+function nfB10(l,r){const e='';return[...l,...Array(11).fill(e),...r];}
+function nfL(l){const e='';return[...l,...Array(21).fill(e)];}
+function nfR10(r){const e='';return[...Array(23).fill(e),...r];}
+const NF_TYPES={
+  'R+34':nfB11(Array(12).fill(''),['R3441','R3440','R3439','R3438','R3437','R3436','R3435','R3434','R3433','R3432','R3431']),
+  'R+33':nfB11(Array(12).fill(''),['G04','T06','T04','T06','T04','T06','T11','T04','T10','T04','C06']),
+  'R+32':nfB11(Array(12).fill(''),['G03','T05','T03','T09','T01','T05','T03','T05','T03','T01','C05']),
+  'R+31':nfB11(Array(12).fill(''),['G04','T06','T04','T12','T02','T06','T04','T06','T04','T02','C06']),
+  'R+30':nfB11(Array(12).fill(''),['G05','T03','T05','T03','T05','T08','T03','T07','T03','T01','C05']),
+  'R+29':nfB11(Array(12).fill(''),['G06','T04','T06','T04','T06','T11','T04','T10','T04','T02','C06']),
+  'R+28':nfB11(Array(12).fill(''),['G03','T05','T03','T05','T03','T05','T03','T01','T07','T03','C05']),
+  'R+27':nfB11(Array(12).fill(''),['G04','T06','T04','T06','T04','T06','T04','T02','T10','T04','C06']),
+  'R+26':(()=>{const e='';return[e,e,e,e,e,e,e,e,e,e,'R2551','R2550','R2549',...Array(9).fill(e),'G03','T01','T05','T03','T01','T09','T07','T03','T01','T09','C05'];})(),
+  'R+25':(()=>{const e='';return['R2565','R2564','R2563','R2562','R2561','R2560','R2559','R2558','R2557','R2556','R2555','R2554','R2553','R2552',...Array(8).fill(e),'G04','T02','T06','T04','T02','T12','T10','T04','T02','T12','C06'];})(),
+  'R+24':nfB11(['C07','T01','T01','T01','T09','T01','T07','T03','T05','T05','T03','E05'],['G05','T03','T05','T03','T01','T05','T03','T07','T03','T01','C05']),
+  'R+23':nfB11(['C08','T02','T02','T02','T12','T02','T10','T04','T06','T06','T04','E06'],['G06','T04','T06','T04','T02','T06','T04','T10','T04','T02','C06']),
+  'R+22':nfB11(['C07','T01','T01','T09','T01','T07','T03','T05','T08','T03','T05','E03'],['G05','T01','T01','T01','T05','T03','T07','T03','T05','T03','C05']),
+  'R+21':nfB11(['C08','T02','T02','T12','T02','T10','T04','T06','T11','T04','T06','E04'],['G06','T02','T02','T02','T06','T04','T10','T04','T06','T04','C06']),
+  'R+20':nfB11(['C07','T01','T01','T09','T05','T03','T01','T01','T05','T03','T05','E03'],['G05','T05','T03','T09','T09','T05','T03','T01','T01','T05','C09']),
+  'R+19':nfB11(['C07','T01','T01','M12','M06','T03','T01','T01','M06','T03','M06','E04'],['GM06','M06','T03','M12','M12','M06','T03','T01','T01','M06','C1902']),
+  'R+18T':nfB11(['C1803','R1851','R1851','R1856','R1853','R1852','R1851','R1851','R1853','R1852','R1853','E1852'],['G1803','R1803','R1802','R1806','R1806','R1803','R1803','R1801','R1801','R1803','C1802']),
+  'R+18M':Array(33).fill(''),'R+18MD':Array(33).fill(''),
+  'R+18B':nfL(['C1703','R1751','R1756','R1751','R1756','R1751','R1751','R1753','R1755','R1752','R1753','E1753']),
+  'R+17T':Array(33).fill(''),
+  'R+17B':nfR10(['D1702','R1701','R1706','R1701','R1703','R1702','R1701','R1701','R1706','C1702']),
+  'R+16':nfB10(['C08','T02','T12','T02','T12','T02','T02','T06','T11','T04','T06','E06'],['G04','T02','T12','T02','T06','T04','T02','T02','T12','C06']),
+  'R+15':nfB10(['C07','T01','T05','T03','T01','T01','T09','T01','T09','T01','T05','E03'],['G05','T05','T03','T05','T03','T01','T01','T09','T05','C09']),
+  'R+14':nfB10(['C08','T02','T06','T04','T02','T02','T12','T02','T12','T02','T06','E04'],['G06','T06','T04','T06','T04','T02','T02','T12','T06','C10']),
+  'R+13':nfB10(['C07','T01','T07','T03','T01','T07','T03','T05','T03','T05','T03','E01'],['G05','T03','T01','T05','T03','T07','T03','T05','T03','C05']),
+  'R+12':nfB10(['C08','T02','T10','T04','T02','T10','T04','T06','T04','T06','T04','E02'],['G06','T04','T02','T06','T04','T10','T04','T06','T04','C06']),
+  'R+11':nfB10(['C07','T01','T01','T07','T03','T05','T08','T03','T05','T03','T09','E05'],['G03','T05','T03','T09','T07','T03','T09','T01','T09','C05']),
+  'R+10':nfB10(['C08','T02','T02','T10','T04','T06','T11','T04','T06','T04','T12','E06'],['G04','T06','T04','T12','T10','T04','T12','T02','T12','C06']),
+  'R+09':nfB10(['C07','T01','T09','T09','T01','T05','T03','T05','T03','T05','T03','E01'],['G05','T03','T01','T05','T03','T01','T07','T03','T05','C09']),
+  'R+08':nfB10(['C08','T02','T12','T12','T02','T06','T04','T06','T04','T06','T04','E02'],['G06','T04','T02','T06','T04','T02','T10','T04','T06','C10']),
+  'R+07':nfB10(['C07','T01','T09','T01','T09','T01','T05','T03','T09','T05','T05','E03'],['G03','T01','T05','T03','T01','T01','T01','T07','T03','C05']),
+  'R+06':nfB10(['C08','T02','T12','T02','T12','T02','T06','T04','T12','T06','T06','E04'],['G04','T02','T06','T04','T02','T02','T02','T10','T04','C06']),
+  'R+05':nfB10(['C07','T01','T01','T07','T03','T01','T01','T05','T08','T03','T05','E05'],['G05','T03','T09','T01','T05','T03','T01','T01','T05','C09']),
+  'R+04':nfB10(['C08','T02','T02','T10','T04','T02','T02','T06','T11','T04','T06','E06'],['G06','T04','T12','T02','T06','T04','T02','T02','T06','C10']),
+  'R+03':nfB10(['C07','T01','T05','T03','T01','T07','T03','T09','T07','T03','T05','E03'],['G05','T03','T09','T01','T05','T03','T01','T01','T05','C09']),
+  'R+02':nfB10(['C07','T01','M06','T03','T01','R210','Door','R208','M10','T03','M06','E03'],['G303','R302','R306','R301','R303','R302','R301','R301','R303','C302']),
+  'R+01':['C201','R201','R203','R202','R201','','','','R204','R202','R203','E202',...Array(21).fill('')],
+  'RDC': Array(33).fill(''),
+};
+
+const WF_COLS=[31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,'15-A'];
+const WF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+const WF_TYPES={
+  'R+34':['R3431','R3430','R3429','R3428','R3427','R3426','R3425','R3424','R3423','R3422','R3421','R3420','R3419','R3418','R3417','R3416','R3415',''],
+  'R+33':['C06','T02','T06','T04','T06','T04','W02','T12','T06','T04','T02','T06','T11','W04','T10','T04','C02',''],
+  'R+32':['C05','T01','T09','W01','T09','T05','T03','T01','T09','T01','T05','T03','T05','T08','W03','T01','C01',''],
+  'R+31':['C06','T02','T12','W02','T12','T06','T04','T02','T12','T02','T06','T04','T06','T11','W04','T02','C02',''],
+  'R+30':['C05','T01','T05','T03','T07','W03','T09','T01','T05','T03','T05','T03','T05','W03','T09','T01','C01',''],
+  'R+29':['C06','T02','T06','T04','T10','W04','T12','T02','T06','T04','T06','T04','T06','W04','T12','T02','C02',''],
+  'R+28':['C05','T01','T09','W01','T01','T05','T03','T09','T09','T01','T09','W01','T05','T03','T01','T01','C01',''],
+  'R+27':['C06','T02','T12','W02','T02','T06','T04','T12','T12','T02','T12','W02','T06','T04','T02','T02','C02',''],
+  'R+26':['C05','T07','T03','T05','T08','W03','T09','T01','T09','T01','T05','T08','T08','W03','T05','T03','C01',''],
+  'R+25':['C06','T10','T04','T06','T11','W04','T12','T02','T12','T02','T06','T11','T11','W04','T06','T04','C02',''],
+  'R+24':['C05','T07','T03','T01','T05','T03','T07','T03','T05','T03','T09','T01','T07','T03','T07','T03','C01',''],
+  'R+23':['C06','T10','T04','T02','T06','T04','T10','T04','T06','T04','T12','T02','T10','T04','T10','T04','C02',''],
+  'R+22':['C05','T01','T07','T03','T07','T03','T05','T03','T09','T01','T05','T03','T05','T03','T09','T01','C01',''],
+  'R+21':['C06','T02','T10','T04','T10','T04','T06','T04','T12','T02','T06','T04','T06','T04','T12','T02','C02',''],
+  'R+20':['C09','T01','T05','T03','T07','T03','T07','T03','T05','T03','T07','T03','T05','T03','T07','T03','C01',''],
+  'R+19':['C1902','T01','R1803','Door','R1804','T03','M10','T03','R1803','Door','R1804','T03','M06','T03','M10','T03','C01',''],
+  'R+18T':['C1802','R1801','','','','R1802','R1804','R1802','','','','R1802','R1803','R1802','R1804','R1802','C1801',''],
+  'R+18M':Array(18).fill(''),'R+18MD':Array(18).fill(''),'R+18B':Array(18).fill(''),
+  'R+17T':['C1702','R1701','R1706','R1701','R1703','R1702','R1704','R1702','R1703','R1702','R1701','R1703','R1702','R1706','R1701','R1701','C1701',''],
+  'R+17B':['C1702','R1701','R1706','R1701','R1703','R1702','R1704','R1702','R1703','R1702','R1701','R1703','R1702','R1706','R1701','R1701','C1701',''],
+  'R+16':['C06','T02','T12','T02','T06','T04','T10','T04','T06','T04','T02','T06','T04','T12','T02','T02','C02',''],
+  'R+15':['C09','T01','T07','T03','T05','T03','T01','T09','T09','T01','T05','T03','T05','T08','T03','T01','C01',''],
+  'R+14':['C10','T02','T10','T04','T06','T04','T02','T12','T12','T02','T06','T04','T06','T11','T04','T02','C02',''],
+  'R+13':['C05','T01','T01','T01','T09','T05','T03','T01','T09','T05','T08','T03','T01','T05','T03','T01','C01',''],
+  'R+12':['C06','T02','T02','T02','T12','T06','T04','T02','T12','T06','T11','T04','T02','T06','T04','T02','C02',''],
+  'R+11':['C05','T01','T05','T03','T09','T01','T05','T03','T05','T03','T09','T05','T03','T01','T07','T03','C01',''],
+  'R+10':['C06','T02','T06','T04','T12','T02','T06','T04','T06','T04','T12','T06','T04','T02','T10','T04','C02',''],
+  'R+09':['C09','T01','T07','T03','T05','T03','T01','T01','T09','T01','T07','T03','T07','T03','T01','T01','C01',''],
+  'R+08':['C10','T02','T10','T04','T06','T04','T02','T02','T12','T02','T10','T04','T10','T04','T02','T02','C02',''],
+  'R+07':['C05','T07','T03','T01','T05','T03','T07','T03','T05','T03','T05','T03','T09','T05','T03','T01','C01',''],
+  'R+06':['C06','T10','T04','T02','T06','T04','T10','T04','T06','T04','T06','T04','T12','T06','T04','T02','C02',''],
+  'R+05':['C09','T01','T01','T05','T08','T03','T01','T01','T09','T01','T05','T03','T01','T09','T01','T01','C01',''],
+  'R+04':['C10','T02','T02','T06','T11','T04','T02','T02','T12','T02','T06','T04','T02','T12','T02','T02','C02',''],
+  'R+03':['C09','T01','T01','T05','T08','T03','T05','T03','T05','T03','T05','T03','T01','T09','T01','T01','C01',''],
+  'R+02':['C302','R301','R301','R303','R305','R302','R303','R302','R303','R302','R303','R302','R301','R306','R301','R301','C301',''],
+  'R+01':Array(18).fill(''),'RDC':Array(18).fill(''),
+};
+
+const EF_COLS=[81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65];
+const EF_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18T','R+18M','R+18MD','R+18B','R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+const EF_TYPES={
+  'R+34':Array(17).fill(''),'R+33':Array(17).fill(''),'R+32':Array(17).fill(''),'R+31':Array(17).fill(''),
+  'R+30':Array(17).fill(''),'R+29':Array(17).fill(''),'R+28':Array(17).fill(''),'R+27':Array(17).fill(''),
+  'R+26':Array(17).fill(''),
+  'R+25':['R2581','R2580','R2579','R2578','R2577','R2576','R2575','R2574','R2573','R2572','R2571','R2570','R2569','R2568','R2567','R2566','R2565'],
+  'R+24':['C03','T01','T09','T01','T09','T01','T07','T03','T07','T03','T07','T03','T05','T03','T01','T09','C07'],
+  'R+23':['C04','T02','T12','T02','T12','T02','T10','T04','T10','T04','T10','T04','T06','T04','T02','T12','C08'],
+  'R+22':['C03','T01','T01','T09','T01','T01','T05','T03','T09','T01','T05','T03','T09','T01','T07','T03','C07'],
+  'R+21':['C04','T02','T02','T12','T02','T02','T06','T04','T12','T02','T06','T04','T12','T02','T10','T04','C08'],
+  'R+20':['C03','T01','T09','T01','T05','T03','T09','T01','T05','T03','T09','T01','T09','T01','T05','T03','C07'],
+  'R+19':['C03','T01','M12','T01','M06','T03','M12','T01','M06','T03','M12','T01','M12','T01','M06','T03','C07'],
+  'R+18T':['C1804','R1851','R1856','R1851','R1853','R1852','R1856','R1851','R1853','R1852','R1856','R1851','R1856','R1851','R1853','R1852','C1803'],
+  'R+18M':Array(17).fill(''),'R+18MD':Array(17).fill(''),
+  'R+18B':['C1704','R1751','R1751','R1754','R1752','R1751','R1753','R1752','R1754','R1752','R1756','R1751','R1753','R1752','R1754','R1752','C1703'],
+  'R+17T':Array(17).fill(''),'R+17B':Array(17).fill(''),
+  'R+16':['C04','T02','T02','T10','T04','T02','T06','T04','T10','T04','T12','T02','T06','T04','T10','T04','C08'],
+  'R+15':['C03','T01','T01','T09','T05','T03','T07','T03','T05','T03','T01','T01','T05','T03','T09','T01','C07'],
+  'R+14':['C04','T02','T02','T12','T06','T04','T10','T04','T06','T04','T02','T02','T06','T04','T12','T02','C08'],
+  'R+13':['C03','T01','T01','T05','T03','T01','T09','T01','T05','T08','T03','T05','T08','T03','T01','T01','C07'],
+  'R+12':['C04','T02','T02','T06','T04','T02','T12','T02','T06','T11','T04','T06','T11','T04','T02','T02','C08'],
+  'R+11':['C03','T01','T09','T01','T01','T05','T08','T03','T09','T01','T05','T03','T09','T01','T05','T03','C07'],
+  'R+10':['C04','T02','T12','T02','T02','T06','T11','T04','T12','T02','T06','T04','T12','T02','T06','T04','C08'],
+  'R+09':['C03','T01','T01','T01','T09','T01','T09','T01','T07','T03','T01','T01','T05','T03','T09','T01','C07'],
+  'R+08':['C04','T02','T02','T02','T12','T02','T12','T02','T10','T04','T02','T02','T06','T04','T12','T02','C08'],
+  'R+07':['C03','T01','T07','T03','T07','T03','T05','T03','T05','T03','T09','T01','T05','T03','T07','T03','C07'],
+  'R+06':['C04','T02','T10','T04','T10','T04','T06','T04','T06','T04','T12','T02','T06','T04','T10','T04','C08'],
+  'R+05':['C03','T01','T01','T07','T03','T01','T05','T03','T09','T05','T03','T01','T09','T05','T03','T01','C07'],
+  'R+04':['C04','T02','T02','T10','T04','T02','T06','T04','T12','T06','T04','T02','T12','T06','T04','T02','C08'],
+  'R+03':['C03','T01','T01','T07','T03','T01','T05','T03','T09','T05','T03','T01','T09','T05','T03','T01','C07'],
+  'R+02':['C04','T02','T02','M10','T03','T01','R207','Door','R208','M06','R209','Door','R208','M06','T03','T01','C07'],
+  'R+01':['C101','T03','C102','R211','R202','R201','','','','R203','','','','R203','R202','R201','C201'],
+  'RDC': ['C001','R080','C002','','','','','','','','','','','','','',''],
+};
+
+// ── Signal ready ──────────────────────────────────────────────────────────────
+window.parent.postMessage({type:'demo3d-ready'},'*');
+window.addEventListener('message',e=>{
+  if(e.data?.type==='demo3d-data') build(e.data.panelColors||{},e.data.legend||[]);
 });
 
-// ── sprite label ──────────────────────────────────────────────────────────
-function makeLabel(text, color) {
-  const cv = document.createElement('canvas');
-  cv.width = 200; cv.height = 40;
-  const ctx = cv.getContext('2d');
-  ctx.fillStyle = color + '22';
-  ctx.fillRect(0, 0, 200, 40);
-  ctx.strokeStyle = color + 'cc';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(1, 1, 198, 38);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 14px system-ui,sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 100, 20);
-  const tex = new THREE.CanvasTexture(cv);
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
-  const sp  = new THREE.Sprite(mat);
-  sp.scale.set(4, 0.8, 1);
-  return sp;
-}
+// ── Build ─────────────────────────────────────────────────────────────────────
+function build(panelColors,legend){
+  const CELL=7,GAP=1,JOINT='#07111e',BASE_H=150,BASE_W=50;
+  const TABLE_ROW_H={'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,'R+18B':40,'R+17T':50,'R+17B':100};
+  const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B']);
+  const STRUCT_CLR='#1c1000';
+  const UNCOLORED='#8a9bac';
 
-// ── main build ────────────────────────────────────────────────────────────
-function build(facades, legend) {
-  const NF = facades?.NF, SF = facades?.SF, EF = facades?.EF, WF = facades?.WF;
+  function rowPx(fl){return Math.max(2,Math.round((TABLE_ROW_H[fl]||BASE_H)*CELL/BASE_W));}
+  function totalH(floors){return floors.reduce((s,fl)=>s+rowPx(fl),0)+(floors.length-1)*GAP;}
+  function colsW(n){return n*CELL+(n-1)*GAP;}
 
-  // Physical panel proportions: facade panels are taller than wide
-  // SW = horizontal slot per column, SH = vertical slot per floor (floor height)
-  const SW    = 0.40;   // horizontal spacing per panel column
-  const SH    = 0.80;   // vertical spacing per floor (2× SW → panels are 2× taller than wide)
-  const CW    = 0.36;   // panel face width  (SW - 0.04 gap)
-  const CH    = 0.74;   // panel face height (SH - 0.06 gap)
-  const DEPTH = 0.12;   // panel protrusion depth
-  const UNCOLORED = new THREE.Color('#8a9bac');
+  const sfCols3D=SF_COLS.filter(c=>c!=='15-A'&&c!=='15-B');
+  const wfCols3D=WF_COLS.filter(c=>c!=='15-A');
+  const sfTypes3D={},wfTypes3D={};
+  SF_FLOORS.forEach(fl=>{sfTypes3D[fl]=(SF_TYPES[fl]||[]).slice(2);});
+  WF_FLOORS.forEach(fl=>{wfTypes3D[fl]=(WF_TYPES[fl]||[]).slice(0,-1);});
 
-  // building half-dims
-  const hW = Math.max(NF?.cols||0, SF?.cols||0) * SW / 2;
-  const hD = Math.max(EF?.cols||0, WF?.cols||0) * SW / 2;
-  const bH = Math.max(NF?.rows||0, SF?.rows||0, EF?.rows||0, WF?.rows||0) * SH;
+  const sfW=colsW(sfCols3D.length),nfW=colsW(NF_COLS.length);
+  const efW=colsW(EF_COLS.length),wfW=colsW(wfCols3D.length);
+  const fH=totalH(SF_FLOORS);
+  const W=Math.max(sfW,nfW),D=Math.max(efW,wfW);
 
-  // ── scene (same look as builder3d.html) ──
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0d1117);
-
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-
-  const sun = new THREE.DirectionalLight(0xffd6a5, 1.3);
-  sun.position.set(10, 20, 10);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -50;
-  sun.shadow.camera.right = sun.shadow.camera.top   =  50;
-  scene.add(sun);
-
-  const fill = new THREE.DirectionalLight(0x6699cc, 0.4);
-  fill.position.set(-10, 5, -10);
-  scene.add(fill);
-
-  scene.add(new THREE.HemisphereLight(0x223355, 0x111a11, 0.3));
-
-  scene.add(new THREE.GridHelper(80, 80, 0x1e2a38, 0x1a222e));
-
-  const gnd = new THREE.Mesh(
-    new THREE.PlaneGeometry(300, 300),
-    new THREE.ShadowMaterial({ opacity: 0.3 })
-  );
-  gnd.rotation.x = -Math.PI / 2;
-  gnd.receiveShadow = true;
-  scene.add(gnd);
-
-  // ── building core (structural slab / frame gaps) ──
-  const coreBox = new THREE.Mesh(
-    new THREE.BoxGeometry(hW * 2, bH, hD * 2),
-    new THREE.MeshStandardMaterial({ color: 0x0c1520, roughness: 0.95 })
-  );
-  coreBox.position.set(0, bH / 2, 0);
-  coreBox.receiveShadow = true;
-  scene.add(coreBox);
-
-  // Roof cap
-  const roof = new THREE.Mesh(
-    new THREE.BoxGeometry(hW * 2 + DEPTH * 2, DEPTH * 1.5, hD * 2 + DEPTH * 2),
-    new THREE.MeshStandardMaterial({ color: 0x141e2c, roughness: 0.9 })
-  );
-  roof.position.set(0, bH + DEPTH * 0.75, 0);
-  scene.add(roof);
-
-  // ── panel instances ──────────────────────────────────────────────────
-  // NS facades: BoxGeometry(CW, CH, DEPTH)  — depth protrudes in ±Z
-  // EW facades: BoxGeometry(DEPTH, CH, CW)  — depth protrudes in ±X
-  const panelMatNS = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55, metalness: 0.08 });
-  const panelMatEW = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55, metalness: 0.08 });
-  const geoNS = new THREE.BoxGeometry(CW, CH, DEPTH);
-  const geoEW = new THREE.BoxGeometry(DEPTH, CH, CW);
-
-  const nsCount = (NF ? NF.rows * NF.cols : 0) + (SF ? SF.rows * SF.cols : 0);
-  const ewCount = (EF ? EF.rows * EF.cols : 0) + (WF ? WF.rows * WF.cols : 0);
-
-  const dummy = new THREE.Object3D();
-  const clr   = new THREE.Color();
-
-  function fillFacade(iMesh, f, getXYZ) {
-    let idx = iMesh._nextIdx || 0;
-    for (let fi = 0; fi < f.rows; fi++) {
-      for (let ci = 0; ci < f.cols; ci++) {
-        const [px, py, pz] = getXYZ(fi, ci, f.rows, f.cols);
-        dummy.position.set(px, py, pz);
-        dummy.rotation.set(0, 0, 0);
-        dummy.scale.set(1, 1, 1);
-        dummy.updateMatrix();
-        iMesh.setMatrixAt(idx, dummy.matrix);
-        const c = f.grid[fi]?.[ci];
-        c ? clr.set(c) : clr.copy(UNCOLORED);
-        iMesh.setColorAt(idx, clr);
-        idx++;
-      }
+  function faceGrid(zid,cols,floors,types,extraRowH,merges){
+    function rPx(fl){
+      if(extraRowH&&extraRowH[fl]!=null)return Math.max(2,Math.round(extraRowH[fl]*CELL/BASE_W));
+      return rowPx(fl);
     }
-    iMesh._nextIdx = idx;
+    const rH=floors.map(rPx);
+    const w=colsW(cols.length);
+    const h=rH.reduce((s,v)=>s+v,0)+(floors.length-1)*GAP;
+    let cells='';
+    floors.forEach((fl)=>{
+      const isStruct=STRUCT_FLOORS.has(fl);
+      cols.forEach((col,ci)=>{
+        const type=(types[fl]||[])[ci]||'';
+        let s;
+        if(isStruct) s=`background:${STRUCT_CLR};`;
+        else if(!type) s=`background:${JOINT};`;
+        else{const clr=panelColors[`${zid}-${fl}-C${col}`]||UNCOLORED;s=`background:${clr};`;}
+        cells+=`<div style="${s}"></div>`;
+      });
+    });
+    const colT=Array(cols.length).fill(`${CELL}px`).join(' ');
+    const rowT=rH.map(v=>`${v}px`).join(' ');
+    const grid=`<div style="display:grid;grid-template-columns:${colT};grid-template-rows:${rowT};gap:${GAP}px;background:${JOINT};width:${w}px;height:${h}px;">${cells}</div>`;
+    if(!merges||!merges.length)return grid;
+    const rowTops={};let _y=0;
+    floors.forEach((fl,fi)=>{rowTops[fl]=_y;_y+=rH[fi]+GAP;});
+    const colLefts={};let _x=0;
+    cols.forEach(col=>{colLefts[String(col)]=_x;_x+=CELL+GAP;});
+    let ovl='';
+    merges.forEach(m=>{
+      const fi1=floors.indexOf(m.fl1),fi2=floors.indexOf(m.fl2);
+      if(fi1<0||fi2<0)return;
+      const mH=rH[fi1]+GAP+rH[fi2],top=rowTops[m.fl1];
+      m.mCols.forEach(col=>{
+        const left=colLefts[String(col)];if(left==null)return;
+        const clr=panelColors[`${zid}-${m.fl1}-C${col}`]||UNCOLORED;
+        ovl+=`<div style="position:absolute;left:${left}px;top:${top}px;width:${CELL}px;height:${mH}px;background:${clr};"></div>`;
+      });
+    });
+    return`<div style="position:relative;width:${w}px;height:${h}px;">${grid}${ovl}</div>`;
   }
 
-  if (nsCount > 0) {
-    const iMeshNS = new THREE.InstancedMesh(geoNS, panelMatNS, nsCount);
-    iMeshNS.castShadow = true;
-    iMeshNS.receiveShadow = true;
-    scene.add(iMeshNS);
-
-    // NF: panels at z = -(hD + DEPTH/2), columns → X, rows → Y
-    if (NF) fillFacade(iMeshNS, NF, (fi, ci, rows, cols) => [
-      ci * SW + SW/2 - cols * SW / 2,
-      (rows - 1 - fi) * SH + SH/2,
-      -(hD + DEPTH / 2)
-    ]);
-    // SF: panels at z = +(hD + DEPTH/2)
-    if (SF) fillFacade(iMeshNS, SF, (fi, ci, rows, cols) => [
-      ci * SW + SW/2 - cols * SW / 2,
-      (rows - 1 - fi) * SH + SH/2,
-      +(hD + DEPTH / 2)
-    ]);
-
-    iMeshNS.instanceMatrix.needsUpdate = true;
-    if (iMeshNS.instanceColor) iMeshNS.instanceColor.needsUpdate = true;
+  function face(id,transform,w,shade,label,labelColor,content){
+    const overlay=shade>0?`<div style="position:absolute;inset:0;background:rgba(0,0,0,${shade});pointer-events:none;"></div>`:'';
+    const lbl=`<div style="position:absolute;bottom:0;left:0;right:0;padding:3px 0;text-align:center;font-size:9px;font-weight:800;letter-spacing:0.2em;color:${labelColor};background:rgba(0,0,0,0.6);pointer-events:none;text-transform:uppercase;">${label}</div>`;
+    return`<div id="${id}" style="position:absolute;width:${w}px;height:${fH}px;left:${-w/2}px;top:${-fH/2}px;transform:${transform};backface-visibility:hidden;overflow:hidden;outline:1px solid rgba(255,255,255,0.11);">${content}${overlay}${lbl}</div>`;
   }
 
-  if (ewCount > 0) {
-    const iMeshEW = new THREE.InstancedMesh(geoEW, panelMatEW, ewCount);
-    iMeshEW.castShadow = true;
-    iMeshEW.receiveShadow = true;
-    scene.add(iMeshEW);
+  const SR01={'R+01':25},SR02={'R+02':50};
 
-    // EF: panels at x = +(hW + DEPTH/2), columns → Z, rows → Y
-    if (EF) fillFacade(iMeshEW, EF, (fi, ci, rows, cols) => [
-      +(hW + DEPTH / 2),
-      (rows - 1 - fi) * SH + SH/2,
-      ci * SW + SW/2 - cols * SW / 2
-    ]);
-    // WF: panels at x = -(hW + DEPTH/2)
-    if (WF) fillFacade(iMeshEW, WF, (fi, ci, rows, cols) => [
-      -(hW + DEPTH / 2),
-      (rows - 1 - fi) * SH + SH/2,
-      ci * SW + SW/2 - cols * SW / 2
-    ]);
+  // NF (split col 0-11 = small R+01, col 12+ = small R+02)
+  const nfSm=NF_COLS.slice(0,12),nfNm=NF_COLS.slice(12);
+  const nfTSm={},nfTNm={};
+  NF_FLOORS.forEach(fl=>{const r=NF_TYPES[fl]||[];nfTSm[fl]=r.slice(0,12);nfTNm[fl]=r.slice(12);});
+  const nfGrid=`<div style="width:${nfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
+    +faceGrid('NF',nfSm,NF_FLOORS,nfTSm,SR01,[{fl1:'R+02',fl2:'R+01',mCols:[60,59,58]}])
+    +faceGrid('NF',nfNm,NF_FLOORS,nfTNm,SR02)
+    +'</div>';
 
-    iMeshEW.instanceMatrix.needsUpdate = true;
-    if (iMeshEW.instanceColor) iMeshEW.instanceColor.needsUpdate = true;
-  }
+  // SF (split col 0-14 = small R+02, col 15+ = normal)
+  const sfSm=sfCols3D.slice(0,15),sfNm=sfCols3D.slice(15);
+  const sfTSm={},sfTNm={};
+  SF_FLOORS.forEach(fl=>{const r=sfTypes3D[fl]||[];sfTSm[fl]=r.slice(0,15);sfTNm[fl]=r.slice(15);});
+  const sfGrid=`<div style="width:${sfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
+    +faceGrid('SF',sfSm,SF_FLOORS,sfTSm,SR02)
+    +faceGrid('SF',sfNm,SF_FLOORS,sfTNm)
+    +'</div>';
 
-  // ── direction labels ──
-  const ZONE_COLORS = { NF:'#2d65bd', SF:'#1a9458', EF:'#a07800', WF:'#6d35d9' };
-  const labelDefs = [
-    { text:'NORTH', x:0,     y:-1.4, z:-(hD+1.2), color: ZONE_COLORS.NF },
-    { text:'SOUTH', x:0,     y:-1.4, z:+(hD+1.2), color: ZONE_COLORS.SF },
-    { text:'EAST',  x:+(hW+1.2), y:-1.4, z:0,    color: ZONE_COLORS.EF },
-    { text:'WEST',  x:-(hW+1.2), y:-1.4, z:0,    color: ZONE_COLORS.WF },
-  ];
-  labelDefs.forEach(({ text, x, y, z, color }) => {
-    const sp = makeLabel(text, color);
-    sp.position.set(x, y, z);
-    scene.add(sp);
-  });
+  // EF (split col 0-2 = normal, col 3+ = small R+01)
+  const efNm=EF_COLS.slice(0,3),efSm=EF_COLS.slice(3);
+  const efTNm={},efTSm={};
+  EF_FLOORS.forEach(fl=>{const r=EF_TYPES[fl]||[];efTNm[fl]=r.slice(0,3);efTSm[fl]=r.slice(3);});
+  const efGrid=`<div style="width:${efW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
+    +faceGrid('EF',efNm,EF_FLOORS,efTNm)
+    +faceGrid('EF',efSm,EF_FLOORS,efTSm,SR01,[{fl1:'R+02',fl2:'R+01',mCols:[75,74,73,71,70,69]}])
+    +'</div>';
 
-  // ── renderer ──
-  const wrap = document.getElementById('canvas-wrap');
-  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  wrap.appendChild(renderer.domElement);
+  // WF
+  const wfGrid=faceGrid('WF',wfCols3D,WF_FLOORS,wfTypes3D,SR02);
 
-  // ── camera ──
-  const camera = new THREE.PerspectiveCamera(55, 1, 0.01, 2000);
-  const dist = Math.max(hW, hD, bH) * 2.6;
-  camera.position.set(dist * 0.7, bH * 0.6, dist * 0.7);
+  const roof=`<div style="position:absolute;width:${W}px;height:${D}px;left:${-W/2}px;top:${-D/2}px;transform:rotateX(90deg) translateZ(${fH/2}px);backface-visibility:hidden;background:linear-gradient(135deg,#1e2f45,#111c2a);outline:1px solid rgba(255,255,255,0.1);"></div>`;
+  const gW=W*2.4,gD=D*2.4;
+  const ground=`<div style="position:absolute;width:${gW}px;height:${gD}px;left:${-gW/2}px;top:${-gD/2}px;transform:rotateX(90deg) translateZ(${-fH/2}px);backface-visibility:hidden;background:radial-gradient(ellipse at center,rgba(14,101,169,0.12) 0%,transparent 68%);"></div>`;
 
-  // ── controls ──
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping  = true;
-  controls.dampingFactor  = 0.06;
-  controls.minDistance    = 0.5;
-  controls.maxDistance    = 500;
-  controls.target.set(0, bH / 2, 0);
-  controls.update();
+  document.getElementById('bld').innerHTML=
+    face('d3-front',`translateZ(${D/2}px)`,nfW,0,'North','#60a5fa',nfGrid)
+    +face('d3-back',`rotateY(180deg) translateZ(${D/2}px)`,sfW,0.18,'South','#4ade80',sfGrid)
+    +face('d3-east',`rotateY(-90deg) translateZ(${W/2}px)`,efW,0.28,'East','#fbbf24',efGrid)
+    +face('d3-west',`rotateY(90deg) translateZ(${W/2}px)`,wfW,0.42,'West','#c084fc',wfGrid)
+    +roof+ground;
 
-  // ── legend ──
-  if (legend?.length) {
-    const el = document.getElementById('leg-items');
-    el.innerHTML = legend.map(l => `
-      <div class="leg-row">
+  if(legend.length){
+    document.getElementById('legend-wrap').innerHTML=legend.map(l=>`
+      <div class="leg-item">
         <div class="leg-dot" style="background:${l.color};"></div>
-        <div class="leg-lbl">${l.label}</div>
-        <div class="leg-cnt">${l.count ?? ''}</div>
+        <span class="leg-lbl">${l.label}${l.count!=null?' ('+l.count+')':''}</span>
       </div>`).join('');
-    document.getElementById('legend-panel').style.display = 'block';
   }
 
-  // ── resize ──
-  function resize() {
-    const w = wrap.clientWidth, h = wrap.clientHeight;
-    renderer.setSize(w, h);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  document.getElementById('loading').style.display = 'none';
-
-  // ── render loop ──
-  (function loop() {
-    requestAnimationFrame(loop);
-    controls.update();
-    renderer.render(scene, camera);
-  })();
+  // Interaction (identical to renderAAAPage)
+  const bld=document.getElementById('bld'),vp=document.getElementById('vp');
+  let rotX=-22,rotY=30,zoom=1,panX=0,panY=0,dragging=false,lastX=0,lastY=0;
+  function applyT(){bld.style.transform=`translate(${panX}px,${panY}px) scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;}
+  vp.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    dragging=true;lastX=e.clientX;lastY=e.clientY;
+    vp.style.cursor=e.shiftKey?'grabbing':'move';e.preventDefault();
+  });
+  window.addEventListener('mouseup',()=>{dragging=false;if(vp.isConnected)vp.style.cursor='grab';});
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const dx=e.clientX-lastX,dy=e.clientY-lastY;
+    if(e.shiftKey&&e.buttons===1){rotY+=dx*0.4;rotX-=dy*0.4;rotX=Math.max(-88,Math.min(88,rotX));}
+    else{panX+=dx;panY+=dy;}
+    lastX=e.clientX;lastY=e.clientY;applyT();
+  });
+  vp.addEventListener('wheel',e=>{
+    e.preventDefault();zoom*=e.deltaY<0?1.08:0.93;zoom=Math.max(0.1,Math.min(7,zoom));applyT();
+  },{passive:false});
+  let lastPinch=0;
+  vp.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;}
+    if(e.touches.length===2)lastPinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  },{passive:false});
+  vp.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      panX+=e.touches[0].clientX-lastX;panY+=e.touches[0].clientY-lastY;
+      lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;applyT();
+    }else if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(lastPinch){zoom*=d/lastPinch;zoom=Math.max(0.1,Math.min(7,zoom));applyT();}
+      lastPinch=d;
+    }
+  },{passive:false});
 }
 </script>
 </body>

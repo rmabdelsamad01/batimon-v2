@@ -14319,12 +14319,14 @@ function _demoOpen3D(){
     alert('No legend items. Add legend items and assign colours to panels first.');
     return;
   }
-  const facadeData=_demoBuild3DData();
-  const msgData={
-    type:'demo3d-data',
-    legend:facadeData.legend,
-    facades:facadeData.facades
-  };
+  const colorMap={};
+  _demoData.legend.forEach(l=>{colorMap[l.id]=l.color;});
+  const panelColors={};
+  Object.entries(_demoData.panels||{}).forEach(([pid,lid])=>{
+    if(colorMap[lid]) panelColors[pid]=colorMap[lid];
+  });
+  const legend=_demoData.legend.map(l=>({id:l.id,label:l.label,color:l.color,count:_demoCountPanels(l.id)}));
+  const msgData={type:'demo3d-data',panelColors,legend};
   const overlay=document.createElement('div');
   overlay.id='demo3d-overlay';
   overlay.style.cssText='position:fixed;inset:0;z-index:99999;';
