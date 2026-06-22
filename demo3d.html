@@ -116,15 +116,19 @@ function makeLabel(text, color) {
 function build(facades, legend) {
   const NF = facades?.NF, SF = facades?.SF, EF = facades?.EF, WF = facades?.WF;
 
-  const S     = 0.5;    // units per panel slot
-  const CELL  = 0.43;   // panel face size (gap = 0.07)
-  const DEPTH = 0.13;   // panel protrusion
+  // Physical panel proportions: facade panels are taller than wide
+  // SW = horizontal slot per column, SH = vertical slot per floor (floor height)
+  const SW    = 0.40;   // horizontal spacing per panel column
+  const SH    = 0.80;   // vertical spacing per floor (2× SW → panels are 2× taller than wide)
+  const CW    = 0.36;   // panel face width  (SW - 0.04 gap)
+  const CH    = 0.74;   // panel face height (SH - 0.06 gap)
+  const DEPTH = 0.12;   // panel protrusion depth
   const UNCOLORED = new THREE.Color('#1b2a3a');
 
   // building half-dims
-  const hW = Math.max(NF?.cols||0, SF?.cols||0) * S / 2;
-  const hD = Math.max(EF?.cols||0, WF?.cols||0) * S / 2;
-  const bH = Math.max(NF?.rows||0, SF?.rows||0, EF?.rows||0, WF?.rows||0) * S;
+  const hW = Math.max(NF?.cols||0, SF?.cols||0) * SW / 2;
+  const hD = Math.max(EF?.cols||0, WF?.cols||0) * SW / 2;
+  const bH = Math.max(NF?.rows||0, SF?.rows||0, EF?.rows||0, WF?.rows||0) * SH;
 
   // ── scene (same look as builder3d.html) ──
   const scene = new THREE.Scene();
@@ -174,12 +178,12 @@ function build(facades, legend) {
   scene.add(roof);
 
   // ── panel instances ──────────────────────────────────────────────────
-  // NS facades: BoxGeometry(CELL, CELL, DEPTH)  — depth protrudes in ±Z
-  // EW facades: BoxGeometry(DEPTH, CELL, CELL)  — depth protrudes in ±X
+  // NS facades: BoxGeometry(CW, CH, DEPTH)  — depth protrudes in ±Z
+  // EW facades: BoxGeometry(DEPTH, CH, CW)  — depth protrudes in ±X
   const panelMatNS = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55, metalness: 0.08 });
   const panelMatEW = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55, metalness: 0.08 });
-  const geoNS = new THREE.BoxGeometry(CELL, CELL, DEPTH);
-  const geoEW = new THREE.BoxGeometry(DEPTH, CELL, CELL);
+  const geoNS = new THREE.BoxGeometry(CW, CH, DEPTH);
+  const geoEW = new THREE.BoxGeometry(DEPTH, CH, CW);
 
   const nsCount = (NF ? NF.rows * NF.cols : 0) + (SF ? SF.rows * SF.cols : 0);
   const ewCount = (EF ? EF.rows * EF.cols : 0) + (WF ? WF.rows * WF.cols : 0);
@@ -214,14 +218,14 @@ function build(facades, legend) {
 
     // NF: panels at z = -(hD + DEPTH/2), columns → X, rows → Y
     if (NF) fillFacade(iMeshNS, NF, (fi, ci, rows, cols) => [
-      ci * S + S/2 - cols * S / 2,
-      (rows - 1 - fi) * S + S/2,
+      ci * SW + SW/2 - cols * SW / 2,
+      (rows - 1 - fi) * SH + SH/2,
       -(hD + DEPTH / 2)
     ]);
     // SF: panels at z = +(hD + DEPTH/2)
     if (SF) fillFacade(iMeshNS, SF, (fi, ci, rows, cols) => [
-      ci * S + S/2 - cols * S / 2,
-      (rows - 1 - fi) * S + S/2,
+      ci * SW + SW/2 - cols * SW / 2,
+      (rows - 1 - fi) * SH + SH/2,
       +(hD + DEPTH / 2)
     ]);
 
@@ -238,14 +242,14 @@ function build(facades, legend) {
     // EF: panels at x = +(hW + DEPTH/2), columns → Z, rows → Y
     if (EF) fillFacade(iMeshEW, EF, (fi, ci, rows, cols) => [
       +(hW + DEPTH / 2),
-      (rows - 1 - fi) * S + S/2,
-      ci * S + S/2 - cols * S / 2
+      (rows - 1 - fi) * SH + SH/2,
+      ci * SW + SW/2 - cols * SW / 2
     ]);
     // WF: panels at x = -(hW + DEPTH/2)
     if (WF) fillFacade(iMeshEW, WF, (fi, ci, rows, cols) => [
       -(hW + DEPTH / 2),
-      (rows - 1 - fi) * S + S/2,
-      ci * S + S/2 - cols * S / 2
+      (rows - 1 - fi) * SH + SH/2,
+      ci * SW + SW/2 - cols * SW / 2
     ]);
 
     iMeshEW.instanceMatrix.needsUpdate = true;
