@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batimon — 3D Demo View</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { width:100%; height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#0a1628; }
+#c3d { width:100%; height:100%; display:block; }
+#top-bar {
+  position:fixed; top:0; left:0; right:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between; padding:14px 18px;
+  pointer-events:none;
+}
+#title-tag {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(10,22,40,0.8); border:1.5px solid rgba(255,255,255,0.13);
+  padding:7px 16px; border-radius:10px; backdrop-filter:blur(14px);
+  font-size:13px; font-weight:700; color:#fff;
+}
+#close-btn {
+  pointer-events:auto; background:rgba(10,22,40,0.85); border:1.5px solid rgba(255,255,255,0.18);
+  color:#fff; font-size:16px; width:36px; height:36px; border-radius:8px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; backdrop-filter:blur(12px);
+  transition:background 0.15s; line-height:1;
+}
+#close-btn:hover { background:rgba(255,60,60,0.3); border-color:rgba(255,100,100,0.5); }
+#legend-panel {
+  position:fixed; bottom:16px; right:16px; z-index:10; display:none;
+  background:rgba(8,18,34,0.88); border:1.5px solid rgba(255,255,255,0.12);
+  border-radius:10px; padding:12px 16px; backdrop-filter:blur(16px);
+  max-height:52vh; overflow-y:auto; min-width:160px; max-width:210px;
+}
+#legend-panel::-webkit-scrollbar { width:4px; }
+#legend-panel::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:2px; }
+.leg-title { font-size:9px; font-weight:700; color:rgba(255,255,255,0.38); letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+.leg-item { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+.leg-dot { width:13px; height:13px; border-radius:3px; flex-shrink:0; }
+.leg-lbl { font-size:11px; color:rgba(255,255,255,0.85); font-weight:500; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.leg-cnt { font-size:10px; color:rgba(255,255,255,0.38); flex-shrink:0; }
+#hint {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:10;
+  font-size:10px; color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.05);
+  padding:3px 14px; border-radius:20px; white-space:nowrap; pointer-events:none;
+}
+#loading {
+  position:fixed; inset:0; background:#0a1628; z-index:50;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
+}
+.spin { width:34px; height:34px; border:3px solid rgba(168,85,247,0.18); border-top-color:#a855f7; border-radius:50%; animation:sp 0.75s linear infinite; }
+@keyframes sp { to { transform:rotate(360deg); } }
+.load-txt { font-size:12px; color:rgba(255,255,255,0.4); }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="loading"><div class="spin"></div><div class="load-txt">Building 3D view…</div></div>
+<canvas id="c3d"></canvas>
+<div id="top-bar">
+  <div id="title-tag">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    Demo — 3D View
+  </div>
+  <button id="close-btn" onclick="window._close3D()" title="Close">✕</button>
+</div>
+<div id="legend-panel">
+  <div class="leg-title">Legend</div>
+  <div id="leg-items"></div>
+</div>
+<div id="hint">Drag to rotate · Scroll to zoom · Right-drag to pan</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+window._close3D = () => {
+  window.parent.postMessage({ type: 'demo3d-close' }, '*');
+};
+
+// Notify parent we're ready to receive data
+window.parent.postMessage({ type: 'demo3d-ready' }, '*');
+
+window.addEventListener('message', e => {
+  if (e.data?.type === 'demo3d-data') build(e.data.data);
+});
+
+// ── Canvas texture for one facade ──────────────────────────────
+function makeFacadeCanvas(facade) {
+  const { rows, cols, grid } = facade;
+  const CELL = 14, GAP = 2;
+  const cw = cols * (CELL + GAP) - GAP;
+  const ch = rows * (CELL + GAP) - GAP;
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(cw, 2); cv.height = Math.max(ch, 2);
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#0f1e35';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      ctx.fillStyle = grid[r]?.[c] || '#1d304d';
+      ctx.fillRect(c * (CELL + GAP), r * (CELL + GAP), CELL, CELL);
+    }
+  }
+  return cv;
+}
+
+// ── Sprite label ───────────────────────────────────────────────
+function makeSprite(text, borderColor) {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 52;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, 256, 52);
+  ctx.fillStyle = 'rgba(8,18,34,0.85)';
+  ctx.beginPath();
+  ctx.roundRect(4, 4, 248, 44, 7);
+  ctx.fill();
+  ctx.strokeStyle = borderColor + 'cc';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(4, 4, 248, 44, 7);
+  ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 17px system-ui,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 26);
+  const tex = new THREE.CanvasTexture(cv);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(6.5, 1.3, 1);
+  return sprite;
+}
+
+// ── Main build ─────────────────────────────────────────────────
+function build(data) {
+  const fac = data.facades;
+  const NF = fac.NF, SF = fac.SF, EF = fac.EF, WF = fac.WF;
+  const S = 0.5; // units per panel cell
+
+  const bW = Math.max(NF?.cols || 33, SF?.cols || 33) * S;
+  const bD = Math.max(EF?.cols || 15, WF?.cols || 15) * S;
+  const bH = Math.max(NF?.rows || 39, SF?.rows || 37) * S;
+
+  // Scene
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a1628);
+  scene.fog = new THREE.FogExp2(0x0a1628, 0.008);
+
+  // Renderer
+  const canvas = document.getElementById('c3d');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+
+  // Camera
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 800);
+  const dist = Math.max(bW, bD, bH) * 2.4;
+  camera.position.set(dist * 0.65, bH * 0.7, dist * 0.65);
+
+  // Controls
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+  controls.minDistance = 4;
+  controls.maxDistance = 400;
+  controls.maxPolarAngle = Math.PI * 0.87;
+  controls.target.set(0, bH / 2, 0);
+  controls.update();
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const sun = new THREE.DirectionalLight(0xfff8f0, 1.0);
+  sun.position.set(40, 80, 50);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xc0d8ff, 0.3);
+  fill.position.set(-25, 25, -35);
+  scene.add(fill);
+
+  // ── Facades ──
+  const ZONE_COLORS = { NF: '#2d65bd', SF: '#1a9458', EF: '#a07800', WF: '#6d35d9' };
+  const facadeDefs = [
+    { key:'NF', label:'North', d:NF, posX:0,      posZ:-bD/2, rotY:Math.PI      },
+    { key:'SF', label:'South', d:SF, posX:0,      posZ:+bD/2, rotY:0            },
+    { key:'EF', label:'East',  d:EF, posX:+bW/2,  posZ:0,     rotY:-Math.PI/2   },
+    { key:'WF', label:'West',  d:WF, posX:-bW/2,  posZ:0,     rotY:+Math.PI/2   },
+  ];
+
+  facadeDefs.forEach(fc => {
+    if (!fc.d) return;
+    const fW = fc.d.cols * S;
+    const fH = fc.d.rows * S;
+    const posY = fH / 2; // bottom of facade at Y=0
+
+    const tex = new THREE.CanvasTexture(makeFacadeCanvas(fc.d));
+    tex.flipY = false;
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.LinearFilter;
+
+    const geo = new THREE.PlaneGeometry(fW, fH);
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.75, metalness: 0.05 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(fc.posX, posY, fc.posZ);
+    mesh.rotation.y = fc.rotY;
+    scene.add(mesh);
+
+    // Direction label below facade
+    const sprite = makeSprite(fc.label, ZONE_COLORS[fc.key] || '#fff');
+    sprite.position.set(fc.posX, -1.8, fc.posZ);
+    scene.add(sprite);
+  });
+
+  // Ground
+  const gnd = new THREE.Mesh(
+    new THREE.PlaneGeometry(bW * 5, bD * 5),
+    new THREE.MeshStandardMaterial({ color: 0x0c1c32, roughness: 1.0 })
+  );
+  gnd.rotation.x = -Math.PI / 2;
+  gnd.position.y = -0.02;
+  scene.add(gnd);
+
+  // Grid
+  const grid = new THREE.GridHelper(bW * 4, 32, 0x182f4a, 0x141f30);
+  grid.position.y = 0.01;
+  scene.add(grid);
+
+  // ── Legend ──
+  if (data.legend?.length) {
+    const el = document.getElementById('leg-items');
+    el.innerHTML = data.legend.map(l => `
+      <div class="leg-item">
+        <div class="leg-dot" style="background:${l.color};"></div>
+        <div class="leg-lbl">${l.label}</div>
+        <div class="leg-cnt">${l.count != null ? l.count : ''}</div>
+      </div>`).join('');
+    document.getElementById('legend-panel').style.display = 'block';
+  }
+
+  document.getElementById('loading').style.display = 'none';
+
+  // ── Render loop ──
+  (function loop() {
+    requestAnimationFrame(loop);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+}
+</script>
+</body>
+</html>

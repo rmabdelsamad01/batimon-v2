@@ -14284,6 +14284,63 @@ document.addEventListener('click',e=>{
   if(cedit&&cedit.style.display==='block'&&!cedit.contains(e.target)) _demoCloseColorEdit();
 });
 
+function _demoBuild3DData(){
+  const hiddenCols={WF:new Set([31,15,'15-A']),EF:new Set([65,81]),SF:new Set(['15-A','15-B'])};
+  const hiddenFloors={WF:new Set(['R+01','RDC','R+18B']),SF:new Set(['R+18M','R+17T']),EF:new Set(['R+18M','R+18MD','R+17T','R+17B'])};
+  const mergedCells={WF:new Set(['R+18T-C21','R+18T-C22','R+18T-C23','R+18T-C27','R+18T-C28','R+18T-C29']),EF:new Set(['R+01-C69','R+01-C70','R+01-C71','R+01-C73','R+01-C74','R+01-C75']),SF:new Set(['R+18T-C89','R+18T-C90','R+18T-C91']),NF:new Set(['R+01-C58','R+01-C59','R+01-C60'])};
+  const colorMap={};
+  _demoData.legend.forEach(l=>{colorMap[l.id]=l.color;});
+  const facades={};
+  ZONES.forEach(z=>{
+    const hC=hiddenCols[z.id]||new Set();
+    const hF=hiddenFloors[z.id]||new Set();
+    const hM=mergedCells[z.id]||new Set();
+    const visFloors=z.floors.filter(fl=>!hF.has(fl));
+    const visCols=z.colNums.filter(col=>!hC.has(col));
+    const rows=visFloors.length, cols=visCols.length;
+    const grid=Array.from({length:rows},()=>new Array(cols).fill(null));
+    visFloors.forEach((fl,fi)=>{
+      visCols.forEach((col,ci)=>{
+        if(hM.has(`${fl}-C${col}`)) return;
+        const lid=_demoData.panels[`${z.id}-${fl}-C${col}`];
+        if(lid&&colorMap[lid]) grid[fi][ci]=colorMap[lid];
+      });
+    });
+    facades[z.id]={name:z.name,rows,cols,grid};
+  });
+  return {
+    legend:_demoData.legend.map(l=>({id:l.id,label:l.label,color:l.color,count:_demoCountPanels(l.id)})),
+    facades
+  };
+}
+
+function _demoOpen3D(){
+  if(!_demoData.legend.length){
+    alert('No legend items. Add legend items and assign colours to panels first.');
+    return;
+  }
+  const data=_demoBuild3DData();
+  const overlay=document.createElement('div');
+  overlay.id='demo3d-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;';
+  const iframe=document.createElement('iframe');
+  iframe.src='demo3d.html';
+  iframe.style.cssText='width:100%;height:100%;border:none;';
+  overlay.appendChild(iframe);
+  const handler=e=>{
+    if(!e.data) return;
+    if(e.data.type==='demo3d-ready'){
+      try{iframe.contentWindow.postMessage({type:'demo3d-data',data},'*');}catch(_){}
+    }
+    if(e.data.type==='demo3d-close'){
+      if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      window.removeEventListener('message',handler);
+    }
+  };
+  window.addEventListener('message',handler);
+  document.body.appendChild(overlay);
+}
+
 // ══════════════════════════════════════════════════════════════
 
 function _supaPasswordGate(){
