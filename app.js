@@ -746,8 +746,6 @@ function _renderProjBeta(){
 }
 
 // ── To Do List ───────────────────────────────────────────────────────────────
-const _TODO_KEY       = 'batimon_todo_tasks';
-const _TODO_BIN_KEY   = 'batimon_todo_bin';
 const _TODO_TYPES_KEY = 'batimon_todo_types';
 const _TODO_DEFAULT_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
 const _TODO_TYPE_COLORS = {
@@ -757,17 +755,14 @@ const _TODO_TYPE_COLORS = {
 };
 const _TODO_PALETTE = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#0ea5e9','#ef4444','#22c55e','#f97316','#6366f1','#ec4899','#14b8a6','#f43f5e','#84cc16','#a855f7','#06b6d4'];
 
-function _todoLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_KEY)||'[]'); }catch(e){ return []; } }
-function _todoSave(tasks){ localStorage.setItem(_TODO_KEY, JSON.stringify(tasks)); }
-function _todoBinLoad(){
+function _todoCurrentUser(){ return (window.currentUser&&(window.currentUser.email||window.currentUser.full_name))||''; }
+async function _todoFetch(){
   try{
-    const bin = JSON.parse(localStorage.getItem(_TODO_BIN_KEY)||'[]');
-    const cutoff = Date.now() - 30*24*60*60*1000;
-    return bin.filter(t=>t.deletedAt && t.deletedAt > cutoff);
+    const {data,error} = await sb.from('todo_tasks').select('*').is('deleted_at',null).order('created',{ascending:false});
+    if(error) throw error;
+    return (data||[]).map(r=>({...r, desc:r.description, createdBy:r.created_by}));
   }catch(e){ return []; }
 }
-function _todoBinSave(bin){ localStorage.setItem(_TODO_BIN_KEY, JSON.stringify(bin)); }
-function _todoCurrentUser(){ return (window.currentUser&&(window.currentUser.email||window.currentUser.full_name))||''; }
 function _todoTypesLoad(){
   const raw = localStorage.getItem(_TODO_TYPES_KEY);
   try{
@@ -902,7 +897,7 @@ function _todoOpenModal(){
         <button onclick="document.getElementById('todo-modal-overlay').remove()"
           style="padding:9px 20px;border:1.5px solid #dde3ee;background:#f8fafd;color:#8099b0;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;"
           onmouseover="this.style.background='#e0eaf5'" onmouseout="this.style.background='#f8fafd'">Cancel</button>
-        <button onclick="_todoAdd()"
+        <button id="todo-modal-submit" onclick="_todoAdd()"
           style="padding:9px 24px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;"
           onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
       </div>
@@ -997,8 +992,14 @@ function _todoRefreshTypeFilter(){
   if(_todoGetAllTypes().includes(prev)) fltEl.value = prev;
 }
 
-function _todoRenderList(){
-  const tasks = _todoLoad();
+async function _todoRenderList(){
+  const list = document.getElementById('todo-list');
+  if(list && list.dataset.loading !== '1'){
+    list.dataset.loading = '1';
+    list.innerHTML = `<div style="text-align:center;padding:48px 0;color:var(--text3);font-size:13px;">Loading…</div>`;
+  }
+  const tasks = await _todoFetch();
+  delete list?.dataset.loading;
   const f = window._todoFilter || 'all';
   const fp = window._todoFilterProject || '';
   const ft = window._todoFilterType || '';
@@ -1059,7 +1060,7 @@ function _todoRenderList(){
   }).join('');
 }
 
-function _todoAdd(){
+async function _todoAdd(){
   const project  = (document.getElementById('todo-f-project')?.value||'').trim();
   const type     = (document.getElementById('todo-f-type')?.value||'').trim();
   const desc     = (document.getElementById('todo-f-desc')?.value||'').trim();
@@ -1073,45 +1074,46 @@ function _todoAdd(){
   if(!desc)   { if(errEl){errEl.textContent='Please enter a description.';errEl.style.display='block';} return; }
   if(errEl) errEl.style.display='none';
 
-  const tasks = _todoLoad();
-  tasks.unshift({
-    id: Date.now().toString(36)+Math.random().toString(36).slice(2),
-    project, type, desc, assignee, date, deadline, done: false, created: Date.now(),
-    createdBy: _todoCurrentUser()
-  });
-  _todoSave(tasks);
+  const btn = document.getElementById('todo-modal-submit');
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+
+  try{
+    const {error} = await sb.from('todo_tasks').insert({
+      id: Date.now().toString(36)+Math.random().toString(36).slice(2),
+      project, type, description: desc, assignee: assignee||null,
+      date, deadline: deadline||null, done: false, created: Date.now(),
+      created_by: _todoCurrentUser()
+    });
+    if(error) throw error;
+  }catch(e){
+    if(errEl){ errEl.textContent='Save failed: '+(e.message||'unknown error'); errEl.style.display='block'; }
+    if(btn){ btn.disabled=false; btn.textContent='Add Task'; }
+    return;
+  }
 
   document.getElementById('todo-modal-overlay')?.remove();
   _todoRenderList();
 }
 
-function _todoToggle(id){
-  const tasks = _todoLoad();
-  const t = tasks.find(x=>x.id===id);
-  if(t) t.done = !t.done;
-  _todoSave(tasks);
+async function _todoToggle(id){
+  const {data} = await sb.from('todo_tasks').select('done').eq('id',id).single();
+  if(!data) return;
+  await sb.from('todo_tasks').update({done:!data.done}).eq('id',id);
   _todoRenderList();
 }
 
-function _todoDelete(id){
-  const tasks = _todoLoad();
-  const idx = tasks.findIndex(x=>x.id===id);
-  if(idx===-1) return;
-  const [removed] = tasks.splice(idx,1);
-  removed.deletedAt = Date.now();
-  removed.deletedBy = _todoCurrentUser();
-  const bin = _todoBinLoad();
-  bin.push(removed);
-  _todoBinSave(bin);
-  _todoSave(tasks);
+async function _todoDelete(id){
+  await sb.from('todo_tasks').update({
+    deleted_at: new Date().toISOString(),
+    deleted_by: _todoCurrentUser()
+  }).eq('id',id);
   _todoRenderList();
 }
 
-function _todoSetDeadline(id, newDeadline){
+async function _todoSetDeadline(id, newDeadline){
   if(!newDeadline) return;
-  const tasks = _todoLoad();
-  const t = tasks.find(x=>x.id===id);
-  if(t){ t.deadline = newDeadline; _todoSave(tasks); _todoRenderList(); }
+  await sb.from('todo_tasks').update({deadline: newDeadline}).eq('id',id);
+  _todoRenderList();
 }
 
 
