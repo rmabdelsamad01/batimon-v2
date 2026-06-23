@@ -823,13 +823,17 @@ function _todoToday(){
 function _renderProjTodo(){
   const wrap = document.getElementById('proj-view-todo');
   if(!wrap) return;
-  if(!window._todoFilter) window._todoFilter = 'all';
-  if(!window._todoFilterProject) window._todoFilterProject = '';
-  if(!window._todoFilterType) window._todoFilterType = '';
-
-  const projects = _todoGetProjects();
-  const filterProjOpts = `<option value="">All Projects</option>`+projects.map(p=>`<option value="${_escHtml(p.id)}">${_escHtml(p.name)}</option>`).join('');
-  const filterTypeOpts = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+  if(!window._todoFilter)   window._todoFilter   = 'all';
+  if(!window._todoFltProj)  window._todoFltProj  = [];
+  if(!window._todoFltType)  window._todoFltType  = [];
+  if(!window._todoFltName)  window._todoFltName  = [];
+  if(!window._todoFltClickSetup){
+    window._todoFltClickSetup = true;
+    document.addEventListener('click', e=>{
+      if(!e.target.closest('#todo-flt-proj-wrap,#todo-flt-type-wrap,#todo-flt-name-wrap'))
+        ['proj','type','name'].forEach(k=>{ const p=document.getElementById('todo-flt-'+k+'-panel'); if(p) p.style.display='none'; });
+    });
+  }
 
   wrap.innerHTML=`
     <div style="padding:18px 24px 14px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;">
@@ -851,9 +855,23 @@ function _renderProjTodo(){
     </div>
 
     <!-- Filters -->
-    <div style="padding:12px 24px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-      <select id="todo-flt-project" onchange="_todoApplyFilters()" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);outline:none;">${filterProjOpts}</select>
-      <select id="todo-flt-type" onchange="_todoApplyFilters()" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);outline:none;">${filterTypeOpts}</select>
+    <div style="padding:12px 24px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <div id="todo-flt-proj-wrap" style="position:relative;">
+        <button id="todo-flt-proj-btn" onclick="_todoFltOpen(event,'proj')"
+          style="padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);cursor:pointer;white-space:nowrap;">All Projects ▾</button>
+        <div id="todo-flt-proj-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
+      </div>
+      <div id="todo-flt-type-wrap" style="position:relative;">
+        <button id="todo-flt-type-btn" onclick="_todoFltOpen(event,'type')"
+          style="padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);cursor:pointer;white-space:nowrap;">All Types ▾</button>
+        <div id="todo-flt-type-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
+      </div>
+      <div id="todo-flt-name-wrap" style="position:relative;">
+        <button id="todo-flt-name-btn" onclick="_todoFltOpen(event,'name')"
+          style="padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);cursor:pointer;white-space:nowrap;">All Names ▾</button>
+        <div id="todo-flt-name-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
+      </div>
+      <div style="width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;"></div>
       <div style="display:flex;gap:6px;">
         <button id="todo-filter-all"    onclick="_todoSetFilter('all')"    style="padding:4px 11px;border-radius:20px;border:1.5px solid #224F93;background:#224F93;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">All</button>
         <button id="todo-filter-active" onclick="_todoSetFilter('active')" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Active</button>
@@ -1093,12 +1111,71 @@ function _todoDeleteName(idx){
   _todoRenderNamesModal();
 }
 
+function _todoFltOpen(e, kind){
+  e.stopPropagation();
+  const panel = document.getElementById('todo-flt-'+kind+'-panel');
+  if(!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  ['proj','type','name'].forEach(k=>{ const p=document.getElementById('todo-flt-'+k+'-panel'); if(p) p.style.display='none'; });
+  if(isOpen) return;
+  _todoFltPopulate(kind);
+  panel.style.display = 'block';
+}
+
+function _todoFltPopulate(kind){
+  const panel = document.getElementById('todo-flt-'+kind+'-panel');
+  if(!panel) return;
+  let items = [];
+  let sel = [];
+  if(kind==='proj'){ items=_todoGetProjects().map(p=>({val:p.id,label:p.name})); sel=window._todoFltProj||[]; }
+  else if(kind==='type'){ items=_todoGetAllTypes().map(t=>({val:t,label:t})); sel=window._todoFltType||[]; }
+  else { items=_todoNamesLoad().map(n=>({val:n,label:n})); sel=window._todoFltName||[]; }
+  if(!items.length){ panel.innerHTML=`<div style="padding:10px 14px;font-size:11px;color:#94a3b8;">Nothing to filter</div>`; return; }
+  panel.innerHTML = items.map(({val,label})=>{
+    const chk = sel.includes(val);
+    return `<label style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:12px;color:#1a2a3a;white-space:nowrap;user-select:none;"
+      onmouseover="this.style.background='#f0f5fb'" onmouseout="this.style.background='transparent'">
+      <input type="checkbox" ${chk?'checked':''} onclick="event.stopPropagation()" onchange="_todoFltToggle('${kind}','${val.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')}',this.checked)"
+        style="accent-color:#224F93;width:13px;height:13px;flex-shrink:0;cursor:pointer;">
+      <span>${_escHtml(label)}</span>
+    </label>`;
+  }).join('');
+}
+
+function _todoFltToggle(kind, val, checked){
+  const key = kind==='proj'?'_todoFltProj':kind==='type'?'_todoFltType':'_todoFltName';
+  const arr = window[key] || [];
+  if(checked && !arr.includes(val)) arr.push(val);
+  else if(!checked){ const i=arr.indexOf(val); if(i>-1) arr.splice(i,1); }
+  window[key] = arr;
+  _todoFltUpdateBtn(kind);
+  _todoRenderList();
+}
+
+function _todoFltUpdateBtn(kind){
+  const btn = document.getElementById('todo-flt-'+kind+'-btn');
+  if(!btn) return;
+  const labels = {proj:'Projects',type:'Types',name:'Names'};
+  const key = kind==='proj'?'_todoFltProj':kind==='type'?'_todoFltType':'_todoFltName';
+  const sel = window[key]||[];
+  const active = sel.length>0;
+  btn.style.borderColor = active?'#224F93':'var(--border)';
+  btn.style.background  = active?'#e8eef8':'var(--surface2)';
+  btn.style.color       = active?'#224F93':'var(--text)';
+  if(!sel.length){ btn.textContent='All '+labels[kind]+' ▾'; }
+  else if(sel.length===1){
+    let name=sel[0];
+    if(kind==='proj'){ const p=_todoGetProjects().find(x=>x.id===sel[0]); name=p?p.name:sel[0]; }
+    btn.textContent=name+' ▾';
+  } else {
+    btn.textContent=labels[kind]+' ('+sel.length+') ▾';
+  }
+}
+
 function _todoRefreshTypeFilter(){
-  const fltEl = document.getElementById('todo-flt-type');
-  if(!fltEl) return;
-  const prev = fltEl.value;
-  fltEl.innerHTML = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
-  if(_todoGetAllTypes().includes(prev)) fltEl.value = prev;
+  const panel = document.getElementById('todo-flt-type-panel');
+  if(panel && panel.style.display!=='none') _todoFltPopulate('type');
+  _todoFltUpdateBtn('type');
 }
 
 async function _todoRenderList(){
@@ -1109,9 +1186,10 @@ async function _todoRenderList(){
   }
   const tasks = await _todoFetch();
   delete list?.dataset.loading;
-  const f = window._todoFilter || 'all';
-  const fp = window._todoFilterProject || '';
-  const ft = window._todoFilterType || '';
+  const f  = window._todoFilter  || 'all';
+  const fp = window._todoFltProj || [];
+  const ft = window._todoFltType || [];
+  const fn = window._todoFltName || [];
   const projects = _todoGetProjects();
   const projMap = {};
   projects.forEach(p=>{ projMap[p.id] = p.name; });
@@ -1119,8 +1197,9 @@ async function _todoRenderList(){
   let filtered = tasks;
   if(f==='active') filtered = filtered.filter(t=>!t.done);
   else if(f==='done') filtered = filtered.filter(t=>t.done);
-  if(fp) filtered = filtered.filter(t=>t.project===fp);
-  if(ft) filtered = filtered.filter(t=>t.type===ft);
+  if(fp.length) filtered = filtered.filter(t=>fp.includes(t.project));
+  if(ft.length) filtered = filtered.filter(t=>ft.includes(t.type));
+  if(fn.length) filtered = filtered.filter(t=>fn.includes(t.assignee));
 
   const badge = document.getElementById('todo-count-badge');
   const remaining = tasks.filter(t=>!t.done).length;
@@ -1236,11 +1315,6 @@ function _todoSetFilter(f){
   _todoRenderList();
 }
 
-function _todoApplyFilters(){
-  window._todoFilterProject = document.getElementById('todo-flt-project')?.value || '';
-  window._todoFilterType    = document.getElementById('todo-flt-type')?.value    || '';
-  _todoRenderList();
-}
 
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
