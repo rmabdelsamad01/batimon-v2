@@ -582,7 +582,7 @@ window._projSbActive = 'projects';
 function projSidebarSelect(id){
   window._projSbActive = id;
   // Update active state styling
-  ['projects','travaux','affectation','suggestions','agenda','beta'].forEach(k=>{
+  ['projects','travaux','affectation','suggestions','agenda','beta','todo'].forEach(k=>{
     const el = document.getElementById('proj-sb-'+k);
     if(!el) return;
     if(k === id){
@@ -598,7 +598,7 @@ function projSidebarSelect(id){
     }
   });
   // Show/hide views
-  const views = ['projects','travaux','affectation','suggestions','beta'];
+  const views = ['projects','travaux','affectation','suggestions','beta','todo'];
   views.forEach(v=>{
     const el = document.getElementById('proj-view-'+v);
     if(el) el.style.display = (v===id) ? 'block' : 'none';
@@ -608,6 +608,7 @@ function projSidebarSelect(id){
   if(id==='affectation' && typeof btInitAffectation==='function') btInitAffectation();
   if(id==='suggestions') _renderProjSuggestions();
   if(id==='beta') _renderProjBeta();
+  if(id==='todo') _renderProjTodo();
   // Reset scroll
   const mc = document.getElementById('proj-main-content');
   if(mc) mc.scrollTop = 0;
@@ -743,6 +744,112 @@ function _renderProjBeta(){
       </div>
     </div>`;
 }
+
+// ── To Do List ───────────────────────────────────────────────────────────────
+const _TODO_KEY = 'batimon_todo_tasks';
+function _todoLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_KEY)||'[]'); }catch(e){ return []; } }
+function _todoSave(tasks){ localStorage.setItem(_TODO_KEY, JSON.stringify(tasks)); }
+
+function _renderProjTodo(){
+  const wrap = document.getElementById('proj-view-todo');
+  if(!wrap) return;
+  wrap.innerHTML=`
+    <div style="padding:22px 28px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:22px;">✅</span>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">To Do List</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px;">Track your tasks and action items</div>
+      </div>
+      <span id="todo-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#e0eaf8;color:#224F93;"></span>
+    </div>
+    <div style="padding:20px 28px 12px;display:flex;gap:10px;">
+      <input id="todo-input" type="text" maxlength="200" placeholder="Add a new task…"
+        style="flex:1;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--text);outline:none;background:var(--surface2);"
+        onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')_todoAdd()">
+      <button onclick="_todoAdd()"
+        style="padding:9px 18px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
+        onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add</button>
+    </div>
+    <div style="padding:0 28px 10px;display:flex;gap:8px;">
+      <button id="todo-filter-all"    onclick="_todoSetFilter('all')"    style="padding:4px 12px;border-radius:20px;border:1.5px solid #224F93;background:#224F93;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">All</button>
+      <button id="todo-filter-active" onclick="_todoSetFilter('active')" style="padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Active</button>
+      <button id="todo-filter-done"   onclick="_todoSetFilter('done')"   style="padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Done</button>
+      <div style="flex:1;"></div>
+      <button onclick="_todoClearDone()" style="padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:#c02020;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;" onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='var(--surface2)'">Clear Done</button>
+    </div>
+    <div id="todo-list" style="padding:0 28px 32px;display:flex;flex-direction:column;gap:8px;"></div>`;
+  window._todoFilter = window._todoFilter || 'all';
+  _todoRenderList();
+}
+
+function _todoRenderList(){
+  const tasks = _todoLoad();
+  const f = window._todoFilter || 'all';
+  const filtered = f==='active' ? tasks.filter(t=>!t.done) : f==='done' ? tasks.filter(t=>t.done) : tasks;
+  const list = document.getElementById('todo-list');
+  const badge = document.getElementById('todo-count-badge');
+  const remaining = tasks.filter(t=>!t.done).length;
+  if(badge) badge.textContent = remaining + ' remaining';
+  if(!list) return;
+  if(!filtered.length){
+    list.innerHTML=`<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px;">${f==='done'?'No completed tasks yet.':f==='active'?'All done! Nothing left to do.':'No tasks yet. Add one above.'}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(t=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${t.done?'var(--surface2)':'#fff'};border:1.5px solid ${t.done?'var(--border)':'#d8e4f5'};border-radius:10px;transition:all 0.15s;">
+      <div onclick="_todoToggle('${t.id}')"
+        style="width:20px;height:20px;border-radius:50%;border:2px solid ${t.done?'#1a9458':'#224F93'};background:${t.done?'#1a9458':'transparent'};flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        ${t.done?'<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>':''}
+      </div>
+      <span style="flex:1;font-size:13px;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};word-break:break-word;">${_escHtml(t.text)}</span>
+      <button onclick="_todoDelete('${t.id}')"
+        style="width:26px;height:26px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:15px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0;"
+        onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='transparent'">✕</button>
+    </div>`).join('');
+}
+
+function _todoAdd(){
+  const inp = document.getElementById('todo-input');
+  const text = (inp?.value||'').trim();
+  if(!text) return;
+  const tasks = _todoLoad();
+  tasks.push({id: Date.now().toString(36)+Math.random().toString(36).slice(2), text, done:false, created:Date.now()});
+  _todoSave(tasks);
+  inp.value = '';
+  _todoRenderList();
+}
+
+function _todoToggle(id){
+  const tasks = _todoLoad();
+  const t = tasks.find(x=>x.id===id);
+  if(t) t.done = !t.done;
+  _todoSave(tasks);
+  _todoRenderList();
+}
+
+function _todoDelete(id){
+  _todoSave(_todoLoad().filter(x=>x.id!==id));
+  _todoRenderList();
+}
+
+function _todoClearDone(){
+  _todoSave(_todoLoad().filter(x=>!x.done));
+  _todoRenderList();
+}
+
+function _todoSetFilter(f){
+  window._todoFilter = f;
+  ['all','active','done'].forEach(k=>{
+    const btn = document.getElementById('todo-filter-'+k);
+    if(!btn) return;
+    if(k===f){ btn.style.background='#224F93'; btn.style.color='#fff'; btn.style.borderColor='#224F93'; }
+    else { btn.style.background='var(--surface2)'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
+  });
+  _todoRenderList();
+}
+
+function _escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── Overview split-button dropdown ───────────────────────────────────────────
 function toggleOverviewDropdown(e){

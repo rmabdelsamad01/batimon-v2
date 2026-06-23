@@ -325,6 +325,12 @@ body.mobile-section-view .dash {
             <span style="width:8px;height:8px;border-radius:50%;background:#c02020;flex-shrink:0;display:inline-block;"></span>
           </div>
 
+          <!-- To Do List -->
+          <div id="proj-sb-todo" onclick="projSidebarSelect('todo')" title="To Do List" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:background 0.15s,border-color 0.15s;" onmouseover="this.style.background='#e8eef8';this.style.borderColor='rgba(34,79,147,0.25)'" onmouseout="if(window._projSbActive==='todo'){this.style.background='rgba(34,79,147,0.08)';this.style.borderColor='rgba(34,79,147,0.3)'}else{this.style.background='var(--surface2)';this.style.borderColor='var(--border)'}">
+            <span style="font-size:15px;line-height:1;flex-shrink:0;">✅</span>
+            <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">To Do List</span>
+          </div>
+
         </div>
       </div>
     </aside>
@@ -373,6 +379,9 @@ body.mobile-section-view .dash {
 
     <!-- Beta view -->
     <div id="proj-view-beta" style="display:none;height:100%;"></div>
+
+    <!-- To Do List view -->
+    <div id="proj-view-todo" style="display:none;height:100%;overflow-y:auto;"></div>
 
   </div>
 
