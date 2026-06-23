@@ -746,16 +746,22 @@ function _renderProjBeta(){
 }
 
 // ── To Do List ───────────────────────────────────────────────────────────────
-const _TODO_KEY = 'batimon_todo_tasks';
-const _TODO_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
+const _TODO_KEY       = 'batimon_todo_tasks';
+const _TODO_TYPES_KEY = 'batimon_todo_types';
+const _TODO_DEFAULT_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
 const _TODO_TYPE_COLORS = {
   'Engineering':'#3b82f6','Procurement':'#8b5cf6','Fabrication':'#f59e0b',
   'Delivery':'#10b981','Installation':'#0ea5e9','Defect':'#ef4444',
   'Payment':'#22c55e','Invoice':'#f97316','Management Approval':'#6366f1','Others':'#94a3b8'
 };
+const _TODO_PALETTE = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#0ea5e9','#ef4444','#22c55e','#f97316','#6366f1','#ec4899','#14b8a6','#f43f5e','#84cc16','#a855f7','#06b6d4'];
 
 function _todoLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_KEY)||'[]'); }catch(e){ return []; } }
 function _todoSave(tasks){ localStorage.setItem(_TODO_KEY, JSON.stringify(tasks)); }
+function _todoTypesLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_TYPES_KEY)||'[]'); }catch(e){ return []; } }
+function _todoTypesSave(t){ localStorage.setItem(_TODO_TYPES_KEY, JSON.stringify(t)); }
+function _todoGetAllTypes(){ return [..._TODO_DEFAULT_TYPES, ..._todoTypesLoad()]; }
+function _todoTypeColor(t){ return _TODO_TYPE_COLORS[t] || '#64748b'; }
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function _todoGetProjects(){
@@ -779,16 +785,19 @@ function _renderProjTodo(){
 
   const projects = _todoGetProjects();
   const filterProjOpts = `<option value="">All Projects</option>`+projects.map(p=>`<option value="${_escHtml(p.id)}">${_escHtml(p.name)}</option>`).join('');
-  const filterTypeOpts = `<option value="">All Types</option>`+_TODO_TYPES.map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+  const filterTypeOpts = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
 
   wrap.innerHTML=`
-    <div style="padding:18px 24px 14px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:12px;">
+    <div style="padding:18px 24px 14px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;">
       <span style="font-size:20px;">✅</span>
       <div style="flex:1;">
         <div style="font-size:15px;font-weight:700;color:var(--text);">To Do List</div>
         <div style="font-size:11px;color:var(--text3);margin-top:1px;">Track tasks and action items per project</div>
       </div>
       <span id="todo-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#e0eaf8;color:#224F93;"></span>
+      <button onclick="_todoOpenTypesModal()"
+        style="padding:8px 16px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
+        onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Type</button>
       <button onclick="_todoOpenModal()"
         style="padding:8px 18px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
         onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
@@ -818,7 +827,7 @@ function _todoOpenModal(){
 
   const projects = _todoGetProjects();
   const projOpts = projects.map(p=>`<option value="${_escHtml(p.id)}">${_escHtml(p.name)}</option>`).join('');
-  const typeOpts = _TODO_TYPES.map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+  const typeOpts = _todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
   const selStyle = `width:100%;padding:9px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;box-sizing:border-box;`;
   const inpStyle = `width:100%;padding:9px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;box-sizing:border-box;`;
   const lblStyle = `display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:6px;`;
@@ -857,15 +866,10 @@ function _todoOpenModal(){
             style="${inpStyle}resize:vertical;min-height:72px;"
             onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'"></textarea>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div>
             <label style="${lblStyle}">Assigned To</label>
             <input id="todo-f-assignee" type="text" maxlength="80" placeholder="Name…"
-              style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
-          </div>
-          <div>
-            <label style="${lblStyle}">Assign Date</label>
-            <input id="todo-f-date" type="date" value="${_todoToday()}"
               style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
           </div>
           <div>
@@ -887,6 +891,111 @@ function _todoOpenModal(){
     </div>`;
   document.body.appendChild(overlay);
   setTimeout(()=>document.getElementById('todo-f-project')?.focus(), 50);
+}
+
+function _todoOpenTypesModal(){
+  document.getElementById('todo-types-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'todo-types-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,20,40,0.45);z-index:99000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = e=>{ if(e.target===overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+  _todoRenderTypesModal();
+}
+
+function _todoRenderTypesModal(){
+  const overlay = document.getElementById('todo-types-overlay');
+  if(!overlay) return;
+  const defaults = _TODO_DEFAULT_TYPES;
+  const custom   = _todoTypesLoad();
+  const inpStyle = `flex:1;padding:8px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;`;
+  const lblStyle = `display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:6px;`;
+
+  const defaultRows = defaults.map(t=>{
+    const c = _todoTypeColor(t);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f4f9;">
+      <span style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0;display:inline-block;"></span>
+      <span style="font-size:13px;color:#1a2a3a;flex:1;">${_escHtml(t)}</span>
+      <span style="font-size:10px;font-weight:600;color:#b0bec5;background:#f0f4f9;padding:2px 8px;border-radius:20px;">Default</span>
+    </div>`;
+  }).join('');
+
+  const customRows = custom.length ? custom.map((t,i)=>{
+    const c = _todoTypeColor(t);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f4f9;">
+      <span style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0;display:inline-block;"></span>
+      <span style="font-size:13px;color:#1a2a3a;flex:1;">${_escHtml(t)}</span>
+      <button onclick="_todoDeleteType(${i})"
+        style="width:26px;height:26px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:14px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+        onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='transparent'">✕</button>
+    </div>`;
+  }).join('') : `<div style="font-size:12px;color:#b0bec5;padding:10px 0;">No custom types yet.</div>`;
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(10,20,40,0.22);overflow:hidden;">
+      <div style="padding:20px 24px 16px;border-bottom:1px solid #eaeef4;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:18px;">🏷️</span>
+        <span style="font-size:15px;font-weight:700;color:#1a2a3a;flex:1;">Task Types</span>
+        <button onclick="document.getElementById('todo-types-overlay').remove()"
+          style="width:30px;height:30px;border:none;background:#f0f4f9;border-radius:7px;font-size:16px;cursor:pointer;color:#8099b0;display:flex;align-items:center;justify-content:center;"
+          onmouseover="this.style.background='#e0eaf5'" onmouseout="this.style.background='#f0f4f9'">✕</button>
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:16px 24px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Default Types</div>
+        ${defaultRows}
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin:16px 0 8px;">Custom Types</div>
+        <div id="todo-custom-types-list">${customRows}</div>
+      </div>
+      <div style="padding:16px 24px 20px;border-top:1px solid #eaeef4;flex-shrink:0;">
+        <label style="${lblStyle}">Add New Type</label>
+        <div style="display:flex;gap:8px;">
+          <input id="todo-new-type-inp" type="text" maxlength="50" placeholder="Type name…"
+            style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'"
+            onkeydown="if(event.key==='Enter')_todoAddType()">
+          <button onclick="_todoAddType()"
+            style="padding:8px 18px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
+            onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">Add</button>
+        </div>
+        <div id="todo-type-err" style="display:none;font-size:11px;color:#c02020;margin-top:6px;"></div>
+      </div>
+    </div>`;
+}
+
+function _todoAddType(){
+  const inp = document.getElementById('todo-new-type-inp');
+  const name = (inp?.value||'').trim();
+  const errEl = document.getElementById('todo-type-err');
+  if(!name){ if(errEl){errEl.textContent='Please enter a type name.';errEl.style.display='block';} return; }
+  const all = _todoGetAllTypes();
+  if(all.some(t=>t.toLowerCase()===name.toLowerCase())){
+    if(errEl){errEl.textContent='This type already exists.';errEl.style.display='block';} return;
+  }
+  if(errEl) errEl.style.display='none';
+  const custom = _todoTypesLoad();
+  custom.push(name);
+  _todoTypesSave(custom);
+  if(inp) inp.value='';
+  _todoRenderTypesModal();
+  // Refresh the filter dropdown in the list view
+  const fltEl = document.getElementById('todo-flt-type');
+  if(fltEl){
+    const prev = fltEl.value;
+    fltEl.innerHTML = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+    fltEl.value = prev;
+  }
+}
+
+function _todoDeleteType(idx){
+  const custom = _todoTypesLoad();
+  custom.splice(idx,1);
+  _todoTypesSave(custom);
+  _todoRenderTypesModal();
+  const fltEl = document.getElementById('todo-flt-type');
+  if(fltEl){
+    const prev = fltEl.value;
+    fltEl.innerHTML = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+    if(_todoGetAllTypes().includes(prev)) fltEl.value = prev;
+  }
 }
 
 function _todoRenderList(){
@@ -917,7 +1026,7 @@ function _todoRenderList(){
 
   list.innerHTML = filtered.map(t=>{
     const projName = projMap[t.project] || t.project || '—';
-    const typeColor = _TODO_TYPE_COLORS[t.type] || '#94a3b8';
+    const typeColor = _todoTypeColor(t.type);
     const today = _todoToday();
     const isOverdue = !t.done && t.deadline && t.deadline < today;
     const deadlineTxt = t.deadline ? (isOverdue ? `<span style="color:#ef4444;font-weight:700;">⚠ ${t.deadline}</span>` : t.deadline) : '—';
@@ -957,7 +1066,7 @@ function _todoAdd(){
   const type     = (document.getElementById('todo-f-type')?.value||'').trim();
   const desc     = (document.getElementById('todo-f-desc')?.value||'').trim();
   const assignee = (document.getElementById('todo-f-assignee')?.value||'').trim();
-  const date     = document.getElementById('todo-f-date')?.value || _todoToday();
+  const date     = _todoToday();
   const deadline = document.getElementById('todo-f-deadline')?.value || '';
   const errEl    = document.getElementById('todo-f-err');
 
