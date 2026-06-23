@@ -1018,9 +1018,20 @@ function _todoRenderList(){
     const projName = projMap[t.project] || t.project || '—';
     const typeColor = _todoTypeColor(t.type);
     const today = _todoToday();
-    const isOverdue = !t.done && t.deadline && t.deadline < today;
+    const isOverdue  = !t.done && t.deadline && t.deadline < today;
+    const isDueToday = !t.done && t.deadline && t.deadline === today;
+    const rowBg     = t.done ? 'var(--surface2)' : isOverdue ? '#fff1f1' : isDueToday ? '#fff8ee' : '#fff';
+    const rowBorder = t.done ? 'var(--border)'   : isOverdue ? '#f5a5a5'  : isDueToday ? '#f9c76b'  : '#dde7f5';
+    const deadlineEl = isOverdue
+      ? `<input type="date" title="Set new deadline"
+           style="padding:2px 6px;border:1.5px solid #f5a5a5;border-radius:6px;font-family:'Barlow',sans-serif;font-size:11px;color:#c02020;background:#fff1f1;outline:none;cursor:pointer;width:118px;flex-shrink:0;"
+           onchange="_todoSetDeadline('${t.id}',this.value)"
+           onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#f5a5a5'">`
+      : t.deadline
+        ? `<span style="font-size:11px;color:${isDueToday?'#c47800':'var(--text3)'};font-weight:${isDueToday?'700':'400'};white-space:nowrap;flex-shrink:0;">⏱ ${_escHtml(t.deadline)}</span>`
+        : '';
     return `
-    <div style="background:${t.done?'var(--surface2)':'#fff'};border:1.5px solid ${isOverdue?'#fca5a5':t.done?'var(--border)':'#dde7f5'};border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:10px;transition:box-shadow 0.15s;"
+    <div style="background:${rowBg};border:1.5px solid ${rowBorder};border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:10px;transition:box-shadow 0.15s;"
       onmouseover="this.style.boxShadow='0 2px 8px rgba(34,79,147,0.08)'" onmouseout="this.style.boxShadow='none'">
       <div onclick="_todoToggle('${t.id}')"
         style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.done?'#1a9458':'#224F93'};background:${t.done?'#1a9458':'transparent'};flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;">
@@ -1031,10 +1042,10 @@ function _todoRenderList(){
       <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${typeColor}18;color:${typeColor};border:1px solid ${typeColor}40;white-space:nowrap;flex-shrink:0;">${_escHtml(t.type||'—')}</span>
       <span style="font-size:13px;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_escHtml(t.desc||'—')}</span>
       ${t.assignee?`<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">👤 ${_escHtml(t.assignee)}</span>`:''}
-      ${t.deadline?`<span style="font-size:11px;color:${isOverdue?'#ef4444':'var(--text3)'};font-weight:${isOverdue?'700':'400'};white-space:nowrap;flex-shrink:0;">${isOverdue?'⚠ ':'⏱ '}${_escHtml(t.deadline)}</span>`:''}
+      ${deadlineEl}
       <button onclick="_todoDelete('${t.id}')"
         style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:13px;display:flex;align-items:center;justify-content:center;border-radius:5px;flex-shrink:0;"
-        onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='transparent'">✕</button>
+        onmouseover="this.style.background='rgba(192,32,32,0.08)'" onmouseout="this.style.background='transparent'">✕</button>
     </div>`;
   }).join('');
 }
@@ -1075,6 +1086,13 @@ function _todoToggle(id){
 function _todoDelete(id){
   _todoSave(_todoLoad().filter(x=>x.id!==id));
   _todoRenderList();
+}
+
+function _todoSetDeadline(id, newDeadline){
+  if(!newDeadline) return;
+  const tasks = _todoLoad();
+  const t = tasks.find(x=>x.id===id);
+  if(t){ t.deadline = newDeadline; _todoSave(tasks); _todoRenderList(); }
 }
 
 function _todoClearDone(){
