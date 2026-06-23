@@ -748,6 +748,7 @@ function _renderProjBeta(){
 // ── To Do List ───────────────────────────────────────────────────────────────
 const _TODO_TYPES_KEY = 'batimon_todo_types';
 const _TODO_NAMES_KEY = 'batimon_todo_names';
+const _TODO_GRID      = '28px 90px 130px 118px 1fr 110px 118px 28px';
 const _TODO_DEFAULT_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
 const _TODO_TYPE_COLORS = {
   'Engineering':'#3b82f6','Procurement':'#8b5cf6','Fabrication':'#f59e0b',
@@ -835,52 +836,50 @@ function _renderProjTodo(){
     });
   }
 
+  const hBtn = `font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:none;background:transparent;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;`;
+  const hPanel = `display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;`;
+
   wrap.innerHTML=`
-    <div style="padding:18px 24px 14px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;">
+    <div style="padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="font-size:20px;">✅</span>
-      <div style="flex:1;">
+      <div style="flex:1;min-width:0;">
         <div style="font-size:15px;font-weight:700;color:var(--text);">To Do List</div>
         <div style="font-size:11px;color:var(--text3);margin-top:1px;">Track tasks and action items per project</div>
       </div>
-      <span id="todo-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#e0eaf8;color:#224F93;"></span>
-      <button onclick="_todoOpenNamesModal()"
-        style="padding:8px 16px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
-        onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Name</button>
-      <button onclick="_todoOpenTypesModal()"
-        style="padding:8px 16px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
-        onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Type</button>
-      <button onclick="_todoOpenModal()"
-        style="padding:8px 18px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
-        onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
-    </div>
-
-    <!-- Filters -->
-    <div style="padding:12px 24px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <div id="todo-flt-proj-wrap" style="position:relative;">
-        <button id="todo-flt-proj-btn" onclick="_todoFltOpen(event,'proj')"
-          style="padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);cursor:pointer;white-space:nowrap;">All Projects ▾</button>
-        <div id="todo-flt-proj-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
-      </div>
-      <div id="todo-flt-type-wrap" style="position:relative;">
-        <button id="todo-flt-type-btn" onclick="_todoFltOpen(event,'type')"
-          style="padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);cursor:pointer;white-space:nowrap;">All Types ▾</button>
-        <div id="todo-flt-type-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
-      </div>
-      <div id="todo-flt-name-wrap" style="position:relative;">
-        <button id="todo-flt-name-btn" onclick="_todoFltOpen(event,'name')"
-          style="padding:5px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;color:var(--text);background:var(--surface2);cursor:pointer;white-space:nowrap;">All Names ▾</button>
-        <div id="todo-flt-name-panel" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
-      </div>
-      <div style="width:1px;height:20px;background:var(--border);margin:0 2px;flex-shrink:0;"></div>
-      <div style="display:flex;gap:6px;">
+      <span id="todo-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#e0eaf8;color:#224F93;flex-shrink:0;"></span>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
         <button id="todo-filter-all"    onclick="_todoSetFilter('all')"    style="padding:4px 11px;border-radius:20px;border:1.5px solid #224F93;background:#224F93;color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">All</button>
         <button id="todo-filter-active" onclick="_todoSetFilter('active')" style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Active</button>
         <button id="todo-filter-done"   onclick="_todoSetFilter('done')"   style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Done</button>
       </div>
-      <div style="flex:1;"></div>
+      <div style="width:1px;height:20px;background:var(--border);flex-shrink:0;"></div>
+      <button onclick="_todoOpenNamesModal()" style="padding:7px 14px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Name</button>
+      <button onclick="_todoOpenTypesModal()" style="padding:7px 14px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Type</button>
+      <button onclick="_todoOpenModal()" style="padding:7px 16px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
     </div>
 
-    <div id="todo-list" style="padding:16px 24px 32px;display:flex;flex-direction:column;gap:10px;"></div>`;
+    <!-- Column headers with inline filter dropdowns -->
+    <div style="display:grid;grid-template-columns:${_TODO_GRID};gap:8px;padding:7px 16px;background:#f0f4fa;border-bottom:2px solid #dde7f5;position:sticky;top:0;z-index:10;align-items:center;">
+      <div></div>
+      <div style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;">Date</div>
+      <div id="todo-flt-proj-wrap" style="position:relative;">
+        <button id="todo-flt-proj-btn" onclick="_todoFltOpen(event,'proj')" style="${hBtn}color:#8099b0;">Project ▾</button>
+        <div id="todo-flt-proj-panel" style="${hPanel}"></div>
+      </div>
+      <div id="todo-flt-type-wrap" style="position:relative;">
+        <button id="todo-flt-type-btn" onclick="_todoFltOpen(event,'type')" style="${hBtn}color:#8099b0;">Type ▾</button>
+        <div id="todo-flt-type-panel" style="${hPanel}"></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;">Description</div>
+      <div id="todo-flt-name-wrap" style="position:relative;">
+        <button id="todo-flt-name-btn" onclick="_todoFltOpen(event,'name')" style="${hBtn}color:#8099b0;">Assigned To ▾</button>
+        <div id="todo-flt-name-panel" style="${hPanel}"></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;">Deadline</div>
+      <div></div>
+    </div>
+
+    <div id="todo-list" style="display:flex;flex-direction:column;padding-bottom:32px;"></div>`;
 
   _todoMigrateLocalStorage().then(()=>_todoRenderList());
 }
@@ -1155,18 +1154,15 @@ function _todoFltToggle(kind, val, checked){
 function _todoFltUpdateBtn(kind){
   const btn = document.getElementById('todo-flt-'+kind+'-btn');
   if(!btn) return;
-  const labels = {proj:'Projects',type:'Types',name:'Names'};
+  const labels = {proj:'Project',type:'Type',name:'Assigned To'};
   const key = kind==='proj'?'_todoFltProj':kind==='type'?'_todoFltType':'_todoFltName';
   const sel = window[key]||[];
-  const active = sel.length>0;
-  btn.style.borderColor = active?'#224F93':'var(--border)';
-  btn.style.background  = active?'#e8eef8':'var(--surface2)';
-  btn.style.color       = active?'#224F93':'var(--text)';
-  if(!sel.length){ btn.textContent='All '+labels[kind]+' ▾'; }
+  btn.style.color = sel.length ? '#224F93' : '#8099b0';
+  if(!sel.length){ btn.textContent=labels[kind]+' ▾'; }
   else if(sel.length===1){
     let name=sel[0];
     if(kind==='proj'){ const p=_todoGetProjects().find(x=>x.id===sel[0]); name=p?p.name:sel[0]; }
-    btn.textContent=name+' ▾';
+    btn.textContent=(name.length>14?name.slice(0,13)+'…':name)+' ▾';
   } else {
     btn.textContent=labels[kind]+' ('+sel.length+') ▾';
   }
@@ -1212,37 +1208,41 @@ async function _todoRenderList(){
   }
 
   list.innerHTML = filtered.map(t=>{
-    const projName = projMap[t.project] || t.project || '—';
+    const projName  = projMap[t.project] || t.project || '—';
     const typeColor = _todoTypeColor(t.type);
-    const today = _todoToday();
+    const today     = _todoToday();
     const isOverdue  = !t.done && t.deadline && t.deadline < today;
     const isDueToday = !t.done && t.deadline && t.deadline === today;
-    const rowBg     = t.done ? 'var(--surface2)' : isOverdue ? '#fff1f1' : isDueToday ? '#fff8ee' : '#fff';
-    const rowBorder = t.done ? 'var(--border)'   : isOverdue ? '#f5a5a5'  : isDueToday ? '#f9c76b'  : '#dde7f5';
+    const rowBg      = t.done ? 'var(--surface2)' : isOverdue ? '#fff1f1' : isDueToday ? '#fff8ee' : '#fff';
+    const rowBorderB = t.done ? 'var(--border)'   : isOverdue ? '#fca5a5' : isDueToday ? '#fcd34d' : '#eef1f8';
+    const hoverBg    = t.done ? '#eef0f4'         : isOverdue ? '#ffe8e8' : isDueToday ? '#fff3e0' : '#f4f7fd';
     const deadlineEl = isOverdue
       ? `<input type="date" title="Set new deadline"
-           style="padding:2px 6px;border:1.5px solid #f5a5a5;border-radius:6px;font-family:'Barlow',sans-serif;font-size:11px;color:#c02020;background:#fff1f1;outline:none;cursor:pointer;width:118px;flex-shrink:0;"
+           style="width:100%;box-sizing:border-box;padding:2px 5px;border:1.5px solid #fca5a5;border-radius:6px;font-family:'Barlow',sans-serif;font-size:11px;color:#c02020;background:#fff1f1;outline:none;cursor:pointer;"
            onchange="_todoSetDeadline('${t.id}',this.value)"
-           onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#f5a5a5'">`
+           onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#fca5a5'">`
       : t.deadline
-        ? `<span style="font-size:11px;color:${isDueToday?'#c47800':'var(--text3)'};font-weight:${isDueToday?'700':'400'};white-space:nowrap;flex-shrink:0;">⏱ ${_escHtml(t.deadline)}</span>`
-        : '';
+        ? `<span style="font-size:11px;color:${isDueToday?'#c47800':'var(--text3)'};font-weight:${isDueToday?'700':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${isDueToday?'⏱ ':''}${_escHtml(t.deadline)}</span>`
+        : `<span style="color:var(--text3);font-size:11px;">—</span>`;
+    const deleteBtn = (!t.createdBy||t.createdBy===_todoCurrentUser())
+      ? `<button onclick="_todoDelete('${t.id}')" title="Move to recycle bin"
+           style="width:22px;height:22px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:5px;"
+           onmouseover="this.style.background='rgba(192,32,32,0.08)'" onmouseout="this.style.background='transparent'">✕</button>`
+      : '';
     return `
-    <div style="background:${rowBg};border:1.5px solid ${rowBorder};border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:10px;transition:box-shadow 0.15s;"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(34,79,147,0.08)'" onmouseout="this.style.boxShadow='none'">
+    <div style="display:grid;grid-template-columns:${_TODO_GRID};gap:8px;padding:7px 16px;align-items:center;background:${rowBg};border-bottom:1px solid ${rowBorderB};transition:background 0.12s;"
+      onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='${rowBg}'">
       <div onclick="_todoToggle('${t.id}')"
-        style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.done?'#1a9458':'#224F93'};background:${t.done?'#1a9458':'transparent'};flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.done?'#1a9458':'#224F93'};background:${t.done?'#1a9458':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         ${t.done?'<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>':''}
       </div>
-      <span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">${_escHtml(t.date||'—')}</span>
-      <span style="font-size:11px;font-weight:600;color:#224F93;background:#e8eef8;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">${_escHtml(projName)}</span>
-      <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${typeColor}18;color:${typeColor};border:1px solid ${typeColor}40;white-space:nowrap;flex-shrink:0;">${_escHtml(t.type||'—')}</span>
-      <span style="font-size:13px;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_escHtml(t.desc||'—')}</span>
-      ${t.assignee?`<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">👤 ${_escHtml(t.assignee)}</span>`:''}
+      <span style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_escHtml(t.date||'—')}</span>
+      <span style="font-size:11px;font-weight:600;color:#224F93;background:#e8eef8;padding:2px 7px;border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${_escHtml(projName)}</span>
+      <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;background:${typeColor}18;color:${typeColor};border:1px solid ${typeColor}40;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">${_escHtml(t.type||'—')}</span>
+      <span style="font-size:13px;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_escHtml(t.desc||t.description||'—')}</span>
+      <span style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.assignee?_escHtml(t.assignee):'—'}</span>
       ${deadlineEl}
-      ${(!t.createdBy||t.createdBy===_todoCurrentUser())?`<button onclick="_todoDelete('${t.id}')"
-        style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:13px;display:flex;align-items:center;justify-content:center;border-radius:5px;flex-shrink:0;"
-        onmouseover="this.style.background='rgba(192,32,32,0.08)'" onmouseout="this.style.background='transparent'" title="Move to recycle bin">✕</button>`:'<div style="width:24px;flex-shrink:0;"></div>'}
+      ${deleteBtn}
     </div>`;
   }).join('');
 }
