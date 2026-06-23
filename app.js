@@ -1019,34 +1019,21 @@ function _todoRenderList(){
     const typeColor = _todoTypeColor(t.type);
     const today = _todoToday();
     const isOverdue = !t.done && t.deadline && t.deadline < today;
-    const deadlineTxt = t.deadline ? (isOverdue ? `<span style="color:#ef4444;font-weight:700;">⚠ ${t.deadline}</span>` : t.deadline) : '—';
     return `
-    <div style="background:${t.done?'var(--surface2)':'#fff'};border:1.5px solid ${isOverdue?'#fca5a5':t.done?'var(--border)':'#dde7f5'};border-radius:12px;padding:14px 16px;transition:box-shadow 0.15s;"
-      onmouseover="if(!this.querySelector('.todo-done-check').dataset.done||this.querySelector('.todo-done-check').dataset.done==='false')this.style.boxShadow='0 3px 12px rgba(34,79,147,0.1)'"
-      onmouseout="this.style.boxShadow='none'">
-      <div style="display:flex;align-items:flex-start;gap:12px;">
-        <div class="todo-done-check" data-done="${t.done}" onclick="_todoToggle('${t.id}')"
-          style="width:22px;height:22px;border-radius:50%;border:2.5px solid ${t.done?'#1a9458':'#224F93'};background:${t.done?'#1a9458':'transparent'};flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;">
-          ${t.done?'<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>':''}
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-            <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:${typeColor}18;color:${typeColor};border:1px solid ${typeColor}40;">${_escHtml(t.type||'—')}</span>
-            <span style="font-size:11px;font-weight:600;color:#224F93;background:#e8eef8;padding:2px 8px;border-radius:20px;">${_escHtml(projName)}</span>
-            ${isOverdue?'<span style="font-size:10px;font-weight:700;color:#ef4444;background:#fef2f2;padding:2px 8px;border-radius:20px;">OVERDUE</span>':''}
-          </div>
-          <div style="font-size:13px;font-weight:600;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};margin-bottom:${t.desc?'6px':'0'};word-break:break-word;">${_escHtml(t.desc||'—')}</div>
-          ${t.desc&&t.desc.length?'':''}
-          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;">
-            <span style="font-size:11px;color:var(--text3);">👤 ${_escHtml(t.assignee||'—')}</span>
-            <span style="font-size:11px;color:var(--text3);">📅 ${_escHtml(t.date||'—')}</span>
-            <span style="font-size:11px;color:var(--text3);">⏱ ${deadlineTxt}</span>
-          </div>
-        </div>
-        <button onclick="_todoDelete('${t.id}')"
-          style="width:28px;height:28px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:14px;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0;"
-          onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='transparent'">✕</button>
+    <div style="background:${t.done?'var(--surface2)':'#fff'};border:1.5px solid ${isOverdue?'#fca5a5':t.done?'var(--border)':'#dde7f5'};border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:10px;transition:box-shadow 0.15s;"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(34,79,147,0.08)'" onmouseout="this.style.boxShadow='none'">
+      <div onclick="_todoToggle('${t.id}')"
+        style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.done?'#1a9458':'#224F93'};background:${t.done?'#1a9458':'transparent'};flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        ${t.done?'<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>':''}
       </div>
+      <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${typeColor}18;color:${typeColor};border:1px solid ${typeColor}40;white-space:nowrap;flex-shrink:0;">${_escHtml(t.type||'—')}</span>
+      <span style="font-size:13px;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_escHtml(t.desc||'—')}</span>
+      <span style="font-size:11px;font-weight:600;color:#224F93;background:#e8eef8;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;">${_escHtml(projName)}</span>
+      ${t.assignee?`<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">👤 ${_escHtml(t.assignee)}</span>`:''}
+      ${t.deadline?`<span style="font-size:11px;color:${isOverdue?'#ef4444':'var(--text3)'};font-weight:${isOverdue?'700':'400'};white-space:nowrap;flex-shrink:0;">${isOverdue?'⚠ ':''}${_escHtml(t.deadline)}</span>`:''}
+      <button onclick="_todoDelete('${t.id}')"
+        style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:13px;display:flex;align-items:center;justify-content:center;border-radius:5px;flex-shrink:0;"
+        onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='transparent'">✕</button>
     </div>`;
   }).join('');
 }
