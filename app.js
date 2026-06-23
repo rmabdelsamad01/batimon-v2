@@ -747,6 +747,7 @@ function _renderProjBeta(){
 
 // ── To Do List ───────────────────────────────────────────────────────────────
 const _TODO_TYPES_KEY = 'batimon_todo_types';
+const _TODO_NAMES_KEY = 'batimon_todo_names';
 const _TODO_DEFAULT_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
 const _TODO_TYPE_COLORS = {
   'Engineering':'#3b82f6','Procurement':'#8b5cf6','Fabrication':'#f59e0b',
@@ -802,6 +803,8 @@ function _todoTypesLoad(){
 }
 function _todoTypesSave(t){ localStorage.setItem(_TODO_TYPES_KEY, JSON.stringify(t)); }
 function _todoGetAllTypes(){ return _todoTypesLoad(); }
+function _todoNamesLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_NAMES_KEY)||'[]'); }catch(e){ return []; } }
+function _todoNamesSave(n){ localStorage.setItem(_TODO_NAMES_KEY, JSON.stringify(n)); }
 function _todoTypeColor(t){ return _TODO_TYPE_COLORS[t] || '#64748b'; }
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -836,6 +839,9 @@ function _renderProjTodo(){
         <div style="font-size:11px;color:var(--text3);margin-top:1px;">Track tasks and action items per project</div>
       </div>
       <span id="todo-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#e0eaf8;color:#224F93;"></span>
+      <button onclick="_todoOpenNamesModal()"
+        style="padding:8px 16px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
+        onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Name</button>
       <button onclick="_todoOpenTypesModal()"
         style="padding:8px 16px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
         onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Type</button>
@@ -867,7 +873,8 @@ function _todoOpenModal(){
 
   const projects = _todoGetProjects();
   const projOpts = projects.map(p=>`<option value="${_escHtml(p.id)}">${_escHtml(p.name)}</option>`).join('');
-  const typeOpts = _todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+  const typeOpts  = _todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+  const nameOpts  = _todoNamesLoad().map(n=>`<option value="${_escHtml(n)}">${_escHtml(n)}</option>`).join('');
   const selStyle = `width:100%;padding:9px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;box-sizing:border-box;`;
   const inpStyle = `width:100%;padding:9px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;box-sizing:border-box;`;
   const lblStyle = `display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:6px;`;
@@ -909,8 +916,9 @@ function _todoOpenModal(){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
           <div>
             <label style="${lblStyle}">Assigned To</label>
-            <input id="todo-f-assignee" type="text" maxlength="80" placeholder="Name…"
-              style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
+            <select id="todo-f-assignee" style="${selStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
+              <option value="">— Select name —</option>${nameOpts}
+            </select>
           </div>
           <div>
             <label style="${lblStyle}">Deadline</label>
@@ -1009,6 +1017,80 @@ function _todoDeleteType(idx){
   _todoTypesSave(types);
   _todoRenderTypesModal();
   _todoRefreshTypeFilter();
+}
+
+function _todoOpenNamesModal(){
+  document.getElementById('todo-names-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'todo-names-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,20,40,0.45);z-index:99000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = e=>{ if(e.target===overlay) overlay.remove(); };
+  document.body.appendChild(overlay);
+  _todoRenderNamesModal();
+}
+
+function _todoRenderNamesModal(){
+  const overlay = document.getElementById('todo-names-overlay');
+  if(!overlay) return;
+  const names = _todoNamesLoad();
+  const inpStyle = `flex:1;padding:8px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;`;
+
+  const rows = names.length ? names.map((n,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0f4f9;">
+      <span style="width:10px;height:10px;border-radius:50%;background:#224F93;flex-shrink:0;display:inline-block;"></span>
+      <span style="font-size:13px;color:#1a2a3a;flex:1;">${_escHtml(n)}</span>
+      <button onclick="_todoDeleteName(${i})"
+        style="width:26px;height:26px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:14px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
+        onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='transparent'">✕</button>
+    </div>`).join('')
+  : `<div style="font-size:12px;color:#b0bec5;padding:10px 0;">No names yet. Add one below.</div>`;
+
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(10,20,40,0.22);overflow:hidden;">
+      <div style="padding:20px 24px 16px;border-bottom:1px solid #eaeef4;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span style="font-size:18px;">👤</span>
+        <span style="font-size:15px;font-weight:700;color:#1a2a3a;flex:1;">Team Names</span>
+        <button onclick="document.getElementById('todo-names-overlay').remove()"
+          style="width:30px;height:30px;border:none;background:#f0f4f9;border-radius:7px;font-size:16px;cursor:pointer;color:#8099b0;display:flex;align-items:center;justify-content:center;"
+          onmouseover="this.style.background='#e0eaf5'" onmouseout="this.style.background='#f0f4f9'">✕</button>
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:16px 24px;">${rows}</div>
+      <div style="padding:16px 24px 20px;border-top:1px solid #eaeef4;flex-shrink:0;">
+        <label style="display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:6px;">New Name</label>
+        <div style="display:flex;gap:8px;">
+          <input id="todo-new-name-inp" type="text" maxlength="80" placeholder="Full name…"
+            style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'"
+            onkeydown="if(event.key==='Enter')_todoAddName()">
+          <button onclick="_todoAddName()"
+            style="padding:8px 18px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
+            onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">Add</button>
+        </div>
+        <div id="todo-name-err" style="display:none;font-size:11px;color:#c02020;margin-top:6px;"></div>
+      </div>
+    </div>`;
+}
+
+function _todoAddName(){
+  const inp = document.getElementById('todo-new-name-inp');
+  const name = (inp?.value||'').trim();
+  const errEl = document.getElementById('todo-name-err');
+  if(!name){ if(errEl){errEl.textContent='Please enter a name.';errEl.style.display='block';} return; }
+  const names = _todoNamesLoad();
+  if(names.some(n=>n.toLowerCase()===name.toLowerCase())){
+    if(errEl){errEl.textContent='This name already exists.';errEl.style.display='block';} return;
+  }
+  if(errEl) errEl.style.display='none';
+  names.push(name);
+  _todoNamesSave(names);
+  if(inp) inp.value='';
+  _todoRenderNamesModal();
+}
+
+function _todoDeleteName(idx){
+  const names = _todoNamesLoad();
+  names.splice(idx,1);
+  _todoNamesSave(names);
+  _todoRenderNamesModal();
 }
 
 function _todoRefreshTypeFilter(){
