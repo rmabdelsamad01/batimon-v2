@@ -747,6 +747,7 @@ function _renderProjBeta(){
 
 // ── To Do List ───────────────────────────────────────────────────────────────
 const _TODO_KEY       = 'batimon_todo_tasks';
+const _TODO_BIN_KEY   = 'batimon_todo_bin';
 const _TODO_TYPES_KEY = 'batimon_todo_types';
 const _TODO_DEFAULT_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
 const _TODO_TYPE_COLORS = {
@@ -758,6 +759,15 @@ const _TODO_PALETTE = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#0ea5e9','#ef444
 
 function _todoLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_KEY)||'[]'); }catch(e){ return []; } }
 function _todoSave(tasks){ localStorage.setItem(_TODO_KEY, JSON.stringify(tasks)); }
+function _todoBinLoad(){
+  try{
+    const bin = JSON.parse(localStorage.getItem(_TODO_BIN_KEY)||'[]');
+    const cutoff = Date.now() - 30*24*60*60*1000;
+    return bin.filter(t=>t.deletedAt && t.deletedAt > cutoff);
+  }catch(e){ return []; }
+}
+function _todoBinSave(bin){ localStorage.setItem(_TODO_BIN_KEY, JSON.stringify(bin)); }
+function _todoCurrentUser(){ return (window.currentUser&&(window.currentUser.email||window.currentUser.full_name))||''; }
 function _todoTypesLoad(){
   const raw = localStorage.getItem(_TODO_TYPES_KEY);
   try{
@@ -822,7 +832,6 @@ function _renderProjTodo(){
         <button id="todo-filter-done"   onclick="_todoSetFilter('done')"   style="padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Done</button>
       </div>
       <div style="flex:1;"></div>
-      <button onclick="_todoClearDone()" style="padding:4px 11px;border-radius:20px;border:1.5px solid #f5c6c6;background:#fef2f2;color:#c02020;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;" onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='#fef2f2'">Clear Done</button>
     </div>
 
     <div id="todo-list" style="padding:16px 24px 32px;display:flex;flex-direction:column;gap:10px;"></div>`;
@@ -1043,9 +1052,9 @@ function _todoRenderList(){
       <span style="font-size:13px;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_escHtml(t.desc||'—')}</span>
       ${t.assignee?`<span style="font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;">👤 ${_escHtml(t.assignee)}</span>`:''}
       ${deadlineEl}
-      <button onclick="_todoDelete('${t.id}')"
+      ${(!t.createdBy||t.createdBy===_todoCurrentUser())?`<button onclick="_todoDelete('${t.id}')"
         style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:13px;display:flex;align-items:center;justify-content:center;border-radius:5px;flex-shrink:0;"
-        onmouseover="this.style.background='rgba(192,32,32,0.08)'" onmouseout="this.style.background='transparent'">✕</button>
+        onmouseover="this.style.background='rgba(192,32,32,0.08)'" onmouseout="this.style.background='transparent'" title="Move to recycle bin">✕</button>`:'<div style="width:24px;flex-shrink:0;"></div>'}
     </div>`;
   }).join('');
 }
@@ -1067,7 +1076,8 @@ function _todoAdd(){
   const tasks = _todoLoad();
   tasks.unshift({
     id: Date.now().toString(36)+Math.random().toString(36).slice(2),
-    project, type, desc, assignee, date, deadline, done: false, created: Date.now()
+    project, type, desc, assignee, date, deadline, done: false, created: Date.now(),
+    createdBy: _todoCurrentUser()
   });
   _todoSave(tasks);
 
@@ -1084,7 +1094,16 @@ function _todoToggle(id){
 }
 
 function _todoDelete(id){
-  _todoSave(_todoLoad().filter(x=>x.id!==id));
+  const tasks = _todoLoad();
+  const idx = tasks.findIndex(x=>x.id===id);
+  if(idx===-1) return;
+  const [removed] = tasks.splice(idx,1);
+  removed.deletedAt = Date.now();
+  removed.deletedBy = _todoCurrentUser();
+  const bin = _todoBinLoad();
+  bin.push(removed);
+  _todoBinSave(bin);
+  _todoSave(tasks);
   _todoRenderList();
 }
 
@@ -1095,11 +1114,6 @@ function _todoSetDeadline(id, newDeadline){
   if(t){ t.deadline = newDeadline; _todoSave(tasks); _todoRenderList(); }
 }
 
-function _todoClearDone(){
-  if(!confirm('Remove all completed tasks?')) return;
-  _todoSave(_todoLoad().filter(x=>!x.done));
-  _todoRenderList();
-}
 
 function _todoSetFilter(f){
   window._todoFilter = f;
