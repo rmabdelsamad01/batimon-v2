@@ -756,6 +756,33 @@ const _TODO_TYPE_COLORS = {
 const _TODO_PALETTE = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#0ea5e9','#ef4444','#22c55e','#f97316','#6366f1','#ec4899','#14b8a6','#f43f5e','#84cc16','#a855f7','#06b6d4'];
 
 function _todoCurrentUser(){ return (window.currentUser&&(window.currentUser.email||window.currentUser.full_name))||''; }
+
+async function _todoMigrateLocalStorage(){
+  const MIGRATED_KEY = 'batimon_todo_migrated_v1';
+  if(localStorage.getItem(MIGRATED_KEY)) return;
+  let old = [];
+  try{ old = JSON.parse(localStorage.getItem('batimon_todo_tasks')||'[]'); }catch(e){}
+  if(!old.length){ localStorage.setItem(MIGRATED_KEY,'1'); return; }
+  const rows = old.map(t=>({
+    id: t.id,
+    project: t.project||'',
+    type: t.type||'',
+    description: t.desc||t.description||'',
+    assignee: t.assignee||null,
+    date: t.date||_todoToday(),
+    deadline: t.deadline||null,
+    done: !!t.done,
+    created: t.created||Date.now(),
+    created_by: t.createdBy||t.created_by||null,
+    deleted_at: null,
+    deleted_by: null
+  })).filter(t=>t.project&&t.type&&t.description);
+  if(rows.length){
+    try{ await sb.from('todo_tasks').upsert(rows,{onConflict:'id'}); }catch(e){ return; }
+  }
+  localStorage.setItem(MIGRATED_KEY,'1');
+}
+
 async function _todoFetch(){
   try{
     const {data,error} = await sb.from('todo_tasks').select('*').is('deleted_at',null).order('created',{ascending:false});
@@ -831,7 +858,7 @@ function _renderProjTodo(){
 
     <div id="todo-list" style="padding:16px 24px 32px;display:flex;flex-direction:column;gap:10px;"></div>`;
 
-  _todoRenderList();
+  _todoMigrateLocalStorage().then(()=>_todoRenderList());
 }
 
 function _todoOpenModal(){
