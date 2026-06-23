@@ -778,14 +778,8 @@ function _renderProjTodo(){
   if(!window._todoFilterType) window._todoFilterType = '';
 
   const projects = _todoGetProjects();
-  const projOpts = projects.map(p=>`<option value="${_escHtml(p.id)}">${_escHtml(p.name)}</option>`).join('');
-  const typeOpts = _TODO_TYPES.map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
   const filterProjOpts = `<option value="">All Projects</option>`+projects.map(p=>`<option value="${_escHtml(p.id)}">${_escHtml(p.name)}</option>`).join('');
   const filterTypeOpts = `<option value="">All Types</option>`+_TODO_TYPES.map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
-
-  const selStyle = `width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;color:var(--text);background:var(--surface2);outline:none;`;
-  const inpStyle = `width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;color:var(--text);background:var(--surface2);outline:none;box-sizing:border-box;`;
-  const lblStyle = `display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;`;
 
   wrap.innerHTML=`
     <div style="padding:18px 24px 14px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:12px;">
@@ -795,57 +789,9 @@ function _renderProjTodo(){
         <div style="font-size:11px;color:var(--text3);margin-top:1px;">Track tasks and action items per project</div>
       </div>
       <span id="todo-count-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#e0eaf8;color:#224F93;"></span>
-    </div>
-
-    <!-- Add Task Form -->
-    <div id="todo-form-wrap" style="padding:18px 24px;border-bottom:1px solid var(--border);background:#f8fafd;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;" onclick="_todoToggleForm()">
-        <span id="todo-form-arrow" style="font-size:11px;color:#224F93;transition:transform 0.2s;">▼</span>
-        <span style="font-size:12px;font-weight:700;color:#224F93;letter-spacing:0.04em;">NEW TASK</span>
-      </div>
-      <div id="todo-form-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-          <div>
-            <label style="${lblStyle}">Project</label>
-            <select id="todo-f-project" style="${selStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'">
-              <option value="">— Select project —</option>${projOpts}
-            </select>
-          </div>
-          <div>
-            <label style="${lblStyle}">Type</label>
-            <select id="todo-f-type" style="${selStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'">
-              <option value="">— Select type —</option>${typeOpts}
-            </select>
-          </div>
-        </div>
-        <div style="margin-bottom:12px;">
-          <label style="${lblStyle}">Description</label>
-          <textarea id="todo-f-desc" maxlength="1000" rows="2" placeholder="Describe the task…"
-            style="${inpStyle}resize:vertical;min-height:56px;"
-            onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'"></textarea>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
-          <div>
-            <label style="${lblStyle}">Assigned To</label>
-            <input id="todo-f-assignee" type="text" maxlength="80" placeholder="Name…"
-              style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'">
-          </div>
-          <div>
-            <label style="${lblStyle}">Assign Date</label>
-            <input id="todo-f-date" type="date" style="${inpStyle}" value="${_todoToday()}"
-              onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'">
-          </div>
-          <div>
-            <label style="${lblStyle}">Deadline</label>
-            <input id="todo-f-deadline" type="date" style="${inpStyle}"
-              onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'">
-          </div>
-        </div>
-        <div id="todo-f-err" style="display:none;font-size:11px;color:#c02020;margin-bottom:10px;"></div>
-        <button onclick="_todoAdd()"
-          style="padding:9px 22px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;"
-          onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
-      </div>
+      <button onclick="_todoOpenModal()"
+        style="padding:8px 18px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;"
+        onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
     </div>
 
     <!-- Filters -->
@@ -863,16 +809,84 @@ function _renderProjTodo(){
 
     <div id="todo-list" style="padding:16px 24px 32px;display:flex;flex-direction:column;gap:10px;"></div>`;
 
-  window._todoFormOpen = true;
   _todoRenderList();
 }
 
-function _todoToggleForm(){
-  window._todoFormOpen = !window._todoFormOpen;
-  const body = document.getElementById('todo-form-body');
-  const arrow = document.getElementById('todo-form-arrow');
-  if(body) body.style.display = window._todoFormOpen ? 'block' : 'none';
-  if(arrow) arrow.style.transform = window._todoFormOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
+function _todoOpenModal(){
+  const existing = document.getElementById('todo-modal-overlay');
+  if(existing) existing.remove();
+
+  const projects = _todoGetProjects();
+  const projOpts = projects.map(p=>`<option value="${_escHtml(p.id)}">${_escHtml(p.name)}</option>`).join('');
+  const typeOpts = _TODO_TYPES.map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+  const selStyle = `width:100%;padding:9px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;box-sizing:border-box;`;
+  const inpStyle = `width:100%;padding:9px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;box-sizing:border-box;`;
+  const lblStyle = `display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:6px;`;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'todo-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,20,40,0.45);z-index:99000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.onclick = e=>{ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:560px;box-shadow:0 24px 64px rgba(10,20,40,0.22);overflow:hidden;">
+      <div style="padding:20px 24px 16px;border-bottom:1px solid #eaeef4;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;">✅</span>
+        <span style="font-size:15px;font-weight:700;color:#1a2a3a;flex:1;">New Task</span>
+        <button onclick="document.getElementById('todo-modal-overlay').remove()"
+          style="width:30px;height:30px;border:none;background:#f0f4f9;border-radius:7px;font-size:16px;cursor:pointer;color:#8099b0;display:flex;align-items:center;justify-content:center;"
+          onmouseover="this.style.background='#e0eaf5'" onmouseout="this.style.background='#f0f4f9'">✕</button>
+      </div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div>
+            <label style="${lblStyle}">Project</label>
+            <select id="todo-f-project" style="${selStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
+              <option value="">— Select project —</option>${projOpts}
+            </select>
+          </div>
+          <div>
+            <label style="${lblStyle}">Type</label>
+            <select id="todo-f-type" style="${selStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
+              <option value="">— Select type —</option>${typeOpts}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label style="${lblStyle}">Description</label>
+          <textarea id="todo-f-desc" maxlength="1000" rows="3" placeholder="Describe the task…"
+            style="${inpStyle}resize:vertical;min-height:72px;"
+            onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+          <div>
+            <label style="${lblStyle}">Assigned To</label>
+            <input id="todo-f-assignee" type="text" maxlength="80" placeholder="Name…"
+              style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
+          </div>
+          <div>
+            <label style="${lblStyle}">Assign Date</label>
+            <input id="todo-f-date" type="date" value="${_todoToday()}"
+              style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
+          </div>
+          <div>
+            <label style="${lblStyle}">Deadline</label>
+            <input id="todo-f-deadline" type="date"
+              style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'">
+          </div>
+        </div>
+        <div id="todo-f-err" style="display:none;font-size:12px;color:#c02020;background:#fdecea;border:1px solid #f5c6c6;border-radius:7px;padding:8px 12px;"></div>
+      </div>
+      <div style="padding:14px 24px 20px;display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('todo-modal-overlay').remove()"
+          style="padding:9px 20px;border:1.5px solid #dde3ee;background:#f8fafd;color:#8099b0;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer;"
+          onmouseover="this.style.background='#e0eaf5'" onmouseout="this.style.background='#f8fafd'">Cancel</button>
+        <button onclick="_todoAdd()"
+          style="padding:9px 24px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;cursor:pointer;"
+          onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('todo-f-project')?.focus(), 50);
 }
 
 function _todoRenderList(){
@@ -959,12 +973,7 @@ function _todoAdd(){
   });
   _todoSave(tasks);
 
-  document.getElementById('todo-f-project').value = '';
-  document.getElementById('todo-f-type').value = '';
-  document.getElementById('todo-f-desc').value = '';
-  document.getElementById('todo-f-assignee').value = '';
-  document.getElementById('todo-f-date').value = _todoToday();
-  document.getElementById('todo-f-deadline').value = '';
+  document.getElementById('todo-modal-overlay')?.remove();
   _todoRenderList();
 }
 
