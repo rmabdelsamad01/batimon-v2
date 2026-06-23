@@ -760,8 +760,13 @@ function _todoLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_KEY)||'[
 function _todoSave(tasks){ localStorage.setItem(_TODO_KEY, JSON.stringify(tasks)); }
 function _todoTypesLoad(){
   const raw = localStorage.getItem(_TODO_TYPES_KEY);
-  if(raw === null){ localStorage.setItem(_TODO_TYPES_KEY, JSON.stringify(_TODO_DEFAULT_TYPES)); return [..._TODO_DEFAULT_TYPES]; }
-  try{ return JSON.parse(raw); }catch(e){ return [..._TODO_DEFAULT_TYPES]; }
+  try{
+    const parsed = raw !== null ? JSON.parse(raw) : null;
+    if(Array.isArray(parsed) && parsed.length > 0) return parsed;
+  }catch(e){}
+  const seeded = [..._TODO_DEFAULT_TYPES];
+  localStorage.setItem(_TODO_TYPES_KEY, JSON.stringify(seeded));
+  return seeded;
 }
 function _todoTypesSave(t){ localStorage.setItem(_TODO_TYPES_KEY, JSON.stringify(t)); }
 function _todoGetAllTypes(){ return _todoTypesLoad(); }
