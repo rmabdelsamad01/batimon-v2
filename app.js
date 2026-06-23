@@ -758,9 +758,13 @@ const _TODO_PALETTE = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#0ea5e9','#ef444
 
 function _todoLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_KEY)||'[]'); }catch(e){ return []; } }
 function _todoSave(tasks){ localStorage.setItem(_TODO_KEY, JSON.stringify(tasks)); }
-function _todoTypesLoad(){ try{ return JSON.parse(localStorage.getItem(_TODO_TYPES_KEY)||'[]'); }catch(e){ return []; } }
+function _todoTypesLoad(){
+  const raw = localStorage.getItem(_TODO_TYPES_KEY);
+  if(raw === null){ localStorage.setItem(_TODO_TYPES_KEY, JSON.stringify(_TODO_DEFAULT_TYPES)); return [..._TODO_DEFAULT_TYPES]; }
+  try{ return JSON.parse(raw); }catch(e){ return [..._TODO_DEFAULT_TYPES]; }
+}
 function _todoTypesSave(t){ localStorage.setItem(_TODO_TYPES_KEY, JSON.stringify(t)); }
-function _todoGetAllTypes(){ return [..._TODO_DEFAULT_TYPES, ..._todoTypesLoad()]; }
+function _todoGetAllTypes(){ return _todoTypesLoad(); }
 function _todoTypeColor(t){ return _TODO_TYPE_COLORS[t] || '#64748b'; }
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -906,33 +910,23 @@ function _todoOpenTypesModal(){
 function _todoRenderTypesModal(){
   const overlay = document.getElementById('todo-types-overlay');
   if(!overlay) return;
-  const defaults = _TODO_DEFAULT_TYPES;
-  const custom   = _todoTypesLoad();
+  const types = _todoTypesLoad();
   const inpStyle = `flex:1;padding:8px 11px;border:1.5px solid #dde3ee;border-radius:8px;font-family:'Barlow',sans-serif;font-size:13px;color:#1a2a3a;background:#f8fafd;outline:none;`;
   const lblStyle = `display:block;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:6px;`;
 
-  const defaultRows = defaults.map(t=>{
+  const rows = types.length ? types.map((t,i)=>{
     const c = _todoTypeColor(t);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f4f9;">
-      <span style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0;display:inline-block;"></span>
-      <span style="font-size:13px;color:#1a2a3a;flex:1;">${_escHtml(t)}</span>
-      <span style="font-size:10px;font-weight:600;color:#b0bec5;background:#f0f4f9;padding:2px 8px;border-radius:20px;">Default</span>
-    </div>`;
-  }).join('');
-
-  const customRows = custom.length ? custom.map((t,i)=>{
-    const c = _todoTypeColor(t);
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f4f9;">
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0f4f9;">
       <span style="width:10px;height:10px;border-radius:50%;background:${c};flex-shrink:0;display:inline-block;"></span>
       <span style="font-size:13px;color:#1a2a3a;flex:1;">${_escHtml(t)}</span>
       <button onclick="_todoDeleteType(${i})"
         style="width:26px;height:26px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:14px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"
         onmouseover="this.style.background='#fdecea'" onmouseout="this.style.background='transparent'">✕</button>
     </div>`;
-  }).join('') : `<div style="font-size:12px;color:#b0bec5;padding:10px 0;">No custom types yet.</div>`;
+  }).join('') : `<div style="font-size:12px;color:#b0bec5;padding:10px 0;">No types yet. Add one below.</div>`;
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(10,20,40,0.22);overflow:hidden;">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(10,20,40,0.22);overflow:hidden;">
       <div style="padding:20px 24px 16px;border-bottom:1px solid #eaeef4;display:flex;align-items:center;gap:10px;flex-shrink:0;">
         <span style="font-size:18px;">🏷️</span>
         <span style="font-size:15px;font-weight:700;color:#1a2a3a;flex:1;">Task Types</span>
@@ -940,14 +934,9 @@ function _todoRenderTypesModal(){
           style="width:30px;height:30px;border:none;background:#f0f4f9;border-radius:7px;font-size:16px;cursor:pointer;color:#8099b0;display:flex;align-items:center;justify-content:center;"
           onmouseover="this.style.background='#e0eaf5'" onmouseout="this.style.background='#f0f4f9'">✕</button>
       </div>
-      <div style="overflow-y:auto;flex:1;padding:16px 24px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Default Types</div>
-        ${defaultRows}
-        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin:16px 0 8px;">Custom Types</div>
-        <div id="todo-custom-types-list">${customRows}</div>
-      </div>
+      <div style="overflow-y:auto;flex:1;padding:16px 24px;">${rows}</div>
       <div style="padding:16px 24px 20px;border-top:1px solid #eaeef4;flex-shrink:0;">
-        <label style="${lblStyle}">Add New Type</label>
+        <label style="${lblStyle}">New Type</label>
         <div style="display:flex;gap:8px;">
           <input id="todo-new-type-inp" type="text" maxlength="50" placeholder="Type name…"
             style="${inpStyle}" onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='#dde3ee'"
@@ -966,36 +955,32 @@ function _todoAddType(){
   const name = (inp?.value||'').trim();
   const errEl = document.getElementById('todo-type-err');
   if(!name){ if(errEl){errEl.textContent='Please enter a type name.';errEl.style.display='block';} return; }
-  const all = _todoGetAllTypes();
-  if(all.some(t=>t.toLowerCase()===name.toLowerCase())){
+  const types = _todoTypesLoad();
+  if(types.some(t=>t.toLowerCase()===name.toLowerCase())){
     if(errEl){errEl.textContent='This type already exists.';errEl.style.display='block';} return;
   }
   if(errEl) errEl.style.display='none';
-  const custom = _todoTypesLoad();
-  custom.push(name);
-  _todoTypesSave(custom);
+  types.push(name);
+  _todoTypesSave(types);
   if(inp) inp.value='';
   _todoRenderTypesModal();
-  // Refresh the filter dropdown in the list view
-  const fltEl = document.getElementById('todo-flt-type');
-  if(fltEl){
-    const prev = fltEl.value;
-    fltEl.innerHTML = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
-    fltEl.value = prev;
-  }
+  _todoRefreshTypeFilter();
 }
 
 function _todoDeleteType(idx){
-  const custom = _todoTypesLoad();
-  custom.splice(idx,1);
-  _todoTypesSave(custom);
+  const types = _todoTypesLoad();
+  types.splice(idx,1);
+  _todoTypesSave(types);
   _todoRenderTypesModal();
+  _todoRefreshTypeFilter();
+}
+
+function _todoRefreshTypeFilter(){
   const fltEl = document.getElementById('todo-flt-type');
-  if(fltEl){
-    const prev = fltEl.value;
-    fltEl.innerHTML = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
-    if(_todoGetAllTypes().includes(prev)) fltEl.value = prev;
-  }
+  if(!fltEl) return;
+  const prev = fltEl.value;
+  fltEl.innerHTML = `<option value="">All Types</option>`+_todoGetAllTypes().map(t=>`<option value="${_escHtml(t)}">${_escHtml(t)}</option>`).join('');
+  if(_todoGetAllTypes().includes(prev)) fltEl.value = prev;
 }
 
 function _todoRenderList(){
