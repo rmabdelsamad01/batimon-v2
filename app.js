@@ -1013,7 +1013,6 @@ async function _todoRenderList(){
   if(fp) filtered = filtered.filter(t=>t.project===fp);
   if(ft) filtered = filtered.filter(t=>t.type===ft);
 
-  const list = document.getElementById('todo-list');
   const badge = document.getElementById('todo-count-badge');
   const remaining = tasks.filter(t=>!t.done).length;
   if(badge) badge.textContent = remaining + ' task' + (remaining===1?'':'s') + ' pending';
