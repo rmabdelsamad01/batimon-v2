@@ -775,7 +775,7 @@ function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 function _todoGetProjects(){
   const list = [];
-  Object.entries(window.PROJECT_META||{}).forEach(([id,m])=>{ if(m.active) list.push({id, name:m.name}); });
+  try{ Object.entries(PROJECT_META||{}).forEach(([id,m])=>{ if(m.active) list.push({id, name:m.name}); }); }catch(e){}
   (typeof getCustomProjects==='function' ? getCustomProjects() : []).forEach(p=>{ list.push({id:p.id, name:p.name}); });
   return list;
 }
