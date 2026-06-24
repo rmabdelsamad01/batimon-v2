@@ -824,10 +824,12 @@ function _todoToday(){
 function _renderProjTodo(){
   const wrap = document.getElementById('proj-view-todo');
   if(!wrap) return;
-  if(!window._todoFilter)   window._todoFilter   = 'all';
-  if(!window._todoFltProj)  window._todoFltProj  = [];
-  if(!window._todoFltType)  window._todoFltType  = [];
-  if(!window._todoFltName)  window._todoFltName  = [];
+  if(!window._todoFilter)              window._todoFilter   = 'all';
+  if(!window._todoFltProj)             window._todoFltProj  = [];
+  if(!window._todoFltType)             window._todoFltType  = [];
+  if(!window._todoFltName)             window._todoFltName  = [];
+  if(window._todoSortCol === undefined) window._todoSortCol = null;
+  if(window._todoSortDir === undefined) window._todoSortDir = 'asc';
   if(!window._todoFltClickSetup){
     window._todoFltClickSetup = true;
     document.addEventListener('click', e=>{
@@ -836,8 +838,10 @@ function _renderProjTodo(){
     });
   }
 
-  const hBtn = `font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:none;background:transparent;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;`;
-  const hPanel = `display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:180px;max-height:220px;overflow-y:auto;padding:4px 0;`;
+  const hBtn   = `font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:none;background:transparent;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;`;
+  const hPanel = `display:none;position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid #dde7f5;border-radius:10px;box-shadow:0 8px 24px rgba(34,79,147,0.13);z-index:9999;min-width:190px;max-height:230px;overflow-y:auto;padding:4px 0;`;
+  const hLbl   = t => `<span style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">${t}</span>`;
+  const si     = c => `<button onclick="event.stopPropagation();_todoSort('${c}')" id="todo-si-${c}" title="Sort" style="font-size:11px;border:none;background:transparent;cursor:pointer;padding:0 1px;color:#bac4d6;line-height:1;flex-shrink:0;font-family:inherit;">↕</button>`;
 
   wrap.innerHTML=`
     <div style="padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -858,30 +862,34 @@ function _renderProjTodo(){
       <button onclick="_todoOpenModal()" style="padding:7px 16px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">+ Add Task</button>
     </div>
 
-    <!-- Column headers with inline filter dropdowns -->
+    <!-- Column headers -->
     <div style="display:grid;grid-template-columns:${_TODO_GRID};gap:8px;padding:7px 16px;background:#f0f4fa;border-bottom:2px solid #dde7f5;position:sticky;top:0;z-index:10;align-items:center;">
       <div></div>
-      <div style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;">Date</div>
-      <div id="todo-flt-proj-wrap" style="position:relative;">
+      <div style="display:flex;align-items:center;gap:3px;">${hLbl('Date')}${si('date')}</div>
+      <div id="todo-flt-proj-wrap" style="position:relative;display:flex;align-items:center;gap:3px;">
         <button id="todo-flt-proj-btn" onclick="_todoFltOpen(event,'proj')" style="${hBtn}color:#8099b0;">Project ▾</button>
+        ${si('project')}
         <div id="todo-flt-proj-panel" style="${hPanel}"></div>
       </div>
-      <div id="todo-flt-type-wrap" style="position:relative;">
+      <div id="todo-flt-type-wrap" style="position:relative;display:flex;align-items:center;gap:3px;">
         <button id="todo-flt-type-btn" onclick="_todoFltOpen(event,'type')" style="${hBtn}color:#8099b0;">Type ▾</button>
+        ${si('type')}
         <div id="todo-flt-type-panel" style="${hPanel}"></div>
       </div>
-      <div style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;">Description</div>
-      <div id="todo-flt-name-wrap" style="position:relative;">
+      <div style="display:flex;align-items:center;gap:3px;">${hLbl('Description')}${si('desc')}</div>
+      <div id="todo-flt-name-wrap" style="position:relative;display:flex;align-items:center;gap:3px;">
         <button id="todo-flt-name-btn" onclick="_todoFltOpen(event,'name')" style="${hBtn}color:#8099b0;">Assigned To ▾</button>
+        ${si('assignee')}
         <div id="todo-flt-name-panel" style="${hPanel}"></div>
       </div>
-      <div style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.06em;">Deadline</div>
+      <div style="display:flex;align-items:center;gap:3px;">${hLbl('Deadline')}${si('deadline')}</div>
       <div></div>
     </div>
 
     <div id="todo-list" style="display:flex;flex-direction:column;padding-bottom:32px;"></div>`;
 
   _todoMigrateLocalStorage().then(()=>_todoRenderList());
+  _todoUpdateSortIcons();
 }
 
 function _todoOpenModal(){
@@ -1130,7 +1138,9 @@ function _todoFltPopulate(kind){
   else if(kind==='type'){ items=_todoGetAllTypes().map(t=>({val:t,label:t})); sel=window._todoFltType||[]; }
   else { items=_todoNamesLoad().map(n=>({val:n,label:n})); sel=window._todoFltName||[]; }
   if(!items.length){ panel.innerHTML=`<div style="padding:10px 14px;font-size:11px;color:#94a3b8;">Nothing to filter</div>`; return; }
-  panel.innerHTML = items.map(({val,label})=>{
+  const allChked  = items.length>0 && items.every(({val})=>sel.includes(val));
+  const someChked = !allChked && items.some(({val})=>sel.includes(val));
+  const rowHtml = items.map(({val,label})=>{
     const chk = sel.includes(val);
     return `<label style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:12px;color:#1a2a3a;white-space:nowrap;user-select:none;"
       onmouseover="this.style.background='#f0f5fb'" onmouseout="this.style.background='transparent'">
@@ -1139,6 +1149,14 @@ function _todoFltPopulate(kind){
       <span>${_escHtml(label)}</span>
     </label>`;
   }).join('');
+  panel.innerHTML = `<label id="todo-flt-${kind}-all-lbl" style="display:flex;align-items:center;gap:8px;padding:7px 14px 7px;cursor:pointer;font-size:12px;color:#1a2a3a;white-space:nowrap;user-select:none;border-bottom:1px solid #eef1f8;font-weight:700;"
+    onmouseover="this.style.background='#f0f5fb'" onmouseout="this.style.background='transparent'">
+    <input type="checkbox" id="todo-flt-${kind}-all-chk" ${allChked?'checked':''} onclick="event.stopPropagation()" onchange="_todoFltSelectAll('${kind}',this.checked)"
+      style="accent-color:#224F93;width:13px;height:13px;flex-shrink:0;cursor:pointer;">
+    <span>Select All</span>
+  </label>${rowHtml}`;
+  const allChkEl = document.getElementById('todo-flt-'+kind+'-all-chk');
+  if(allChkEl) allChkEl.indeterminate = someChked;
 }
 
 function _todoFltToggle(kind, val, checked){
@@ -1174,6 +1192,40 @@ function _todoRefreshTypeFilter(){
   _todoFltUpdateBtn('type');
 }
 
+function _todoFltSelectAll(kind, checked){
+  const key = kind==='proj'?'_todoFltProj':kind==='type'?'_todoFltType':'_todoFltName';
+  let all = [];
+  if(kind==='proj')      all = _todoGetProjects().map(p=>p.id);
+  else if(kind==='type') all = _todoGetAllTypes();
+  else                   all = _todoNamesLoad();
+  window[key] = checked ? [...all] : [];
+  _todoFltUpdateBtn(kind);
+  _todoFltPopulate(kind);
+  _todoRenderList();
+}
+
+function _todoSort(col){
+  if(window._todoSortCol===col){
+    if(window._todoSortDir==='asc') window._todoSortDir='desc';
+    else { window._todoSortCol=null; window._todoSortDir='asc'; }
+  } else {
+    window._todoSortCol=col;
+    window._todoSortDir='asc';
+  }
+  _todoRenderList();
+}
+
+function _todoUpdateSortIcons(){
+  const sc = window._todoSortCol;
+  const sd = window._todoSortDir||'asc';
+  ['date','project','type','desc','assignee','deadline'].forEach(c=>{
+    const el = document.getElementById('todo-si-'+c);
+    if(!el) return;
+    if(c===sc){ el.textContent=sd==='asc'?'↑':'↓'; el.style.color='#224F93'; }
+    else       { el.textContent='↕';                el.style.color='#bac4d6'; }
+  });
+}
+
 async function _todoRenderList(){
   const list = document.getElementById('todo-list');
   if(list && list.dataset.loading !== '1'){
@@ -1196,6 +1248,22 @@ async function _todoRenderList(){
   if(fp.length) filtered = filtered.filter(t=>fp.includes(t.project));
   if(ft.length) filtered = filtered.filter(t=>ft.includes(t.type));
   if(fn.length) filtered = filtered.filter(t=>fn.includes(t.assignee));
+
+  const sc = window._todoSortCol;
+  const sd = window._todoSortDir || 'asc';
+  if(sc){
+    filtered = [...filtered].sort((a,b)=>{
+      let av='', bv='';
+      if(sc==='date')     { av=a.date||''; bv=b.date||''; }
+      else if(sc==='project') { av=projMap[a.project]||a.project||''; bv=projMap[b.project]||b.project||''; }
+      else if(sc==='type')    { av=a.type||''; bv=b.type||''; }
+      else if(sc==='desc')    { av=a.desc||a.description||''; bv=b.desc||b.description||''; }
+      else if(sc==='assignee'){ av=a.assignee||''; bv=b.assignee||''; }
+      else if(sc==='deadline'){ av=a.deadline||''; bv=b.deadline||''; }
+      const c = av.localeCompare(bv,undefined,{sensitivity:'base'});
+      return sd==='asc'?c:-c;
+    });
+  }
 
   const badge = document.getElementById('todo-count-badge');
   const remaining = tasks.filter(t=>!t.done).length;
@@ -1245,6 +1313,7 @@ async function _todoRenderList(){
       ${deleteBtn}
     </div>`;
   }).join('');
+  _todoUpdateSortIcons();
 }
 
 async function _todoAdd(){
