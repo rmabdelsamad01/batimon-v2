@@ -779,13 +779,28 @@ async function _sujetFetchUpdates(taskId){
   return data||[];
 }
 
+function _sujetFmtDt(iso){
+  const d=new Date(iso);
+  return d.toLocaleDateString()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
 function _sujetRenderUpdatesContent(taskId,ns,updates){
+  const me = window.sbProfile?.full_name||window.sbProfile?.username||window.sbProfile?.email||'';
   const rows = updates.length
-    ? updates.map(u=>`
-      <div style="padding:6px 0;border-bottom:1px solid #eef1f8;">
-        <div style="font-size:12px;color:var(--text);line-height:1.5;">${_escHtml(u.content)}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;">${_escHtml(u.updated_by||'Unknown')} · ${(d=>d.toLocaleDateString()+" "+d.getHours().toString().padStart(2,'0')+":"+d.getMinutes().toString().padStart(2,'0'))(new Date(u.created_at))}</div>
-      </div>`).join('')
+    ? updates.map(u=>{
+        const isOwn = me && u.updated_by===me;
+        const editBtn = isOwn
+          ? `<button onclick="_sujetEditUpdate('${u.id}','${taskId}','${ns}')"
+               style="border:none;background:transparent;cursor:pointer;color:#b0bec5;font-size:11px;padding:0 2px;line-height:1;vertical-align:middle;"
+               title="Edit" onmouseover="this.style.color='#224F93'" onmouseout="this.style.color='#b0bec5'">✎</button>` : '';
+        return `<div id="sujet-upd-row-${u.id}" style="padding:6px 0;border-bottom:1px solid #eef1f8;">
+          <div style="font-size:12px;color:var(--text);line-height:1.5;">${_escHtml(u.content)}</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:3px;">
+            <span style="font-size:10px;color:var(--text3);">${_escHtml(u.updated_by||'Unknown')} · ${_sujetFmtDt(u.created_at)}</span>
+            ${editBtn}
+          </div>
+        </div>`;
+      }).join('')
     : '<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px 0;">No updates yet.</div>';
   return `<div style="padding:10px 16px 12px 68px;">
     <div style="margin-bottom:10px;max-height:200px;overflow-y:auto;">${rows}</div>
@@ -798,6 +813,49 @@ function _sujetRenderUpdatesContent(taskId,ns,updates){
         onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">Add Update</button>
     </div>
   </div>`;
+}
+
+function _sujetEditUpdate(updateId,taskId,ns){
+  const row = document.getElementById('sujet-upd-row-'+updateId);
+  if(!row) return;
+  const currentText = row.querySelector('div').textContent;
+  row.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;padding:4px 0;">
+    <textarea id="sujet-edit-inp-${updateId}"
+      style="width:100%;min-height:54px;padding:7px 10px;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;resize:vertical;outline:none;box-sizing:border-box;"
+    >${_escHtml(currentText)}</textarea>
+    <div style="display:flex;gap:6px;justify-content:flex-end;">
+      <button onclick="_sujetCancelEditUpdate('${updateId}','${taskId}','${ns}')"
+        style="padding:5px 12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);border-radius:6px;font-family:'Barlow',sans-serif;font-size:11px;cursor:pointer;">Cancel</button>
+      <button onclick="_sujetSaveUpdate('${updateId}','${taskId}','${ns}')"
+        style="padding:5px 12px;background:#224F93;color:#fff;border:none;border-radius:6px;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">Save</button>
+    </div>
+  </div>`;
+  const ta = document.getElementById('sujet-edit-inp-'+updateId);
+  if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); }
+}
+
+async function _sujetSaveUpdate(updateId,taskId,ns){
+  const inp = document.getElementById('sujet-edit-inp-'+updateId);
+  const content = inp?.value?.trim();
+  if(!content) return;
+  const saveBtn = inp?.closest('div[style]')?.querySelector('button:last-child');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Saving…'; }
+  const {error} = await sb.from('sujet_updates').update({content}).eq('id',updateId);
+  if(error){ alert('Failed to save: '+(error.message||'unknown')); if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='Save'; } return; }
+  const panel = document.getElementById('sujet-upd-'+taskId);
+  if(panel){
+    panel.innerHTML='<div style="padding:12px 16px;color:var(--text3);font-size:12px;">Loading…</div>';
+    const updates = await _sujetFetchUpdates(taskId);
+    panel.innerHTML = _sujetRenderUpdatesContent(taskId, ns, updates);
+  }
+}
+
+async function _sujetCancelEditUpdate(updateId,taskId,ns){
+  const panel = document.getElementById('sujet-upd-'+taskId);
+  if(panel){
+    const updates = await _sujetFetchUpdates(taskId);
+    panel.innerHTML = _sujetRenderUpdatesContent(taskId, ns, updates);
+  }
 }
 
 async function _sujetAddUpdate(taskId,ns){
