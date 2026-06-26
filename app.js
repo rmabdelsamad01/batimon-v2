@@ -759,7 +759,16 @@ function _nsNamesKey(){ return 'batimon_'+_todoNs+'_names'; }
 function _nsMigratedKey(){ return 'batimon_'+_todoNs+'_migrated_v1'; }
 
 function _renderProjTodo()  { _todoNs='todo';   _renderTodoView(); }
-function _renderProjSujets(){ _todoNs='sujets'; _renderTodoView(); }
+function _renderProjSujets(){
+  _todoNs='sujets';
+  if(!localStorage.getItem('batimon_sujets_names_seeded')){
+    const todoNames = JSON.parse(localStorage.getItem('batimon_todo_names')||'[]');
+    if(todoNames.length && !JSON.parse(localStorage.getItem('batimon_sujets_names')||'[]').length)
+      localStorage.setItem('batimon_sujets_names', JSON.stringify(todoNames));
+    localStorage.setItem('batimon_sujets_names_seeded','1');
+  }
+  _renderTodoView();
+}
 const _TODO_GRID      = '28px 90px 130px 118px 1fr 110px 118px 28px';
 const _SUJET_GRID     = '24px 28px 90px 130px 118px 1fr 110px 118px 28px';
 const _TODO_DEFAULT_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
