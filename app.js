@@ -1417,6 +1417,9 @@ async function _todoRenderList(){
       return sd==='asc'?c:-c;
     });
   }
+  if(ns==='todo'){
+    filtered = [...filtered].sort((a,b)=> a.done===b.done ? 0 : a.done ? 1 : -1);
+  }
   const itemLabel = ns==='sujets' ? 'sujet' : 'task';
   const badge = document.getElementById(ns+'-count-badge');
   const remaining = tasks.filter(t=>!t.done).length;
