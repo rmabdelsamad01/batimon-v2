@@ -804,9 +804,9 @@ async function _sujetAddUpdate(taskId,ns){
   const inp = document.getElementById('sujet-upd-inp-'+taskId);
   const content = inp?.value?.trim();
   if(!content) return;
-  const updatedBy = window.currentUser?.user_metadata?.full_name
-    || window.currentUser?.full_name
-    || window.currentUser?.email
+  const updatedBy = window.sbProfile?.full_name
+    || window.sbProfile?.username
+    || window.sbProfile?.email
     || 'Unknown';
   const btn = inp?.nextElementSibling;
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
