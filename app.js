@@ -785,7 +785,7 @@ function _sujetFmtDt(iso){
 }
 
 function _sujetRenderUpdatesContent(taskId,ns,updates){
-  const me = window.sbProfile?.full_name||window.sbProfile?.username||window.sbProfile?.email||'';
+  const me = sbProfile?.full_name||sbProfile?.username||sbProfile?.email||'';
   const rows = updates.length
     ? updates.map(u=>{
         const isOwn = me && u.updated_by===me;
@@ -862,9 +862,9 @@ async function _sujetAddUpdate(taskId,ns){
   const inp = document.getElementById('sujet-upd-inp-'+taskId);
   const content = inp?.value?.trim();
   if(!content) return;
-  const updatedBy = window.sbProfile?.full_name
-    || window.sbProfile?.username
-    || window.sbProfile?.email
+  const updatedBy = sbProfile?.full_name
+    || sbProfile?.username
+    || sbProfile?.email
     || 'Unknown';
   const btn = inp?.nextElementSibling;
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
@@ -16896,7 +16896,7 @@ window.ofSign=function(sigKey,field){
   const labels={be:"Bureau d'etude",cdp:'Chef / Directeur Projet',rp:'Responsable Production'};
   const existing=document.getElementById('of-sign-modal');
   if(existing) existing.remove();
-  const defaultName=(window.sbProfile&&(window.sbProfile.full_name||window.sbProfile.email))||'';
+  const defaultName=(sbProfile&&(sbProfile.full_name||sbProfile.email))||'';
   const div=document.createElement('div');
   div.id='of-sign-modal';
   div.style.cssText='position:fixed;inset:0;z-index:10600;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);';
