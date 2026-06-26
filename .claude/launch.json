@@ -1,11 +1,1 @@
-{
-  "version": "0.0.1",
-  "configurations": [
-    {
-      "name": "batimon-preview",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "3131", "."],
-      "port": 3131
-    }
-  ]
-}
+version:0.0.1 configurations:[name:preview] configurations:[runtimeExecutable:npx] configurations:[runtimeArgs:[serve] configurations:[-p] configurations:[4321] configurations:[.]] configurations:[port:4321]
