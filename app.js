@@ -758,6 +758,31 @@ function _nsTypesKey(){ return 'batimon_'+_todoNs+'_types'; }
 function _nsNamesKey(){ return 'batimon_'+_todoNs+'_names'; }
 function _nsMigratedKey(){ return 'batimon_'+_todoNs+'_migrated_v1'; }
 
+const _typesCache = {};
+const _namesCache = {};
+
+async function _todoLoadCache(ns){
+  const {data:tData} = await sb.from('todo_types').select('name').eq('namespace',ns).order('created_at');
+  if(tData && tData.length){
+    _typesCache[ns] = tData.map(r=>r.name);
+  } else {
+    let ls = [];
+    try{ ls = JSON.parse(localStorage.getItem('batimon_'+ns+'_types')||'[]'); }catch(e){}
+    if(!ls.length) ls = ns==='todo' ? [..._TODO_DEFAULT_TYPES] : [];
+    if(ls.length) await sb.from('todo_types').insert(ls.map(name=>({namespace:ns,name}))).select();
+    _typesCache[ns] = ls;
+  }
+  const {data:nData} = await sb.from('todo_names').select('name').eq('namespace',ns).order('created_at');
+  if(nData && nData.length){
+    _namesCache[ns] = nData.map(r=>r.name);
+  } else {
+    let ls = [];
+    try{ ls = JSON.parse(localStorage.getItem('batimon_'+ns+'_names')||'[]'); }catch(e){}
+    if(ls.length) await sb.from('todo_names').insert(ls.map(name=>({namespace:ns,name}))).select();
+    _namesCache[ns] = ls;
+  }
+}
+
 function _renderProjTodo()  { _todoNs='todo';   _renderTodoView(); }
 function _renderProjSujets(){
   _todoNs='sujets';
@@ -945,19 +970,11 @@ async function _todoFetch(){
   }catch(e){ return []; }
 }
 function _todoTypesLoad(){
-  const raw = localStorage.getItem(_nsTypesKey());
-  try{
-    const parsed = raw !== null ? JSON.parse(raw) : null;
-    if(Array.isArray(parsed) && parsed.length > 0) return parsed;
-  }catch(e){}
-  const seeded = [..._TODO_DEFAULT_TYPES];
-  localStorage.setItem(_nsTypesKey(), JSON.stringify(seeded));
-  return seeded;
+  const ns = _todoNs;
+  return _typesCache[ns] || [..._TODO_DEFAULT_TYPES];
 }
-function _todoTypesSave(t){ localStorage.setItem(_nsTypesKey(), JSON.stringify(t)); }
 function _todoGetAllTypes(){ return _todoTypesLoad(); }
-function _todoNamesLoad(){ try{ return JSON.parse(localStorage.getItem(_nsNamesKey())||'[]'); }catch(e){ return []; } }
-function _todoNamesSave(n){ localStorage.setItem(_nsNamesKey(), JSON.stringify(n)); }
+function _todoNamesLoad(){ return _namesCache[_todoNs] || []; }
 function _todoTypeColor(t){ return _TODO_TYPE_COLORS[t] || '#64748b'; }
 function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -1036,7 +1053,7 @@ function _renderTodoView(){
       <div></div>
     </div>
     <div id="${ns}-list" style="display:flex;flex-direction:column;padding-bottom:32px;"></div>`;
-  _todoMigrateLocalStorage().then(()=>_todoRenderList());
+  _todoMigrateLocalStorage().then(()=>_todoLoadCache(ns)).then(()=>_todoRenderList());
   _todoUpdateSortIcons();
 }
 
@@ -1170,7 +1187,7 @@ function _todoRenderTypesModal(){
     </div>`;
 }
 
-function _todoAddType(){
+async function _todoAddType(){
   const ns = _todoNs;
   const inp = document.getElementById(ns+'-new-type-inp');
   const name = (inp?.value||'').trim();
@@ -1181,17 +1198,23 @@ function _todoAddType(){
     if(errEl){errEl.textContent='This type already exists.';errEl.style.display='block';} return;
   }
   if(errEl) errEl.style.display='none';
-  types.push(name);
-  _todoTypesSave(types);
+  const {error} = await sb.from('todo_types').insert({namespace:ns, name});
+  if(error){ if(errEl){errEl.textContent='Save failed: '+(error.message||'error');errEl.style.display='block';} return; }
+  if(!_typesCache[ns]) _typesCache[ns]=[];
+  _typesCache[ns].push(name);
   if(inp) inp.value='';
   _todoRenderTypesModal();
   _todoRefreshTypeFilter();
 }
 
-function _todoDeleteType(idx){
+async function _todoDeleteType(idx){
+  const ns = _todoNs;
   const types = _todoTypesLoad();
+  const name = types[idx];
+  if(!name) return;
+  await sb.from('todo_types').delete().eq('namespace',ns).eq('name',name);
   types.splice(idx,1);
-  _todoTypesSave(types);
+  _typesCache[ns] = types;
   _todoRenderTypesModal();
   _todoRefreshTypeFilter();
 }
@@ -1247,7 +1270,7 @@ function _todoRenderNamesModal(){
     </div>`;
 }
 
-function _todoAddName(){
+async function _todoAddName(){
   const ns = _todoNs;
   const inp = document.getElementById(ns+'-new-name-inp');
   const name = (inp?.value||'').trim();
@@ -1258,16 +1281,22 @@ function _todoAddName(){
     if(errEl){errEl.textContent='This name already exists.';errEl.style.display='block';} return;
   }
   if(errEl) errEl.style.display='none';
-  names.push(name);
-  _todoNamesSave(names);
+  const {error} = await sb.from('todo_names').insert({namespace:ns, name});
+  if(error){ if(errEl){errEl.textContent='Save failed: '+(error.message||'error');errEl.style.display='block';} return; }
+  if(!_namesCache[ns]) _namesCache[ns]=[];
+  _namesCache[ns].push(name);
   if(inp) inp.value='';
   _todoRenderNamesModal();
 }
 
-function _todoDeleteName(idx){
+async function _todoDeleteName(idx){
+  const ns = _todoNs;
   const names = _todoNamesLoad();
+  const name = names[idx];
+  if(!name) return;
+  await sb.from('todo_names').delete().eq('namespace',ns).eq('name',name);
   names.splice(idx,1);
-  _todoNamesSave(names);
+  _namesCache[ns] = names;
   _todoRenderNamesModal();
 }
 
