@@ -761,6 +761,7 @@ function _nsMigratedKey(){ return 'batimon_'+_todoNs+'_migrated_v1'; }
 function _renderProjTodo()  { _todoNs='todo';   _renderTodoView(); }
 function _renderProjSujets(){ _todoNs='sujets'; _renderTodoView(); }
 const _TODO_GRID      = '28px 90px 130px 118px 1fr 110px 118px 28px';
+const _SUJET_GRID     = '24px 28px 90px 130px 118px 1fr 110px 118px 28px';
 const _TODO_DEFAULT_TYPES = ['Engineering','Procurement','Fabrication','Delivery','Installation','Defect','Payment','Invoice','Management Approval','Others'];
 const _TODO_TYPE_COLORS = {
   'Engineering':'#3b82f6','Procurement':'#8b5cf6','Fabrication':'#f59e0b',
@@ -770,6 +771,78 @@ const _TODO_TYPE_COLORS = {
 const _TODO_PALETTE = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#0ea5e9','#ef4444','#22c55e','#f97316','#6366f1','#ec4899','#14b8a6','#f43f5e','#84cc16','#a855f7','#06b6d4'];
 
 function _todoCurrentUser(){ return (window.currentUser&&(window.currentUser.email||window.currentUser.full_name))||''; }
+
+async function _sujetFetchUpdates(taskId){
+  const {data,error} = await sb.from('sujet_updates')
+    .select('*').eq('task_id',taskId).order('created_at',{ascending:false});
+  if(error) return [];
+  return data||[];
+}
+
+function _sujetRenderUpdatesContent(taskId,ns,updates){
+  const rows = updates.length
+    ? updates.map(u=>`
+      <div style="padding:6px 0;border-bottom:1px solid #eef1f8;">
+        <div style="font-size:12px;color:var(--text);line-height:1.5;">${_escHtml(u.content)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;">${_escHtml(u.updated_by||'Unknown')} · ${new Date(u.created_at).toLocaleString()}</div>
+      </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px 0;">No updates yet.</div>';
+  return `<div style="padding:10px 16px 12px 68px;">
+    <div style="margin-bottom:10px;max-height:200px;overflow-y:auto;">${rows}</div>
+    <div style="display:flex;gap:8px;align-items:flex-end;">
+      <textarea id="sujet-upd-inp-${taskId}" placeholder="Add an update…"
+        style="flex:1;min-height:54px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;resize:vertical;outline:none;box-sizing:border-box;"
+        onfocus="this.style.borderColor='#224F93'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <button onclick="_todoNs='${ns}';_sujetAddUpdate('${taskId}','${ns}')"
+        style="padding:8px 16px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;"
+        onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">Add Update</button>
+    </div>
+  </div>`;
+}
+
+async function _sujetAddUpdate(taskId,ns){
+  const inp = document.getElementById('sujet-upd-inp-'+taskId);
+  const content = inp?.value?.trim();
+  if(!content) return;
+  const updatedBy = window.currentUser?.user_metadata?.full_name
+    || window.currentUser?.full_name
+    || window.currentUser?.email
+    || 'Unknown';
+  const btn = inp?.nextElementSibling;
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  const {error} = await sb.from('sujet_updates').insert({
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2),
+    task_id: taskId, content, updated_by: updatedBy,
+    created_at: new Date().toISOString()
+  });
+  if(error){
+    if(btn){ btn.disabled=false; btn.textContent='Add Update'; }
+    alert('Failed to save: '+(error.message||'unknown'));
+    return;
+  }
+  const panel = document.getElementById('sujet-upd-'+taskId);
+  if(panel){
+    panel.innerHTML='<div style="padding:12px 16px;color:var(--text3);font-size:12px;">Loading…</div>';
+    const updates = await _sujetFetchUpdates(taskId);
+    panel.innerHTML = _sujetRenderUpdatesContent(taskId, ns, updates);
+  }
+}
+
+async function _sujetToggleUpdates(taskId,ns){
+  const panel = document.getElementById('sujet-upd-'+taskId);
+  const arrow = document.getElementById('sujet-arr-'+taskId);
+  if(!panel) return;
+  if(panel.style.display!=='none'){
+    panel.style.display='none';
+    if(arrow) arrow.style.transform='rotate(0deg)';
+    return;
+  }
+  panel.style.display='block';
+  if(arrow) arrow.style.transform='rotate(90deg)';
+  panel.innerHTML='<div style="padding:12px 16px;color:var(--text3);font-size:12px;">Loading updates…</div>';
+  const updates = await _sujetFetchUpdates(taskId);
+  panel.innerHTML = _sujetRenderUpdatesContent(taskId, ns, updates);
+}
 
 async function _todoMigrateLocalStorage(){
   const MIGRATED_KEY = _nsMigratedKey();
@@ -872,7 +945,8 @@ function _renderTodoView(){
       <button onclick="_todoNs='${ns}';_todoOpenTypesModal()" style="padding:7px 14px;background:#fff;color:#224F93;border:1.5px solid #224F93;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='#e8eef8'" onmouseout="this.style.background='#fff'">+ Add Type</button>
       <button onclick="_todoNs='${ns}';_todoOpenModal()" style="padding:7px 16px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;" onmouseover="this.style.background='#2d65bd'" onmouseout="this.style.background='#224F93'">${addLabel}</button>
     </div>
-    <div style="display:grid;grid-template-columns:${_TODO_GRID};gap:8px;padding:7px 16px;background:#f0f4fa;border-bottom:2px solid #dde7f5;position:sticky;top:0;z-index:10;align-items:center;">
+    <div style="display:grid;grid-template-columns:${isSujets?_SUJET_GRID:_TODO_GRID};gap:8px;padding:7px 16px;background:#f0f4fa;border-bottom:2px solid #dde7f5;position:sticky;top:0;z-index:10;align-items:center;">
+      ${isSujets?'<div></div>':''}
       <div></div>
       <div style="display:flex;align-items:center;gap:3px;">${hLbl('Date')}${si('date')}</div>
       <div id="${ns}-flt-proj-wrap" style="position:relative;display:flex;align-items:center;gap:3px;">
@@ -1294,6 +1368,7 @@ async function _todoRenderList(){
     list.innerHTML=`<div style="text-align:center;padding:48px 0;color:var(--text3);font-size:13px;">No ${itemLabel}s to show.</div>`;
     return;
   }
+  const isSujets = ns==='sujets';
   list.innerHTML = filtered.map(t=>{
     const projName  = projMap[t.project] || t.project || '—';
     const typeColor = _todoTypeColor(t.type);
@@ -1316,9 +1391,13 @@ async function _todoRenderList(){
            style="width:22px;height:22px;border:none;background:transparent;cursor:pointer;color:#c02020;font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:5px;"
            onmouseover="this.style.background='rgba(192,32,32,0.08)'" onmouseout="this.style.background='transparent'">✕</button>`
       : '';
-    return `
-    <div style="display:grid;grid-template-columns:${_TODO_GRID};gap:8px;padding:7px 16px;align-items:center;background:${rowBg};border-bottom:1px solid ${rowBorderB};transition:background 0.12s;"
+    const arrowCol = isSujets ? `<div id="sujet-arr-${t.id}" onclick="_todoNs='${ns}';_sujetToggleUpdates('${t.id}','${ns}')"
+      style="display:flex;align-items:center;justify-content:center;cursor:pointer;color:#8099b0;font-size:9px;transition:transform 0.18s;flex-shrink:0;" title="Show updates">&#9658;</div>` : '';
+    const rowGrid = isSujets ? _SUJET_GRID : _TODO_GRID;
+    const rowHtml = `
+    <div style="display:grid;grid-template-columns:${rowGrid};gap:8px;padding:7px 16px;align-items:center;background:${rowBg};border-bottom:1px solid ${rowBorderB};transition:background 0.12s;"
       onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='${rowBg}'">
+      ${arrowCol}
       <div onclick="_todoNs='${ns}';_todoToggle('${t.id}')"
         style="width:18px;height:18px;border-radius:50%;border:2px solid ${t.done?'#1a9458':'#224F93'};background:${t.done?'#1a9458':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         ${t.done?'<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>':''}
@@ -1331,6 +1410,7 @@ async function _todoRenderList(){
       ${deadlineEl}
       ${deleteBtn}
     </div>`;
+    return isSujets ? `<div>${rowHtml}<div id="sujet-upd-${t.id}" style="display:none;background:#f8faff;border-bottom:1px solid #e8eef8;"></div></div>` : rowHtml;
   }).join('');
   _todoUpdateSortIcons();
 }
