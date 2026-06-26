@@ -784,7 +784,7 @@ function _sujetRenderUpdatesContent(taskId,ns,updates){
     ? updates.map(u=>`
       <div style="padding:6px 0;border-bottom:1px solid #eef1f8;">
         <div style="font-size:12px;color:var(--text);line-height:1.5;">${_escHtml(u.content)}</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:3px;">${_escHtml(u.updated_by||'Unknown')} · ${new Date(u.created_at).toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px;">${_escHtml(u.updated_by||'Unknown')} · ${(d=>d.toLocaleDateString()+" "+d.getHours().toString().padStart(2,'0')+":"+d.getMinutes().toString().padStart(2,'0'))(new Date(u.created_at))}</div>
       </div>`).join('')
     : '<div style="font-size:12px;color:var(--text3);font-style:italic;padding:4px 0;">No updates yet.</div>';
   return `<div style="padding:10px 16px 12px 68px;">
