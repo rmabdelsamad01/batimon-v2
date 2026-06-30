@@ -14445,10 +14445,11 @@ async function _demoPrintAll(){
     const wrap=pgw.querySelector('.wf-wrap');
     if(wrap){
       const printH=Math.round(267*MM);
+      const pagePadV=40; // ._dpp has 20px top+bottom padding not in printH budget
       const hdrH=hdr.offsetHeight+14;
       const legEl=page.querySelector('._dpp_leg');
       const legH=legEl?legEl.offsetHeight+10:0;
-      const avH=printH-hdrH-legH;
+      const avH=printH-pagePadV-hdrH-legH;
       const natW=wrap.scrollWidth, natH=wrap.scrollHeight;
       const s=Math.min(printW/natW, avH/natH);
       wrap.style.transform='scale('+s+')';
