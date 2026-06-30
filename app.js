@@ -14467,7 +14467,6 @@ async function _demoPrintAll(){
     @media print{
       body>*:not(#_demo_print_layer){display:none!important;}
       #_demo_print_layer{position:static!important;height:auto!important;overflow:visible!important;}
-      ._dpp{page-break-inside:avoid;}
       *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
       .wfc:hover{transform:none!important;box-shadow:none!important;}
     }`;
