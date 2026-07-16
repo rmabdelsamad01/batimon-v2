@@ -22,8 +22,6 @@ let _pvPolyNamePos = 'above'; // 'above' | 'inside'
 
 function _pvIsDev(){
   if(typeof sbProfile==='undefined'||!sbProfile) return false;
-  const r=sbProfile.roles;
-  if(Array.isArray(r)) return r.includes('developer')||r.includes('admin');
   return sbProfile.role==='developer'||sbProfile.role==='admin';
 }
 
