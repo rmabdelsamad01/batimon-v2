@@ -746,17 +746,6 @@ function pvPolyClick(e,id,pid,facade){
 
 async function pvRectRC(e,id,cellKey,pid,facade){
   e.preventDefault(); e.stopPropagation();
-  const isDev=_pvIsDev();
-  if(isDev){
-    const {floor:fl}=_pvState;
-    const rectChk=(_pvLayouts[`${pid}|${facade}`]?.[fl]?.rects||[]).find(r=>r.id===id);
-    if(rectChk?.type==='title'){_pvState.selectedId=id;_pvRefreshSVG();return;}
-    _pvState.selectedId=id;
-    _pvEditingRectId=id;
-    if(rectChk) _pvPendingRect={...rectChk};
-    pvShowLinkModal(rectChk?.cellKey,rectChk?.label,false);
-    return;
-  }
   const {floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
   if(!rect||!rect.cellKey) return;
@@ -773,17 +762,22 @@ async function pvRectRC(e,id,cellKey,pid,facade){
   await custCellOpenPanel(e,pid,facade,rect.cellKey,cellRef);
 }
 
-function pvPolyRC(e,id,pid,facade){
+async function pvPolyRC(e,id,pid,facade){
   e.preventDefault(); e.stopPropagation();
-  if(!_pvIsDev()) return;
   const {floor}=_pvState;
   const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
-  if(!poly) return;
-  _pvState.selectedId=id;
-  _pvEditingRectId=id;
-  _pvPendingRect={...poly};
-  _pvPolyNamePos=poly.namePos||'above';
-  pvShowLinkModal(poly.cellKey,poly.label,true);
+  if(!poly||!poly.cellKey) return;
+  const m=poly.cellKey.match(/^r(\d+)_c(\d+)$/); if(!m) return;
+  const ri=parseInt(m[1]),ci=parseInt(m[2]);
+  const meta=_custGetMeta(pid,facade);
+  const rLbl=meta.rows[ri]?.label||String(ri+1);
+  const cLbl=meta.cols[ci]?.label||String(ci+1);
+  const _cats=getProjectCategories(pid);
+  const _cpFM=(window._currentCustomPage||'').match(/^c(\d+)-([A-Z]+)$/);
+  let catNick='CAT1',facNick=facade;
+  if(_cpFM){const cn=parseInt(_cpFM[1]);const cd=_cpFM[2];const cat=_cats.find(x=>x.num===cn);catNick=cat?.nick||'CAT'+cn;facNick=cat?.facadeNicks?.[cd]||cd+cn;}
+  const cellRef=`${catNick}-${facNick}-${rLbl}-${cLbl}`;
+  await custCellOpenPanel(e,pid,facade,poly.cellKey,cellRef);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
