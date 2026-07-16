@@ -988,13 +988,25 @@ function pvSetNamePos(pos){
 }
 
 function pvShowLinkModal(selectedKey, label, isPoly){
-  const {pid,facade}=_pvState;
+  const {pid,facade,floor}=_pvState;
   const meta=_custGetMeta(pid,facade);
 
   let selRi=0, selCi=0;
   if(selectedKey){
     const m=selectedKey.match(/^r(\d+)_c(\d+)$/);
     if(m){selRi=parseInt(m[1]);selCi=parseInt(m[2]);}
+  } else {
+    // Default floor to current floor being viewed
+    const floorIdx=meta.rows.findIndex(row=>row.label===floor);
+    if(floorIdx>=0) selRi=floorIdx;
+    // Default col to next after last linked shape on this floor
+    const rects=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]);
+    const linkedRects=rects.filter(r=>r.cellKey);
+    if(linkedRects.length){
+      const lastKey=linkedRects[linkedRects.length-1].cellKey;
+      const lm=lastKey.match(/^r(\d+)_c(\d+)$/);
+      if(lm) selCi=Math.min(parseInt(lm[2])+1, meta.cols.length-1);
+    }
   }
 
   const floorSel=document.getElementById('pv-floor-select');
