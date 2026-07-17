@@ -188,7 +188,7 @@ function renderProjectScreen(){
 
   const isDev = (sbProfile?.role === 'developer');
   const userAssignedProjects = Array.isArray(profile.projects) ? profile.projects : [];
-  const hasAllProjects = !isDev && userAssignedProjects.includes('*');
+  const hasAllProjects = userAssignedProjects.includes('*');
   const userProjects = hasAllProjects
     ? Object.keys(PROJECT_META)
     : (userAssignedProjects.length > 0 ? userAssignedProjects : Object.keys(PROJECT_META));
@@ -200,7 +200,7 @@ function renderProjectScreen(){
 
   // PROJECT_META entries
   Object.entries(PROJECT_META).forEach(([id, meta]) => {
-    if(!isDev && !hasAllProjects && !userProjects.includes(id)) return;
+    if(!hasAllProjects && !userProjects.includes(id)) return;
     if(_projFilter && !(meta.members||[]).includes(_projFilter)) return;
     allProjects.push({ id, name: meta.name, type: 'meta', meta, viewerOnly: false });
   });
@@ -208,7 +208,7 @@ function renderProjectScreen(){
   // Custom projects
   getCustomProjects().forEach(proj => {
     if(_projFilter && proj.owner !== _projFilter) return;
-    const hasFullAccess = isDev || hasAllProjects || userAssignedProjects.includes(proj.id);
+    const hasFullAccess = hasAllProjects || userAssignedProjects.includes(proj.id);
     const hasViewerAccess = userViewerProjects.includes(proj.id);
     if(!hasFullAccess && !hasViewerAccess) return;
     allProjects.push({ id: proj.id, name: proj.name, type: 'custom', proj, viewerOnly: !hasFullAccess && hasViewerAccess });
@@ -536,11 +536,11 @@ async function renderMobileProjectList(){
   // Build full project list
   _mobileAllProjects = [];
   Object.entries(PROJECT_META).forEach(([id, meta]) => {
-    if(!isDev && !hasAllProjects && !userAssignedProjects.includes(id)) return;
+    if(!hasAllProjects && !userAssignedProjects.includes(id)) return;
     _mobileAllProjects.push({ id, name: meta.name, active: meta.active, members: meta.members||[] });
   });
   getCustomProjects().forEach(proj => {
-    const hasFullAccess = isDev || hasAllProjects || userAssignedProjects.includes(proj.id);
+    const hasFullAccess = hasAllProjects || userAssignedProjects.includes(proj.id);
     const hasViewerAccess = userViewerProjects.includes(proj.id);
     if(!hasFullAccess && !hasViewerAccess) return;
     _mobileAllProjects.push({ id: proj.id, name: proj.name, active: true, members: proj.owner ? [proj.owner] : [] });
