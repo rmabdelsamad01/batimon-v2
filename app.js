@@ -249,6 +249,7 @@ let _custMultiPid=null,_custMultiFacade=null;
 let _custCurPid=null,_custCurFacade=null,_custCurCellKey=null;
 let _custCurCellRef='';let _custCurSelStatus='pending';
 let _undoStack=[];
+let _redoStack=[];
 let assemblyPanelRefs=new Set(); // panel_ref values that have a panel-assembly QC checklist filled
 let prepInstPanelRefs=new Set();  // panel_ref values that have a panel-preparation QC checklist filled
 let _supaUnlocked=false; // true once the correct password has been entered this session
@@ -2800,11 +2801,25 @@ function _undoPush(pid,facade){
   const k=pid+'|'+facade;
   _undoStack.push({pid,facade,snapshot:JSON.parse(JSON.stringify(_custFacadeCache[k]||{}))});
   if(_undoStack.length>50) _undoStack.shift();
+  _redoStack=[];
 }
 function undoLast(){
   if(!_undoStack.length) return;
   const {pid,facade,snapshot}=_undoStack.pop();
-  _custFacadeCache[pid+'|'+facade]=snapshot;
+  const k=pid+'|'+facade;
+  _redoStack.push({pid,facade,snapshot:JSON.parse(JSON.stringify(_custFacadeCache[k]||{}))});
+  if(_redoStack.length>50) _redoStack.shift();
+  _custFacadeCache[k]=snapshot;
+  _custSaveFull(pid,facade);
+  renderCustomMonitoring(window._currentCustomPage);
+}
+function redoLast(){
+  if(!_redoStack.length) return;
+  const {pid,facade,snapshot}=_redoStack.pop();
+  const k=pid+'|'+facade;
+  _undoStack.push({pid,facade,snapshot:JSON.parse(JSON.stringify(_custFacadeCache[k]||{}))});
+  if(_undoStack.length>50) _undoStack.shift();
+  _custFacadeCache[k]=snapshot;
   _custSaveFull(pid,facade);
   renderCustomMonitoring(window._currentCustomPage);
 }
@@ -3974,6 +3989,7 @@ async function renderCustomMonitoring(pageId){
         <div style="padding:7px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           ${_isDev?`
             <button onclick="undoLast()" ${_undoStack.length===0?'disabled':''} style="${bs}${_undoStack.length===0?'opacity:0.35;':''}font-weight:700;" title="${_undoStack.length>0?`Undo last action (${_undoStack.length} step${_undoStack.length>1?'s':''} available)`:'Nothing to undo'}">↩ Undo</button>
+            <button onclick="redoLast()" ${_redoStack.length===0?'disabled':''} style="${bs}${_redoStack.length===0?'opacity:0.35;':''}font-weight:700;" title="${_redoStack.length>0?`Redo last action (${_redoStack.length} step${_redoStack.length>1?'s':''} available)`:'Nothing to redo'}">↪ Redo</button>
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <button onclick="custGridAddRow('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Row</button>
             <button onclick="custGridAddCol('${pid}','${facade}')" style="${bs}" onmouseover="this.style.background='#e0e8f5'" onmouseout="this.style.background='#f0f4f9'">+ Column</button>
