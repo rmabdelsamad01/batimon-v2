@@ -19,6 +19,48 @@ let _pvPendingRect  = null;
 let _pvEditingRectId = null;
 let _pvPolyPoints  = [];   // in-progress polyline [{x,y}] percentages
 let _pvPolyNamePos = 'above'; // 'above' | 'inside'
+let _pvUndoStack = [];
+let _pvRedoStack = [];
+
+function _pvUndoPush(){
+  const {pid,facade,floor}=_pvState;
+  const key=`${pid}|${facade}`;
+  const snap=JSON.parse(JSON.stringify(_pvLayouts[key]?.[floor]||{rects:[]}));
+  _pvUndoStack.push({pid,facade,floor,snap});
+  if(_pvUndoStack.length>50) _pvUndoStack.shift();
+  _pvRedoStack=[];
+  _pvSyncPvUndoRedoBtns();
+}
+function _pvSyncPvUndoRedoBtns(){
+  const ub=document.getElementById('pv-undo-btn');
+  const rb=document.getElementById('pv-redo-btn');
+  if(ub){ub.disabled=_pvUndoStack.length===0;ub.style.opacity=_pvUndoStack.length===0?'0.4':'1';}
+  if(rb){rb.disabled=_pvRedoStack.length===0;rb.style.opacity=_pvRedoStack.length===0?'0.4':'1';}
+}
+function pvUndoLast(){
+  if(!_pvUndoStack.length) return;
+  const {pid,facade,floor,snap}=_pvUndoStack.pop();
+  const key=`${pid}|${facade}`;
+  if(!_pvLayouts[key]) _pvLayouts[key]={};
+  _pvRedoStack.push({pid,facade,floor,snap:JSON.parse(JSON.stringify(_pvLayouts[key][floor]||{rects:[]}))});
+  if(_pvRedoStack.length>50) _pvRedoStack.shift();
+  _pvLayouts[key][floor]=snap;
+  _pvRefreshSVG();
+  pvSaveLayout(true);
+  _pvSyncPvUndoRedoBtns();
+}
+function pvRedoLast(){
+  if(!_pvRedoStack.length) return;
+  const {pid,facade,floor,snap}=_pvRedoStack.pop();
+  const key=`${pid}|${facade}`;
+  if(!_pvLayouts[key]) _pvLayouts[key]={};
+  _pvUndoStack.push({pid,facade,floor,snap:JSON.parse(JSON.stringify(_pvLayouts[key][floor]||{rects:[]}))});
+  if(_pvUndoStack.length>50) _pvUndoStack.shift();
+  _pvLayouts[key][floor]=snap;
+  _pvRefreshSVG();
+  pvSaveLayout(true);
+  _pvSyncPvUndoRedoBtns();
+}
 
 function _pvIsDev(){
   if(typeof sbProfile==='undefined'||!sbProfile) return false;
@@ -136,7 +178,9 @@ function _pvBuild(container, isDev, floors){
       <button onclick="pvShowDupModal()"
         style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;">Duplicate from…</button>
       <span id="pv-hint" style="font-size:10px;color:#a07800;font-style:italic;"></span>
-      <div style="margin-left:auto;">
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+        <button id="pv-undo-btn" onclick="pvUndoLast()" disabled style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;" title="Nothing to undo">↩ Undo</button>
+        <button id="pv-redo-btn" onclick="pvRedoLast()" disabled style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;" title="Nothing to redo">↪ Redo</button>
         <button onclick="pvSaveLayout(false)"
           style="padding:3px 13px;border:none;border-radius:5px;background:#224F93;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;">Save Layout</button>
       </div>
@@ -230,6 +274,7 @@ function pvInsertTitleBlock(){
   const {pid,facade,floor}=_pvState;
   if(!_pvLayouts[`${pid}|${facade}`]) _pvLayouts[`${pid}|${facade}`]={};
   if(!_pvLayouts[`${pid}|${facade}`][floor]) _pvLayouts[`${pid}|${facade}`][floor]={rects:[]};
+  _pvUndoPush();
   const rects=_pvLayouts[`${pid}|${facade}`][floor].rects;
   const id='t'+Date.now();
   rects.push({id, type:'title', cellKey:'', label:'title', x:1, y:1, w:28, h:18});
@@ -590,6 +635,7 @@ function pvRectMD(e,id){
   const {pid,facade,floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
   if(!rect) return;
+  _pvUndoPush();
   const pt=_pvPct(e);
   _pvMouse={down:true,mode:'drag',rectId:id,startX:pt.x,startY:pt.y,origX:rect.x,origY:rect.y};
   _pvRefreshSVG();
@@ -609,6 +655,7 @@ function pvPolyMD(e,id){
   const {pid,facade,floor}=_pvState;
   const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
   if(!poly) return;
+  _pvUndoPush();
   const pt=_pvPct(e);
   _pvMouse={down:true,mode:'drag-poly',rectId:id,startX:pt.x,startY:pt.y,origPts:poly.points.map(p=>({...p}))};
   _pvRefreshSVG();
@@ -620,6 +667,7 @@ function pvPolyVertexMD(e,vertexIdx){
   const {pid,facade,floor}=_pvState;
   const poly=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id&&r.type==='poly');
   if(!poly) return;
+  _pvUndoPush();
   const pt=_pvPct(e);
   _pvMouse={down:true,mode:'drag-poly-vertex',rectId:id,vertexIdx,startX:pt.x,startY:pt.y,origPts:poly.points.map(p=>({...p}))};
 }
@@ -631,6 +679,7 @@ function pvHandleMD(e,pos){
   const {pid,facade,floor}=_pvState;
   const rect=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects||[]).find(r=>r.id===id);
   if(!rect) return;
+  _pvUndoPush();
   const pt=_pvPct(e);
   _pvMouse={down:true,mode:'resize',rectId:id,pos,startX:pt.x,startY:pt.y,orig:{...rect}};
 }
@@ -647,6 +696,7 @@ function pvRotHandleMD(e){
   const cx=b.left+(rect.x+rect.w/2)/100*b.width;
   const cy=b.top+(rect.y+rect.h/2)/100*b.height;
   const startAngle=Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI;
+  _pvUndoPush();
   _pvMouse={down:true,mode:'rotate',rectId:id,cx,cy,startAngle,origRot:rect.rotation||0};
   e.preventDefault();
 }
@@ -933,6 +983,7 @@ function _pvPolyFinalize(points){
 function pvDeleteSelected(){
   const id=_pvState.selectedId;
   if(!id){_pvToast('Select an element first');return;}
+  _pvUndoPush();
   const {pid,facade,floor}=_pvState;
   const layout=_pvLayouts[`${pid}|${facade}`]||{};
   if(layout[floor]?.rects) layout[floor].rects=layout[floor].rects.filter(r=>r.id!==id);
@@ -1048,6 +1099,7 @@ function pvLinkSave(){
 
   if(!cellKey&&!isPoly){pvLinkCancel();return;}
 
+  _pvUndoPush();
   if(!_pvLayouts[`${pid}|${facade}`]) _pvLayouts[`${pid}|${facade}`]={};
   if(!_pvLayouts[`${pid}|${facade}`][floor]) _pvLayouts[`${pid}|${facade}`][floor]={rects:[]};
   const rects=_pvLayouts[`${pid}|${facade}`][floor].rects;
