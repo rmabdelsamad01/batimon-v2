@@ -3761,6 +3761,7 @@ async function custCellSavePanel(){
   if(_isViewer()){_viewerToast();return;}
   if(!_cgPanelCtx) return;
   const {pid, facade, key} = _cgPanelCtx;
+  _undoPush(pid, facade);
   const k = pid+'|'+facade;
   if(!_custFacadeCache[k]) _custFacadeCache[k]={};
   if(!_custFacadeCache[k][key]) _custFacadeCache[k][key]={status:'pending'};
