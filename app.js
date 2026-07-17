@@ -387,8 +387,10 @@ const _TYPE_COLS = [
   {key:'traitement_surface', label:'Traitement surface',  w:140},
   {key:'finition',           label:'Finition',            w:100},
   {key:'couleur',            label:'Couleur',             w:100},
-  {key:'largeur',            label:'Largeur (m)',         w:90, dim:true},
-  {key:'hauteur',            label:'Hauteur (m)',         w:90, dim:true},
+  {key:'largeur',            label:'BC Largeur (mm)',      w:110, dim:true},
+  {key:'hauteur',            label:'BC Hauteur (mm)',      w:110, dim:true},
+  {key:'chantier_largeur',   label:'Chantier Largeur (mm)',w:130, dim:true},
+  {key:'chantier_hauteur',   label:'Chantier Hauteur (mm)',w:130, dim:true},
   {key:'surface',            label:'Surface (m²)',        w:90, calc:true},
 ];
 async function _loadProjectTypes(pid){
@@ -476,7 +478,7 @@ function _typesDeleteSelected(pid){
 function _typesAddRow(pid){
   if(_isViewer()){_viewerToast();return;}
   if(!_custTypesCache[pid])_custTypesCache[pid]=[];
-  _custTypesCache[pid].push({id:'new-'+Date.now(),panelType:'',designation:'',type_composition:'',ouvrants_type:'',ouvrants_nombre:'',type_vitrage:'',gamme:'',traitement_surface:'',finition:'',couleur:'',largeur:'',hauteur:'',surface:'',_isNew:true});
+  _custTypesCache[pid].push({id:'new-'+Date.now(),panelType:'',designation:'',type_composition:'',ouvrants_type:'',ouvrants_nombre:'',type_vitrage:'',gamme:'',traitement_surface:'',finition:'',couleur:'',largeur:'',hauteur:'',chantier_largeur:'',chantier_hauteur:'',surface:'',_isNew:true});
   _renderTypesTable(pid);
   setTimeout(()=>{const el=document.getElementById('ti-'+(_custTypesCache[pid].length-1)+'-panelType');if(el)el.focus();},40);
 }
@@ -496,7 +498,7 @@ async function _typesSave(pid){
   types.forEach((t,i)=>{
     const l=readN(i,'largeur'),h=readN(i,'hauteur');
     const sf=l&&h?((parseFloat(l)||0)*(parseFloat(h)||0)/1e6).toFixed(3):'';
-    const cur={panelType:read(i,'panelType'),designation:read(i,'designation'),type_composition:read(i,'type_composition'),ouvrants_type:read(i,'ouvrants_type'),ouvrants_nombre:readN(i,'ouvrants_nombre'),type_vitrage:read(i,'type_vitrage'),gamme:read(i,'gamme'),traitement_surface:read(i,'traitement_surface'),finition:read(i,'finition'),couleur:read(i,'couleur'),largeur:l,hauteur:h,surface:sf};
+    const cur={panelType:read(i,'panelType'),designation:read(i,'designation'),type_composition:read(i,'type_composition'),ouvrants_type:read(i,'ouvrants_type'),ouvrants_nombre:readN(i,'ouvrants_nombre'),type_vitrage:read(i,'type_vitrage'),gamme:read(i,'gamme'),traitement_surface:read(i,'traitement_surface'),finition:read(i,'finition'),couleur:read(i,'couleur'),largeur:l,hauteur:h,chantier_largeur:read(i,'chantier_largeur'),chantier_hauteur:read(i,'chantier_hauteur'),surface:sf};
     if(t._isNew){
       updated.push({...cur,id:'typ-'+Date.now()+'-'+i});
     } else {
@@ -519,13 +521,13 @@ async function _typesSave(pid){
 function _typesExportExcel(pid){
   const types=_custTypesCache[pid]||[];
   if(!types.length){alert('No types to export.');return;}
-  const headers=['SQN','Panel Type','Désignation','Type / Composition','Ouvrants Type','Ouvrants Nombre','Type vitrage','Gamme','Traitement surface','Finition','Couleur','Largeur (m)','Hauteur (m)','Surface (m²)'];
-  const keys=['panelType','designation','type_composition','ouvrants_type','ouvrants_nombre','type_vitrage','gamme','traitement_surface','finition','couleur','largeur','hauteur','surface'];
+  const headers=['SQN','Panel Type','Désignation','Type / Composition','Ouvrants Type','Ouvrants Nombre','Type vitrage','Gamme','Traitement surface','Finition','Couleur','BC Largeur (mm)','BC Hauteur (mm)','Chantier Largeur (mm)','Chantier Hauteur (mm)','Surface (m²)'];
+  const keys=['panelType','designation','type_composition','ouvrants_type','ouvrants_nombre','type_vitrage','gamme','traitement_surface','finition','couleur','largeur','hauteur','chantier_largeur','chantier_hauteur','surface'];
   const wsData=[headers,...types.map((t,i)=>[String(i).padStart(4,'0'),...keys.map(k=>t[k]!=null?t[k]:'')])];
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet(wsData);
   // Column widths
-  ws['!cols']=[{wch:20},{wch:18},{wch:22},{wch:16},{wch:16},{wch:16},{wch:14},{wch:20},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14}];
+  ws['!cols']=[{wch:20},{wch:18},{wch:22},{wch:16},{wch:16},{wch:16},{wch:14},{wch:20},{wch:14},{wch:14},{wch:14},{wch:16},{wch:16},{wch:20},{wch:20},{wch:14}];
   XLSX.utils.book_append_sheet(wb,ws,'Panel Types');
   XLSX.writeFile(wb,'panel_types_'+pid+'.xlsx');
 }
