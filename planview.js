@@ -282,7 +282,8 @@ function _pvRectSVG(rect, pid, facade){
   const lbl=cellData.panelRef||rect.label||rect.cellKey;
   const isPortrait=rect.h>rect.w;
   const rot=rect.rotation||0;
-  const grpRotStyle=rot?`transform-box:fill-box;transform-origin:center;transform:rotate(${rot}deg);`:'';
+  const cx_pct=rect.x+rect.w/2, cy_pct=rect.y+rect.h/2;
+  const grpRotStyle=rot?`transform-box:view-box;transform-origin:${cx_pct}% ${cy_pct}%;transform:rotate(${rot}deg);`:'';
   const txtStyle=`pointer-events:none;user-select:none;font-size:10px;${isPortrait?'transform-box:fill-box;transform-origin:center;transform:rotate(-90deg);':''}`;
   return `
     <g id="pvrg-${rect.id}" class="pv-rg${isPortrait?' pv-portrait':''}" data-id="${rect.id}"
