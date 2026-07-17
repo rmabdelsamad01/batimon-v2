@@ -427,6 +427,7 @@ function _renderTypesTable(pid,isDev){
   const types=_custTypesCache[pid]||[];
   const cont=document.getElementById('types-table-container');
   if(!cont)return;
+  cont.dataset.pid=pid;
   const thS='padding:8px 6px;background:#1a3d72;color:#fff;font-size:10px;font-weight:700;text-align:left;white-space:nowrap;border:1px solid rgba(255,255,255,0.1);position:sticky;top:0;z-index:2;';
   const sqnTh=`<th style="${thS}width:58px;min-width:58px;text-align:center;">SQN</th>`;
   const chkTh=`<th style="${thS}width:36px;min-width:36px;text-align:center;"><input type="checkbox" id="types-chk-all" onchange="_typesSelectAll(this.checked)" style="cursor:pointer;width:14px;height:14px;" title="Select all"></th>`;
@@ -437,11 +438,41 @@ function _renderTypesTable(pid,isDev){
   const rows=types.map((t,i)=>{
     const sqnCell=`<td style="${fixedCellS}">${String(i).padStart(4,'0')}</td>`;
     const chkCell=`<td style="padding:4px;border:1px solid var(--border);text-align:center;"><input type="checkbox" class="types-row-chk" data-idx="${i}" style="cursor:pointer;width:14px;height:14px;"></td>`;
+    if(t._groupRole==='parent'){
+      const subs=types.filter(s=>s._groupId===t._groupId&&s._groupRole==='sub');
+      const totalSurf=subs.reduce((sum,s)=>{const l=parseFloat(s.largeur)||0,h=parseFloat(s.hauteur)||0;return sum+(l&&h?(l*h)/1e6:0);},0);
+      const surfDisplay=subs.length?totalSurf.toFixed(3):'';
+      const pCells=_TYPE_COLS.map(c=>{
+        if(c.calc)return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#d8e8f8;font-size:11px;font-weight:700;color:#1a3d72;text-align:center;">${surfDisplay}</td>`;
+        let val;
+        if(c.key==='panelType')val='MULTIPLE';
+        else if(c.key==='chantier_largeur'||c.key==='chantier_hauteur')val='multiple';
+        else val=(t[c.key]||'').toString();
+        const align=c.dim?'text-align:right;':'';
+        return `<td style="padding:4px 6px;border:1px solid var(--border);background:#e8f0fa;font-size:11px;font-weight:700;${align}color:#1a3d72;">${val||'—'}</td>`;
+      }).join('');
+      return `<tr style="background:#e8f0fa;">${sqnCell}${chkCell}${pCells}</tr>`;
+    }
+    if(t._groupRole==='sub'){
+      const subCells=_TYPE_COLS.map(c=>{
+        const val=(t[c.key]||'').toString();
+        if(c.calc){const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#ddeaf9;font-size:11px;color:var(--text3);text-align:center;">${l&&h?((l*h)/1e6).toFixed(3):''}</td>`;}
+        const align=c.dim?'text-align:right;':'';
+        if(isDev){
+          if(c.key==='panelType')return `<td style="padding:2px 2px 2px 0;border:1px solid var(--border);"><span style="color:#1a6abf;font-size:11px;padding:0 2px 0 5px;vertical-align:middle;">└</span><input id="ti-${i}-${c.key}" value="${val.replace(/"/g,'&quot;')}" style="${inS}width:calc(100% - 20px);"></td>`;
+          const onInput=c.key==='largeur'||c.key==='hauteur'?`oninput="_typesCalcSurf(${i})"`:'' ;
+          return `<td style="padding:2px 4px;border:1px solid var(--border);${align}"><input id="ti-${i}-${c.key}" value="${val.replace(/"/g,'&quot;')}" ${onInput} style="${inS}${align}"></td>`;
+        }
+        if(c.key==='panelType')return `<td style="padding:4px 6px;border:1px solid var(--border);"><span style="color:#1a6abf;font-size:11px;margin-right:3px;">└</span><span style="${roS}">${val||'—'}</span></td>`;
+        return `<td style="padding:4px 6px;border:1px solid var(--border);${align}"><span style="${roS}">${val||'—'}</span></td>`;
+      }).join('');
+      return `<tr style="background:#f0f6ff;">${sqnCell}${chkCell}${subCells}</tr>`;
+    }
     const cells=_TYPE_COLS.map(c=>{
       const val=(t[c.key]||'').toString();
       if(c.calc){
         const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;
-        return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;color:var(--text3);text-align:center;">${l&&h?(l*h).toFixed(3):''}</td>`;
+        return `<td id="types-surf-${i}" style="padding:4px 6px;border:1px solid var(--border);background:#f7f9fc;font-size:11px;color:var(--text3);text-align:center;">${l&&h?((l*h)/1e6).toFixed(3):''}</td>`;
       }
       const align=c.dim?'text-align:right;':'';
       if(isDev){
@@ -463,8 +494,25 @@ function _typesSelectAll(checked){
 function _typesCalcSurf(i){
   const l=parseFloat(document.getElementById('ti-'+i+'-largeur')?.value)||0;
   const h=parseFloat(document.getElementById('ti-'+i+'-hauteur')?.value)||0;
+  const surfVal=l&&h?((l*h)/1e6).toFixed(3):'';
   const c=document.getElementById('types-surf-'+i);
-  if(c)c.textContent=l&&h?(l*h).toFixed(3):'';
+  if(c)c.textContent=surfVal;
+  const pid=document.getElementById('types-table-container')?.dataset?.pid;
+  if(!pid)return;
+  const types=_custTypesCache[pid]||[];
+  const t=types[i];
+  if(!t?._groupId)return;
+  const parentIdx=types.findIndex(r=>r._groupId===t._groupId&&r._groupRole==='parent');
+  if(parentIdx<0)return;
+  let total=0,hasAny=false;
+  types.forEach((s,j)=>{
+    if(s._groupId!==t._groupId||s._groupRole!=='sub')return;
+    const sl=parseFloat(document.getElementById('ti-'+j+'-largeur')?.value||s.largeur)||0;
+    const sh=parseFloat(document.getElementById('ti-'+j+'-hauteur')?.value||s.hauteur)||0;
+    if(sl&&sh){total+=(sl*sh)/1e6;hasAny=true;}
+  });
+  const pc=document.getElementById('types-surf-'+parentIdx);
+  if(pc)pc.textContent=hasAny?total.toFixed(3):'';
 }
 function _typesDeleteSelected(pid){
   if(_isViewer()){_viewerToast();return;}
@@ -472,15 +520,75 @@ function _typesDeleteSelected(pid){
   if(!checked.length){alert('No rows selected. Tick the checkboxes of the rows you want to delete.');return;}
   if(!confirm(`Delete ${checked.length} selected row${checked.length>1?'s':''}?`))return;
   const types=_custTypesCache[pid]||[];
-  _custTypesCache[pid]=types.filter((_,i)=>!checked.includes(i));
+  const deletingParentGroupIds=new Set(checked.filter(i=>types[i]?._groupRole==='parent').map(i=>types[i]._groupId));
+  let result=types.filter((_,i)=>!checked.includes(i));
+  // Parent deleted → ungroup its subs
+  result=result.map(t=>{
+    if(t._groupRole==='sub'&&deletingParentGroupIds.has(t._groupId)){
+      const{_groupRole,_groupId,_groupBase,...rest}=t;
+      return rest;
+    }
+    return t;
+  });
+  // All subs of a group deleted → restore parent to normal row
+  const remainingSubsPerGroup={};
+  result.forEach(t=>{if(t._groupRole==='sub')remainingSubsPerGroup[t._groupId]=(remainingSubsPerGroup[t._groupId]||0)+1;});
+  result=result.map(t=>{
+    if(t._groupRole==='parent'&&!remainingSubsPerGroup[t._groupId]){
+      const{_groupRole,_groupId,_groupBase,_origChantierL,_origChantierH,...rest}=t;
+      return{...rest,panelType:_groupBase||'',chantier_largeur:_origChantierL||'',chantier_hauteur:_origChantierH||''};
+    }
+    return t;
+  });
+  _custTypesCache[pid]=result;
   _renderTypesTable(pid,true);
 }
 function _typesAddRow(pid){
   if(_isViewer()){_viewerToast();return;}
   if(!_custTypesCache[pid])_custTypesCache[pid]=[];
-  _custTypesCache[pid].push({id:'new-'+Date.now(),panelType:'',designation:'',type_composition:'',ouvrants_type:'',ouvrants_nombre:'',type_vitrage:'',gamme:'',traitement_surface:'',finition:'',couleur:'',largeur:'',hauteur:'',chantier_largeur:'',chantier_hauteur:'',surface:'',_isNew:true});
+  const types=_custTypesCache[pid];
+  const checked=[...document.querySelectorAll('.types-row-chk:checked')];
+  if(checked.length===1){
+    const idx=parseInt(checked[0].dataset.idx);
+    const sel=types[idx];
+    if(sel._groupRole==='sub')return;
+    if(sel._groupRole==='parent'){
+      const subs=types.filter(t=>t._groupId===sel._groupId&&t._groupRole==='sub');
+      const nextNum=subs.length;
+      const templateSub=subs[0]||{};
+      const newSub={...templateSub,id:'new-'+Date.now(),panelType:`${sel._groupBase}-${String(nextNum).padStart(2,'0')}`,_groupRole:'sub',_groupId:sel._groupId,_groupBase:sel._groupBase,_isNew:true};
+      let lastSubIdx=idx;
+      types.forEach((t,j)=>{if(t._groupId===sel._groupId&&t._groupRole==='sub')lastSubIdx=j;});
+      types.splice(lastSubIdx+1,0,newSub);
+      _renderTypesTable(pid);
+      const newIdx=types.indexOf(newSub);
+      setTimeout(()=>{const el=document.getElementById('ti-'+newIdx+'-panelType');if(el)el.focus();},40);
+      return;
+    }
+    // Normal row → convert to parent + create 2 subs
+    const base=sel.panelType||'';
+    const groupId='grp-'+Date.now();
+    const origChantierL=sel.chantier_largeur||'';
+    const origChantierH=sel.chantier_hauteur||'';
+    const originalData={...sel};
+    sel.panelType='multiple';
+    sel._groupRole='parent';
+    sel._groupId=groupId;
+    sel._groupBase=base;
+    sel._origChantierL=origChantierL;
+    sel._origChantierH=origChantierH;
+    sel.chantier_largeur='multiple';
+    sel.chantier_hauteur='multiple';
+    const sub00={...originalData,id:'new-'+Date.now()+'-00',panelType:`${base}-00`,_groupRole:'sub',_groupId:groupId,_groupBase:base,_isNew:true};
+    const sub01={...originalData,id:'new-'+(Date.now()+1)+'-01',panelType:`${base}-01`,_groupRole:'sub',_groupId:groupId,_groupBase:base,_isNew:true};
+    types.splice(idx+1,0,sub00,sub01);
+    _renderTypesTable(pid);
+    return;
+  }
+  // Default: add blank row at bottom
+  types.push({id:'new-'+Date.now(),panelType:'',designation:'',type_composition:'',ouvrants_type:'',ouvrants_nombre:'',type_vitrage:'',gamme:'',traitement_surface:'',finition:'',couleur:'',largeur:'',hauteur:'',chantier_largeur:'',chantier_hauteur:'',surface:'',_isNew:true});
   _renderTypesTable(pid);
-  setTimeout(()=>{const el=document.getElementById('ti-'+(_custTypesCache[pid].length-1)+'-panelType');if(el)el.focus();},40);
+  setTimeout(()=>{const el=document.getElementById('ti-'+(types.length-1)+'-panelType');if(el)el.focus();},40);
 }
 function _typesNextRevName(types,base){
   const stripped=(base||'').replace(/\s+Rev\.\d+$/,'').trim();
@@ -496,11 +604,19 @@ async function _typesSave(pid){
   const readN=(i,key)=>{ const v=document.getElementById(`ti-${i}-${key}`)?.value; return v!==undefined&&v!==''?v:''; };
   const updated=[];
   types.forEach((t,i)=>{
+    if(t._groupRole==='parent'){
+      const orig={...t};delete orig._isNew;
+      updated.push(orig);
+      return;
+    }
     const l=readN(i,'largeur'),h=readN(i,'hauteur');
     const sf=l&&h?((parseFloat(l)||0)*(parseFloat(h)||0)/1e6).toFixed(3):'';
-    const cur={panelType:read(i,'panelType'),designation:read(i,'designation'),type_composition:read(i,'type_composition'),ouvrants_type:read(i,'ouvrants_type'),ouvrants_nombre:readN(i,'ouvrants_nombre'),type_vitrage:read(i,'type_vitrage'),gamme:read(i,'gamme'),traitement_surface:read(i,'traitement_surface'),finition:read(i,'finition'),couleur:read(i,'couleur'),largeur:l,hauteur:h,chantier_largeur:read(i,'chantier_largeur'),chantier_hauteur:read(i,'chantier_hauteur'),surface:sf};
+    const groupFields=t._groupRole==='sub'?{_groupRole:t._groupRole,_groupId:t._groupId,_groupBase:t._groupBase}:{};
+    const cur={...groupFields,panelType:read(i,'panelType'),designation:read(i,'designation'),type_composition:read(i,'type_composition'),ouvrants_type:read(i,'ouvrants_type'),ouvrants_nombre:readN(i,'ouvrants_nombre'),type_vitrage:read(i,'type_vitrage'),gamme:read(i,'gamme'),traitement_surface:read(i,'traitement_surface'),finition:read(i,'finition'),couleur:read(i,'couleur'),largeur:l,hauteur:h,chantier_largeur:read(i,'chantier_largeur'),chantier_hauteur:read(i,'chantier_hauteur'),surface:sf};
     if(t._isNew){
       updated.push({...cur,id:'typ-'+Date.now()+'-'+i});
+    } else if(t._groupRole==='sub'){
+      updated.push({...cur,id:t.id});
     } else {
       const changed=_TYPE_COLS.filter(c=>!c.calc).some(c=>(cur[c.key]||'')!==(String(t[c.key]||'')));
       if(changed){
@@ -512,6 +628,14 @@ async function _typesSave(pid){
         const orig={...t};delete orig._isNew;
         updated.push(orig);
       }
+    }
+  });
+  // Recompute parent surfaces from their subs
+  updated.forEach(t=>{
+    if(t._groupRole==='parent'){
+      const subs=updated.filter(s=>s._groupId===t._groupId&&s._groupRole==='sub');
+      const total=subs.reduce((sum,s)=>{const l=parseFloat(s.largeur)||0,h=parseFloat(s.hauteur)||0;return sum+(l&&h?(l*h)/1e6:0);},0);
+      t.surface=subs.length?total.toFixed(3):'';
     }
   });
   _custTypesCache[pid]=updated;
@@ -547,7 +671,7 @@ function _typesImportExcel(ev,pid){
         const t={id:'imp-'+Date.now()+'-'+Math.random().toString(36).slice(2),_isNew:true};
         Object.entries(r).forEach(([col,val])=>{const mapped=colMap[col.toLowerCase().trim()];if(mapped)t[mapped]=val!=null?String(val):'';});
         // Auto-calc surface if missing
-        if((!t.surface||t.surface==='')&&t.largeur&&t.hauteur){const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;if(l&&h)t.surface=(l*h).toFixed(3);}
+        if((!t.surface||t.surface==='')&&t.largeur&&t.hauteur){const l=parseFloat(t.largeur)||0,h=parseFloat(t.hauteur)||0;if(l&&h)t.surface=((l*h)/1e6).toFixed(3);}
         return t;
       });
       if(!_custTypesCache[pid])_custTypesCache[pid]=[];
@@ -3654,7 +3778,7 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
     (function(){
       const l=parseFloat(document.getElementById('cp-largeur').value)||0;
       const h=parseFloat(document.getElementById('cp-hauteur').value)||0;
-      document.getElementById('cp-surface').value=l&&h?(l*h).toFixed(3):'';
+      document.getElementById('cp-surface').value=l&&h?((l*h)/1e6).toFixed(3):'';
     })()`;
 
   body.innerHTML=`
