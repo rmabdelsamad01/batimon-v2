@@ -32,10 +32,10 @@ function _pvUndoPush(){
   _pvSyncPvUndoRedoBtns();
 }
 function _pvSyncPvUndoRedoBtns(){
-  const ub=document.getElementById('pv-undo-btn');
-  const rb=document.getElementById('pv-redo-btn');
-  if(ub){ub.disabled=_pvUndoStack.length===0;ub.style.opacity=_pvUndoStack.length===0?'0.4':'1';}
-  if(rb){rb.disabled=_pvRedoStack.length===0;rb.style.opacity=_pvRedoStack.length===0?'0.4':'1';}
+  const ub=document.getElementById('cg-undo-btn');
+  const rb=document.getElementById('cg-redo-btn');
+  if(ub){ub.disabled=_pvUndoStack.length===0;ub.style.opacity=_pvUndoStack.length===0?'0.35':'1';ub.title=_pvUndoStack.length>0?`Undo last action (${_pvUndoStack.length} step${_pvUndoStack.length>1?'s':''} available)`:'Nothing to undo';}
+  if(rb){rb.disabled=_pvRedoStack.length===0;rb.style.opacity=_pvRedoStack.length===0?'0.35':'1';rb.title=_pvRedoStack.length>0?`Redo last action (${_pvRedoStack.length} step${_pvRedoStack.length>1?'s':''} available)`:'Nothing to redo';}
 }
 function pvUndoLast(){
   if(!_pvUndoStack.length) return;
@@ -178,9 +178,7 @@ function _pvBuild(container, isDev, floors){
       <button onclick="pvShowDupModal()"
         style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;">Duplicate from…</button>
       <span id="pv-hint" style="font-size:10px;color:#a07800;font-style:italic;"></span>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-        <button id="pv-undo-btn" onclick="pvUndoLast()" disabled style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;" title="Nothing to undo">↩ Undo</button>
-        <button id="pv-redo-btn" onclick="pvRedoLast()" disabled style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;" title="Nothing to redo">↪ Redo</button>
+      <div style="margin-left:auto;">
         <button onclick="pvSaveLayout(false)"
           style="padding:3px 13px;border:none;border-radius:5px;background:#224F93;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;">Save Layout</button>
       </div>
@@ -1248,10 +1246,12 @@ async function pvSwitchView(view){
     if(fb){fb.style.background='var(--surface)';fb.style.color='var(--text2)';fb.style.borderColor='var(--border)';}
     const {pid,facade}=_pvState;
     if(pid&&facade) await renderPlanView(pid,facade,pv);
+    _pvSyncPvUndoRedoBtns();
   } else {
     pv.style.display='none'; fv.style.display='flex'; fv.style.flexDirection='column';
     if(fb){fb.style.background='#224F93';fb.style.color='#fff';fb.style.borderColor='#224F93';}
     if(pb){pb.style.background='var(--surface)';pb.style.color='var(--text2)';pb.style.borderColor='var(--border)';}
     const mr=document.getElementById('pv-modals-root'); if(mr) mr.remove();
+    if(typeof _syncUndoRedoBtns==='function') _syncUndoRedoBtns();
   }
 }
