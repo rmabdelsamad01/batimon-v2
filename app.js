@@ -2383,7 +2383,7 @@ function _renderPage(id){
 
   // Pages that need a pre-built HTML shell (inner IDs used by render fns)
   if(id==='dashboard'){
-    root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><div style="font-size:18px;font-weight:700;margin-bottom:3px;">Project Overview</div><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div></div></div></div>`;
+    root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><div style="font-size:18px;font-weight:700;margin-bottom:3px;">Project Overview</div><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div><div style="margin-top:22px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Panels per Floor</span></div><div id="floor-summary" style="margin-top:10px;"></div></div></div></div>`;
   } else if(id==='batidoc'){
     // Only rebuild the shell if the iframe doesn't already exist (avoid destroying a live iframe)
     if(!document.getElementById('batidoc-frame')){
@@ -4323,6 +4323,48 @@ function renderDash(){
   // Use the same full sidebar as EF/WF
   const wrap=document.getElementById('dash-sidebar-wrap');
   if(wrap) wrap.innerHTML=efSidebarHTML();
+  // ── Panels per Floor ─────────────────────────────────────────
+  const floorMap={};
+  allPanelIds().forEach(id=>{
+    const m=id.match(/^([WESN])-(\d+)-(\d+)$/i);
+    if(!m) return;
+    const floorNum=parseInt(m[2],10);
+    const floorLabel=floorNum===0?'RDC':`R+${String(floorNum).padStart(2,'0')}`;
+    if(!floorMap[floorLabel]) floorMap[floorLabel]={num:floorNum,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0,pending:0,total:0};
+    const st=(panels[id]||{}).status||'pending';
+    floorMap[floorLabel].total++;
+    floorMap[floorLabel][st]=(floorMap[floorLabel][st]||0)+1;
+  });
+  const floorRows=Object.values(floorMap).sort((a,b)=>b.num-a.num);
+  const floorCols=[
+    {key:'installed',label:'Inst.',color:'#1a9458'},
+    {key:'delivered',label:'Del.',color:'#a07800'},
+    {key:'fabricated',label:'Fab.',color:'#1a5fa8'},
+    {key:'cutting',label:'CL',color:'#C98BCA'},
+    {key:'cip',label:'CIP',color:'#A349A4'},
+    {key:'cl_not_issued',label:'CL NI',color:'#FF6666'},
+    {key:'defect',label:'Def.',color:'#c02020'},
+  ];
+  const thS='padding:5px 8px;font-size:9px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#fff;background:#1a3d72;border:1px solid rgba(255,255,255,0.1);white-space:nowrap;text-align:center;';
+  const flEl=document.getElementById('floor-summary');
+  if(flEl){
+    flEl.innerHTML=`<div style="overflow-x:auto;"><table style="border-collapse:collapse;font-family:var(--mono);width:100%;"><thead><tr>
+      <th style="${thS}text-align:left;">Floor</th>
+      <th style="${thS}">Total</th>
+      ${floorCols.map(c=>`<th style="${thS}color:${c.color};">${c.label}</th>`).join('')}
+      <th style="${thS}">Inst. %</th>
+    </tr></thead><tbody>${floorRows.map((r,i)=>{
+      const bg=i%2?'var(--surface2)':'var(--surface)';
+      const pct=r.total?Math.round(r.installed/r.total*100):0;
+      const floorLabel=r.num===0?'RDC':`R+${String(r.num).padStart(2,'0')}`;
+      return`<tr style="background:${bg};">
+        <td style="padding:5px 8px;font-size:11px;font-weight:700;color:var(--text);border:1px solid var(--border);">${floorLabel}</td>
+        <td style="padding:5px 8px;font-size:11px;font-weight:700;color:#1a2a3a;text-align:center;border:1px solid var(--border);">${r.total}</td>
+        ${floorCols.map(c=>{const v=r[c.key]||0;return`<td style="padding:5px 8px;font-size:11px;text-align:center;color:${v>0?c.color:'var(--text3)'};font-weight:${v>0?'700':'400'};border:1px solid var(--border);">${v>0?v:'—'}</td>`;}).join('')}
+        <td style="padding:5px 8px;font-size:11px;font-weight:700;text-align:center;color:#1a9458;border:1px solid var(--border);">${pct}%</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+  }
 }
 
 function sidebarHTML(zid,color){
