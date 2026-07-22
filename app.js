@@ -14775,7 +14775,7 @@ function _demoLegendBreakdown(lid){
   });
   if(!Object.keys(map).length) return '<div style="font-size:10px;color:#8099b0;padding:6px 4px;text-align:center;">No panels assigned.</div>';
 
-  const rows=[['Facade','Floor','Type','Qty']]; // for clipboard
+  const rowsDetailed=[['Facade','Floor','Type','Qty']]; // detailed: per-facade only
   let html=`<table id="demo-leg-tbl-${lid}" style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--font);">
     <thead><tr style="background:#f0f4fb;">
       <th style="text-align:left;padding:3px 5px;border:1px solid #dde3ee;color:#224F93;">Facade</th>
@@ -14803,42 +14803,41 @@ function _demoLegendBreakdown(lid){
           <td style="padding:3px 5px;border:1px solid #dde3ee;">${floor}</td>
           <td style="padding:3px 5px;border:1px solid #dde3ee;">${type}</td>
           <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:600;">${qty}</td></tr>`;
-        rows.push([zoneName,floor,type,qty]);
+        rowsDetailed.push([zoneName,floor,type,qty]);
       });
     });
     totalAll+=zoneTotal;
     html+=`<tr style="background:#f5f8ff;"><td colspan="3" style="padding:3px 5px;border:1px solid #dde3ee;font-weight:700;color:${zoneColor};">${zoneName} — Total</td>
       <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:700;color:${zoneColor};">${zoneTotal}</td></tr>`;
-    rows.push([zoneName+' — Total','','',zoneTotal]);
+    rowsDetailed.push([zoneName+' — Total','','',zoneTotal]);
   });
 
   // Combined
   html+=`<tr style="background:#fff3e0;"><td colspan="4" style="padding:3px 5px;border:1px solid #dde3ee;font-weight:700;color:#a05000;">All Facades Combined</td></tr>`;
-  rows.push(['All Facades Combined','','','']);
+  const rowsPerType=[['Type','Qty']];
   Object.keys(combined).sort().forEach(type=>{
     html+=`<tr style="background:#fffbf5;"><td style="padding:3px 5px;border:1px solid #dde3ee;"></td>
       <td style="padding:3px 5px;border:1px solid #dde3ee;"></td>
       <td style="padding:3px 5px;border:1px solid #dde3ee;">${type}</td>
       <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:600;">${combined[type]}</td></tr>`;
-    rows.push(['','',type,combined[type]]);
+    rowsPerType.push([type,combined[type]]);
   });
+  rowsPerType.push(['TOTAL',totalAll]);
   html+=`<tr style="background:#fff8e1;"><td colspan="3" style="padding:3px 5px;border:1px solid #dde3ee;font-weight:700;">TOTAL</td>
     <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:700;">${totalAll}</td></tr>`;
-  rows.push(['TOTAL','','',totalAll]);
   html+=`</tbody></table>`;
 
   // Panels per Floor for this legend item
   const floorCount={};
   ['NF','SF','EF','WF'].forEach(zid=>{
     if(!map[zid]) return;
-    const zone=ZONES.find(z=>z.id===zid);
-    const floorOrder=zone?zone.floors:[];
     Object.keys(map[zid]).forEach(floor=>{
       const qty=Object.values(map[zid][floor]).reduce((s,v)=>s+v,0);
       floorCount[floor]=(floorCount[floor]||0)+qty;
     });
   });
   const floorOrder=NF_FLOORS.filter(f=>floorCount[f]);
+  const rowsPerFloor=[['Floor','Qty']];
   if(floorOrder.length){
     const thF='padding:3px 5px;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:1px solid #c8d8ee;text-align:center;white-space:nowrap;';
     html+=`<div style="margin-top:8px;font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:3px;">Panels per Floor</div>
@@ -14851,26 +14850,39 @@ function _demoLegendBreakdown(lid){
       const bg=i%2?'#f8fafd':'#ffffff';
       html+=`<tr style="background:${bg};"><td style="padding:3px 5px;border:1px solid #dde3ee;font-weight:600;color:#1e3a5f;">${floor}</td>
         <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:700;color:#224F93;">${floorCount[floor]}</td></tr>`;
+      rowsPerFloor.push([floor,floorCount[floor]]);
     });
     html+=`</tbody></table>`;
   }
 
-  // Store rows for clipboard
-  window['_demoLegRows_'+lid]=rows;
+  // Store clipboard data by mode
+  window['_demoLeg_detailed_'+lid]=rowsDetailed;
+  window['_demoLeg_pertype_'+lid]=rowsPerType;
+  window['_demoLeg_perfloor_'+lid]=rowsPerFloor;
   return html;
 }
 
-function _demoCopyLegTable(lid){
-  const rows=window['_demoLegRows_'+lid]||[];
+function _demoCopyLeg(lid,mode){
+  let rows=[];
+  if(mode==='detailed') rows=window['_demoLeg_detailed_'+lid]||[];
+  else if(mode==='pertype') rows=window['_demoLeg_pertype_'+lid]||[];
+  else if(mode==='perfloor') rows=window['_demoLeg_perfloor_'+lid]||[];
+  else if(mode==='all'){
+    const d=window['_demoLeg_detailed_'+lid]||[];
+    const t=window['_demoLeg_pertype_'+lid]||[];
+    const f=window['_demoLeg_perfloor_'+lid]||[];
+    rows=[...d,[''],[''],...t,[''],[''],...f];
+  }
   const tsv=rows.map(r=>r.join('\t')).join('\n');
-  navigator.clipboard.writeText(tsv).then(()=>{
-    const btn=document.getElementById('demo-leg-copy-'+lid);
+  const btnId='demo-leg-copy-'+mode+'-'+lid;
+  const copy=()=>{
+    const btn=document.getElementById(btnId);
     if(btn){const o=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent=o,2000);}
-  }).catch(()=>{
+  };
+  navigator.clipboard.writeText(tsv).then(copy).catch(()=>{
     const ta=document.createElement('textarea');
     ta.value=tsv;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-    const btn=document.getElementById('demo-leg-copy-'+lid);
-    if(btn){const o=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>btn.textContent=o,2000);}
+    copy();
   });
 }
 
@@ -15125,10 +15137,16 @@ function _demoRenderOverview(area){
               </div>
               ${isExp?`<div style="margin-top:10px;">
                 ${_demoLegendBreakdown(item.id)}
-                <button id="demo-leg-copy-${item.id}" onclick="_demoCopyLegTable('${item.id}')"
-                  style="margin-top:6px;font-size:10px;padding:4px 14px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);">
-                  📋 Copy for Excel
-                </button>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">
+                  <button id="demo-leg-copy-detailed-${item.id}" onclick="_demoCopyLeg('${item.id}','detailed')"
+                    style="font-size:10px;padding:4px 10px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);">📋 Detailed</button>
+                  <button id="demo-leg-copy-pertype-${item.id}" onclick="_demoCopyLeg('${item.id}','pertype')"
+                    style="font-size:10px;padding:4px 10px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);">📋 Per Type</button>
+                  <button id="demo-leg-copy-perfloor-${item.id}" onclick="_demoCopyLeg('${item.id}','perfloor')"
+                    style="font-size:10px;padding:4px 10px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);">📋 Per Floor</button>
+                  <button id="demo-leg-copy-all-${item.id}" onclick="_demoCopyLeg('${item.id}','all')"
+                    style="font-size:10px;padding:4px 10px;border:1px solid #dde3ee;border-radius:4px;cursor:pointer;background:#f5f8ff;color:#224F93;font-family:var(--font);">📋 All</button>
+                </div>
               </div>`:''}
             </div>`;
           }).join('')
