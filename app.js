@@ -14836,7 +14836,7 @@ function _demoLegendBreakdown(lid){
       floorCount[floor]=(floorCount[floor]||0)+qty;
     });
   });
-  const floorOrder=NF_FLOORS.filter(f=>floorCount[f]);
+  const floorOrder=NF_FLOORS.filter(f=>floorCount[f]).reverse();
   const rowsPerFloor=[['Floor','Qty']];
   if(floorOrder.length){
     const thF='padding:3px 5px;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:1px solid #c8d8ee;text-align:center;white-space:nowrap;';
