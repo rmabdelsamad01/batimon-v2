@@ -14827,6 +14827,34 @@ function _demoLegendBreakdown(lid){
   rows.push(['TOTAL','','',totalAll]);
   html+=`</tbody></table>`;
 
+  // Panels per Floor for this legend item
+  const floorCount={};
+  ['NF','SF','EF','WF'].forEach(zid=>{
+    if(!map[zid]) return;
+    const zone=ZONES.find(z=>z.id===zid);
+    const floorOrder=zone?zone.floors:[];
+    Object.keys(map[zid]).forEach(floor=>{
+      const qty=Object.values(map[zid][floor]).reduce((s,v)=>s+v,0);
+      floorCount[floor]=(floorCount[floor]||0)+qty;
+    });
+  });
+  const floorOrder=NF_FLOORS.filter(f=>floorCount[f]);
+  if(floorOrder.length){
+    const thF='padding:3px 5px;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:1px solid #c8d8ee;text-align:center;white-space:nowrap;';
+    html+=`<div style="margin-top:8px;font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#8099b0;margin-bottom:3px;">Panels per Floor</div>
+    <table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--font);">
+    <thead><tr>
+      <th style="${thF}color:#224F93;background:#e8f0fb;text-align:left;">Floor</th>
+      <th style="${thF}color:#224F93;background:#e8f0fb;">Qty</th>
+    </tr></thead><tbody>`;
+    floorOrder.forEach((floor,i)=>{
+      const bg=i%2?'#f8fafd':'#ffffff';
+      html+=`<tr style="background:${bg};"><td style="padding:3px 5px;border:1px solid #dde3ee;font-weight:600;color:#1e3a5f;">${floor}</td>
+        <td style="padding:3px 5px;border:1px solid #dde3ee;text-align:center;font-weight:700;color:#224F93;">${floorCount[floor]}</td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  }
+
   // Store rows for clipboard
   window['_demoLegRows_'+lid]=rows;
   return html;
@@ -15067,48 +15095,6 @@ function _demoRenderGrid(){
   area.appendChild(wrap);
 }
 
-function _demoFloorSummaryHTML(){
-  const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
-  const allFloors=NF_FLOORS;
-  const totalPerFloor={};
-  ZONES.forEach(z=>{z.floors.forEach(f=>{totalPerFloor[f]=(totalPerFloor[f]||0)+z.colNums.length;});});
-  const coloredPerFloor={};
-  Object.entries(_demoData.panels).forEach(([pid,lid])=>{
-    if(_isMirror.test(pid)) return;
-    const dashIdx=pid.indexOf('-'); if(dashIdx<0) return;
-    const rest=pid.slice(dashIdx+1);
-    const colMatch=rest.match(/-C(\d.*)$/); if(!colMatch) return;
-    const floor=rest.slice(0,rest.length-colMatch[0].length);
-    if(!coloredPerFloor[floor]) coloredPerFloor[floor]={};
-    coloredPerFloor[floor][lid]=(coloredPerFloor[floor][lid]||0)+1;
-  });
-  const legs=_demoData.legend;
-  const thS='padding:4px 7px;font-size:9px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#224F93;background:#e8f0fb;border:1px solid #c8d8ee;white-space:nowrap;text-align:center;';
-  let html=`<div style="margin-top:24px;padding-top:18px;border-top:1px solid #e8f0fb;">
-    <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Panels per Floor</div>
-    <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-family:var(--mono);font-size:10px;">
-    <thead><tr>
-      <th style="${thS}text-align:left;min-width:60px;">Floor</th>
-      <th style="${thS}">Total</th>
-      ${legs.map(l=>`<th style="${thS}"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${l.color};vertical-align:middle;margin-right:3px;"></span>${l.label}</th>`).join('')}
-      <th style="${thS}color:#8099b0;">Uncolored</th>
-    </tr></thead><tbody>`;
-  allFloors.forEach((floor,i)=>{
-    const total=totalPerFloor[floor]||0;
-    const fg=coloredPerFloor[floor]||{};
-    const totalColored=Object.values(fg).reduce((s,v)=>s+v,0);
-    const uncolored=total-totalColored;
-    const bg=i%2?'#f8fafd':'#ffffff';
-    html+=`<tr style="background:${bg};">
-      <td style="padding:4px 7px;border:1px solid #dde3ee;font-weight:700;color:#1e3a5f;">${floor}</td>
-      <td style="padding:4px 7px;border:1px solid #dde3ee;text-align:center;font-weight:700;color:#224F93;">${total}</td>
-      ${legs.map(l=>{const v=fg[l.id]||0;return`<td style="padding:4px 7px;border:1px solid #dde3ee;text-align:center;color:${v>0?l.color:'#c8d0dc'};font-weight:${v>0?'700':'400'};">${v>0?v:'—'}</td>`;}).join('')}
-      <td style="padding:4px 7px;border:1px solid #dde3ee;text-align:center;color:${uncolored>0?'#8099b0':'#c8d0dc'};font-weight:${uncolored>0?'600':'400'};">${uncolored>0?uncolored:'—'}</td>
-    </tr>`;
-  });
-  html+=`</tbody></table></div></div>`;
-  return html;
-}
 
 function _demoRenderOverview(area){
   const totalZonePanels=ZONES.reduce((s,z)=>s+z.floors.length*z.colNums.length,0);
@@ -15147,7 +15133,6 @@ function _demoRenderOverview(area){
             </div>`;
           }).join('')
       }
-      ${_demoFloorSummaryHTML()}
     </div>`;
 }
 
