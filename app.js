@@ -2383,7 +2383,7 @@ function _renderPage(id){
 
   // Pages that need a pre-built HTML shell (inner IDs used by render fns)
   if(id==='dashboard'){
-    root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><div style="font-size:18px;font-weight:700;margin-bottom:3px;">Project Overview</div><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div><div style="margin-top:22px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Panels per Floor</span></div><div id="floor-summary" style="margin-top:10px;"></div></div></div></div>`;
+    root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><div style="font-size:18px;font-weight:700;margin-bottom:3px;">Project Overview</div><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div></div></div></div>`;
   } else if(id==='batidoc'){
     // Only rebuild the shell if the iframe doesn't already exist (avoid destroying a live iframe)
     if(!document.getElementById('batidoc-frame')){
@@ -4323,48 +4323,6 @@ function renderDash(){
   // Use the same full sidebar as EF/WF
   const wrap=document.getElementById('dash-sidebar-wrap');
   if(wrap) wrap.innerHTML=efSidebarHTML();
-  // ── Panels per Floor ─────────────────────────────────────────
-  const floorMap={};
-  allPanelIds().forEach(id=>{
-    const m=id.match(/^([WESN])-(\d+)-(\d+)$/i);
-    if(!m) return;
-    const floorNum=parseInt(m[2],10);
-    const floorLabel=floorNum===0?'RDC':`R+${String(floorNum).padStart(2,'0')}`;
-    if(!floorMap[floorLabel]) floorMap[floorLabel]={num:floorNum,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0,pending:0,total:0};
-    const st=(panels[id]||{}).status||'pending';
-    floorMap[floorLabel].total++;
-    floorMap[floorLabel][st]=(floorMap[floorLabel][st]||0)+1;
-  });
-  const floorRows=Object.values(floorMap).sort((a,b)=>b.num-a.num);
-  const floorCols=[
-    {key:'installed',label:'Inst.',color:'#1a9458'},
-    {key:'delivered',label:'Del.',color:'#a07800'},
-    {key:'fabricated',label:'Fab.',color:'#1a5fa8'},
-    {key:'cutting',label:'CL',color:'#C98BCA'},
-    {key:'cip',label:'CIP',color:'#A349A4'},
-    {key:'cl_not_issued',label:'CL NI',color:'#FF6666'},
-    {key:'defect',label:'Def.',color:'#c02020'},
-  ];
-  const thS='padding:5px 8px;font-size:9px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#fff;background:#1a3d72;border:1px solid rgba(255,255,255,0.1);white-space:nowrap;text-align:center;';
-  const flEl=document.getElementById('floor-summary');
-  if(flEl){
-    flEl.innerHTML=`<div style="overflow-x:auto;"><table style="border-collapse:collapse;font-family:var(--mono);width:100%;"><thead><tr>
-      <th style="${thS}text-align:left;">Floor</th>
-      <th style="${thS}">Total</th>
-      ${floorCols.map(c=>`<th style="${thS}color:${c.color};">${c.label}</th>`).join('')}
-      <th style="${thS}">Inst. %</th>
-    </tr></thead><tbody>${floorRows.map((r,i)=>{
-      const bg=i%2?'var(--surface2)':'var(--surface)';
-      const pct=r.total?Math.round(r.installed/r.total*100):0;
-      const floorLabel=r.num===0?'RDC':`R+${String(r.num).padStart(2,'0')}`;
-      return`<tr style="background:${bg};">
-        <td style="padding:5px 8px;font-size:11px;font-weight:700;color:var(--text);border:1px solid var(--border);">${floorLabel}</td>
-        <td style="padding:5px 8px;font-size:11px;font-weight:700;color:#1a2a3a;text-align:center;border:1px solid var(--border);">${r.total}</td>
-        ${floorCols.map(c=>{const v=r[c.key]||0;return`<td style="padding:5px 8px;font-size:11px;text-align:center;color:${v>0?c.color:'var(--text3)'};font-weight:${v>0?'700':'400'};border:1px solid var(--border);">${v>0?v:'—'}</td>`;}).join('')}
-        <td style="padding:5px 8px;font-size:11px;font-weight:700;text-align:center;color:#1a9458;border:1px solid var(--border);">${pct}%</td>
-      </tr>`;
-    }).join('')}</tbody></table></div>`;
-  }
 }
 
 function sidebarHTML(zid,color){
@@ -15109,6 +15067,49 @@ function _demoRenderGrid(){
   area.appendChild(wrap);
 }
 
+function _demoFloorSummaryHTML(){
+  const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
+  const allFloors=NF_FLOORS;
+  const totalPerFloor={};
+  ZONES.forEach(z=>{z.floors.forEach(f=>{totalPerFloor[f]=(totalPerFloor[f]||0)+z.colNums.length;});});
+  const coloredPerFloor={};
+  Object.entries(_demoData.panels).forEach(([pid,lid])=>{
+    if(_isMirror.test(pid)) return;
+    const dashIdx=pid.indexOf('-'); if(dashIdx<0) return;
+    const rest=pid.slice(dashIdx+1);
+    const colMatch=rest.match(/-C(\d.*)$/); if(!colMatch) return;
+    const floor=rest.slice(0,rest.length-colMatch[0].length);
+    if(!coloredPerFloor[floor]) coloredPerFloor[floor]={};
+    coloredPerFloor[floor][lid]=(coloredPerFloor[floor][lid]||0)+1;
+  });
+  const legs=_demoData.legend;
+  const thS='padding:4px 7px;font-size:9px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#224F93;background:#e8f0fb;border:1px solid #c8d8ee;white-space:nowrap;text-align:center;';
+  let html=`<div style="margin-top:24px;padding-top:18px;border-top:1px solid #e8f0fb;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Panels per Floor</div>
+    <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-family:var(--mono);font-size:10px;">
+    <thead><tr>
+      <th style="${thS}text-align:left;min-width:60px;">Floor</th>
+      <th style="${thS}">Total</th>
+      ${legs.map(l=>`<th style="${thS}"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${l.color};vertical-align:middle;margin-right:3px;"></span>${l.label}</th>`).join('')}
+      <th style="${thS}color:#8099b0;">Uncolored</th>
+    </tr></thead><tbody>`;
+  allFloors.forEach((floor,i)=>{
+    const total=totalPerFloor[floor]||0;
+    const fg=coloredPerFloor[floor]||{};
+    const totalColored=Object.values(fg).reduce((s,v)=>s+v,0);
+    const uncolored=total-totalColored;
+    const bg=i%2?'#f8fafd':'#ffffff';
+    html+=`<tr style="background:${bg};">
+      <td style="padding:4px 7px;border:1px solid #dde3ee;font-weight:700;color:#1e3a5f;">${floor}</td>
+      <td style="padding:4px 7px;border:1px solid #dde3ee;text-align:center;font-weight:700;color:#224F93;">${total}</td>
+      ${legs.map(l=>{const v=fg[l.id]||0;return`<td style="padding:4px 7px;border:1px solid #dde3ee;text-align:center;color:${v>0?l.color:'#c8d0dc'};font-weight:${v>0?'700':'400'};">${v>0?v:'—'}</td>`;}).join('')}
+      <td style="padding:4px 7px;border:1px solid #dde3ee;text-align:center;color:${uncolored>0?'#8099b0':'#c8d0dc'};font-weight:${uncolored>0?'600':'400'};">${uncolored>0?uncolored:'—'}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div></div>`;
+  return html;
+}
+
 function _demoRenderOverview(area){
   const totalZonePanels=ZONES.reduce((s,z)=>s+z.floors.length*z.colNums.length,0);
   const totalColored=Object.keys(_demoData.panels).length;
@@ -15146,6 +15147,7 @@ function _demoRenderOverview(area){
             </div>`;
           }).join('')
       }
+      ${_demoFloorSummaryHTML()}
     </div>`;
 }
 
