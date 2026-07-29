@@ -1117,6 +1117,7 @@ function pvLinkSave(){
   _pvPendingRect=null; _pvEditingRectId=null;
   pvLinkCancel();
   _pvRefreshSVG();
+  pvSaveLayout(true);
 }
 
 function pvLinkCancel(){
