@@ -3503,6 +3503,14 @@ function custUrClear(pid,facade,ci){
   _custSetMeta(pid,facade,meta);renderCustomMonitoring(window._currentCustomPage);
 }
 function _cgToggleSplitView(){
+  const pid=window._activeProjectId;
+  const pgId=window._currentCustomPage||'NF';
+  const _fm=pgId.match(/^c(\d+)-([A-Z]+)$/);
+  const _fac=_fm?(parseInt(_fm[1])===1?_fm[2]:pgId):(pgId||'NF');
+  const _meta=_custGetMeta(pid,_fac);
+  if(!(_meta&&_meta.upperRow&&_meta.upperRow.enabled)){
+    showToast('Enable Upper Row first to use Split View');return;
+  }
   _cgSplitView=!_cgSplitView;
   renderCustomMonitoring(window._currentCustomPage);
 }
@@ -4138,7 +4146,7 @@ async function renderCustomMonitoring(pageId){
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
             ${_filterBtns}
-            ${_urEnabled?`<div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div><button onclick="_cgToggleSplitView()" style="${bs}${_cgSplitView?'background:#224F93;color:#fff;':''}" title="Toggle split / single table view">${_cgSplitView?'⊞ 1 Table':'⊟ Split View'}</button>`:''}
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div><button onclick="_cgToggleSplitView()" style="${bs}${_cgSplitView&&_urEnabled?'background:#224F93;color:#fff;':''}" title="Toggle split / single table view${_urEnabled?'':' (enable Upper Row first)'}">${_cgSplitView&&_urEnabled?'⊞ 1 Table':'⊟ Split View'}</button>
             ${_zoomControls}
             ${_printBtn}
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
