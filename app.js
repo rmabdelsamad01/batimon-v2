@@ -6318,7 +6318,6 @@ function efSidebarHTML(){
      customSubHTML:_customMonHTML},
     {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['Fabrication Rate','Delivery Rate','Installation Rate','Fabrication Counting']},
     {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
-    ...(!isCustomProject?[{id:'site-stock', label:'Site stock', icon:'📦', color:'#0d9488', subs:[]}]:[]),
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
     {id:'plan', label:'Planning',     icon:'📅', color:'#e05c00', subs:[]},
@@ -6334,6 +6333,7 @@ function efSidebarHTML(){
       'Signed Checklist':['Signed Bracket Installation','Signed Panel Assembly','Signed Panel Prep et Inst']
     }},
     {id:'supabase', label:'My Database', icon:'⚡', color:'#3ecf8e', subs:[]},
+    ...(!isCustomProject?[{id:'site-stock', label:'Site stock', icon:'📦', color:'#0d9488', subs:[]}]:[]),
   ];
   return`<aside class="sb" style="width:210px;flex-shrink:0;overflow-y:auto;">
     <div class="sbs" style="padding:11px 13px;">
