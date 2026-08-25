@@ -18469,9 +18469,10 @@ function _attachMobilePinchZoom(container){
   container.addEventListener('touchend', e=>{
     if(e.touches.length<2) isPinching=false;
     if(e.touches.length===0){
-      // Double-tap resets zoom
       const now=Date.now();
-      if(now-lastTapTime<300){ scale=initialScale; tx=0; ty=0; clamp(); apply(); }
+      // Double-tap resets zoom — but not if the tap was on an interactive element
+      const onInteractive=e.target&&e.target.closest('button,a,input,select,textarea');
+      if(now-lastTapTime<300&&!onInteractive){ scale=initialScale; tx=0; ty=0; clamp(); apply(); }
       lastTapTime=now;
       // Snap back if zoomed out below initial
       if(scale<initialScale*0.85){ scale=initialScale; tx=0; ty=0; clamp(); apply(); }
