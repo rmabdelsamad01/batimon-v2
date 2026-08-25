@@ -15807,7 +15807,7 @@ function renderSiteStock(){
   tableHTML+=`<thead><tr>`;
   tableHTML+=`<th style="padding:7px 14px;background:#224F93;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #1a3d72;min-width:70px;position:sticky;left:0;z-index:2;">Floor</th>`;
   _SS_TYPES.forEach(t=>{
-    tableHTML+=`<th style="padding:7px 16px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:100px;">${t}</th>`;
+    tableHTML+=`<th style="padding:7px 4px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:50px;">${t}</th>`;
   });
   tableHTML+=`</tr></thead><tbody>`;
   // Rows
@@ -15818,11 +15818,11 @@ function renderSiteStock(){
     _SS_TYPES.forEach(t=>{
       const v=(_ssData[f]&&_ssData[f][t])||0;
       const dis=v===0?'opacity:0.3;cursor:default;':'';
-      tableHTML+=`<td style="padding:5px 8px;background:${rowBg};border:1px solid var(--border);text-align:center;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
-          <button id="ss-m-${f}-${t}" onclick="_ssChange('${f}','${t}',-1)" ${v===0?'disabled':''} style="${btnS}${dis}width:22px;padding:2px 0;text-align:center;">−</button>
-          <span id="ss-n-${f}-${t}" style="font-size:13px;font-weight:700;color:${v>0?'var(--text)':'var(--text3)'};min-width:24px;text-align:center;">${v}</span>
-          <button onclick="_ssChange('${f}','${t}',1)" style="${btnS}width:22px;padding:2px 0;text-align:center;">+</button>
+      tableHTML+=`<td style="padding:3px 2px;background:${rowBg};border:1px solid var(--border);text-align:center;min-width:50px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:2px;">
+          <button id="ss-m-${f}-${t}" onclick="_ssChange('${f}','${t}',-1)" ${v===0?'disabled':''} style="${btnS}${dis}width:16px;padding:1px 0;text-align:center;font-size:10px;min-width:0;">−</button>
+          <span id="ss-n-${f}-${t}" style="font-size:11px;font-weight:700;color:${v>0?'var(--text)':'var(--text3)'};min-width:16px;text-align:center;">${v}</span>
+          <button onclick="_ssChange('${f}','${t}',1)" style="${btnS}width:16px;padding:1px 0;text-align:center;font-size:10px;min-width:0;">+</button>
         </div>
       </td>`;
     });
