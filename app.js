@@ -15840,14 +15840,14 @@ function _ssBuildTable(){
   const allCols=[..._SS_TYPES,..._ssExtraTypes];
   const btnS=`padding:1px 0;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text2);font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;cursor:pointer;width:16px;min-width:0;text-align:center;`;
   let h=`<table style="border-collapse:collapse;font-size:11px;font-family:'Barlow',sans-serif;"><thead><tr>`;
-  h+=`<th style="padding:7px 14px;background:#224F93;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #1a3d72;min-width:70px;position:sticky;left:0;z-index:2;">Floor</th>`;
-  _SS_TYPES.forEach(t=>{h+=`<th style="padding:7px 4px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:50px;">${t}</th>`;});
-  _ssExtraTypes.forEach(t=>{h+=`<th style="padding:4px;background:#0d9488;color:#fff;font-weight:700;text-align:center;border:1px solid #0a7a70;min-width:50px;"><div style="display:flex;align-items:center;justify-content:center;gap:4px;">${t}<button onclick="_ssRemoveType('${t}')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:3px;width:14px;height:14px;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;" title="Remove column">×</button></div></th>`;});
-  if(hasMore){h+=`<th style="padding:4px 6px;background:#1a3d72;border:1px solid #15305e;white-space:nowrap;"><button onclick="_ssShowAddTypePopup(this)" style="padding:3px 7px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:5px;color:#fff;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Add type</button></th>`;}
+  h+=`<th style="padding:7px 14px;background:#224F93;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #1a3d72;min-width:70px;position:sticky;top:0;left:0;z-index:4;">Floor</th>`;
+  _SS_TYPES.forEach(t=>{h+=`<th style="padding:7px 4px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:50px;position:sticky;top:0;z-index:3;">${t}</th>`;});
+  _ssExtraTypes.forEach(t=>{h+=`<th style="padding:4px;background:#0d9488;color:#fff;font-weight:700;text-align:center;border:1px solid #0a7a70;min-width:50px;position:sticky;top:0;z-index:3;"><div style="display:flex;align-items:center;justify-content:center;gap:4px;">${t}<button onclick="_ssRemoveType('${t}')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:3px;width:14px;height:14px;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;" title="Remove column">×</button></div></th>`;});
+  if(hasMore){h+=`<th style="padding:4px 6px;background:#1a3d72;border:1px solid #15305e;white-space:nowrap;position:sticky;top:0;z-index:3;"><button onclick="_ssShowAddTypePopup(this)" style="padding:3px 7px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:5px;color:#fff;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Add type</button></th>`;}
   h+=`</tr></thead><tbody>`;
   _SS_FLOORS.forEach((f,fi)=>{
     const rowBg=fi%2===0?'var(--surface2)':'var(--surface)';
-    h+=`<tr><td style="padding:6px 14px;background:#1a3d72;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #15305e;position:sticky;left:0;z-index:1;">${f}</td>`;
+    h+=`<tr><td style="padding:6px 14px;background:#1a3d72;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #15305e;position:sticky;left:0;z-index:2;">${f}</td>`;
     allCols.forEach(t=>{
       const v=(_ssData[f]&&_ssData[f][t])||0;
       const dis=v===0?'opacity:0.3;cursor:default;':'';
