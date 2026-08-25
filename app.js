@@ -18145,7 +18145,7 @@ function _refreshMobileContent(){
   if(facadeBar) facadeBar.style.display='';
   // Restore mob-content to its original scroll behaviour
   const mc=document.getElementById('mob-content');
-  if(mc){mc.style.overflow='';mc.style.overflowX='';mc.style.overflowY='scroll';mc.style.touchAction='pan-y';mc.style.webkitOverflowScrolling='touch';mc.style.display='';mc.style.position='';}
+  if(mc){mc.style.overflow='';mc.style.overflowX='';mc.style.overflowY='scroll';mc.style.touchAction='pan-y';mc.style.webkitOverflowScrolling='touch';mc.style.display='';mc.style.position='';mc.style.flexDirection='';}
   _renderMobileFacadeBar();
   const isOverview=window._mobFacade==='overview';
   if(filterBar) filterBar.style.display=isOverview?'none':'';
@@ -18161,21 +18161,100 @@ async function _renderMobileStock(){
   cont.style.overflow='hidden';
   cont.style.position='relative';
   cont.style.touchAction='none';
-  cont.style.display='block';
-  cont.innerHTML=`<div style="padding:12px 16px;color:#8099b0;font-family:'Barlow',sans-serif;font-size:13px;">Loading site stock…</div>`;
+  cont.style.display='flex';
+  cont.style.flexDirection='column';
+  cont.innerHTML=`<div style="padding:12px 16px;color:#8099b0;font-family:'Barlow',sans-serif;font-size:13px;flex-shrink:0;">Loading site stock…</div>`;
   _ssData={};_ssExtraTypes=[];_ssVerified=false;_ssDeliveredCounts={};
   await _ssLoad();
   const btnStyle='padding:8px 16px;border-radius:8px;border:none;font-family:"Barlow",sans-serif;font-size:12px;font-weight:700;cursor:pointer;';
   const verifyLabel=_ssVerified?'✓ Verified — Reset':'Verify Stock';
   const verifyBg=_ssVerified?'#1a7a3a':'#224F93';
-  cont.innerHTML=`<div id="mob-pinch-target" style="display:inline-block;transform-origin:0 0;will-change:transform;padding:0;">
-    <div style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;border-bottom:1px solid rgba(255,255,255,0.1);min-width:100vw;">
+  // Action bar is outside the zoom area so it stays constant size
+  // The zoom area uses CSS zoom (not transform) so position:sticky works inside
+  cont.innerHTML=`
+    <div id="mob-ss-action-bar" style="flex-shrink:0;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;border-bottom:1px solid rgba(255,255,255,0.1);z-index:20;">
       <span style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:#fff;">Site Stock</span>
       <button onclick="_mobVerifyStock()" style="${btnStyle}background:${verifyBg};color:#fff;">${verifyLabel}</button>
     </div>
-    <div id="mob-ss-table-wrap">${_ssBuildTable()}</div>
-  </div>`;
-  _attachMobilePinchZoom(cont);
+    <div id="mob-ss-zoom-area" style="flex:1;overflow:hidden;position:relative;">
+      <div id="mob-ss-inner" style="zoom:1;position:absolute;top:0;left:0;">
+        <div id="mob-ss-scroll" style="overflow:auto;-webkit-overflow-scrolling:touch;">
+          <div id="mob-ss-table-wrap">${_ssBuildTable()}</div>
+        </div>
+      </div>
+    </div>`;
+  _attachMobileStockZoom(cont);
+}
+
+function _attachMobileStockZoom(container){
+  if(container._pinchAbort) container._pinchAbort.abort();
+  const ac=new AbortController();
+  container._pinchAbort=ac;
+  const sig=ac.signal;
+
+  let scale=1, initialScale=1, lastScale=1, startDist=0;
+  let isPinching=false, lastTapTime=0;
+  let panStartX=0, panStartY=0, panStartSL=0, panStartST=0;
+
+  const zoomArea=()=>container.querySelector('#mob-ss-zoom-area');
+  const inner=()=>container.querySelector('#mob-ss-inner');
+  const scroll=()=>container.querySelector('#mob-ss-scroll');
+
+  function applyZoom(){
+    const za=zoomArea(), el=inner(), sc=scroll();
+    if(!el||!za||!sc) return;
+    el.style.zoom=scale;
+    sc.style.width=(za.clientWidth/scale)+'px';
+    sc.style.height=(za.clientHeight/scale)+'px';
+  }
+  function dist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
+
+  // Auto-fit table width on first paint
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const za=zoomArea(), sc=scroll();
+    if(!za||!sc) return;
+    const cw=za.clientWidth, ew=sc.scrollWidth;
+    if(ew>cw) scale=Math.max(cw/ew, 0.15);
+    initialScale=scale;
+    applyZoom();
+  }));
+
+  const area=container.querySelector('#mob-ss-zoom-area');
+  if(!area) return;
+
+  area.addEventListener('touchstart', e=>{
+    const sc=scroll();
+    if(e.touches.length===2){
+      isPinching=true; startDist=dist(e.touches); lastScale=scale;
+      e.preventDefault();
+    } else if(e.touches.length===1){
+      panStartX=e.touches[0].clientX; panStartY=e.touches[0].clientY;
+      panStartSL=sc?sc.scrollLeft:0; panStartST=sc?sc.scrollTop:0;
+    }
+  },{passive:false,signal:sig});
+
+  area.addEventListener('touchmove', e=>{
+    const sc=scroll();
+    if(e.touches.length===2&&isPinching){
+      scale=Math.min(Math.max(lastScale*dist(e.touches)/startDist, 0.15), 4);
+      applyZoom(); e.preventDefault();
+    } else if(e.touches.length===1&&!isPinching&&sc){
+      sc.scrollLeft=panStartSL+(panStartX-e.touches[0].clientX)/scale;
+      sc.scrollTop=panStartST+(panStartY-e.touches[0].clientY)/scale;
+      e.preventDefault();
+    }
+  },{passive:false,signal:sig});
+
+  area.addEventListener('touchend', e=>{
+    if(e.touches.length<2) isPinching=false;
+    if(e.touches.length===0){
+      const now=Date.now();
+      const onInteractive=e.target&&e.target.closest('button,a,input,select,textarea');
+      if(now-lastTapTime<300&&!onInteractive){ scale=initialScale; applyZoom(); }
+      lastTapTime=now;
+      if(scale<initialScale*0.85){ scale=initialScale; applyZoom(); }
+    }
+  },{signal:sig});
 }
 
 window._mobVerifyStock=function(){
