@@ -15852,13 +15852,13 @@ function _ssBuildTable(){
   const hasMore=allTypes.some(t=>!used.has(t));
   const allCols=[..._SS_TYPES,..._ssExtraTypes];
   const btnS=`padding:1px 0;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text2);font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;cursor:pointer;width:16px;min-width:0;text-align:center;`;
-  const totS=`background:#0f2d5c;color:#fff;font-weight:700;font-size:11px;text-align:center;border:1px solid #0a1f3e;padding:5px 8px;`;
+  const totS=`background:#5b8dd9;color:#fff;font-weight:700;font-size:11px;text-align:center;border:1px solid #4a7cc8;padding:5px 8px;`;
   let h=`<table style="border-collapse:collapse;font-size:11px;font-family:'Barlow',sans-serif;"><thead><tr>`;
   h+=`<th style="padding:7px 14px;background:#224F93;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #1a3d72;min-width:70px;position:sticky;top:0;left:0;z-index:4;">Floor</th>`;
   _SS_TYPES.forEach(t=>{h+=`<th style="padding:7px 4px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:50px;position:sticky;top:0;z-index:3;">${t}</th>`;});
   _ssExtraTypes.forEach(t=>{h+=`<th style="padding:4px;background:#0d9488;color:#fff;font-weight:700;text-align:center;border:1px solid #0a7a70;min-width:50px;position:sticky;top:0;z-index:3;"><div style="display:flex;align-items:center;justify-content:center;gap:4px;">${t}<button onclick="_ssRemoveType('${t}')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:3px;width:14px;height:14px;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;" title="Remove column">×</button></div></th>`;});
   if(hasMore){h+=`<th style="padding:4px 6px;background:#1a3d72;border:1px solid #15305e;white-space:nowrap;position:sticky;top:0;z-index:3;"><button onclick="_ssShowAddTypePopup(this)" style="padding:3px 7px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:5px;color:#fff;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Add type</button></th>`;}
-  h+=`<th style="${totS}position:sticky;top:0;z-index:3;white-space:nowrap;min-width:60px;">Total</th>`;
+  h+=`<th style="${totS}position:sticky;top:0;z-index:3;white-space:nowrap;min-width:60px;background:#5b8dd9;">Total</th>`;
   h+=`</tr></thead><tbody>`;
   _SS_FLOORS.forEach((f,fi)=>{
     const rowBg=fi%2===0?'var(--surface2)':'var(--surface)';
@@ -15889,7 +15889,7 @@ function _ssBuildTable(){
 function _ssExportExcel(){
   const allCols=[..._SS_TYPES,..._ssExtraTypes];
   const hdrS=`background:#224F93;color:#fff;padding:6px 10px;`;
-  const totHdrS=`background:#0f2d5c;color:#fff;padding:6px 10px;font-weight:700;`;
+  const totHdrS=`background:#5b8dd9;color:#fff;padding:6px 10px;font-weight:700;`;
   let html=`<table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;"><tr><th style="${hdrS}">Floor</th>${allCols.map(t=>`<th style="${hdrS}">${t}</th>`).join('')}<th style="${totHdrS}">Total</th></tr>`;
   _SS_FLOORS.forEach((f,fi)=>{
     const rowTot=allCols.reduce((s,t)=>s+((_ssData[f]&&_ssData[f][t])||0),0);
