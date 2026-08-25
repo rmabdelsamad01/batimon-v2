@@ -15919,7 +15919,7 @@ function renderSiteStock(){
           </button>
         </div>
       </div>
-      <div style="flex:1;overflow:auto;padding:16px 20px;">
+      <div style="flex:1;overflow:auto;padding:16px 0 16px 0;">
         <div id="ss-table-wrap">${_ssBuildTable()}</div>
       </div>
     </div>`;
