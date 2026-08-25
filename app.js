@@ -15766,6 +15766,23 @@ let _ssData={};
 let _ssExtraTypes=[];
 let _ssVerified=false;
 let _ssDeliveredCounts={};
+let _ssSaveTimer=null;
+
+async function _ssLoad(){
+  try{
+    const{data}=await sb.from('project_info').select('value').eq('project','shift-tower').eq('key','site_stock').single();
+    if(data&&data.value){const p=JSON.parse(data.value);_ssData=p.data||{};_ssExtraTypes=p.extraTypes||[];}
+  }catch(e){}
+}
+
+function _ssSave(){
+  clearTimeout(_ssSaveTimer);
+  _ssSaveTimer=setTimeout(async()=>{
+    try{
+      await sb.from('project_info').upsert({project:'shift-tower',key:'site_stock',value:JSON.stringify({data:_ssData,extraTypes:_ssExtraTypes}),updated_at:new Date().toISOString()},{onConflict:'project,key'});
+    }catch(e){}
+  },1000);
+}
 
 function _ssGetProjectTypes(){
   const s=new Set();
@@ -15826,6 +15843,7 @@ function _ssChange(floor,type,delta){
     }
     _ssUpdateBanner();
   }
+  _ssSave();
 }
 
 function _ssShowAddTypePopup(btn){
@@ -15899,11 +15917,13 @@ function _ssAddType(type){
   document.getElementById('ss-type-popup')?.remove();
   _ssExtraTypes.push(type);
   _ssRebuildTable();
+  _ssSave();
 }
 
 function _ssRemoveType(type){
   _ssExtraTypes=_ssExtraTypes.filter(t=>t!==type);
   _ssRebuildTable();
+  _ssSave();
 }
 
 function _ssRebuildTable(){
@@ -16029,10 +16049,12 @@ function _ssExportExcel(){
   const a=document.createElement('a');a.href=url;a.download='site_stock.xls';a.click();URL.revokeObjectURL(url);
 }
 
-function renderSiteStock(){
+async function renderSiteStock(){
   const cont=document.getElementById('page-site-stock');
   if(!cont)return;
   _ssData={};_ssExtraTypes=[];_ssVerified=false;_ssDeliveredCounts={};
+  cont.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;gap:10px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--text3);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>Loading site stock…</div>`;
+  await _ssLoad();
   cont.innerHTML=`
     <div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;">
       <div style="padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
