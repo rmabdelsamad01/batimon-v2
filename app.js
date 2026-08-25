@@ -18258,9 +18258,13 @@ function _attachMobileStockZoom(container){
 }
 
 window._mobVerifyStock=function(){
-  _ssVerifyStock();
-  // Re-render the stock view to reflect verification state
-  _renderMobileStock();
+  _ssVerifyStock(); // rebuilds table internally via _ssRebuildTable()
+  // Update button label/colour without resetting verified state
+  const btn=document.querySelector('#mob-ss-action-bar button');
+  if(btn){
+    btn.textContent=_ssVerified?'✓ Verified — Reset':'Verify Stock';
+    btn.style.background=_ssVerified?'#1a7a3a':'#224F93';
+  }
 };
 
 function _renderMobileOverview(){
