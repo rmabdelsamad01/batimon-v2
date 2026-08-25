@@ -411,6 +411,7 @@ function _showMobileProjectMenu(){
     'signed-panel-prep':()=>{ if(typeof openSignedChecklistsView==='function') openSignedChecklistsView('panel-preparation','Signed Panel Prep et Inst'); },
     'ncr':              ()=>{ if(typeof openNCRModal==='function') openNCRModal(); },
     'supabase':         ()=>{ if(typeof _supaPasswordGate==='function') _supaPasswordGate(); },
+    'site-stock':       ()=>goPage('site-stock'),
     'monitoring':       ()=>{
       // Go straight to the phone monitoring view — undo section-view first
       document.body.classList.remove('mobile-section-view');
@@ -447,6 +448,7 @@ function _showMobileProjectMenu(){
         {label:'NCR',nav:'ncr'},
       ]},
     { id:'supabase',  label:'My Database',          icon:'⚡', color:'#3ecf8e', nav:'supabase'},
+    { id:'site-stock',label:'Site Stock',           icon:'📦', color:'#0d9488', nav:'site-stock'},
   ];
 
   function renderSubSub(items, color){
