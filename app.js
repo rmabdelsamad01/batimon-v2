@@ -18145,7 +18145,7 @@ function _refreshMobileContent(){
   if(facadeBar) facadeBar.style.display='';
   // Restore mob-content to its original scroll behaviour
   const mc=document.getElementById('mob-content');
-  if(mc){mc.style.overflow='';mc.style.overflowX='';mc.style.overflowY='scroll';mc.style.touchAction='pan-y';mc.style.webkitOverflowScrolling='touch';mc.style.display='';}
+  if(mc){mc.style.overflow='';mc.style.overflowX='';mc.style.overflowY='scroll';mc.style.touchAction='pan-y';mc.style.webkitOverflowScrolling='touch';mc.style.display='';mc.style.position='';}
   _renderMobileFacadeBar();
   const isOverview=window._mobFacade==='overview';
   if(filterBar) filterBar.style.display=isOverview?'none':'';
@@ -18158,23 +18158,23 @@ function _refreshMobileContent(){
 async function _renderMobileStock(){
   const cont=document.getElementById('mob-content');
   if(!cont) return;
-  cont.style.overflow='auto';
-  cont.style.overflowX='auto';
-  cont.style.overflowY='auto';
-  cont.style.touchAction='pan-x pan-y';
-  cont.style.webkitOverflowScrolling='touch';
+  cont.style.overflow='hidden';
+  cont.style.position='relative';
+  cont.style.touchAction='none';
   cont.style.display='block';
   cont.innerHTML=`<div style="padding:12px 16px;color:#8099b0;font-family:'Barlow',sans-serif;font-size:13px;">Loading site stock…</div>`;
   if(!Object.keys(_ssData).length) await _ssLoad();
   const btnStyle='padding:8px 16px;border-radius:8px;border:none;font-family:"Barlow",sans-serif;font-size:12px;font-weight:700;cursor:pointer;';
   const verifyLabel=_ssVerified?'✓ Verified — Reset':'Verify Stock';
   const verifyBg=_ssVerified?'#1a7a3a':'#224F93';
-  cont.innerHTML=`
-    <div style="position:sticky;top:0;left:0;z-index:20;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;border-bottom:1px solid rgba(255,255,255,0.1);">
+  cont.innerHTML=`<div id="mob-pinch-target" style="display:inline-block;transform-origin:0 0;will-change:transform;padding:0;">
+    <div style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;border-bottom:1px solid rgba(255,255,255,0.1);min-width:100vw;">
       <span style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:#fff;">Site Stock</span>
       <button onclick="_mobVerifyStock()" style="${btnStyle}background:${verifyBg};color:#fff;">${verifyLabel}</button>
     </div>
-    <div id="mob-ss-table-wrap">${_ssBuildTable()}</div>`;
+    <div id="mob-ss-table-wrap">${_ssBuildTable()}</div>
+  </div>`;
+  _attachMobilePinchZoom(cont);
 }
 
 window._mobVerifyStock=function(){
