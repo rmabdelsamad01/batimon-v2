@@ -18163,7 +18163,8 @@ async function _renderMobileStock(){
   cont.style.touchAction='none';
   cont.style.display='block';
   cont.innerHTML=`<div style="padding:12px 16px;color:#8099b0;font-family:'Barlow',sans-serif;font-size:13px;">Loading site stock…</div>`;
-  if(!Object.keys(_ssData).length) await _ssLoad();
+  _ssData={};_ssExtraTypes=[];_ssVerified=false;_ssDeliveredCounts={};
+  await _ssLoad();
   const btnStyle='padding:8px 16px;border-radius:8px;border:none;font-family:"Barlow",sans-serif;font-size:12px;font-weight:700;cursor:pointer;';
   const verifyLabel=_ssVerified?'✓ Verified — Reset':'Verify Stock';
   const verifyBg=_ssVerified?'#1a7a3a':'#224F93';
