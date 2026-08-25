@@ -15764,6 +15764,8 @@ const _SS_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26'
 const _SS_TYPES=['T01','T02','T03','T04','T05','T06','T07','T08','T09','T10','T11','T12'];
 let _ssData={};
 let _ssExtraTypes=[];
+let _ssVerified=false;
+let _ssDeliveredCounts={};
 
 function _ssGetProjectTypes(){
   const s=new Set();
@@ -15798,6 +15800,16 @@ function _ssChange(floor,type,delta){
   const grand=_SS_FLOORS.reduce((s,fl)=>s+allCols.reduce((s2,t)=>s2+((_ssData[fl]&&_ssData[fl][t])||0),0),0);
   const gtEl=document.getElementById('ss-gt');
   if(gtEl){gtEl.textContent=grand||'';gtEl.style.color=grand>0?'#fff':'rgba(255,255,255,0.4)';}
+  // Refresh verification highlights for this type if verify is active
+  if(_ssVerified){
+    const sysVal=_ssDeliveredCounts[type]||0;
+    const match=colTot===sysVal;
+    const ctEl2=document.getElementById(`ss-ct-${type}`);
+    const dvEl=document.getElementById(`ss-dv-${type}`);
+    if(ctEl2){ctEl2.style.background=match?'#1a7a3a':'#c02020';}
+    if(dvEl){dvEl.style.background=match?'#1a7a3a':'#c02020';dvEl.textContent=sysVal||'';}
+    _ssUpdateBanner();
+  }
 }
 
 function _ssShowAddTypePopup(btn){
@@ -15828,6 +15840,43 @@ function _ssFilterTypes(q){
   const available=allTypes.filter(t=>!used.has(t)&&t.toLowerCase().includes(q.toLowerCase()));
   const list=document.getElementById('ss-type-list');
   if(list)list.innerHTML=_ssTypeItems(available);
+}
+
+function _ssVerifyStock(){
+  if(_ssVerified){
+    // Reset verification
+    _ssVerified=false;_ssDeliveredCounts={};
+    _ssRebuildTable();_ssUpdateBanner();return;
+  }
+  // Build delivered counts from in-memory panels (status==='delivered' only)
+  const counts={};
+  Object.values(panels||{}).forEach(p=>{
+    if(p.status==='delivered'&&p.type){counts[p.type]=(counts[p.type]||0)+1;}
+  });
+  _ssDeliveredCounts=counts;
+  // Auto-add types found in Supabase but not yet in the grid
+  const allShown=new Set([..._SS_TYPES,..._ssExtraTypes]);
+  Object.keys(counts).forEach(t=>{if(!allShown.has(t))_ssExtraTypes.push(t);});
+  _ssVerified=true;
+  _ssRebuildTable();_ssUpdateBanner();
+}
+
+function _ssUpdateBanner(){
+  const banner=document.getElementById('ss-verify-banner');
+  if(!banner)return;
+  if(!_ssVerified){banner.style.display='none';return;}
+  const allCols=[..._SS_TYPES,..._ssExtraTypes];
+  let disc=0;
+  allCols.forEach(t=>{
+    const siteTot=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);
+    const sysVal=_ssDeliveredCounts[t]||0;
+    if(siteTot!==sysVal)disc++;
+  });
+  banner.style.display='flex';
+  banner.innerHTML=disc===0
+    ?`<span style="color:#1a7a3a;font-weight:700;">✓ All types match</span>`
+    :`<span style="color:#c02020;font-weight:700;">⚠ ${disc} discrepanc${disc===1?'y':'ies'} found</span>
+      <button onclick="_ssVerifyStock()" style="margin-left:12px;padding:3px 10px;background:#c02020;color:#fff;border:none;border-radius:5px;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">Reset</button>`;
 }
 
 function _ssAddType(type){
@@ -15878,11 +15927,26 @@ function _ssBuildTable(){
   h+=`<tr><td style="${totS}position:sticky;left:0;z-index:2;white-space:nowrap;">Total</td>`;
   allCols.forEach(t=>{
     const colTot=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);
-    h+=`<td id="ss-ct-${t}" style="${totS}color:${colTot>0?'#fff':'rgba(255,255,255,0.4)'};">${colTot||''}</td>`;
+    const vMatch=_ssVerified?(colTot===(_ssDeliveredCounts[t]||0)):null;
+    const vBg=vMatch===null?'':(vMatch?'background:#1a7a3a;':'background:#c02020;');
+    h+=`<td id="ss-ct-${t}" style="${totS}${vBg}color:${colTot>0?'#fff':'rgba(255,255,255,0.4)'};">${colTot||''}</td>`;
   });
   if(hasMore)h+=`<td style="${totS}"></td>`;
   h+=`<td id="ss-gt" style="${totS}color:${grandTot>0?'#fff':'rgba(255,255,255,0.4)'};">${grandTot||''}</td>`;
   h+=`</tr>`;
+  // Delivered (system) row — only when verified
+  if(_ssVerified){
+    const dvS=`font-weight:700;font-size:11px;text-align:center;border:1px solid rgba(0,0,0,0.15);padding:5px 8px;color:#fff;`;
+    h+=`<tr><td style="${dvS}background:#444;position:sticky;left:0;z-index:2;white-space:nowrap;">Delivered<br><span style="font-size:9px;font-weight:400;opacity:0.8;">(system)</span></td>`;
+    allCols.forEach(t=>{
+      const sysVal=_ssDeliveredCounts[t]||0;
+      const siteTot=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);
+      const match=siteTot===sysVal;
+      h+=`<td id="ss-dv-${t}" style="${dvS}background:${match?'#1a7a3a':'#c02020'};">${sysVal||''}</td>`;
+    });
+    if(hasMore)h+=`<td style="${dvS}background:#444;"></td>`;
+    h+=`<td style="${dvS}background:#444;"></td></tr>`;
+  }
   return h+`</tbody></table>`;
 }
 
@@ -15907,12 +15971,17 @@ function _ssExportExcel(){
 function renderSiteStock(){
   const cont=document.getElementById('page-site-stock');
   if(!cont)return;
-  _ssData={};_ssExtraTypes=[];
+  _ssData={};_ssExtraTypes=[];_ssVerified=false;_ssDeliveredCounts={};
   cont.innerHTML=`
     <div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;">
-      <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px;">
         <div style="font-size:15px;font-weight:700;color:var(--text);">Site Stock</div>
-        <div style="margin-left:auto;">
+        <div id="ss-verify-banner" style="display:none;align-items:center;margin-left:12px;font-size:11px;padding:4px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);"></div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <button onclick="_ssVerifyStock()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:#224F93;color:#fff;border:none;border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Verify Stock
+          </button>
           <button onclick="_ssExportExcel()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:#1a7a3a;color:#fff;border:none;border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export Excel
