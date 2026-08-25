@@ -15760,16 +15760,109 @@ function renderLaborCurve(){
 // ═══════════════════════════════════════════════════════════
 //  SITE STOCK
 // ═══════════════════════════════════════════════════════════
-function renderSiteStock(){
+const _SS_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18','R+17','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
+const _SS_TYPES=['T01','T02','T03','T04','T05','T06','T07','T08','T09','T10','T11','T12'];
+let _ssData={};
+let _ssSaveTimer=null;
+
+async function _ssLoad(){
+  try{
+    const{data}=await sb.from('project_info').select('value').eq('project','shift-tower').eq('key','site_stock').maybeSingle();
+    _ssData=data?JSON.parse(data.value):{};
+  }catch(e){_ssData={};}
+}
+
+async function _ssSave(){
+  try{
+    await sb.from('project_info').upsert({project:'shift-tower',key:'site_stock',value:JSON.stringify(_ssData),updated_at:new Date().toISOString()},{onConflict:'project,key'});
+    const lbl=document.getElementById('ss-save-lbl');
+    if(lbl){lbl.textContent='✓ Saved';setTimeout(()=>{lbl.textContent='';},2000);}
+  }catch(e){showToast('Save failed');}
+}
+
+function _ssChange(floor,type,delta){
+  if(!_ssData[floor])_ssData[floor]={};
+  const cur=_ssData[floor][type]||0;
+  const nv=Math.max(0,cur+delta);
+  _ssData[floor][type]=nv;
+  const numEl=document.getElementById(`ss-n-${floor}-${type}`);
+  const minBtn=document.getElementById(`ss-m-${floor}-${type}`);
+  if(numEl)numEl.textContent=nv;
+  if(minBtn){minBtn.disabled=nv===0;minBtn.style.opacity=nv===0?'0.3':'1';minBtn.style.cursor=nv===0?'default':'pointer';}
+  clearTimeout(_ssSaveTimer);
+  _ssSaveTimer=setTimeout(_ssSave,1500);
+}
+
+function _ssExportExcel(){
+  const hdr=['Floor',..._SS_TYPES];
+  let html=`<table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;">`;
+  html+=`<tr style="background:#224F93;color:#fff;">${hdr.map(h=>`<th style="padding:6px 10px;white-space:nowrap;">${h}</th>`).join('')}</tr>`;
+  _SS_FLOORS.forEach((f,fi)=>{
+    const bg=fi%2===0?'#f4f8fd':'#fff';
+    html+=`<tr style="background:${bg};">`;
+    html+=`<td style="padding:5px 10px;font-weight:700;color:#224F93;white-space:nowrap;">${f}</td>`;
+    _SS_TYPES.forEach(t=>{
+      const v=(_ssData[f]&&_ssData[f][t])||0;
+      html+=`<td style="padding:5px 10px;text-align:center;">${v||''}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</table>`;
+  const full=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Site Stock</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>${html}</body></html>`;
+  const blob=new Blob([full],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='site_stock.xls';a.click();URL.revokeObjectURL(url);
+}
+
+async function renderSiteStock(){
   const cont=document.getElementById('page-site-stock');
   if(!cont) return;
+  cont.innerHTML=`<div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;"><div style="padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;color:var(--text3);font-size:12px;">Loading…</div></div>`;
+  await _ssLoad();
+
+  const btnS=`padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;`;
+  let tableHTML=`<table style="border-collapse:collapse;font-size:11px;font-family:'Barlow',sans-serif;">`;
+  // Header
+  tableHTML+=`<thead><tr>`;
+  tableHTML+=`<th style="padding:7px 14px;background:#224F93;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #1a3d72;min-width:70px;position:sticky;left:0;z-index:2;">Floor</th>`;
+  _SS_TYPES.forEach(t=>{
+    tableHTML+=`<th style="padding:7px 16px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:100px;">${t}</th>`;
+  });
+  tableHTML+=`</tr></thead><tbody>`;
+  // Rows
+  _SS_FLOORS.forEach((f,fi)=>{
+    const rowBg=fi%2===0?'var(--surface2)':'var(--surface)';
+    tableHTML+=`<tr>`;
+    tableHTML+=`<td style="padding:6px 14px;background:#1a3d72;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #15305e;position:sticky;left:0;z-index:1;">${f}</td>`;
+    _SS_TYPES.forEach(t=>{
+      const v=(_ssData[f]&&_ssData[f][t])||0;
+      const dis=v===0?'opacity:0.3;cursor:default;':'';
+      tableHTML+=`<td style="padding:5px 8px;background:${rowBg};border:1px solid var(--border);text-align:center;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+          <button id="ss-m-${f}-${t}" onclick="_ssChange('${f}','${t}',-1)" ${v===0?'disabled':''} style="${btnS}${dis}width:22px;padding:2px 0;text-align:center;">−</button>
+          <span id="ss-n-${f}-${t}" style="font-size:13px;font-weight:700;color:${v>0?'var(--text)':'var(--text3)'};min-width:24px;text-align:center;">${v}</span>
+          <button onclick="_ssChange('${f}','${t}',1)" style="${btnS}width:22px;padding:2px 0;text-align:center;">+</button>
+        </div>
+      </td>`;
+    });
+    tableHTML+=`</tr>`;
+  });
+  tableHTML+=`</tbody></table>`;
+
   cont.innerHTML=`
     <div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;">
-      <div style="padding:16px 24px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
-        <div style="font-size:16px;font-weight:700;color:var(--text);">Site Stock</div>
+      <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Site Stock</div>
+        <span id="ss-save-lbl" style="font-size:11px;color:#1a9458;font-weight:600;"></span>
+        <div style="margin-left:auto;">
+          <button onclick="_ssExportExcel()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:#1a7a3a;color:#fff;border:none;border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export Excel
+          </button>
+        </div>
       </div>
-      <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;">
-        Coming soon
+      <div style="flex:1;overflow:auto;padding:16px 20px;">
+        ${tableHTML}
       </div>
     </div>`;
 }
