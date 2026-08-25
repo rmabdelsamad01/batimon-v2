@@ -239,7 +239,7 @@ const ZONES=[
   {id:'WF',name:'West Facade', sub:'West Elevation', cols:WF_COLS.length,rows:WF_FLOORS.length,color:'#6d35d9',simple:false,floors:WF_FLOORS,colNums:WF_COLS,types:WF_TYPES,refs:WF_REFS},
 ];
 
-const SM={c_and_d:{icon:'◆',label:'C+D',cls:'st-cd'},bottom_bracket:{icon:'▲',label:'Bottom Bracket',cls:'st-bb'},installed:{icon:'✓',label:'Top Bracket',cls:'st-i'},delivered:{icon:'▣',label:'Delivered',cls:'st-d'},fabricated:{icon:'⬡',label:'Fabricated',cls:'st-f'},cutting:{icon:'✂',label:'CL issued',cls:'st-c'},cl_not_issued:{icon:'✗',label:'CL not issued',cls:'st-cn'},cip:{icon:'◑',label:'Cutting List in Progress',cls:'st-cip'},defect:{icon:'!',label:'Defect',cls:'st-x'},pending:{icon:'·',label:'Pending',cls:'st-p'}};
+const SM={c_and_d:{icon:'◆',label:'C+D',cls:'st-cd'},bottom_bracket:{icon:'▲',label:'Bottom Bracket',cls:'st-bb'},installed:{icon:'✓',label:'Installed',cls:'st-i'},delivered:{icon:'▣',label:'Delivered',cls:'st-d'},fabricated:{icon:'⬡',label:'Fabricated',cls:'st-f'},cutting:{icon:'✂',label:'CL issued',cls:'st-c'},cl_not_issued:{icon:'✗',label:'CL not issued',cls:'st-cn'},cip:{icon:'◑',label:'Cutting List in Progress',cls:'st-cip'},defect:{icon:'!',label:'Defect',cls:'st-x'},pending:{icon:'·',label:'Pending',cls:'st-p'}};
 const SMAP={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
 let panels={},issues=[],selPanel=null,selStat='pending',fFilters={};
 let multiSelPanels=new Set();
@@ -9614,9 +9614,7 @@ function buildComplexTable(zone){
     if(legendWrap){
       const c=zC(zone.id);
       const legendItems=[
-        {cls:'st-cd',label:'C+D',key:'c_and_d'},
-        {cls:'st-bb',label:'Bot. Bracket',key:'bottom_bracket'},
-        {cls:'st-i',label:'Top Bracket',key:'installed'},
+        {cls:'st-i',label:'Installed',key:'installed'},
         {cls:'st-d',label:'Delivered',key:'delivered'},
         {cls:'st-f',label:'Fabricated',key:'fabricated'},
         {cls:'st-c',label:'CL issued',key:'cutting'},
