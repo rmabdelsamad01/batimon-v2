@@ -15930,7 +15930,7 @@ function _ssRemoveType(type){
 }
 
 function _ssRebuildTable(){
-  const wrap=document.getElementById('ss-table-wrap');
+  const wrap=document.getElementById('ss-table-wrap')||document.getElementById('mob-ss-table-wrap');
   if(wrap)wrap.innerHTML=_ssBuildTable();
 }
 
