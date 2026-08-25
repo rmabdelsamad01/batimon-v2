@@ -15882,10 +15882,13 @@ function _ssVerifyStock(){
     _ssVerified=false;_ssDeliveredCounts={};
     _ssRebuildTable();_ssUpdateBanner();return;
   }
-  // Build delivered counts from in-memory panels (status==='delivered' only)
+  // Build delivered counts using allPanelIds() to match the project overview's counting logic.
+  // This excludes merged-cell ghost IDs (e.g. EF R+01 cols 69-75) that exist in `panels`
+  // but are not counted by gC() because they are covered by rowspan-2 cells above.
   const counts={};
-  Object.values(panels||{}).forEach(p=>{
-    if(p.status==='delivered'&&p.type){counts[p.type]=(counts[p.type]||0)+1;}
+  allPanelIds().forEach(id=>{
+    const p=panels[id];
+    if(p&&p.status==='delivered'&&p.type){counts[p.type]=(counts[p.type]||0)+1;}
   });
   _ssDeliveredCounts=counts;
   // Auto-add types found in Supabase but not yet in the grid
