@@ -330,8 +330,6 @@ function updateNavFacadeLabels(){
     const pct=document.getElementById('tp-'+dir);
     if(pct) pct.style.display=isCustom?'none':'';
   });
-  const _siteStockBtn=document.getElementById('nav-btn-site-stock');
-  if(_siteStockBtn) _siteStockBtn.style.display=isCustom?'none':'';
   if(isCustom){
     const catNum=window._activeCatNum||1;
     const cats=getProjectCategories(pid);
@@ -6320,6 +6318,7 @@ function efSidebarHTML(){
      customSubHTML:_customMonHTML},
     {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['Fabrication Rate','Delivery Rate','Installation Rate','Fabrication Counting']},
     {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
+    ...(!isCustomProject?[{id:'site-stock', label:'Site stock', icon:'📦', color:'#0d9488', subs:[]}]:[]),
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
     {id:'plan', label:'Planning',     icon:'📅', color:'#e05c00', subs:[]},
@@ -6344,7 +6343,7 @@ function efSidebarHTML(){
              style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:${s.soon?'var(--surface)':'var(--surface2)'};cursor:${s.soon?'default':'pointer'};transition:border-color 0.15s,background 0.15s;${s.soon?'opacity:0.7;':''}"
              ${s.soon?'':`onmouseover="this.style.borderColor='${s.color}';this.style.background='${s.color}18'"`}
              ${s.soon?'':`onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"`}
-             ${s.soon?'':(s.subs.length||s.customSubHTML?s.id==='cashflow'?`onclick="_cfPasswordGate(this)"`:`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:s.id==='of-log'?`onclick="goPage('of-log')"`:'')}
+             ${s.soon?'':(s.subs.length||s.customSubHTML?s.id==='cashflow'?`onclick="_cfPasswordGate(this)"`:`onclick="toggleEFSub('${s.id}',this)"`:s.id==='eng'?`onclick="openBatidoc('deliverables',this)"`:s.id==='pay'?`onclick="openBatidoc('payments',this)"`:s.id==='plan'?`onclick="goPage('planning')"`:s.id==='suggestions'?`onclick="goPage('suggestions')"`:s.id==='supabase'?`onclick="_supaPasswordGate()"`:s.id==='demo'?`onclick="_demoGate()"`:s.id==='3d'?`onclick="goPage('3d')"`:s.id==='builder'?`onclick="goPage('builder')"`:s.id==='aaa'?`onclick="goPage('aaa')"`:s.id==='sitepictures'?`onclick=""`:s.id==='agenda'?`onclick="goPage('agenda')"`:s.id==='beta'?`onclick="goPage('beta')"`:s.id==='of-log'?`onclick="goPage('of-log')"`:s.id==='site-stock'?`onclick="goPage('site-stock')"`:'')}
         >
           <span style="font-size:13px;line-height:1;">${s.icon}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);flex:1;">${s.label}</span>
