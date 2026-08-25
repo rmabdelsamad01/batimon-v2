@@ -15763,6 +15763,18 @@ function renderLaborCurve(){
 const _SS_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18','R+17','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
 const _SS_TYPES=['T01','T02','T03','T04','T05','T06','T07','T08','T09','T10','T11','T12'];
 let _ssData={};
+let _ssExtraTypes=[];
+
+function _ssGetProjectTypes(){
+  const s=new Set();
+  if(typeof ZONES!=='undefined'){
+    ZONES.forEach(z=>{
+      if(z.simple||!z.floors||!z.colNums||!z.types)return;
+      z.floors.forEach(fl=>z.colNums.forEach((col,ci)=>{const t=(z.types[fl]||[])[ci]||'';if(t)s.add(t);}));
+    });
+  }
+  return[...s].sort();
+}
 
 function _ssChange(floor,type,delta){
   if(!_ssData[floor])_ssData[floor]={};
@@ -15775,19 +15787,83 @@ function _ssChange(floor,type,delta){
   if(minBtn){minBtn.disabled=nv===0;minBtn.style.opacity=nv===0?'0.3':'1';minBtn.style.cursor=nv===0?'default':'pointer';}
 }
 
-function _ssExportExcel(){
-  const hdr=['Floor',..._SS_TYPES];
-  let html=`<table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;">`;
-  html+=`<tr style="background:#224F93;color:#fff;">${hdr.map(h=>`<th style="padding:6px 10px;white-space:nowrap;">${h}</th>`).join('')}</tr>`;
+function _ssShowAddTypePopup(btn){
+  document.getElementById('ss-type-popup')?.remove();
+  const allTypes=_ssGetProjectTypes();
+  const used=new Set([..._SS_TYPES,..._ssExtraTypes]);
+  const available=allTypes.filter(t=>!used.has(t));
+  if(!available.length){showToast('All types already added');return;}
+  const rect=btn.getBoundingClientRect();
+  const pop=document.createElement('div');
+  pop.id='ss-type-popup';
+  pop.style.cssText=`position:fixed;top:${rect.bottom+4}px;left:${rect.left}px;background:#fff;border:1.5px solid #dde3ee;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.14);z-index:9999;min-width:160px;font-family:'Barlow',sans-serif;overflow:hidden;`;
+  pop.innerHTML=`<div style="padding:8px 8px 4px;"><input id="ss-type-search" type="text" placeholder="Search…" oninput="_ssFilterTypes(this.value)" style="width:100%;padding:5px 8px;border:1px solid #dde3ee;border-radius:6px;font-family:'Barlow',sans-serif;font-size:12px;outline:none;box-sizing:border-box;"></div><div id="ss-type-list" style="max-height:220px;overflow-y:auto;">${_ssTypeItems(available)}</div>`;
+  document.body.appendChild(pop);
+  pop.querySelector('#ss-type-search').focus();
+  setTimeout(()=>document.addEventListener('mousedown',function _cl(e){if(!pop.contains(e.target)){pop.remove();document.removeEventListener('mousedown',_cl);}}),0);
+}
+
+function _ssTypeItems(list){
+  return list.length
+    ?list.map(t=>`<div onclick="_ssAddType('${t}')" style="padding:6px 12px;font-size:12px;font-weight:600;color:#1a2a3a;cursor:pointer;border-top:1px solid #f0f2f5;" onmouseover="this.style.background='#eef3fb'" onmouseout="this.style.background=''">${t}</div>`).join('')
+    :`<div style="padding:10px 12px;font-size:11px;color:#8099b0;">No match</div>`;
+}
+
+function _ssFilterTypes(q){
+  const allTypes=_ssGetProjectTypes();
+  const used=new Set([..._SS_TYPES,..._ssExtraTypes]);
+  const available=allTypes.filter(t=>!used.has(t)&&t.toLowerCase().includes(q.toLowerCase()));
+  const list=document.getElementById('ss-type-list');
+  if(list)list.innerHTML=_ssTypeItems(available);
+}
+
+function _ssAddType(type){
+  document.getElementById('ss-type-popup')?.remove();
+  _ssExtraTypes.push(type);
+  _ssRebuildTable();
+}
+
+function _ssRemoveType(type){
+  _ssExtraTypes=_ssExtraTypes.filter(t=>t!==type);
+  _ssRebuildTable();
+}
+
+function _ssRebuildTable(){
+  const wrap=document.getElementById('ss-table-wrap');
+  if(wrap)wrap.innerHTML=_ssBuildTable();
+}
+
+function _ssBuildTable(){
+  const allTypes=_ssGetProjectTypes();
+  const used=new Set([..._SS_TYPES,..._ssExtraTypes]);
+  const hasMore=allTypes.some(t=>!used.has(t));
+  const allCols=[..._SS_TYPES,..._ssExtraTypes];
+  const btnS=`padding:1px 0;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text2);font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;cursor:pointer;width:16px;min-width:0;text-align:center;`;
+  let h=`<table style="border-collapse:collapse;font-size:11px;font-family:'Barlow',sans-serif;"><thead><tr>`;
+  h+=`<th style="padding:7px 14px;background:#224F93;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #1a3d72;min-width:70px;position:sticky;left:0;z-index:2;">Floor</th>`;
+  _SS_TYPES.forEach(t=>{h+=`<th style="padding:7px 4px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:50px;">${t}</th>`;});
+  _ssExtraTypes.forEach(t=>{h+=`<th style="padding:4px;background:#0d9488;color:#fff;font-weight:700;text-align:center;border:1px solid #0a7a70;min-width:50px;"><div style="display:flex;align-items:center;justify-content:center;gap:4px;">${t}<button onclick="_ssRemoveType('${t}')" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:3px;width:14px;height:14px;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;" title="Remove column">×</button></div></th>`;});
+  if(hasMore){h+=`<th style="padding:4px 6px;background:#1a3d72;border:1px solid #15305e;white-space:nowrap;"><button onclick="_ssShowAddTypePopup(this)" style="padding:3px 7px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:5px;color:#fff;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">+ Add type</button></th>`;}
+  h+=`</tr></thead><tbody>`;
   _SS_FLOORS.forEach((f,fi)=>{
-    const bg=fi%2===0?'#f4f8fd':'#fff';
-    html+=`<tr style="background:${bg};">`;
-    html+=`<td style="padding:5px 10px;font-weight:700;color:#224F93;white-space:nowrap;">${f}</td>`;
-    _SS_TYPES.forEach(t=>{
+    const rowBg=fi%2===0?'var(--surface2)':'var(--surface)';
+    h+=`<tr><td style="padding:6px 14px;background:#1a3d72;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #15305e;position:sticky;left:0;z-index:1;">${f}</td>`;
+    allCols.forEach(t=>{
       const v=(_ssData[f]&&_ssData[f][t])||0;
-      html+=`<td style="padding:5px 10px;text-align:center;">${v||''}</td>`;
+      const dis=v===0?'opacity:0.3;cursor:default;':'';
+      h+=`<td style="padding:3px 2px;background:${rowBg};border:1px solid var(--border);text-align:center;min-width:50px;"><div style="display:flex;align-items:center;justify-content:center;gap:2px;"><button id="ss-m-${f}-${t}" onclick="_ssChange('${f}','${t}',-1)" ${v===0?'disabled':''} style="${btnS}${dis}">−</button><span id="ss-n-${f}-${t}" style="font-size:11px;font-weight:700;color:${v>0?'var(--text)':'var(--text3)'};min-width:16px;text-align:center;">${v}</span><button onclick="_ssChange('${f}','${t}',1)" style="${btnS}">+</button></div></td>`;
     });
-    html+=`</tr>`;
+    if(hasMore)h+=`<td style="background:${rowBg};border:1px solid var(--border);"></td>`;
+    h+=`</tr>`;
+  });
+  return h+`</tbody></table>`;
+}
+
+function _ssExportExcel(){
+  const allCols=[..._SS_TYPES,..._ssExtraTypes];
+  let html=`<table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;"><tr style="background:#224F93;color:#fff;"><th style="padding:6px 10px;">Floor</th>${allCols.map(t=>`<th style="padding:6px 10px;">${t}</th>`).join('')}</tr>`;
+  _SS_FLOORS.forEach((f,fi)=>{
+    html+=`<tr style="background:${fi%2===0?'#f4f8fd':'#fff'};"><td style="padding:5px 10px;font-weight:700;color:#224F93;">${f}</td>${allCols.map(t=>`<td style="padding:5px 10px;text-align:center;">${(_ssData[f]&&_ssData[f][t])||''}</td>`).join('')}</tr>`;
   });
   html+=`</table>`;
   const full=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Site Stock</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>${html}</body></html>`;
@@ -15798,38 +15874,8 @@ function _ssExportExcel(){
 
 function renderSiteStock(){
   const cont=document.getElementById('page-site-stock');
-  if(!cont) return;
-  _ssData={};
-
-  const btnS=`padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;`;
-  let tableHTML=`<table style="border-collapse:collapse;font-size:11px;font-family:'Barlow',sans-serif;">`;
-  // Header
-  tableHTML+=`<thead><tr>`;
-  tableHTML+=`<th style="padding:7px 14px;background:#224F93;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #1a3d72;min-width:70px;position:sticky;left:0;z-index:2;">Floor</th>`;
-  _SS_TYPES.forEach(t=>{
-    tableHTML+=`<th style="padding:7px 4px;background:#224F93;color:#fff;font-weight:700;text-align:center;border:1px solid #1a3d72;min-width:50px;">${t}</th>`;
-  });
-  tableHTML+=`</tr></thead><tbody>`;
-  // Rows
-  _SS_FLOORS.forEach((f,fi)=>{
-    const rowBg=fi%2===0?'var(--surface2)':'var(--surface)';
-    tableHTML+=`<tr>`;
-    tableHTML+=`<td style="padding:6px 14px;background:#1a3d72;color:#fff;font-weight:700;white-space:nowrap;border:1px solid #15305e;position:sticky;left:0;z-index:1;">${f}</td>`;
-    _SS_TYPES.forEach(t=>{
-      const v=(_ssData[f]&&_ssData[f][t])||0;
-      const dis=v===0?'opacity:0.3;cursor:default;':'';
-      tableHTML+=`<td style="padding:3px 2px;background:${rowBg};border:1px solid var(--border);text-align:center;min-width:50px;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:2px;">
-          <button id="ss-m-${f}-${t}" onclick="_ssChange('${f}','${t}',-1)" ${v===0?'disabled':''} style="${btnS}${dis}width:16px;padding:1px 0;text-align:center;font-size:10px;min-width:0;">−</button>
-          <span id="ss-n-${f}-${t}" style="font-size:11px;font-weight:700;color:${v>0?'var(--text)':'var(--text3)'};min-width:16px;text-align:center;">${v}</span>
-          <button onclick="_ssChange('${f}','${t}',1)" style="${btnS}width:16px;padding:1px 0;text-align:center;font-size:10px;min-width:0;">+</button>
-        </div>
-      </td>`;
-    });
-    tableHTML+=`</tr>`;
-  });
-  tableHTML+=`</tbody></table>`;
-
+  if(!cont)return;
+  _ssData={};_ssExtraTypes=[];
   cont.innerHTML=`
     <div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;">
       <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
@@ -15842,7 +15888,7 @@ function renderSiteStock(){
         </div>
       </div>
       <div style="flex:1;overflow:auto;padding:16px 20px;">
-        ${tableHTML}
+        <div id="ss-table-wrap">${_ssBuildTable()}</div>
       </div>
     </div>`;
 }
