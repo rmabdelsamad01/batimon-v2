@@ -18143,6 +18143,9 @@ function _refreshMobileContent(){
     return;
   }
   if(facadeBar) facadeBar.style.display='';
+  // Restore mob-content to its original scroll behaviour
+  const mc=document.getElementById('mob-content');
+  if(mc){mc.style.overflow='';mc.style.overflowX='';mc.style.overflowY='scroll';mc.style.touchAction='pan-y';mc.style.webkitOverflowScrolling='touch';mc.style.display='';}
   _renderMobileFacadeBar();
   const isOverview=window._mobFacade==='overview';
   if(filterBar) filterBar.style.display=isOverview?'none':'';
