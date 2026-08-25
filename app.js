@@ -15973,13 +15973,36 @@ function _ssExportExcel(){
   const allCols=[..._SS_TYPES,..._ssExtraTypes];
   const hdrS=`background:#224F93;color:#fff;padding:6px 10px;`;
   const totHdrS=`background:#5b8dd9;color:#fff;padding:6px 10px;font-weight:700;`;
+  const cell=`padding:5px 10px;text-align:center;`;
   let html=`<table border="1" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px;"><tr><th style="${hdrS}">Floor</th>${allCols.map(t=>`<th style="${hdrS}">${t}</th>`).join('')}<th style="${totHdrS}">Total</th></tr>`;
   _SS_FLOORS.forEach((f,fi)=>{
     const rowTot=allCols.reduce((s,t)=>s+((_ssData[f]&&_ssData[f][t])||0),0);
-    html+=`<tr style="background:${fi%2===0?'#f4f8fd':'#fff'};"><td style="padding:5px 10px;font-weight:700;color:#224F93;">${f}</td>${allCols.map(t=>`<td style="padding:5px 10px;text-align:center;">${(_ssData[f]&&_ssData[f][t])||''}</td>`).join('')}<td style="padding:5px 10px;text-align:center;font-weight:700;background:#e8eef8;">${rowTot||''}</td></tr>`;
+    html+=`<tr style="background:${fi%2===0?'#f4f8fd':'#fff'};"><td style="padding:5px 10px;font-weight:700;color:#224F93;">${f}</td>${allCols.map(t=>`<td style="${cell}">${(_ssData[f]&&_ssData[f][t])||''}</td>`).join('')}<td style="${cell}font-weight:700;background:#e8eef8;">${rowTot||''}</td></tr>`;
   });
   const grandTot=_SS_FLOORS.reduce((s,fl)=>s+allCols.reduce((s2,t)=>s2+((_ssData[fl]&&_ssData[fl][t])||0),0),0);
-  html+=`<tr style="background:#e8eef8;"><td style="padding:5px 10px;font-weight:700;color:#0f2d5c;">Total</td>${allCols.map(t=>{const c=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);return`<td style="padding:5px 10px;text-align:center;font-weight:700;">${c||''}</td>`;}).join('')}<td style="padding:5px 10px;text-align:center;font-weight:700;background:#c8d8f0;">${grandTot||''}</td></tr>`;
+  html+=`<tr style="background:#e8eef8;"><td style="padding:5px 10px;font-weight:700;color:#0f2d5c;">Total</td>${allCols.map(t=>{const c=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);return`<td style="${cell}font-weight:700;">${c||''}</td>`;}).join('')}<td style="${cell}font-weight:700;background:#c8d8f0;">${grandTot||''}</td></tr>`;
+  if(_ssVerified){
+    // Delivered (system) row
+    html+=`<tr style="background:#555;"><td style="padding:5px 10px;font-weight:700;color:#fff;">Delivered (system)</td>`;
+    allCols.forEach(t=>{
+      const sysVal=_ssDeliveredCounts[t]||0;
+      const siteTot=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);
+      const match=siteTot===sysVal;
+      html+=`<td style="${cell}font-weight:700;background:${match?'#1a7a3a':'#c02020'};color:#fff;">${sysVal||''}</td>`;
+    });
+    html+=`<td style="${cell}background:#555;"></td></tr>`;
+    // Discrepancy row
+    html+=`<tr style="background:#333;"><td style="padding:5px 10px;font-weight:700;color:#fff;">Discrepancy</td>`;
+    allCols.forEach(t=>{
+      const sysVal=_ssDeliveredCounts[t]||0;
+      const siteTot=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);
+      const diff=sysVal-siteTot;
+      const bg=diff===0?'#1a7a3a':diff>0?'#c02020':'#c06000';
+      const label=diff===0?'':diff>0?`${diff} missing`:`${Math.abs(diff)} extra`;
+      html+=`<td style="${cell}font-weight:700;background:${bg};color:#fff;">${label}</td>`;
+    });
+    html+=`<td style="${cell}background:#333;"></td></tr>`;
+  }
   html+=`</table>`;
   const full=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Site Stock</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>${html}</body></html>`;
   const blob=new Blob([full],{type:'application/vnd.ms-excel;charset=utf-8'});
