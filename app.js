@@ -15763,22 +15763,6 @@ function renderLaborCurve(){
 const _SS_FLOORS=['R+34','R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+18','R+17','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC'];
 const _SS_TYPES=['T01','T02','T03','T04','T05','T06','T07','T08','T09','T10','T11','T12'];
 let _ssData={};
-let _ssSaveTimer=null;
-
-async function _ssLoad(){
-  try{
-    const{data}=await sb.from('project_info').select('value').eq('project','shift-tower').eq('key','site_stock').maybeSingle();
-    _ssData=data?JSON.parse(data.value):{};
-  }catch(e){_ssData={};}
-}
-
-async function _ssSave(){
-  try{
-    await sb.from('project_info').upsert({project:'shift-tower',key:'site_stock',value:JSON.stringify(_ssData),updated_at:new Date().toISOString()},{onConflict:'project,key'});
-    const lbl=document.getElementById('ss-save-lbl');
-    if(lbl){lbl.textContent='✓ Saved';setTimeout(()=>{lbl.textContent='';},2000);}
-  }catch(e){showToast('Save failed');}
-}
 
 function _ssChange(floor,type,delta){
   if(!_ssData[floor])_ssData[floor]={};
@@ -15787,10 +15771,8 @@ function _ssChange(floor,type,delta){
   _ssData[floor][type]=nv;
   const numEl=document.getElementById(`ss-n-${floor}-${type}`);
   const minBtn=document.getElementById(`ss-m-${floor}-${type}`);
-  if(numEl)numEl.textContent=nv;
+  if(numEl){numEl.textContent=nv;numEl.style.color=nv>0?'var(--text)':'var(--text3)';}
   if(minBtn){minBtn.disabled=nv===0;minBtn.style.opacity=nv===0?'0.3':'1';minBtn.style.cursor=nv===0?'default':'pointer';}
-  clearTimeout(_ssSaveTimer);
-  _ssSaveTimer=setTimeout(_ssSave,1500);
 }
 
 function _ssExportExcel(){
@@ -15814,11 +15796,10 @@ function _ssExportExcel(){
   const a=document.createElement('a');a.href=url;a.download='site_stock.xls';a.click();URL.revokeObjectURL(url);
 }
 
-async function renderSiteStock(){
+function renderSiteStock(){
   const cont=document.getElementById('page-site-stock');
   if(!cont) return;
-  cont.innerHTML=`<div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;"><div style="padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;color:var(--text3);font-size:12px;">Loading…</div></div>`;
-  await _ssLoad();
+  _ssData={};
 
   const btnS=`padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;cursor:pointer;`;
   let tableHTML=`<table style="border-collapse:collapse;font-size:11px;font-family:'Barlow',sans-serif;">`;
@@ -15853,7 +15834,6 @@ async function renderSiteStock(){
     <div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;">
       <div style="padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
         <div style="font-size:15px;font-weight:700;color:var(--text);">Site Stock</div>
-        <span id="ss-save-lbl" style="font-size:11px;color:#1a9458;font-weight:600;"></span>
         <div style="margin-left:auto;">
           <button onclick="_ssExportExcel()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:#1a7a3a;color:#fff;border:none;border-radius:7px;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
