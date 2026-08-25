@@ -5455,30 +5455,52 @@ function renderBMDashboard(){
   const cont=document.getElementById('page-BM-dashboard');
   const gc=bmGC();
   const ss=[
-    {key:'c_and_d',    label:'C+D',                      color:'#0a3d1f'},
-    {key:'bottom_bracket',label:'Bot. Bracket',           color:'#155c2e'},
-    {key:'installed',  label:'Top Bracket',              color:'#1a9458'},
-    {key:'delivered',  label:'Delivered',                color:'#a07800'},
-    {key:'fabricated', label:'Fabricated',               color:'#1a5fa8'},
-    {key:'cutting',        label:'CL issued',                color:'#C98BCA'},
-    {key:'cip',           label:'Cutting List in Progress', color:'#A349A4'},
-    {key:'cl_not_issued', label:'CL not issued',            color:'#FF6666'},
-    {key:'defect',     label:'Defect',                   color:'#c02020'},
+    {key:'c_and_d',       label:'C+D',                      color:'#0a3d1f', cumulLabel:''},
+    {key:'bottom_bracket',label:'Bot. Bracket',             color:'#155c2e', cumulLabel:'T. Bot. Bracket'},
+    {key:'installed',     label:'Top Bracket',              color:'#1a9458', cumulLabel:'T. Top Bracket'},
+    {key:'delivered',     label:'Delivered',                color:'#a07800', cumulLabel:'T. delivered'},
+    {key:'fabricated',    label:'Fabricated',               color:'#1a5fa8', cumulLabel:'T. fabricated'},
+    {key:'cutting',       label:'CL issued',                color:'#C98BCA', cumulLabel:'T. CL issued'},
+    {key:'cip',           label:'Cutting List in Progress', color:'#A349A4', cumulLabel:'T. CL in Prog'},
+    {key:'cl_not_issued', label:'CL not issued',            color:'#FF6666', cumulLabel:'T. CL not issued'},
+    {key:'defect',        label:'Defect',                   color:'#c02020', cumulLabel:''},
   ];
-  const cardsHTML=ss.map(s=>`<div class="sc">
-    <div class="scl">${s.label}</div>
-    <div class="scn" style="color:${s.color}">${gc[s.key]||0}</div>
-    <div class="scb"><div class="scbf" style="width:${gc.total?Math.round((gc[s.key]||0)/gc.total*100):0}%;background:${s.color}"></div></div>
-  </div>`).join('');
+  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const gcActiveTotal=(gc.c_and_d||0)+(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
+  const cardsHTML=ss.map(s=>{
+    const n=gc[s.key]||0;
+    const idx=pipeline.indexOf(s.key);
+    const cumul=idx>0?pipeline.slice(0,idx+1).reduce((sum,k)=>sum+(gc[k]||0),0):n;
+    const pct=gcActiveTotal?(cumul/gcActiveTotal*100):0;
+    const hasCumul=s.cumulLabel&&idx>0;
+    return`<div class="sc">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:4px;margin-bottom:4px;min-width:0;">
+        <div class="scl" style="margin-bottom:0;font-size:8px;letter-spacing:0.05em;white-space:nowrap;">${s.label}</div>
+        ${hasCumul?`<div style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</div>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div class="scn" style="color:${s.color};">${n}</div>
+        ${hasCumul?`<div style="font-size:18px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</div>`:''}
+      </div>
+      <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:${pct.toFixed(1)}%;background:${s.color}"></div></div>
+      <div style="font-size:10px;color:${s.color};font-family:var(--mono);text-align:right;margin-top:3px;">${pct.toFixed(1)}%</div>
+    </div>`;
+  }).join('');
 
   const facadesHTML=BM_ZONES.map(z=>{
-    const c=bmZC(z.id);const activeTotal=(c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const c=bmZC(z.id);
+    const activeTotal=(c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
     const pct=activeTotal?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/activeTotal*100):0;
-    const breakdown=ss.map(s=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);">
+    const breakdown=ss.map(s=>{
+      const n=c[s.key]||0;
+      const idx=pipeline.indexOf(s.key);
+      const cumul=idx>0?pipeline.slice(0,idx+1).reduce((sum,k)=>sum+(c[k]||0),0):n;
+      const hasCumul=s.cumulLabel&&idx>0;
+      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);">
         <span style="font-size:10px;color:${s.color};font-weight:600;">${s.label}</span>
-        <span style="font-size:10px;font-weight:700;color:var(--text);font-family:var(--mono);">${c[s.key]||0}</span>
-      </div>`).join('');
+        <span style="font-size:10px;font-weight:700;color:var(--text);font-family:var(--mono);">${n}${hasCumul?` <span style="color:#8099b0;">(${cumul})</span>`:''}</span>
+      </div>`;
+    }).join('');
     return`<div class="fc" onclick="navMode='bracket';goPage('${z.id}')" style="cursor:pointer;">
       <div style="display:flex;align-items:center;">
         <div class="fcdot" style="background:${z.color}"></div>
