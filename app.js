@@ -15814,6 +15814,16 @@ function _ssChange(floor,type,delta){
       dpEl.style.background=diff===0?'#1a7a3a':diff>0?'#c02020':'#c06000';
       dpEl.textContent=diff===0?'':diff>0?`${diff} missing`:`${Math.abs(diff)} extra`;
     }
+    // Update discrepancy grand total
+    const dpTotEl=document.getElementById('ss-dp-total');
+    if(dpTotEl){
+      const allCols2=[..._SS_TYPES,..._ssExtraTypes];
+      const dvGrand=allCols2.reduce((s,t)=>s+(_ssDeliveredCounts[t]||0),0);
+      const siteGrand=_SS_FLOORS.reduce((s,fl)=>s+allCols2.reduce((s2,t)=>s2+((_ssData[fl]&&_ssData[fl][t])||0),0),0);
+      const dg=dvGrand-siteGrand;
+      dpTotEl.style.background=dg===0?'#1a7a3a':dg>0?'#c02020':'#c06000';
+      dpTotEl.textContent=dg===0?'':dg>0?`${dg} missing`:`${Math.abs(dg)} extra`;
+    }
     _ssUpdateBanner();
   }
 }
@@ -15944,6 +15954,7 @@ function _ssBuildTable(){
   if(_ssVerified){
     const dvS=`font-weight:700;font-size:11px;text-align:center;border:1px solid rgba(0,0,0,0.15);padding:5px 8px;color:#fff;`;
     // Delivered row
+    const dvGrandTot=allCols.reduce((s,t)=>s+(_ssDeliveredCounts[t]||0),0);
     h+=`<tr><td style="${dvS}background:#444;position:sticky;left:0;z-index:2;white-space:nowrap;">Delivered<br><span style="font-size:9px;font-weight:400;opacity:0.8;">(system)</span></td>`;
     allCols.forEach(t=>{
       const sysVal=_ssDeliveredCounts[t]||0;
@@ -15952,8 +15963,11 @@ function _ssBuildTable(){
       h+=`<td id="ss-dv-${t}" style="${dvS}background:${match?'#1a7a3a':'#c02020'};">${sysVal||''}</td>`;
     });
     if(hasMore)h+=`<td style="${dvS}background:#444;"></td>`;
-    h+=`<td style="${dvS}background:#444;"></td></tr>`;
+    h+=`<td style="${dvS}background:#444;font-weight:700;">${dvGrandTot||''}</td></tr>`;
     // Discrepancy row
+    const dpGrandDiff=dvGrandTot-grandTot;
+    const dpGrandBg=dpGrandDiff===0?'#1a7a3a':dpGrandDiff>0?'#c02020':'#c06000';
+    const dpGrandLabel=dpGrandDiff===0?'':dpGrandDiff>0?`${dpGrandDiff} missing`:`${Math.abs(dpGrandDiff)} extra`;
     h+=`<tr><td style="${dvS}background:#2a2a2a;position:sticky;left:0;z-index:2;white-space:nowrap;">Discrepancy</td>`;
     allCols.forEach(t=>{
       const sysVal=_ssDeliveredCounts[t]||0;
@@ -15964,7 +15978,7 @@ function _ssBuildTable(){
       h+=`<td id="ss-dp-${t}" style="${dvS}background:${bg};font-size:10px;">${label}</td>`;
     });
     if(hasMore)h+=`<td style="${dvS}background:#2a2a2a;"></td>`;
-    h+=`<td style="${dvS}background:#2a2a2a;"></td></tr>`;
+    h+=`<td id="ss-dp-total" style="${dvS}background:${dpGrandBg};font-size:10px;">${dpGrandLabel}</td></tr>`;
   }
   return h+`</tbody></table>`;
 }
@@ -15983,6 +15997,7 @@ function _ssExportExcel(){
   html+=`<tr style="background:#e8eef8;"><td style="padding:5px 10px;font-weight:700;color:#0f2d5c;">Total</td>${allCols.map(t=>{const c=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);return`<td style="${cell}font-weight:700;">${c||''}</td>`;}).join('')}<td style="${cell}font-weight:700;background:#c8d8f0;">${grandTot||''}</td></tr>`;
   if(_ssVerified){
     // Delivered (system) row
+    const xDvGrand=allCols.reduce((s,t)=>s+(_ssDeliveredCounts[t]||0),0);
     html+=`<tr style="background:#555;"><td style="padding:5px 10px;font-weight:700;color:#fff;">Delivered (system)</td>`;
     allCols.forEach(t=>{
       const sysVal=_ssDeliveredCounts[t]||0;
@@ -15990,8 +16005,12 @@ function _ssExportExcel(){
       const match=siteTot===sysVal;
       html+=`<td style="${cell}font-weight:700;background:${match?'#1a7a3a':'#c02020'};color:#fff;">${sysVal||''}</td>`;
     });
-    html+=`<td style="${cell}background:#555;"></td></tr>`;
+    html+=`<td style="${cell}font-weight:700;background:#444;color:#fff;">${xDvGrand||''}</td></tr>`;
     // Discrepancy row
+    const xSiteGrand=_SS_FLOORS.reduce((s,fl)=>s+allCols.reduce((s2,t)=>s2+((_ssData[fl]&&_ssData[fl][t])||0),0),0);
+    const xDpGrand=xDvGrand-xSiteGrand;
+    const xDpGrandBg=xDpGrand===0?'#1a7a3a':xDpGrand>0?'#c02020':'#c06000';
+    const xDpGrandLabel=xDpGrand===0?'':xDpGrand>0?`${xDpGrand} missing`:`${Math.abs(xDpGrand)} extra`;
     html+=`<tr style="background:#333;"><td style="padding:5px 10px;font-weight:700;color:#fff;">Discrepancy</td>`;
     allCols.forEach(t=>{
       const sysVal=_ssDeliveredCounts[t]||0;
@@ -16001,7 +16020,7 @@ function _ssExportExcel(){
       const label=diff===0?'':diff>0?`${diff} missing`:`${Math.abs(diff)} extra`;
       html+=`<td style="${cell}font-weight:700;background:${bg};color:#fff;">${label}</td>`;
     });
-    html+=`<td style="${cell}background:#333;"></td></tr>`;
+    html+=`<td style="${cell}font-weight:700;background:${xDpGrandBg};color:#fff;">${xDpGrandLabel}</td></tr>`;
   }
   html+=`</table>`;
   const full=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Site Stock</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>${html}</body></html>`;
