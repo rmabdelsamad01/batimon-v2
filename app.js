@@ -330,6 +330,8 @@ function updateNavFacadeLabels(){
     const pct=document.getElementById('tp-'+dir);
     if(pct) pct.style.display=isCustom?'none':'';
   });
+  const _siteStockBtn=document.getElementById('nav-btn-site-stock');
+  if(_siteStockBtn) _siteStockBtn.style.display=isCustom?'none':'';
   if(isCustom){
     const catNum=window._activeCatNum||1;
     const cats=getProjectCategories(pid);
@@ -2427,6 +2429,7 @@ function _renderPage(id){
   else if(id==='3d')render3DPage();
   else if(id==='aaa')renderAAAPage();
   else if(id==='builder')renderBuilderPage();
+  else if(id==='site-stock')renderSiteStock();
   else if(id==='agenda')renderAgendaPage();
   else if(id==='beta')renderBetaPage();
   else if(id==='batidoc')openBatidocPage();
@@ -15753,6 +15756,23 @@ function renderLaborCurve(){
       </div>
     </div>
   </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SITE STOCK
+// ═══════════════════════════════════════════════════════════
+function renderSiteStock(){
+  const cont=document.getElementById('page-site-stock');
+  if(!cont) return;
+  cont.innerHTML=`
+    <div style="display:flex;flex-direction:column;height:100%;font-family:'Barlow',sans-serif;">
+      <div style="padding:16px 24px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:16px;font-weight:700;color:var(--text);">Site Stock</div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;">
+        Coming soon
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
