@@ -18067,6 +18067,9 @@ function _buildMobileShell(prof){
       <button id="mob-btn-ucw" onclick="mobileSetTab('ucw')" style="flex:1;padding:10px 0 8px;border:none;border-top:3px solid transparent;background:transparent;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8099b0;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>UCW
       </button>
+      <button id="mob-btn-stock" onclick="mobileSetTab('stock')" style="flex:1;padding:10px 0 8px;border:none;border-top:3px solid transparent;background:transparent;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8099b0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Stock
+      </button>
     </div>`;
 }
 
@@ -18101,13 +18104,16 @@ window.mobileSwitchToPhoneOnly=function(){
 
 window.mobileSetTab=function(tab){
   window._mobTab=tab;
-  window._mobFacade=tab==='brackets'?'BM-NF':'NF';
+  if(tab!=='stock') window._mobFacade=tab==='brackets'?'BM-NF':'NF';
   window._mobFilter='all';
   const isB=tab==='brackets';
+  const isS=tab==='stock';
   document.getElementById('mob-btn-brackets').style.color=isB?'#224F93':'#8099b0';
   document.getElementById('mob-btn-brackets').style.borderTopColor=isB?'#224F93':'transparent';
-  document.getElementById('mob-btn-ucw').style.color=!isB?'#224F93':'#8099b0';
-  document.getElementById('mob-btn-ucw').style.borderTopColor=!isB?'#224F93':'transparent';
+  document.getElementById('mob-btn-ucw').style.color=(!isB&&!isS)?'#224F93':'#8099b0';
+  document.getElementById('mob-btn-ucw').style.borderTopColor=(!isB&&!isS)?'#224F93':'transparent';
+  document.getElementById('mob-btn-stock').style.color=isS?'#224F93':'#8099b0';
+  document.getElementById('mob-btn-stock').style.borderTopColor=isS?'#224F93':'transparent';
   _refreshMobileContent();
   _fixMobContentHeight();
 };
@@ -18127,15 +18133,53 @@ window.mobileSetFilter=function(f){
 };
 
 function _refreshMobileContent(){
+  const isStock=window._mobTab==='stock';
+  const facadeBar=document.getElementById('mob-facade-bar');
+  const filterBar=document.getElementById('mob-filter-bar');
+  if(isStock){
+    if(facadeBar) facadeBar.style.display='none';
+    if(filterBar) filterBar.style.display='none';
+    _renderMobileStock();
+    return;
+  }
+  if(facadeBar) facadeBar.style.display='';
   _renderMobileFacadeBar();
   const isOverview=window._mobFacade==='overview';
-  const filterBar=document.getElementById('mob-filter-bar');
   if(filterBar) filterBar.style.display=isOverview?'none':'';
   if(isOverview){_renderMobileOverview();return;}
   _renderMobileFilterBar();
   if(window._mobTab==='brackets') _renderMobileBMGrid();
   else _renderMobileUCWGrid();
 }
+
+async function _renderMobileStock(){
+  const cont=document.getElementById('mob-content');
+  if(!cont) return;
+  cont.style.overflow='';
+  cont.style.overflowY='scroll';
+  cont.style.touchAction='pan-y';
+  cont.style.position='';
+  cont.innerHTML=`<div style="padding:12px 16px;color:#8099b0;font-family:'Barlow',sans-serif;font-size:13px;">Loading site stock…</div>`;
+  // Load from Supabase if not already loaded
+  if(!Object.keys(_ssData).length) await _ssLoad();
+  const btnStyle='padding:8px 16px;border-radius:8px;border:none;font-family:"Barlow",sans-serif;font-size:12px;font-weight:700;cursor:pointer;';
+  const verifyLabel=_ssVerified?'✓ Verified — Reset':'Verify Stock';
+  const verifyBg=_ssVerified?'#1a7a3a':'#224F93';
+  cont.innerHTML=`
+    <div style="padding:10px 12px 6px;display:flex;align-items:center;justify-content:space-between;background:#1a2a3a;border-bottom:1px solid rgba(255,255,255,0.1);">
+      <span style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:#fff;">Site Stock</span>
+      <button onclick="_mobVerifyStock()" style="${btnStyle}background:${verifyBg};color:#fff;">${verifyLabel}</button>
+    </div>
+    <div style="overflow:auto;-webkit-overflow-scrolling:touch;background:#1a2a3a;">
+      <div id="mob-ss-table-wrap">${_ssBuildTable()}</div>
+    </div>`;
+}
+
+window._mobVerifyStock=function(){
+  _ssVerifyStock();
+  // Re-render the stock view to reflect verification state
+  _renderMobileStock();
+};
 
 function _renderMobileOverview(){
   const cont=document.getElementById('mob-content');
