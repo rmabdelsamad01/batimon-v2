@@ -10054,10 +10054,10 @@ async function _openInstalledChecklist(panelId){
 async function savePanel(){
   if(!selPanel)return;
   if(sbProfile?.role==='viewer'){toast('Viewers cannot edit panels.');return;}
-  const installDate = selStat==='installed' ? document.getElementById('m-install-date').value : (panels[selPanel]||{}).installDate||'';
-  const installRef = selStat==='installed' ? document.getElementById('m-install-ref').value : (panels[selPanel]||{}).installRef||'';
-  const fabDate = selStat==='fabricated' ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
-  const deliveryDate = selStat==='delivered' ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
+  const installDate = ['installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-install-date').value : (panels[selPanel]||{}).installDate||'';
+  const installRef = ['installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-install-ref').value : (panels[selPanel]||{}).installRef||'';
+  const fabDate = ['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
+  const deliveryDate = ['delivered','installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
   panels[selPanel]={...panels[selPanel],status:selStat,installDate,installRef,fabDate,deliveryDate};
   _dirtyPanels.add(selPanel);
   // Mirror SF-{floor}-C15 → WF-{floor}-C15 (one-way, read-only mirror)
