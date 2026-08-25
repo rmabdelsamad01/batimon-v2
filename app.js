@@ -18170,9 +18170,21 @@ async function _renderMobileStock(){
       <span style="font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;color:#fff;">Site Stock</span>
       <button onclick="_mobVerifyStock()" style="${btnStyle}background:${verifyBg};color:#fff;">${verifyLabel}</button>
     </div>
-    <div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;background:#1a2a3a;">
+    <div id="mob-ss-scroll" style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;background:#1a2a3a;">
       <div id="mob-ss-table-wrap">${_ssBuildTable()}</div>
     </div>`;
+  // Force one-finger scroll on iOS by intercepting touch events
+  const scroller=document.getElementById('mob-ss-scroll');
+  if(scroller){
+    let _tx=0,_ty=0;
+    scroller.addEventListener('touchstart',e=>{_tx=e.touches[0].clientX;_ty=e.touches[0].clientY;},{passive:true});
+    scroller.addEventListener('touchmove',e=>{
+      const dx=_tx-e.touches[0].clientX, dy=_ty-e.touches[0].clientY;
+      scroller.scrollLeft+=dx; scroller.scrollTop+=dy;
+      _tx=e.touches[0].clientX; _ty=e.touches[0].clientY;
+      e.stopPropagation();
+    },{passive:true});
+  }
 }
 
 window._mobVerifyStock=function(){
