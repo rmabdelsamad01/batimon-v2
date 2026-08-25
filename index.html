@@ -423,7 +423,9 @@ body.mobile-section-view .dash {
     <div class="pib" id="m-info"></div>
     <div class="fg2"><label class="fl2">Status</label>
       <div class="sr2">
-        <div class="so soi" onclick="setSt('installed',this)"><span class="si">✓</span>Installed</div>
+        <div class="so socd" onclick="setSt('c_and_d',this)"><span class="si">◆</span>C+D</div>
+        <div class="so sobb" onclick="setSt('bottom_bracket',this)"><span class="si">▲</span>Bot. Bracket</div>
+        <div class="so soi" onclick="setSt('installed',this)"><span class="si">✓</span>Top Bracket</div>
         <div class="so sod" onclick="setSt('delivered',this)"><span class="si">▣</span>Delivered</div>
         <div class="so sof" onclick="setSt('fabricated',this)"><span class="si">⬡</span>Fabricated</div>
         <div class="so soc" onclick="setSt('cutting',this)"><span class="si">✂</span>CL issued</div>
@@ -1145,9 +1147,17 @@ body.mobile-section-view .dash {
     </div>
     <div id="bulk-count" style="font-size:12px;color:#8099b0;margin-bottom:20px;font-family:'DM Mono',monospace;"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <button class="bso" onclick="document.querySelectorAll('.bso').forEach(b=>b.classList.remove('bss'));this.classList.add('bss');document.getElementById('bsm-apply').onclick=()=>applyBulkStatus('c_and_d');" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;">
+        <span style="width:14px;height:14px;border-radius:3px;background:#005c1e;flex-shrink:0;display:inline-block;border:1px solid rgba(0,61,20,0.4);"></span>
+        <span style="font-size:12px;font-weight:600;color:#1a2a3a;">C+D</span>
+      </button>
+      <button class="bso" onclick="document.querySelectorAll('.bso').forEach(b=>b.classList.remove('bss'));this.classList.add('bss');document.getElementById('bsm-apply').onclick=()=>applyBulkStatus('bottom_bracket');" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;">
+        <span style="width:14px;height:14px;border-radius:3px;background:#00b33c;flex-shrink:0;display:inline-block;border:1px solid rgba(0,143,48,0.4);"></span>
+        <span style="font-size:12px;font-weight:600;color:#1a2a3a;">Bottom Bracket</span>
+      </button>
       <button class="bso" onclick="document.querySelectorAll('.bso').forEach(b=>b.classList.remove('bss'));this.classList.add('bss');document.getElementById('bsm-apply').onclick=()=>applyBulkStatus('installed');" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;">
         <span style="width:14px;height:14px;border-radius:3px;background:#00FF32;flex-shrink:0;display:inline-block;border:1px solid rgba(0,180,30,0.4);"></span>
-        <span style="font-size:12px;font-weight:600;color:#1a2a3a;">Installed</span>
+        <span style="font-size:12px;font-weight:600;color:#1a2a3a;">Top Bracket</span>
       </button>
       <button class="bso" onclick="document.querySelectorAll('.bso').forEach(b=>b.classList.remove('bss'));this.classList.add('bss');document.getElementById('bsm-apply').onclick=()=>applyBulkStatus('delivered');" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:2px solid rgba(34,79,147,0.12);background:#f0f4f9;cursor:pointer;font-family:'Barlow',sans-serif;">
         <span style="width:14px;height:14px;border-radius:3px;background:#FFF000;flex-shrink:0;display:inline-block;border:1px solid rgba(180,160,0,0.4);"></span>
@@ -1524,7 +1534,9 @@ if(typeof supabase === 'undefined'){
     </div>
     <div class="fg2"><label class="fl2">Status</label>
       <div class="sr2">
-        <div class="so soi" onclick="custSetSt('installed',this)"><span class="si">✓</span>Installed</div>
+        <div class="so socd" onclick="custSetSt('c_and_d',this)"><span class="si">◆</span>C+D</div>
+        <div class="so sobb" onclick="custSetSt('bottom_bracket',this)"><span class="si">▲</span>Bot. Bracket</div>
+        <div class="so soi" onclick="custSetSt('installed',this)"><span class="si">✓</span>Top Bracket</div>
         <div class="so sod" onclick="custSetSt('delivered',this)"><span class="si">▣</span>Delivered</div>
         <div class="so sof" onclick="custSetSt('fabricated',this)"><span class="si">⬡</span>Fabricated</div>
         <div class="so soc" onclick="custSetSt('cutting',this)"><span class="si">✂</span>CL issued</div>

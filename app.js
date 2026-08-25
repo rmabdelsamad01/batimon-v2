@@ -239,8 +239,8 @@ const ZONES=[
   {id:'WF',name:'West Facade', sub:'West Elevation', cols:WF_COLS.length,rows:WF_FLOORS.length,color:'#6d35d9',simple:false,floors:WF_FLOORS,colNums:WF_COLS,types:WF_TYPES,refs:WF_REFS},
 ];
 
-const SM={installed:{icon:'✓',label:'Installed',cls:'st-i'},delivered:{icon:'▣',label:'Delivered',cls:'st-d'},fabricated:{icon:'⬡',label:'Fabricated',cls:'st-f'},cutting:{icon:'✂',label:'CL issued',cls:'st-c'},cl_not_issued:{icon:'✗',label:'CL not issued',cls:'st-cn'},cip:{icon:'◑',label:'Cutting List in Progress',cls:'st-cip'},defect:{icon:'!',label:'Defect',cls:'st-x'},pending:{icon:'·',label:'Pending',cls:'st-p'}};
-const SMAP={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+const SM={c_and_d:{icon:'◆',label:'C+D',cls:'st-cd'},bottom_bracket:{icon:'▲',label:'Bottom Bracket',cls:'st-bb'},installed:{icon:'✓',label:'Top Bracket',cls:'st-i'},delivered:{icon:'▣',label:'Delivered',cls:'st-d'},fabricated:{icon:'⬡',label:'Fabricated',cls:'st-f'},cutting:{icon:'✂',label:'CL issued',cls:'st-c'},cl_not_issued:{icon:'✗',label:'CL not issued',cls:'st-cn'},cip:{icon:'◑',label:'Cutting List in Progress',cls:'st-cip'},defect:{icon:'!',label:'Defect',cls:'st-x'},pending:{icon:'·',label:'Pending',cls:'st-p'}};
+const SMAP={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
 let panels={},issues=[],selPanel=null,selStat='pending',fFilters={};
 let multiSelPanels=new Set();
 // Custom project multi-select state
@@ -2341,8 +2341,8 @@ function allIds(zid){
   });
 }
 function allPanelIds(){return ZONES.flatMap(z=>allIds(z.id));}
-function zC(zid){const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};allIds(zid).forEach(id=>{c.total++;const s=(panels[id]||{}).status||'pending';c[s]=(c[s]||0)+1;});return c;}
-function gC(){const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};allPanelIds().forEach(id=>{c.total++;const s=(panels[id]||{}).status||'pending';c[s]=(c[s]||0)+1;});return c;}
+function zC(zid){const c={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};allIds(zid).forEach(id=>{c.total++;const s=(panels[id]||{}).status||'pending';c[s]=(c[s]||0)+1;});return c;}
+function gC(){const c={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};allPanelIds().forEach(id=>{c.total++;const s=(panels[id]||{}).status||'pending';c[s]=(c[s]||0)+1;});return c;}
 
 let curPage='welcome';
 let navMode=null; // 'bracket' | 'ucw' | null
@@ -2450,10 +2450,10 @@ function _renderPage(id){
 }
 
 // ── Custom project monitoring grid (blank A–Z / 1–10 table) ───────────────
-const _custStBg    = {installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-const _custStText  = {installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
-const _custStLabel = {installed:'Installed',delivered:'Delivered',fabricated:'Fabricated',cutting:'CL Issued',cip:'CL In Prog',cl_not_issued:'CL Not Issued',defect:'Defect',pending:'Pending'};
-const _custStatuses = ['pending','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'];
+const _custStBg    = {c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+const _custStText  = {c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+const _custStLabel = {c_and_d:'C+D',bottom_bracket:'Bot. Bracket',installed:'Top Bracket',delivered:'Delivered',fabricated:'Fabricated',cutting:'CL Issued',cip:'CL In Prog',cl_not_issued:'CL Not Issued',defect:'Defect',pending:'Pending'};
+const _custStatuses = ['pending','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'];
 
 // In-memory cache: { 'projId|facade': { '1-A': {status,notes}, ... } }
 const _custFacadeCache = {};
@@ -2602,13 +2602,15 @@ async function renderCustomDash(){
 
 // ── Helpers for custom project dashboard-style rendering ─────────────────────
 function _custTotalsFromCells(cells){
-  const t={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+  const t={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
   Object.entries(cells).forEach(([k,v])=>{if(k==='__meta__')return;const s=typeof v==='object'?v.status:v;if(s&&t[s]!==undefined)t[s]++;});
   return t;
 }
 function _custStatCardsHTML(totals){
   const ss=[
-    {key:'installed',    label:'Installed',    color:'#1a9458',cumulLabel:'T. installed'},
+    {key:'c_and_d',      label:'C+D',          color:'#0a3d1f',cumulLabel:''},
+    {key:'bottom_bracket',label:'Bot. Bracket', color:'#155c2e',cumulLabel:'T. Bot. Bracket'},
+    {key:'installed',    label:'Top Bracket',  color:'#1a9458',cumulLabel:'T. Top Bracket'},
     {key:'delivered',    label:'Delivered',    color:'#a07800',cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',   color:'#1a5fa8',cumulLabel:'T. fabricated'},
     {key:'cutting',      label:'CL issued',    color:'#C98BCA',cumulLabel:'T. CL issued'},
@@ -2616,7 +2618,7 @@ function _custStatCardsHTML(totals){
     {key:'cl_not_issued',label:'CL not issued',color:'#FF6666',cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',       color:'#c02020',cumulLabel:''},
   ];
-  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const activeTotal=ss.reduce((s,d)=>s+(totals[d.key]||0),0);
   return ss.map(s=>{
     const n=totals[s.key]||0;
@@ -2645,7 +2647,9 @@ function _custStatCardsHTML(totals){
 }
 function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
   const statDefs=[
-    {key:'installed',    label:'Installed',    color:'#1a9458',cumulLabel:'T. installed'},
+    {key:'c_and_d',      label:'C+D',          color:'#0a3d1f',cumulLabel:''},
+    {key:'bottom_bracket',label:'Bot. Bracket', color:'#155c2e',cumulLabel:'T. Bot. Bracket'},
+    {key:'installed',    label:'Top Bracket',  color:'#1a9458',cumulLabel:'T. Top Bracket'},
     {key:'delivered',    label:'Delivered',    color:'#a07800',cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',   color:'#1a5fa8',cumulLabel:'T. fabricated'},
     {key:'cutting',      label:'CL issued',    color:'#C98BCA',cumulLabel:'T. CL issued'},
@@ -2653,9 +2657,9 @@ function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
     {key:'cl_not_issued',label:'CL not issued',color:'#FF6666',cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',       color:'#c02020',cumulLabel:''},
   ];
-  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const activeTotal=statDefs.reduce((s,d)=>s+(totals[d.key]||0),0);
-  const pct=activeTotal?Math.round((totals.installed||0)/activeTotal*100):0;
+  const pct=activeTotal?Math.round(((totals.c_and_d||0)+(totals.bottom_bracket||0)+(totals.installed||0))/activeTotal*100):0;
   const _showPct=(_custFacadeValMode==='percentages');
   const breakdown=statDefs.map(s=>{
     const n=totals[s.key]||0;
@@ -2757,7 +2761,7 @@ async function renderAllCategoriesOverview(){
   (rows||[]).forEach(r=>{ byKey[r.facade]=r.cells||{}; });
 
   // Global totals across all cats
-  const globalTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+  const globalTotals={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
   allKeys.forEach(k=>{const t=_custTotalsFromCells(byKey[k]||{});Object.keys(globalTotals).forEach(s=>globalTotals[s]+=(t[s]||0));});
   el.innerHTML = _custStatCardsHTML(globalTotals);
 
@@ -2767,7 +2771,7 @@ async function renderAllCategoriesOverview(){
   if(_custOvMode==='category'){
     const catColors=['#2d65bd','#1a9458','#e05c00','#7c3aed','#a07800','#c02020','#0a7a5a','#6d35d9'];
     const catCards=cats.map((cat,i)=>{
-      const catTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+      const catTotals={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
       ['NF','SF','EF','WF'].forEach(f=>{
         const key=cat.num===1?f:'c'+cat.num+'-'+f;
         const t=_custTotalsFromCells(byKey[key]||{});
@@ -2787,7 +2791,7 @@ async function renderAllCategoriesOverview(){
     const facadeColor={NF:'#2d65bd',SF:'#1a9458',EF:'#e05c00',WF:'#7c3aed'};
     const cat1=cats[0];
     const buildingCards=['NF','SF','EF','WF'].map(f=>{
-      const bldTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+      const bldTotals={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
       cats.forEach(cat=>{
         const key=cat.num===1?f:'c'+cat.num+'-'+f;
         const t=_custTotalsFromCells(byKey[key]||{});
@@ -2798,7 +2802,7 @@ async function renderAllCategoriesOverview(){
       return _custFacadeCardHTML(name,facadeColor[f],bldTotals,null,null);
     }).join('');
     const extraBuildingCards=_extraFacades.map((xf,i)=>{
-      const bldTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+      const bldTotals={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
       cats.forEach(cat=>{
         const key=cat.num===1?xf:'c'+cat.num+'-'+xf;
         const t=_custTotalsFromCells(byKey[key]||{});
@@ -2851,7 +2855,7 @@ async function renderCustomCatOverview(catNum){
   (rows||[]).forEach(r=>{byKey[r.facade]=r.cells||{};});
 
   // Cat-level totals (all facades combined)
-  const catTotals={installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
+  const catTotals={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0};
   facadeKeys.forEach(k=>{const t=_custTotalsFromCells(byKey[k]||{});Object.keys(catTotals).forEach(s=>catTotals[s]+=(t[s]||0));});
   const statEl=document.getElementById('catov-statcards-'+catNum);
   if(statEl) statEl.innerHTML=_custStatCardsHTML(catTotals);
@@ -3607,13 +3611,13 @@ function custSetSt(status, el){
     modal.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
     if(el){el.classList.add('ss');}
     else{
-      const _sm={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+      const _sm={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
       const _sc=_sm[status];if(_sc){const _sb=modal.querySelector('.so.'+_sc);if(_sb)_sb.classList.add('ss');}
     }
   }
-  const showFab=['fabricated','delivered','installed'].includes(status);
-  const showDel=['delivered','installed'].includes(status);
-  const showInst=status==='installed';
+  const showFab=['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(status);
+  const showDel=['delivered','installed','bottom_bracket','c_and_d'].includes(status);
+  const showInst=['installed','bottom_bracket','c_and_d'].includes(status);
   const fw=document.getElementById('cust-pm-fab-wrap');
   const dw=document.getElementById('cust-pm-del-wrap');
   const iw=document.getElementById('cust-pm-inst-wrap');
@@ -3749,7 +3753,7 @@ function _cgRenderPanelBody(pid, facade, key, cellRef){
   const k = pid+'|'+facade;
   const cellData = (_custFacadeCache[k]||{})[key] || {};
   const st = cellData.status || 'pending';
-  const stColor={installed:'#1a9458',delivered:'#a07800',fabricated:'#1a5fa8',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FF6666',defect:'#c02020',pending:'#8099b0'};
+  const stColor={c_and_d:'#0a3d1f',bottom_bracket:'#155c2e',installed:'#1a9458',delivered:'#a07800',fabricated:'#1a5fa8',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FF6666',defect:'#c02020',pending:'#8099b0'};
 
   // Shared styles
   const lbl=`display:block;font-size:9px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--text3);margin-bottom:4px;`;
@@ -4089,7 +4093,7 @@ async function renderCustomMonitoring(pageId){
     const s=typeof v==='object'?v.status:v;
     if(s&&s!=='pending') _stTotals[s]=(_stTotals[s]||0)+1;
   });
-  const _stClsMap={installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x'};
+  const _stClsMap={c_and_d:'st-cd',bottom_bracket:'st-bb',installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x'};
   const legend=_custStatuses.filter(s=>s!=='pending').map(s=>`
     <div style="display:flex;align-items:center;gap:6px;">
       <div class="wfc ${_stClsMap[s]||''}" style="width:18px;height:18px;border-radius:3px;min-width:18px;flex-shrink:0;"></div>
@@ -4098,8 +4102,8 @@ async function renderCustomMonitoring(pageId){
     </div>`).join('');
 
   const _fbStyle='padding:3px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;';
-  const _filterBtns=['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'].map(f=>{
-    const lbl=f==='all'?'All':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1);
+  const _filterBtns=['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'].map(f=>{
+    const lbl=f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1);
     return`<button class="cg-fb${_cgFilterStatus===f?' af':''}" onclick="_cgSetFilter('${f}',this)" style="${_fbStyle}${_cgFilterStatus===f?'background:#224F93;color:#fff;border-color:#224F93;':''}">${lbl}</button>`;
   }).join('');
   const _zoomControls=`<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="_cgZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="cg-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(_CG_ZOOM_LEVELS[_cgZoomIdx]*100)}%</span><button onclick="_cgZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="_cgZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div>`;
@@ -4236,7 +4240,9 @@ function toggleFacadeValMode(){
 function renderDash(){
   const gc=gC();
   const ss=[
-    {key:'installed',   label:'Installed',         color:'#1a9458', cumulLabel:'T. installed'},
+    {key:'c_and_d',     label:'C+D',               color:'#0a3d1f', cumulLabel:''},
+    {key:'bottom_bracket',label:'Bot. Bracket',     color:'#155c2e', cumulLabel:'T. Bot. Bracket'},
+    {key:'installed',   label:'Top Bracket',        color:'#1a9458', cumulLabel:'T. Top Bracket'},
     {key:'delivered',   label:'Delivered',          color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',  label:'Fabricated',         color:'#1a5fa8', cumulLabel:'T. fabricated'},
     {key:'cutting',     label:'CL issued',          color:'#C98BCA', cumulLabel:'T. CL issued'},
@@ -4244,8 +4250,8 @@ function renderDash(){
     {key:'cl_not_issued',label:'CL not issued',     color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',      label:'Defect',             color:'#c02020', cumulLabel:''},
   ];
-  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
-  const gcActiveTotal=(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
+  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const gcActiveTotal=(gc.c_and_d||0)+(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
   document.getElementById('dash-cards').innerHTML=ss.map(s=>{
     const n=gc[s.key]||0;
     const idx=pipeline.indexOf(s.key);
@@ -4277,7 +4283,9 @@ function renderDash(){
     <div style="font-size:10px;color:#1a2a3a;font-family:var(--mono);text-align:right;margin-top:3px;">100%</div>
   </div>`;
   const statDefs=[
-    {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
+    {key:'c_and_d',      label:'C+D',           color:'#0a3d1f', cumulLabel:''},
+    {key:'bottom_bracket',label:'Bot. Bracket',  color:'#155c2e', cumulLabel:'T. Bot. Bracket'},
+    {key:'installed',    label:'Top Bracket',   color:'#1a9458', cumulLabel:'T. Top Bracket'},
     {key:'delivered',    label:'Delivered',     color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',    color:'#1a5fa8', cumulLabel:'T. fabricated'},
     {key:'cutting',      label:'CL issued',     color:'#C98BCA', cumulLabel:'T. CL issued'},
@@ -4285,11 +4293,11 @@ function renderDash(){
     {key:'cl_not_issued',label:'CL not issued', color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',        color:'#c02020', cumulLabel:''},
   ];
-  const facadePipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const facadePipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   document.getElementById('facades-grid').innerHTML=ZONES.map(z=>{
     const c=zC(z.id);
-    const activeTotal=(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
-    const pct=activeTotal?Math.round(c.installed/activeTotal*100):0;
+    const activeTotal=(c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/activeTotal*100):0;
     const breakdown=statDefs.map(s=>{
       const n=c[s.key]||0;
       const idx=facadePipeline.indexOf(s.key);
@@ -4335,7 +4343,7 @@ function renderDash(){
 }
 
 function sidebarHTML(zid,color){
-  const c=zC(zid);const pct=c.total?Math.round(c.installed/c.total*100):0;
+  const c=zC(zid);const pct=c.total?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/c.total*100):0;
   const z=ZONES.find(z=>z.id===zid);
   const issH=issues.filter(i=>i.panelId.startsWith(zid+'-'));
   return`<aside class="sb"><div class="sbs"><div class="sbl">Legend</div><div class="leg"><div class="li"><span class="ls sw-i"></span>Installed</div><div class="li"><span class="ls sw-d"></span>Delivered</div><div class="li"><span class="ls sw-f"></span>Fabricated</div><div class="li"><span class="ls sw-c"></span>CL issued</div><div class="li"><span class="ls sw-cn"></span>CL not issued</div><div class="li"><span class="ls sw-cip"></span>Cutting List in Progress</div><div class="li"><span class="ls sw-x"></span>Defect</div></div><div style="margin-top:11px"><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:4px"><span>Progress</span><span style="font-family:var(--mono);color:${color}">${pct}%</span></div><div class="pb"><div class="pbf" style="width:${pct}%;background:${color}"></div></div></div><div style="margin-top:11px;padding-top:9px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);line-height:1.9"><b style="color:var(--text);font-size:11px;">${z.name}</b><br>${z.sub}<br><b style="color:var(--text)">${c.total}</b> panels</div></div><div class="sbs" style="padding:9px 11px 7px"><div class="sbl" style="margin-bottom:0">Issues (${issH.length})</div></div><div class="il">${issH.length===0?'<div class="ni">No issues</div>':issH.slice().reverse().map(iss=>`<div class="ic"><div class="it"><span class="iid">#${iss.id}</span><span class="ib">${iss.type}</span></div><div class="idesc">${iss.desc||'—'}</div><div class="ipid">${iss.panelId}</div></div>`).join('')}</div></aside>`;
@@ -5429,7 +5437,7 @@ const BM_ZONES=[
   {id:'BM-WF',name:'West Facade', sub:'West Elevation', color:'#6d35d9'},
 ];
 function bmZC(zid){
-  const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  const c={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
   allBracketIds(zid.replace('BM-','')).forEach(id=>{
     c.total++;
     const s=(panels[id]||{}).status||'pending';
@@ -5438,7 +5446,7 @@ function bmZC(zid){
   return c;
 }
 function bmGC(){
-  const c={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  const c={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
   allBracketPanelIds().forEach(id=>{
     c.total++;
     const s=(panels[id]||{}).status||'pending';
@@ -5451,7 +5459,9 @@ function renderBMDashboard(){
   const cont=document.getElementById('page-BM-dashboard');
   const gc=bmGC();
   const ss=[
-    {key:'installed',  label:'Installed',                color:'#1a9458'},
+    {key:'c_and_d',    label:'C+D',                      color:'#0a3d1f'},
+    {key:'bottom_bracket',label:'Bot. Bracket',           color:'#155c2e'},
+    {key:'installed',  label:'Top Bracket',              color:'#1a9458'},
     {key:'delivered',  label:'Delivered',                color:'#a07800'},
     {key:'fabricated', label:'Fabricated',               color:'#1a5fa8'},
     {key:'cutting',        label:'CL issued',                color:'#C98BCA'},
@@ -5466,8 +5476,8 @@ function renderBMDashboard(){
   </div>`).join('');
 
   const facadesHTML=BM_ZONES.map(z=>{
-    const c=bmZC(z.id);const activeTotal=(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
-    const pct=activeTotal?Math.round(c.installed/activeTotal*100):0;
+    const c=bmZC(z.id);const activeTotal=(c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/activeTotal*100):0;
     const breakdown=ss.map(s=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);">
         <span style="font-size:10px;color:${s.color};font-weight:600;">${s.label}</span>
@@ -5544,15 +5554,15 @@ function renderBMNF(){
     {label:'R+1', data:mk(L_R1, R_EMP)},{label:'RDC', data:mk(L_EMP,R_EMP)},
   ];
 
-  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
-  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+  const stBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
   const cellW=44, cellH=26, labelW=44;
 
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setNFBMFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setNFBMFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="nfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="nf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(NF_ZOOM_LEVELS[nfZoomIdx]*100)}%</span><button onclick="nfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="nfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printNF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   const headerCells=cols.map(c=>{
@@ -5578,7 +5588,7 @@ function renderBMNF(){
     </div>`;
   }).join('');
 
-  const nfCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  const nfCount={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
   rows.forEach(r=>{
     r.data.forEach((bracketType,ci)=>{
       if(!bracketType||bracketType==='|') return;
@@ -5591,7 +5601,8 @@ function renderBMNF(){
   });
 
   const legendItems=[
-    {cls:'st-i',label:'Installed',key:'installed'},{cls:'st-d',label:'Delivered',key:'delivered'},
+    {cls:'st-cd',label:'C+D',key:'c_and_d'},{cls:'st-bb',label:'Bot. Bracket',key:'bottom_bracket'},
+    {cls:'st-i',label:'Top Bracket',key:'installed'},{cls:'st-d',label:'Delivered',key:'delivered'},
     {cls:'st-f',label:'Fabricated',key:'fabricated'},{cls:'st-c',label:'CL issued',key:'cutting'},
     {cls:'st-cn',label:'CL not issued',key:'cl_not_issued'},
     {cls:'st-cip',label:'Cutting List in Progress',key:'cip'},{cls:'st-x',label:'Defect',key:'defect'},
@@ -5662,12 +5673,12 @@ function openBmNFModal(id,label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
-  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  if(['installed','bottom_bracket','c_and_d'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
-  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  if(['delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
-  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
   if(btn)btn.classList.add('ss');
   document.getElementById('pm').classList.add('open');
@@ -5716,15 +5727,15 @@ function renderBMSF(){
     {label:'R+1', data:mk(L_EMP,R_STD)},{label:'RDC', data:mk(L_EMP,R_RDC)},
   ];
 
-  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
-  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+  const stBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
   const cellW=44, cellH=26, labelW=44;
 
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setSFBMFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setSFBMFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="sfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="sf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(SF_ZOOM_LEVELS[sfZoomIdx]*100)}%</span><button onclick="sfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="sfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printSF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   // Column headers
@@ -5753,7 +5764,7 @@ function renderBMSF(){
   }).join('');
 
   // Count statuses for legend
-  const sfCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  const sfCount={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
   rows.forEach(r=>{
     r.data.forEach((bracketType,ci)=>{
       if(!bracketType||bracketType==='|'||bracketType==='x') return;
@@ -5766,7 +5777,8 @@ function renderBMSF(){
   });
 
   const legendItems=[
-    {cls:'st-i',label:'Installed',key:'installed'},{cls:'st-d',label:'Delivered',key:'delivered'},
+    {cls:'st-cd',label:'C+D',key:'c_and_d'},{cls:'st-bb',label:'Bot. Bracket',key:'bottom_bracket'},
+    {cls:'st-i',label:'Top Bracket',key:'installed'},{cls:'st-d',label:'Delivered',key:'delivered'},
     {cls:'st-f',label:'Fabricated',key:'fabricated'},{cls:'st-c',label:'CL issued',key:'cutting'},
     {cls:'st-cn',label:'CL not issued',key:'cl_not_issued'},
     {cls:'st-cip',label:'Cutting List in Progress',key:'cip'},{cls:'st-x',label:'Defect',key:'defect'},
@@ -5837,12 +5849,12 @@ function openBmSFModal(id,label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
-  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  if(['installed','bottom_bracket','c_and_d'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
-  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  if(['delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
-  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
   if(btn)btn.classList.add('ss');
   document.getElementById('pm').classList.add('open');
@@ -5879,15 +5891,15 @@ function renderBMEF(){
     {label:'RDC', data:RDC_ROW},
   ];
 
-  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
-  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+  const stBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
   const cellW=46, cellH=26, labelW=44;
 
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setEFBMFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setEFBMFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="efZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="ef-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">100%</span><button onclick="efZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="efZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printEF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   const headerCells=cols.map(c=>`<div style="width:${cellW}px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8099b0;flex-shrink:0;">${c}</div>`).join('');
@@ -5912,7 +5924,7 @@ function renderBMEF(){
   }).join('');
 
   // Count statuses for legend
-  const efCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  const efCount={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
   rows.forEach(r=>{
     r.data.forEach((bracketType,ci)=>{
       if(!bracketType||bracketType==='x') return;
@@ -5925,7 +5937,9 @@ function renderBMEF(){
   });
 
   const legendItems=[
-    {cls:'st-i',label:'Installed',key:'installed'},
+    {cls:'st-cd',label:'C+D',key:'c_and_d'},
+    {cls:'st-bb',label:'Bot. Bracket',key:'bottom_bracket'},
+    {cls:'st-i',label:'Top Bracket',key:'installed'},
     {cls:'st-d',label:'Delivered',key:'delivered'},
     {cls:'st-f',label:'Fabricated',key:'fabricated'},
     {cls:'st-c',label:'CL issued',key:'cutting'},
@@ -6001,12 +6015,12 @@ function openBmEFModal(id, label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
-  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  if(['installed','bottom_bracket','c_and_d'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
-  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  if(['delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
-  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
   if(activeBtn)activeBtn.classList.add('ss');
   document.getElementById('pm').classList.add('open');
@@ -6043,16 +6057,16 @@ function renderBMWF(){
   ];
 
   // Status colors — same as facade panels
-  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-  const stBorder={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
-  const stText={installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
+  const stBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
   const cellW=46, cellH=26, labelW=44;
 
   // Filter bar
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setWFFilter('${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setWFFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="wfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="wf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">100%</span><button onclick="wfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="wfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printWF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   // Column headers
@@ -6079,7 +6093,7 @@ function renderBMWF(){
   }).join('');
 
   // Count statuses for legend
-  const wfCount={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  const wfCount={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
   rows.forEach(r=>{
     if(r.data[0]==='x'||r.data[0]==='') return;
     r.data.forEach((bracketType,ci)=>{
@@ -6092,7 +6106,9 @@ function renderBMWF(){
   });
 
   const legendItems=[
-    {cls:'st-i',label:'Installed',key:'installed'},
+    {cls:'st-cd',label:'C+D',key:'c_and_d'},
+    {cls:'st-bb',label:'Bot. Bracket',key:'bottom_bracket'},
+    {cls:'st-i',label:'Top Bracket',key:'installed'},
     {cls:'st-d',label:'Delivered',key:'delivered'},
     {cls:'st-f',label:'Fabricated',key:'fabricated'},
     {cls:'st-c',label:'CL issued',key:'cutting'},
@@ -6169,12 +6185,12 @@ function openBmWFModal(id,label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
-  if(selStat==='fabricated'){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
+  if(['installed','bottom_bracket','c_and_d'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
-  if(selStat==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
+  if(['delivered','installed','bottom_bracket','c_and_d'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
-  const map={installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
+  const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
   if(activeBtn)activeBtn.classList.add('ss');
   document.getElementById('pm').classList.add('open');
@@ -9394,8 +9410,8 @@ function buildComplexTable(zone){
           td.setAttribute('rowspan','2');
           td.style.padding='0';td.style.verticalAlign='top';
           const doorStatus=(panels[id]||{}).status||'pending';
-          const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
-          const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
+          const doorBg=({'c_and_d':'#005c1e','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBorder=({'c_and_d':'rgba(0,61,20,0.6)','bottom_bracket':'rgba(0,143,48,0.6)','installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH=150+25; // R+19 (150px) + R+18T (25px)
           td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('SF-R+19-C90','R+19',90,'','Door',ZONES.find(z=>z.id==='SF'))">
             <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
@@ -9457,8 +9473,8 @@ function buildComplexTable(zone){
           td.setAttribute('rowspan','2');
           td.style.padding='0';td.style.verticalAlign='top';
           const doorStatus=(panels[id]||{}).status||'pending';
-          const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
-          const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
+          const doorBg=({'c_and_d':'#005c1e','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBorder=({'c_and_d':'rgba(0,61,20,0.6)','bottom_bracket':'rgba(0,143,48,0.6)','installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH = 150 + 25; // R+02 (150px) + R+01 (25px)
           td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('NF-R+02-C59','R+02',59,'','DOOR',ZONES.find(z=>z.id==='NF'))">
             <div style="height:50px;flex-shrink:0;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;border-bottom:1px solid rgba(0,0,0,0.15);"></div>
@@ -9525,8 +9541,8 @@ function buildComplexTable(zone){
           td.style.verticalAlign='middle';
           const doorName = col===28 ? 'Door 6' : 'Door 5';
           const doorStatus=(panels[id]||{}).status||'pending';
-          const doorBg=({'installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
-          const doorBorder=({'installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
+          const doorBg=({'c_and_d':'#005c1e','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBorder=({'c_and_d':'rgba(0,61,20,0.6)','bottom_bracket':'rgba(0,143,48,0.6)','installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH = 150+25; // R+19 (150px) + R+18T (25px)
           td.style.padding='0';
           td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('WF-R+19-C${col}','R+19',${col},'','Door',ZONES.find(z=>z.id==='WF'))">
@@ -9598,7 +9614,9 @@ function buildComplexTable(zone){
     if(legendWrap){
       const c=zC(zone.id);
       const legendItems=[
-        {cls:'st-i',label:'Installed',key:'installed'},
+        {cls:'st-cd',label:'C+D',key:'c_and_d'},
+        {cls:'st-bb',label:'Bot. Bracket',key:'bottom_bracket'},
+        {cls:'st-i',label:'Top Bracket',key:'installed'},
         {cls:'st-d',label:'Delivered',key:'delivered'},
         {cls:'st-f',label:'Fabricated',key:'fabricated'},
         {cls:'st-c',label:'CL issued',key:'cutting'},
@@ -10142,7 +10160,7 @@ async function saveIssue(){
   toast('Issue logged');
 }
 function cm(id){document.getElementById(id).classList.remove('open');if(id==='pm')selPanel=null;}
-function updateTabs(){ZONES.forEach(z=>{const c=zC(z.id);const pct=c.total?Math.round(c.installed/c.total*100):0;const el=document.getElementById('tp-'+z.id);if(el)el.textContent=pct+'%';});}
+function updateTabs(){ZONES.forEach(z=>{const c=zC(z.id);const pct=c.total?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/c.total*100):0;const el=document.getElementById('tp-'+z.id);if(el)el.textContent=pct+'%';});}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
 // ── Custom project rate helpers ───────────────────────────────────────────────
@@ -13851,8 +13869,8 @@ async function _supaEditCell(panelId, field, value, el){
   }
   // Update status badge colours live
   if(el&&field==='status'){
-    const bgMap={cl_not_issued:'#ffebee',cip:'#fce4ec',cutting:'#f3e5f5',fabricated:'#e3f2fd',delivered:'#fff8e1',installed:'#e8f5e9',defect:'#fbe9e7',pending:'#f5f5f5'};
-    const clMap={cl_not_issued:'#b71c1c',cip:'#c2185b',cutting:'#7b1fa2',fabricated:'#1a5fa8',delivered:'#a07800',installed:'#1a9458',defect:'#bf360c',pending:'#757575'};
+    const bgMap={c_and_d:'#003d14',bottom_bracket:'#007a29',cl_not_issued:'#ffebee',cip:'#fce4ec',cutting:'#f3e5f5',fabricated:'#e3f2fd',delivered:'#fff8e1',installed:'#e8f5e9',defect:'#fbe9e7',pending:'#f5f5f5'};
+    const clMap={c_and_d:'#ffffff',bottom_bracket:'#ffffff',cl_not_issued:'#b71c1c',cip:'#c2185b',cutting:'#7b1fa2',fabricated:'#1a5fa8',delivered:'#a07800',installed:'#1a9458',defect:'#bf360c',pending:'#757575'};
     el.style.background=bgMap[value]||'#f5f5f5';
     el.style.color=clMap[value]||'#757575';
   }
@@ -18279,7 +18297,9 @@ function _renderMobileOverview(){
   cont.scrollTop=0;
   const isB=window._mobTab==='brackets';
   const ss=[
-    {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
+    {key:'c_and_d',      label:'C+D',            color:'#005c1e', cumulLabel:'T. C+D'},
+    {key:'bottom_bracket',label:'Bot. Bracket',  color:'#00b33c', cumulLabel:'T. Bot. Bracket'},
+    {key:'installed',    label:'Top Bracket',    color:'#1a9458', cumulLabel:'T. Top Bracket'},
     {key:'delivered',    label:'Delivered',      color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',     color:'#1a5fa8', cumulLabel:'T. fabricated'},
     {key:'cutting',      label:'CL issued',      color:'#C98BCA', cumulLabel:'T. CL issued'},
@@ -18287,13 +18307,13 @@ function _renderMobileOverview(){
     {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
   ];
-  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const zones=isB
     ?[{id:'BM-NF',name:'North Facade',color:'#2d65bd'},{id:'BM-SF',name:'South Facade',color:'#1a9458'},{id:'BM-EF',name:'East Facade',color:'#a07800'},{id:'BM-WF',name:'West Facade',color:'#6d35d9'}]
     :[{id:'NF',name:'North Facade',color:'#2d65bd'},{id:'SF',name:'South Facade',color:'#1a9458'},{id:'EF',name:'East Facade',color:'#a07800'},{id:'WF',name:'West Facade',color:'#6d35d9'}];
   // Global counts
   const gc=isB?bmGC():gC();
-  const gcActiveTotal=(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
+  const gcActiveTotal=(gc.c_and_d||0)+(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
   // Global status cards (2-col grid)
   const globalCards=ss.map(s=>{
     const n=gc[s.key]||0;
@@ -18321,8 +18341,8 @@ function _renderMobileOverview(){
   // Per-facade cards
   const facadeCards=zones.map(z=>{
     const c=isB?bmZC(z.id):zC(z.id);
-    const activeTotal=(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
-    const pct=activeTotal>0?Math.round((c.installed||0)/activeTotal*100):0;
+    const activeTotal=(c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal>0?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/activeTotal*100):0;
     const breakdown=ss.map(s=>{
       const n=c[s.key]||0;
       const idx=pipeline.indexOf(s.key);
@@ -18397,9 +18417,9 @@ function _renderMobileFacadeBar(){
 function _renderMobileFilterBar(){
   const bar=document.getElementById('mob-filter-bar');
   if(!bar) return;
-  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-  const stTxt={installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
-  const items=[{k:'all',l:'All'},{k:'installed',l:'Installed'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}];
+  const stBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stTxt={c_and_d:'#fff',bottom_bracket:'#fff',installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
+  const items=[{k:'all',l:'All'},{k:'c_and_d',l:'C+D'},{k:'bottom_bracket',l:'Bot. Bracket'},{k:'installed',l:'Top Bracket'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}];
   bar.innerHTML=`<div style="display:flex;gap:6px;">`+items.map(f=>{
     const active=window._mobFilter===f.k;
     const bg=active?(f.k==='all'?'#224F93':stBg[f.k]):'#fff';

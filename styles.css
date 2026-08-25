@@ -225,6 +225,8 @@ td[rowspan]{overflow:visible !important;}
 .wfc.ef-t11{border-left:5px double #ED1C24 !important;border-bottom:5px double #ED1C24 !important;}
 /* T12: T09 + bottom red */
 .wfc.ef-t12{border-left:5px double #ED1C24 !important;border-bottom:5px double #ED1C24 !important;}
+.st-cd{background:#005c1e;border-color:#003d14;color:#ffffff;}
+.st-bb{background:#00b33c;border-color:#008f30;color:#ffffff;}
 .st-i{background:#00FF32;border-color:#00cc28;color:#006612;}
 .st-d{background:#FFF000;border-color:#ccbb00;color:#665e00;}
 .st-f{background:#002DFF;border-color:#0025cc;color:#ffffff;}
@@ -262,6 +264,8 @@ td[rowspan]{overflow:visible !important;}
 .sr2{display:flex;gap:4px;flex-wrap:wrap;}
 .so{flex:0 0 calc(25% - 3px);padding:6px 3px;border-radius:var(--r);border:1.5px solid var(--border);cursor:pointer;text-align:center;font-size:9px;font-weight:700;transition:all 0.15s;display:flex;flex-direction:column;gap:2px;align-items:center;font-family:var(--font);color:var(--text3);background:transparent;}
 .so .si{font-size:11px;}
+.socd.ss{border-color:#0a3d1f;color:#0a3d1f;background:rgba(10,61,31,0.08);}
+.sobb.ss{border-color:#155c2e;color:#155c2e;background:rgba(21,92,46,0.08);}
 .soi.ss{border-color:#1a9458;color:#1a9458;background:rgba(46,194,126,0.08);}
 .sod.ss{border-color:#a07800;color:#a07800;background:rgba(245,197,24,0.08);}
 .sof.ss{border-color:#1a5fa8;color:#1a5fa8;background:rgba(74,144,217,0.08);}
