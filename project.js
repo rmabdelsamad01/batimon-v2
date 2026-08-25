@@ -296,6 +296,7 @@ async function openProject(id){
   // ───────────────────────────────────────────────────────────────────────────
 
   document.getElementById('project-screen').style.display='none';
+  const _rootEl=document.getElementById('root');if(_rootEl)_rootEl.innerHTML='';
   if(sbProfile) updateUserChip(sbProfile.full_name||sbProfile.username||sbUser?.email||'');
   // Load project metadata (categories + facade names) from Supabase before rendering
   if(typeof _loadProjectMetaFromSB==='function') await _loadProjectMetaFromSB(id);
