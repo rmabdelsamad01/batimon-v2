@@ -15806,8 +15806,14 @@ function _ssChange(floor,type,delta){
     const match=colTot===sysVal;
     const ctEl2=document.getElementById(`ss-ct-${type}`);
     const dvEl=document.getElementById(`ss-dv-${type}`);
+    const dpEl=document.getElementById(`ss-dp-${type}`);
     if(ctEl2){ctEl2.style.background=match?'#1a7a3a':'#c02020';}
     if(dvEl){dvEl.style.background=match?'#1a7a3a':'#c02020';dvEl.textContent=sysVal||'';}
+    if(dpEl){
+      const diff=sysVal-colTot;
+      dpEl.style.background=diff===0?'#1a7a3a':diff>0?'#c02020':'#c06000';
+      dpEl.textContent=diff===0?'':diff>0?`${diff} missing`:`${Math.abs(diff)} extra`;
+    }
     _ssUpdateBanner();
   }
 }
@@ -15934,9 +15940,10 @@ function _ssBuildTable(){
   if(hasMore)h+=`<td style="${totS}"></td>`;
   h+=`<td id="ss-gt" style="${totS}color:${grandTot>0?'#fff':'rgba(255,255,255,0.4)'};">${grandTot||''}</td>`;
   h+=`</tr>`;
-  // Delivered (system) row — only when verified
+  // Delivered (system) + Discrepancy rows — only when verified
   if(_ssVerified){
     const dvS=`font-weight:700;font-size:11px;text-align:center;border:1px solid rgba(0,0,0,0.15);padding:5px 8px;color:#fff;`;
+    // Delivered row
     h+=`<tr><td style="${dvS}background:#444;position:sticky;left:0;z-index:2;white-space:nowrap;">Delivered<br><span style="font-size:9px;font-weight:400;opacity:0.8;">(system)</span></td>`;
     allCols.forEach(t=>{
       const sysVal=_ssDeliveredCounts[t]||0;
@@ -15946,6 +15953,18 @@ function _ssBuildTable(){
     });
     if(hasMore)h+=`<td style="${dvS}background:#444;"></td>`;
     h+=`<td style="${dvS}background:#444;"></td></tr>`;
+    // Discrepancy row
+    h+=`<tr><td style="${dvS}background:#2a2a2a;position:sticky;left:0;z-index:2;white-space:nowrap;">Discrepancy</td>`;
+    allCols.forEach(t=>{
+      const sysVal=_ssDeliveredCounts[t]||0;
+      const siteTot=_SS_FLOORS.reduce((s,fl)=>s+((_ssData[fl]&&_ssData[fl][t])||0),0);
+      const diff=sysVal-siteTot;
+      const bg=diff===0?'#1a7a3a':diff>0?'#c02020':'#c06000';
+      const label=diff===0?'':diff>0?`${diff} missing`:`${Math.abs(diff)} extra`;
+      h+=`<td id="ss-dp-${t}" style="${dvS}background:${bg};font-size:10px;">${label}</td>`;
+    });
+    if(hasMore)h+=`<td style="${dvS}background:#2a2a2a;"></td>`;
+    h+=`<td style="${dvS}background:#2a2a2a;"></td></tr>`;
   }
   return h+`</tbody></table>`;
 }
