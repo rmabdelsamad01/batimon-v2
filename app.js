@@ -6772,9 +6772,9 @@ function openQCChecklist(typeId, label, opts={}){
       <div style="display:grid;grid-template-columns:28px 1fr 46px 46px 46px 180px;gap:6px;padding:8px 10px;background:#eef2f8;border-bottom:1px solid #d0dae8;">
         <span style="font-size:10px;font-weight:700;color:#8099b0;text-align:center;">#</span>
         <span style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;">Description</span>
-        <span style="font-size:10px;font-weight:700;color:#1a9458;text-align:center;white-space:nowrap;">C</span>
-        <span style="font-size:10px;font-weight:700;color:#c02020;text-align:center;white-space:nowrap;">NC</span>
-        <span style="font-size:10px;font-weight:700;color:#8099b0;text-align:center;white-space:nowrap;">N/A</span>
+        <span onclick="_ckSelectAll('C')" style="font-size:10px;font-weight:700;color:#1a9458;text-align:center;white-space:nowrap;cursor:pointer;user-select:none;" title="Select all C">C</span>
+        <span onclick="_ckSelectAll('NC')" style="font-size:10px;font-weight:700;color:#c02020;text-align:center;white-space:nowrap;cursor:pointer;user-select:none;" title="Select all NC">NC</span>
+        <span onclick="_ckSelectAll('NA')" style="font-size:10px;font-weight:700;color:#8099b0;text-align:center;white-space:nowrap;cursor:pointer;user-select:none;" title="Select all N/A">N/A</span>
         <span style="font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.7px;">Commentaires</span>
       </div>
 
@@ -6957,6 +6957,11 @@ function _qcDrawSigImage(canvasId, dataUrl){
   img.src = dataUrl;
 }
 
+function _ckSelectAll(val){
+  document.querySelectorAll(`#qc-items-scroll input[type=radio][value="${val}"]`).forEach(r=>{
+    if(!r.disabled)r.checked=true;
+  });
+}
 // Cancel checklist — revert panel status picker to pre-fabricated state if needed
 function _qcCancelChecklist(){
   const modal = document.getElementById('qc-ck-modal');
