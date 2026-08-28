@@ -5699,7 +5699,7 @@ function openBmNFModal(id,label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
   if(btn)btn.classList.add('ss');
-  document.getElementById('pm').classList.add('open');
+  _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
 function renderBMSF(){
@@ -5875,7 +5875,7 @@ function openBmSFModal(id,label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
   if(btn)btn.classList.add('ss');
-  document.getElementById('pm').classList.add('open');
+  _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
 function renderBMEF(){
@@ -6041,7 +6041,7 @@ function openBmEFModal(id, label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
   if(activeBtn)activeBtn.classList.add('ss');
-  document.getElementById('pm').classList.add('open');
+  _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
 function renderBMWF(){
@@ -6211,7 +6211,7 @@ function openBmWFModal(id,label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
   if(activeBtn)activeBtn.classList.add('ss');
-  document.getElementById('pm').classList.add('open');
+  _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
 function activateUCWMonitoring(){
@@ -9692,7 +9692,7 @@ function openSimpleModal(id,zone){
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
   if((p.status||'pending')==='delivered'){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   selStat=p.status||'pending';document.querySelectorAll('.so').forEach(el=>{el.classList.remove('ss');if(el.classList.contains(SMAP[selStat]))el.classList.add('ss');});
-  document.getElementById('pm').classList.add('open');
+  _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 function handlePanelClick(e, id, fl, col, ref, type, zone){
   if(ctrlHeld || e.ctrlKey){
@@ -9959,7 +9959,16 @@ function openComplexModal(id,fl,col,ref,type,zone){
   const _dw2=document.getElementById('m-del-date-wrap'),_dd2=document.getElementById('m-del-date');
   if((p.status||'pending')==='delivered'){_dw2.style.display='block';_dd2.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw2.style.display='none';_dd2.value='';}
   selStat=p.status||'pending';document.querySelectorAll('.so').forEach(el=>{el.classList.remove('ss');if(el.classList.contains(SMAP[selStat]))el.classList.add('ss');});
-  document.getElementById('pm').classList.add('open');
+  _pmSetMode();document.getElementById('pm').classList.add('open');
+}
+function _pmSetMode(){
+  const isBM=selPanel&&selPanel.startsWith('BM-');
+  const cdEl=document.querySelector('.so.socd');
+  const bbEl=document.querySelector('.so.sobb');
+  const soiEl=document.querySelector('.so.soi');
+  if(cdEl)cdEl.style.display=isBM?'':'none';
+  if(bbEl)bbEl.style.display=isBM?'':'none';
+  if(soiEl)soiEl.innerHTML=`<span class="si">✓</span>${isBM?'Top Bracket':'Installed'}`;
 }
 function setSt(s,el){
   // Remember previous status so we can revert if checklist is cancelled
