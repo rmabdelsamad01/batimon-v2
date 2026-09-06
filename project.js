@@ -151,7 +151,7 @@ async function confirmAddProject(){
 
 function setProjectFilter(person){
   _projFilter = (_projFilter === person) ? null : person;
-  const people = ['raed','anas','nabil'];
+  const people = ['raed','anas'];
   people.forEach(p => {
     const btn = document.getElementById(`pf-${p}`);
     if(!btn) return;
@@ -585,7 +585,6 @@ async function renderMobileProjectList(){
       <div style="display:flex;gap:8px;">
         <button id="mpf-raed"  onclick="setMobileProjectFilter('raed')"  style="flex:1;padding:9px 4px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Raed</button>
         <button id="mpf-anas"  onclick="setMobileProjectFilter('anas')"  style="flex:1;padding:9px 4px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Anas</button>
-        <button id="mpf-nabil" onclick="setMobileProjectFilter('nabil')" style="flex:1;padding:9px 4px;border-radius:20px;border:1.5px solid rgba(34,79,147,0.25);background:#fff;color:#1a2a3a;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Nabil</button>
       </div>
     </div>
     <div id="mob-proj-list" style="flex:1;overflow-y:scroll;-webkit-overflow-scrolling:touch;background:#f0f4f9;padding:12px 16px 24px;"></div>
@@ -623,7 +622,7 @@ function _renderMobileProjItems(){
 
 window.setMobileProjectFilter = function(person){
   _mobileDirectorFilter = (_mobileDirectorFilter === person) ? null : person;
-  ['raed','anas','nabil'].forEach(d => {
+  ['raed','anas'].forEach(d => {
     const btn = document.getElementById('mpf-'+d);
     if(!btn) return;
     const on = _mobileDirectorFilter === d;
