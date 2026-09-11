@@ -7558,7 +7558,7 @@ function renderNFDemo(){
       if(!td)return;
       td.style.cssText='padding:0;width:var(--cw);height:150px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;';
       td.setAttribute('rowspan','2');
-      td.innerHTML='<div style="position:relative;width:100%;height:150px;overflow:hidden;background:#fff;">'
+      td.innerHTML='<div style="position:relative;width:100%;height:150px;overflow:hidden;background:#E8F0FB;">'
         +'<div style="position:absolute;top:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
         +'<div style="position:absolute;top:50px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
         +'<div style="position:absolute;top:52px;left:0;right:0;height:23px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
