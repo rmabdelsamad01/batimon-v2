@@ -7533,12 +7533,21 @@ function renderNFDemo(){
   buildComplexTable(nfZone);
   demoTbl.id='tbl-NFD';
   if(realTbl&&realTbl!==demoTbl) realTbl.id='tbl-NF';
-  // Demo override: R+17T cols 31-40 → orange dot pattern instead of solid orange
+  // Demo override: R+17T cols 31-40 → orange dot pattern + click delegates to R+17B panel below
   const r17tRow=demoTbl.querySelector('tr.tr-r17t');
+  const r17bRow=demoTbl.querySelector('tr.tr-r17b');
   if(r17tRow){
     [40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r17tRow.querySelector('td[data-col="'+col+'"]');
-      if(td){const div=td.querySelector('div');if(div)div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#fff8f0;border:1px solid rgba(34,79,147,0.2);';}
+      if(td){
+        const div=td.querySelector('div');
+        if(div){
+          div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#fff8f0;border:1px solid rgba(34,79,147,0.2);cursor:pointer;';
+          div.onclick=function(){
+            if(r17bRow){const b=r17bRow.querySelector('td[data-col="'+col+'"] .wfc');if(b)b.click();}
+          };
+        }
+      }
     });
   }
   // Demo override: R+18MD cols 31-40 → R1899 panel (150px rowspan, orange dots top+strips, white center, label)
