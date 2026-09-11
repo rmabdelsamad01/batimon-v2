@@ -7541,6 +7541,23 @@ function renderNFDemo(){
       if(td){const div=td.querySelector('div');if(div)div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#fff8f0;border:1px solid rgba(34,79,147,0.2);';}
     });
   }
+  // Demo override: R+18MD cols 31-40 → R1899 panel (150px rowspan, orange dots top+strips, white center, label)
+  const r18mdRow=demoTbl.querySelector('tr.tr-r18md');
+  if(r18mdRow){
+    [40,39,38,37,36,35,34,33,32,31].forEach(function(col){
+      const td=r18mdRow.querySelector('td[data-col="'+col+'"]');
+      if(!td)return;
+      td.style.cssText='padding:0;width:var(--cw);height:150px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;';
+      td.setAttribute('rowspan','2');
+      td.innerHTML='<div style="position:relative;width:100%;height:150px;overflow:hidden;background:#fff;">'
+        +'<div style="position:absolute;top:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
+        +'<div style="position:absolute;top:50px;left:0;right:0;height:25px;background-image:radial-gradient(circle,#FF8C00 0.7px,transparent 0.7px);background-size:4px 4px;"></div>'
+        +'<div style="position:absolute;bottom:0;left:0;right:0;height:25px;background-image:radial-gradient(circle,#FF8C00 0.7px,transparent 0.7px);background-size:4px 4px;"></div>'
+        +'<div style="position:absolute;top:50px;left:0;right:0;bottom:0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;z-index:2;">'
+        +'<span style="font-family:var(--mono);font-size:15px;font-weight:700;color:#224F93;white-space:pre;line-height:1.3;text-align:center;">R\n1\n8\n9\n9</span>'
+        +'</div></div>';
+    });
+  }
 }
 
 function renderComplexFP(zone){
