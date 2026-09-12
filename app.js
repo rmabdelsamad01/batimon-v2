@@ -7620,6 +7620,11 @@ function renderNFDemo(){
           lDots.style.cssText='position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;pointer-events:none;';
           leftDiv.appendChild(lVlines);
           leftDiv.appendChild(lDots);
+          // limit middle divider to 100px
+          leftDiv.style.borderRight='none';
+          const midPb=document.createElement('div');
+          midPb.style.cssText='position:absolute;right:0;top:0;width:5px;height:100px;z-index:10;pointer-events:none;background:linear-gradient(to left,#ED1C24 0,#ED1C24 1.5px,transparent 1.5px,transparent 3.5px,#ED1C24 3.5px,#ED1C24 5px);';
+          leftDiv.appendChild(midPb);
           // restructure right col bottom section (label area → label 50px + odots 50px)
           const labelDiv=rightDiv.children[1];
           if(labelDiv){
@@ -7637,7 +7642,7 @@ function renderNFDemo(){
         }
       }
       // All R+19 cols with double red left border: limit border to top 100px
-      if([41,40,39,38,37,36,35,32].includes(col)){
+      if([41,40,39,38,37,36,35,32,31].includes(col)){
         cell.style.borderLeft='none';
         cell.style.position='relative';
         const pb=document.createElement('div');
