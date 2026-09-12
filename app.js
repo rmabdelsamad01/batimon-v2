@@ -7557,7 +7557,7 @@ function renderNFDemo(){
       const div=td41.querySelector('div');
       if(div){
         div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#E8F0FB;border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;position:relative;display:flex;align-items:center;justify-content:center;';
-        div.innerHTML='<span style="position:relative;z-index:1;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;white-space:nowrap;background:rgba(232,240,251,0.7);padding:1px 2px;">R 1 7 4 1</span>';
+        div.innerHTML='<span style="position:relative;z-index:1;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;white-space:nowrap;background:rgba(232,240,251,0.7);padding:1px 2px;">R1741</span>';
       }
     }
   }
