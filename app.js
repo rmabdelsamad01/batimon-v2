@@ -7605,6 +7605,37 @@ function renderNFDemo(){
           cBottom.appendChild(dots);
         }
       }
+      // M12 cols: left=vlines100px+odots50px, right=blackdots50px+label50px+odots50px
+      if([38,37].includes(col)){
+        const leftDiv=cell.children[0];
+        const rightDiv=cell.children[1];
+        if(leftDiv&&rightDiv){
+          // restructure left col
+          leftDiv.style.backgroundImage='none';
+          leftDiv.style.position='relative';
+          leftDiv.style.overflow='hidden';
+          const lVlines=document.createElement('div');
+          lVlines.style.cssText='position:absolute;top:0;left:0;right:0;height:100px;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);pointer-events:none;';
+          const lDots=document.createElement('div');
+          lDots.style.cssText='position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;pointer-events:none;';
+          leftDiv.appendChild(lVlines);
+          leftDiv.appendChild(lDots);
+          // restructure right col bottom section (label area → label 50px + odots 50px)
+          const labelDiv=rightDiv.children[1];
+          if(labelDiv){
+            labelDiv.style.cssText='width:100%;display:flex;flex-direction:column;flex-shrink:0;';
+            const labelZone=document.createElement('div');
+            labelZone.style.cssText='width:100%;height:50px;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
+            const cType=labelDiv.querySelector('.c-type');
+            if(cType)labelZone.appendChild(cType);
+            const rDots=document.createElement('div');
+            rDots.style.cssText='width:100%;height:50px;flex-shrink:0;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
+            labelDiv.innerHTML='';
+            labelDiv.appendChild(labelZone);
+            labelDiv.appendChild(rDots);
+          }
+        }
+      }
       // M06/GM06 cols: vlines top 100px, orange dots bottom 50px, label centered full height
       if([41,40,36,32].includes(col)){
         cell.style.backgroundImage='none';
