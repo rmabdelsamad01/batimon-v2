@@ -1,4 +1,4 @@
-﻿// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // WEST FACADE DATA (from west_1.pdf)
 // Cols 31→15, Floors R+33→RDC
 // ══════════════════════════════════════════════════════════════
@@ -7533,9 +7533,25 @@ function renderNFDemo(){
   buildComplexTable(nfZone);
   demoTbl.id='tbl-NFD';
   if(realTbl&&realTbl!==demoTbl) realTbl.id='tbl-NF';
-  // Demo override: R+17T cols 31-40 → orange dot pattern + click delegates to R+17B panel below
-  const r17tRow=demoTbl.querySelector('tr.tr-r17t');
-  const r17bRow=demoTbl.querySelector('tr.tr-r17b');
+  applyNFDesignOverrides(demoTbl);
+}
+
+function renderComplexFP(zone){
+  const cont=document.getElementById('page-'+zone.id);
+  const isEF = zone.id==='EF';
+  const isNF = zone.id==='NF';
+  const sidebarPart = efSidebarHTML();
+  cont.innerHTML=`<div class="fpw">${sidebarPart}<div class="fpm">${filterBarHTML(zone.id)}<div class="gw" id="gw-${zone.id}" style="overflow:auto;"><div class="wf-wrap" id="wf-wrap-${zone.id}" style="transform-origin:top left;display:inline-block;${(zone.id==='WF'||zone.id==='SF'||zone.id==='NF')?'--ch:150px;':''}"><div class="wftitle">${zone.name}</div><table class="wft" id="tbl-${zone.id}"></table>${(isEF||zone.id==='WF'||zone.id==='SF'||isNF)?`<div id="legend-wrap-${zone.id}"></div>`:''}</div></div></div></div>`;
+  buildComplexTable(zone);
+  if(zone.id==='NF'){
+    const nfTbl=document.getElementById('tbl-NF');
+    if(nfTbl)applyNFDesignOverrides(nfTbl);
+  }
+}
+function applyNFDesignOverrides(tbl){
+  // R+17T cols 31-40: orange dots + click delegates to R+17B
+  const r17tRow=tbl.querySelector('tr.tr-r17t');
+  const r17bRow=tbl.querySelector('tr.tr-r17b');
   if(r17tRow){
     [40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r17tRow.querySelector('td[data-col="'+col+'"]');
@@ -7550,7 +7566,7 @@ function renderNFDemo(){
       }
     });
   }
-  // Demo override: R+17T col 41 → orange dots + label R1741
+  // R+17T col 41: orange dots + label R1741
   if(r17tRow){
     const td41=r17tRow.querySelector('td[data-col="41"]');
     if(td41){
@@ -7561,11 +7577,11 @@ function renderNFDemo(){
       }
     }
   }
-  // Demo override: cols 41,40,39-31 — merge R+18T+R+18M+R+18MD+R+18B = 225px single cell
-  const r18tRow=demoTbl.querySelector('tr.tr-r18t');
-  const r18mRow=demoTbl.querySelector('tr.tr-r18m');
-  const r18mdRow=demoTbl.querySelector('tr.tr-r18md');
-  const r18bRow=demoTbl.querySelector('tr.tr-r18b');
+  // R+18 cols 31-41: merge all 4 sub-rows into 225px cell
+  const r18tRow=tbl.querySelector('tr.tr-r18t');
+  const r18mRow=tbl.querySelector('tr.tr-r18m');
+  const r18mdRow=tbl.querySelector('tr.tr-r18md');
+  const r18bRow=tbl.querySelector('tr.tr-r18b');
   const r1899HTML='<div style="position:relative;width:100%;height:225px;overflow:hidden;background:#E8F0FB;">'
     +'<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
     +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
@@ -7589,14 +7605,13 @@ function renderNFDemo(){
       });
     });
   }
-  // Demo override: R+19 cols 31-41 → rename panels R1941..R1932 and C1931 (vertical, one char per line)
+  // R+19 cols 31-41: rename + format by type
   const r19Labels={41:'R1941',40:'R1940',39:'R1939',38:'R1938',37:'R1937',36:'R1936',35:'R1935',34:'R1934',33:'R1933',32:'R1932',31:'C1931'};
-  // cols with orange dot strip (keep left border) vs no-left-border variant
   const r19DotCols=[39,35,31];
   const r19DotColsNoBorder=[34,33];
   [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
     const pid='NF-R+19-C'+col;
-    const cell=demoTbl.querySelector('[data-pid="'+pid+'"]');
+    const cell=tbl.querySelector('[data-pid="'+pid+'"]');
     if(cell){
       const span=cell.querySelector('.c-type');
       if(span)span.textContent=r19Labels[col].split('').join('\n');
@@ -7616,12 +7631,10 @@ function renderNFDemo(){
           cBottom.appendChild(dots);
         }
       }
-      // M12 cols: left=vlines100px+odots50px, right=blackdots50px+label50px+odots50px
       if([38,37].includes(col)){
         const leftDiv=cell.children[0];
         const rightDiv=cell.children[1];
         if(leftDiv&&rightDiv){
-          // restructure left col
           leftDiv.style.backgroundImage='none';
           leftDiv.style.position='relative';
           leftDiv.style.overflow='hidden';
@@ -7631,12 +7644,10 @@ function renderNFDemo(){
           lDots.style.cssText='position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;pointer-events:none;';
           leftDiv.appendChild(lVlines);
           leftDiv.appendChild(lDots);
-          // limit middle divider to 100px
           leftDiv.style.borderRight='none';
           const midPb=document.createElement('div');
           midPb.style.cssText='position:absolute;right:0;top:0;width:5px;height:100px;z-index:10;pointer-events:none;background:linear-gradient(to left,#ED1C24 0,#ED1C24 1.5px,transparent 1.5px,transparent 3.5px,#ED1C24 3.5px,#ED1C24 5px);';
           leftDiv.appendChild(midPb);
-          // restructure right col bottom section (label area → label 50px + odots 50px)
           const labelDiv=rightDiv.children[1];
           if(labelDiv){
             labelDiv.style.cssText='width:100%;display:flex;flex-direction:column;flex-shrink:0;';
@@ -7652,7 +7663,6 @@ function renderNFDemo(){
           }
         }
       }
-      // All R+19 cols with double red left border: limit border to top 100px
       if([41,40,39,38,37,36,35,32,31].includes(col)){
         cell.style.borderLeft='none';
         cell.style.position='relative';
@@ -7660,7 +7670,6 @@ function renderNFDemo(){
         pb.style.cssText='position:absolute;left:0;top:0;width:5px;height:100px;z-index:10;pointer-events:none;background:linear-gradient(to right,#ED1C24 0,#ED1C24 1.5px,transparent 1.5px,transparent 3.5px,#ED1C24 3.5px,#ED1C24 5px);';
         cell.appendChild(pb);
       }
-      // M06/GM06 cols: vlines top 100px, orange dots bottom 50px, label centered full height
       if([41,40,36,32].includes(col)){
         cell.style.backgroundImage='none';
         cell.style.cssText=cell.style.cssText+'position:relative;justify-content:center;align-items:center;padding:0;';
@@ -7675,15 +7684,6 @@ function renderNFDemo(){
       }
     }
   });
-}
-
-function renderComplexFP(zone){
-  const cont=document.getElementById('page-'+zone.id);
-  const isEF = zone.id==='EF';
-  const isNF = zone.id==='NF';
-  const sidebarPart = efSidebarHTML();
-  cont.innerHTML=`<div class="fpw">${sidebarPart}<div class="fpm">${filterBarHTML(zone.id)}<div class="gw" id="gw-${zone.id}" style="overflow:auto;"><div class="wf-wrap" id="wf-wrap-${zone.id}" style="transform-origin:top left;display:inline-block;${(zone.id==='WF'||zone.id==='SF'||zone.id==='NF')?'--ch:150px;':''}"><div class="wftitle">${zone.name}</div><table class="wft" id="tbl-${zone.id}"></table>${(isEF||zone.id==='WF'||zone.id==='SF'||isNF)?`<div id="legend-wrap-${zone.id}"></div>`:''}</div></div></div></div>`;
-  buildComplexTable(zone);
 }
 function buildComplexTable(zone){
   const tbl=document.getElementById('tbl-'+zone.id);if(!tbl)return;
