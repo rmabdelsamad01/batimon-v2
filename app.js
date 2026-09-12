@@ -7600,16 +7600,16 @@ function applyNFDesignOverrides(tbl){
       td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;position:relative;';
       // Visual overlay (orange dots + real label) — pointer-events:none so it doesn't block clicks
       const vis=document.createElement('div');
-      vis.style.cssText='position:absolute;top:0;left:0;right:0;height:225px;overflow:hidden;background:'+statusBg+';pointer-events:none;z-index:5;';
+      vis.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;background:'+statusBg+';pointer-events:none;z-index:5;';
       vis.innerHTML='<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
         +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
         +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
         +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-        +(labelText?'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:rgba(232,240,251,0.75);padding:2px 0;">'+labelText+'</span></div>':'');
+        +(labelText?'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:transparent;padding:2px 0;">'+labelText+'</span></div>':'');
       td.appendChild(vis);
       // Transparent full-height click div covering all 225px — delegates to wfc's onclick
       const clickDiv=document.createElement('div');
-      clickDiv.style.cssText='position:absolute;top:0;left:0;width:100%;height:225px;z-index:10;cursor:pointer;';
+      clickDiv.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;z-index:10;cursor:pointer;';
       if(wfcOnclick){
         clickDiv.onclick=function(e){
           if(wfc)e.currentTarget=wfc;
