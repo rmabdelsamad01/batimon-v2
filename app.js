@@ -108,7 +108,7 @@ const NF_TYPES={
   'R+22': nfRowBoth11(['C07','T01','T01','T09','T01','T07','T03','T05','T08','T03','T05','E03'],['G05','T01','T01','T01','T05','T03','T07','T03','T05','T03','C05']),
   'R+21': nfRowBoth11(['C08','T02','T02','T12','T02','T10','T04','T06','T11','T04','T06','E04'],['G06','T02','T02','T02','T06','T04','T10','T04','T06','T04','C06']),
   'R+20': nfRowBoth11(['C07','T01','T01','T09','T05','T03','T01','T01','T05','T03','T05','E03'],['G05','T05','T03','T09','T09','T05','T03','T01','T01','T05','C09']),
-  'R+19': nfRowBoth11(['C07','T01','T01','M12','M06','T03','T01','T01','M06','T03','M06','E04'],['GM06','M06','T03','M12','M12','M06','T03','T01','T01','M06','C1902']),
+  'R+19': nfRowBoth11(['C07','T01','T01','M12','M06','T03','T01','T01','M06','T03','M06','E04'],['R1941','R1940','R1939','R1938','R1937','R1936','R1935','R1934','R1933','R1932','C1931']),
   'R+18T': nfRowBoth11(['C1803','R1851','R1851','R1856','R1853','R1852','R1851','R1851','R1853','R1852','R1853','E1852'],['G1803','R1803','R1802','R1806','R1806','R1803','R1803','R1801','R1801','R1803','C1802']),
   'R+18M':  Array(33).fill(''),
   'R+18MD': Array(33).fill(''),
@@ -9098,15 +9098,18 @@ function buildComplexTable(zone){
           cell.dataset.pid=id;cell.onclick=(e)=>{e.currentTarget=cell;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(cell);tr.appendChild(td);return;
         }
-        // effType: use pType, or pRef when pRef is a known D/G format code and pType is empty
-        const effType = pType || (['D05','D06','D07','D08','D10','D11','G03','G04','G05','G06'].includes(pRef) ? pRef : '');
+        // NF R+19 named panels: alias to base structural type for rendering, keep pType for display/click
+        const _nfAliases={'R1941':'GM06','R1940':'M06','R1939':'T03','R1938':'M12','R1937':'M12','R1936':'M06','R1935':'T03','R1934':'T01','R1933':'T01','R1932':'M06','C1931':'C1902'};
+        const pTypeStruct = _nfAliases[pType] || pType;
+        // effType: use pTypeStruct, or pRef when pRef is a known D/G format code and pType is empty
+        const effType = pTypeStruct || (['D05','D06','D07','D08','D10','D11','G03','G04','G05','G06'].includes(pRef) ? pRef : '');
         // SPLIT CELL types (T01-T04, C03, C04, C07, C08, G03, G04 + WF equivalents)
-        if(['T01','T02','T03','T04','C03','C04','C07','C08','C01','C02','C05','C06','C09','C10','C1902','G03','G04','D01','D02','D03','D04','E01','E02','E03','E04'].includes(pType)){
+        if(['T01','T02','T03','T04','C03','C04','C07','C08','C01','C02','C05','C06','C09','C10','C1902','G03','G04','D01','D02','D03','D04','E01','E02','E03','E04'].includes(pTypeStruct)){
           cell.classList.add('split-cell');
           const c03group = ['T01','C03','C07','C01','C05','C09','C1902','D01','E01'];
           const c04group = ['T02','C04','C08','C02','C06','C10','C302','C301','D02','E02'];
-          const hasLeft   = ['T03','T04','G03','G04','D03','D04','E03','E04'].includes(pType);
-          const hasBottom = c04group.includes(pType) || ['T04','G04','D04','E04'].includes(pType);
+          const hasLeft   = ['T03','T04','G03','G04','D03','D04','E03','E04'].includes(pTypeStruct);
+          const hasBottom = c04group.includes(pTypeStruct) || ['T04','G04','D04','E04'].includes(pTypeStruct);
           if(hasLeft)   cell.style.borderLeft   = '5px double #ED1C24';
           if(!hasLeft)  cell.style.borderLeft   = '1.5px solid rgba(34,79,147,0.2)';
           cell.style.borderTop   = '1.5px solid rgba(34,79,147,0.2)';
