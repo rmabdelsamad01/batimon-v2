@@ -7592,11 +7592,9 @@ function applyNFDesignOverrides(tbl){
       const wfc=td.querySelector('.wfc');
       const statusBg=wfc?getComputedStyle(wfc).backgroundColor:'#E8F0FB';
       const wfcOnclick=wfc?wfc.onclick:null;
-      // Real panel type from database
-      const pid='NF-R+18T-C'+col;
-      const panelData=(typeof panels!=='undefined'?panels[pid]:null)||{};
-      const pType=panelData.panel_type||'';
-      const labelText=pType?pType.split('').join('\n'):'';
+      // Panel labels from NF_TYPES (same approach as r19Labels)
+      const r18Labels={41:'G1803',40:'R1803',39:'R1802',38:'R1806',37:'R1806',36:'R1803',35:'R1803',34:'R1801',33:'R1801',32:'R1803',31:'C1802'};
+      const labelText=(r18Labels[col]||'').split('').join('\n');
       // Expand td to span all 4 sub-rows
       td.setAttribute('rowspan','4');
       td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;position:relative;';
