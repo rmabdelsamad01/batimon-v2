@@ -7550,6 +7550,17 @@ function renderNFDemo(){
       }
     });
   }
+  // Demo override: R+17T col 41 → orange dots + label R1741
+  if(r17tRow){
+    const td41=r17tRow.querySelector('td[data-col="41"]');
+    if(td41){
+      const div=td41.querySelector('div');
+      if(div){
+        div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#E8F0FB;border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;position:relative;display:flex;align-items:center;justify-content:center;';
+        div.innerHTML='<span style="position:relative;z-index:1;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;white-space:nowrap;background:rgba(232,240,251,0.7);padding:1px 2px;">R 1 7 4 1</span>';
+      }
+    }
+  }
   // Demo override: cols 41,40,39-31 — merge R+18T+R+18M+R+18MD+R+18B = 225px single cell
   const r18tRow=demoTbl.querySelector('tr.tr-r18t');
   const r18mRow=demoTbl.querySelector('tr.tr-r18m');
