@@ -7569,7 +7569,8 @@ function renderNFDemo(){
       if(!td)return;
       td.setAttribute('rowspan','4');
       td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;';
-      td.innerHTML=r1899HTML;
+      const label=col===31?'R\n1\n8\n9\n8':'R\n1\n8\n9\n9';
+      td.innerHTML=r1899HTML.replace('R\\n1\\n8\\n9\\n9',label);
       [r18mRow,r18mdRow,r18bRow].forEach(function(row){
         if(!row)return;
         const td2=row.querySelector('td[data-col="'+col+'"]');
