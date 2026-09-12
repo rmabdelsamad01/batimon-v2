@@ -9817,6 +9817,7 @@ function buildComplexTable(zone){
         </div>`;
     }
   }
+  if(zone.id==='NF') applyNFDesignOverrides(tbl);
 }
 
 async function _loadAssemblyPanels(){
