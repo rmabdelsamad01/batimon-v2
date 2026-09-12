@@ -7578,14 +7578,14 @@ function renderNFDemo(){
       });
     });
   }
-  // Demo override: R+19 cols 31-41 → rename panels R1941..R1932 and C1931
+  // Demo override: R+19 cols 31-41 → rename panels R1941..R1932 and C1931 (vertical, one char per line)
   const r19Labels={41:'R1941',40:'R1940',39:'R1939',38:'R1938',37:'R1937',36:'R1936',35:'R1935',34:'R1934',33:'R1933',32:'R1932',31:'C1931'};
   [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
     const pid='NF-R+19-C'+col;
     const cell=demoTbl.querySelector('[data-pid="'+pid+'"]');
     if(cell){
       const span=cell.querySelector('.c-type');
-      if(span)span.textContent=r19Labels[col];
+      if(span)span.textContent=r19Labels[col].split('').join('\n');
     }
   });
 }
