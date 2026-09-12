@@ -7580,10 +7580,10 @@ function renderNFDemo(){
       td40.innerHTML='<div style="position:relative;width:100%;height:225px;overflow:hidden;background:#E8F0FB;">'
         +'<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
         +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
-        +'<div style="position:absolute;top:77px;left:0;right:0;height:23px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-        +'<div style="position:absolute;bottom:0;left:0;right:0;height:25px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-        +'<div style="position:absolute;top:75px;left:0;right:0;bottom:0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;z-index:2;">'
-        +'<span style="font-family:var(--mono);font-size:15px;font-weight:700;color:#224F93;white-space:pre;line-height:1.3;text-align:center;">R\n1\n8\n9\n9</span>'
+        +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+        +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+        +'<div style="position:absolute;top:75px;left:0;right:0;bottom:15px;display:flex;align-items:flex-start;justify-content:center;z-index:2;">'
+        +'<span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;">R\n1\n8\n9\n9</span>'
         +'</div></div>';
       // Remove col 40 from R+18M, R+18MD, R+18B (covered by rowspan=4)
       [r18mRow,r18mdRow,r18bRow].forEach(function(row){
