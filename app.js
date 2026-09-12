@@ -7560,8 +7560,8 @@ function renderNFDemo(){
     +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
     +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
     +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-    +'<div style="position:absolute;top:75px;left:0;right:0;bottom:15px;display:flex;align-items:flex-start;justify-content:center;z-index:2;">'
-    +'<span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;">R\n1\n8\n9\n9</span>'
+    +'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;">'
+    +'<span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:rgba(232,240,251,0.75);padding:2px 0;">R\n1\n8\n9\n9</span>'
     +'</div></div>';
   if(r18tRow){
     [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
