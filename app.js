@@ -7590,9 +7590,15 @@ function renderNFDemo(){
       if(col===35){
         const cBottom=cell.querySelector('.c-bottom');
         if(cBottom){
-          cBottom.style.cssText='width:100%;height:100px;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;';
+          cBottom.style.cssText='width:100%;height:100px;flex-shrink:0;display:flex;flex-direction:column;';
+          const labelZone=document.createElement('div');
+          labelZone.style.cssText='width:100%;height:50px;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
+          const span=cBottom.querySelector('.c-type');
+          if(span)labelZone.appendChild(span);
           const dots=document.createElement('div');
-          dots.style.cssText='position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
+          dots.style.cssText='width:100%;height:50px;flex-shrink:0;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
+          cBottom.innerHTML='';
+          cBottom.appendChild(labelZone);
           cBottom.appendChild(dots);
         }
       }
