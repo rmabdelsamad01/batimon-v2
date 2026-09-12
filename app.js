@@ -7605,6 +7605,19 @@ function renderNFDemo(){
           cBottom.appendChild(dots);
         }
       }
+      // M06/GM06 cols: vlines top 100px, orange dots bottom 50px, label centered full height
+      if([41,40,36,32].includes(col)){
+        cell.style.backgroundImage='none';
+        cell.style.cssText=cell.style.cssText+'position:relative;justify-content:center;align-items:center;padding:0;';
+        const vlines=document.createElement('div');
+        vlines.style.cssText='position:absolute;top:0;left:0;right:0;height:100px;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);pointer-events:none;';
+        const odots=document.createElement('div');
+        odots.style.cssText='position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;pointer-events:none;';
+        const cType=cell.querySelector('.c-type');
+        if(cType){cType.style.cssText='font-size:17px;line-height:1.7;font-weight:700;color:inherit;white-space:pre;text-align:center;position:relative;z-index:1;';}
+        cell.appendChild(vlines);
+        cell.appendChild(odots);
+      }
     }
   });
 }
