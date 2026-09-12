@@ -7580,21 +7580,24 @@ function renderNFDemo(){
   }
   // Demo override: R+19 cols 31-41 → rename panels R1941..R1932 and C1931 (vertical, one char per line)
   const r19Labels={41:'R1941',40:'R1940',39:'R1939',38:'R1938',37:'R1937',36:'R1936',35:'R1935',34:'R1934',33:'R1933',32:'R1932',31:'C1931'};
+  // cols with orange dot strip (keep left border) vs no-left-border variant
+  const r19DotCols=[39,35,31];
+  const r19DotColsNoBorder=[34,33];
   [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
     const pid='NF-R+19-C'+col;
     const cell=demoTbl.querySelector('[data-pid="'+pid+'"]');
     if(cell){
       const span=cell.querySelector('.c-type');
       if(span)span.textContent=r19Labels[col].split('').join('\n');
-      // col 35 only: orange dot strip in last 50px of c-bottom
-      if(col===35){
+      if(r19DotColsNoBorder.includes(col)) cell.style.borderLeft='1.5px solid rgba(34,79,147,0.2)';
+      if(r19DotCols.includes(col)||r19DotColsNoBorder.includes(col)){
         const cBottom=cell.querySelector('.c-bottom');
         if(cBottom){
           cBottom.style.cssText='width:100%;height:100px;flex-shrink:0;display:flex;flex-direction:column;';
           const labelZone=document.createElement('div');
           labelZone.style.cssText='width:100%;height:50px;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
-          const span=cBottom.querySelector('.c-type');
-          if(span)labelZone.appendChild(span);
+          const cType=cBottom.querySelector('.c-type');
+          if(cType)labelZone.appendChild(cType);
           const dots=document.createElement('div');
           dots.style.cssText='width:100%;height:50px;flex-shrink:0;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
           cBottom.innerHTML='';
