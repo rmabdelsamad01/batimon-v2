@@ -7542,7 +7542,7 @@ function renderNFDemo(){
       if(td){
         const div=td.querySelector('div');
         if(div){
-          div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#fff8f0;border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;';
+          div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#E8F0FB;border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;';
           div.onclick=function(){
             if(r17bRow){const b=r17bRow.querySelector('td[data-col="'+col+'"] .wfc');if(b)b.click();}
           };
