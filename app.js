@@ -7636,6 +7636,14 @@ function renderNFDemo(){
           }
         }
       }
+      // All R+19 cols with double red left border: limit border to top 100px
+      if([41,40,39,38,37,36,35,32].includes(col)){
+        cell.style.borderLeft='none';
+        cell.style.position='relative';
+        const pb=document.createElement('div');
+        pb.style.cssText='position:absolute;left:0;top:0;width:5px;height:100px;z-index:10;pointer-events:none;background:linear-gradient(to right,#ED1C24 0,#ED1C24 1.5px,transparent 1.5px,transparent 3.5px,#ED1C24 3.5px,#ED1C24 5px);';
+        cell.appendChild(pb);
+      }
       // M06/GM06 cols: vlines top 100px, orange dots bottom 50px, label centered full height
       if([41,40,36,32].includes(col)){
         cell.style.backgroundImage='none';
