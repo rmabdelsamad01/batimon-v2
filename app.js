@@ -7562,7 +7562,7 @@ function applyNFDesignOverrides(tbl){
           const r17bStatus=(typeof panels!=='undefined'&&panels['NF-R+17B-C'+col])?panels['NF-R+17B-C'+col].status:null;
           if(r17bStatus==='installed'){
             div.style.cssText='width:var(--cw);height:50px;background:#FF8C00;border:1px solid rgba(34,79,147,0.2);cursor:pointer;';
-            if(r17bCell)r17bCell.style.background='#2E9E5B';
+            if(r17bCell)r17bCell.style.background='#00FF32';
           } else {
             const statusBg=r17bCell?getComputedStyle(r17bCell).backgroundColor:'#E8F0FB';
             div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:'+statusBg+';border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;';
@@ -7647,10 +7647,11 @@ function applyNFDesignOverrides(tbl){
     if(cell){
       const r19Status=(typeof panels!=='undefined'&&panels[pid])?panels[pid].status:null;
       if(r19Status==='installed'){
-        const r19SavedOnclick=cell.onclick;
-        cell.style.cssText='width:var(--cw);height:150px;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(34,79,147,0.2);cursor:pointer;position:relative;';
-        cell.innerHTML='<div style="width:100%;height:100px;background:#2E9E5B;flex-shrink:0;"></div><div style="width:100%;height:50px;background:#FF8C00;flex-shrink:0;"></div>';
-        if(r19SavedOnclick)cell.onclick=r19SavedOnclick;
+        cell.style.position='relative';
+        const r19Overlay=document.createElement('div');
+        r19Overlay.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;z-index:20;pointer-events:none;display:flex;flex-direction:column;';
+        r19Overlay.innerHTML='<div style="flex:0 0 100px;background:#00FF32;"></div><div style="flex:0 0 50px;background:#FF8C00;"></div>';
+        cell.appendChild(r19Overlay);
         return;
       }
       const span=cell.querySelector('.c-type');
