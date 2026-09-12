@@ -7550,10 +7550,13 @@ function renderNFDemo(){
       }
     });
   }
-  // Demo override: R+18MD cols 31-40 → R1899 panel (150px rowspan, orange dots top+strips, white center, label)
+  // Demo override: R+18MD cols 31-39 → R1899 panel (150px rowspan=2, orange dots top+strips, baby blue center, label)
+  const r18tRow=demoTbl.querySelector('tr.tr-r18t');
+  const r18mRow=demoTbl.querySelector('tr.tr-r18m');
   const r18mdRow=demoTbl.querySelector('tr.tr-r18md');
+  const r18bRow=demoTbl.querySelector('tr.tr-r18b');
   if(r18mdRow){
-    [40,39,38,37,36,35,34,33,32,31].forEach(function(col){
+    [39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r18mdRow.querySelector('td[data-col="'+col+'"]');
       if(!td)return;
       td.style.cssText='padding:0;width:var(--cw);height:150px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;';
@@ -7567,6 +7570,28 @@ function renderNFDemo(){
         +'<span style="font-family:var(--mono);font-size:15px;font-weight:700;color:#224F93;white-space:pre;line-height:1.3;text-align:center;">R\n1\n8\n9\n9</span>'
         +'</div></div>';
     });
+  }
+  // Demo override: col 40 — merge R+18T(25px)+R+18M(50px)+R+18MD(110px)+R+18B(40px) = 225px single cell
+  if(r18tRow){
+    const td40=r18tRow.querySelector('td[data-col="40"]');
+    if(td40){
+      td40.setAttribute('rowspan','4');
+      td40.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;';
+      td40.innerHTML='<div style="position:relative;width:100%;height:225px;overflow:hidden;background:#E8F0FB;">'
+        +'<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
+        +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
+        +'<div style="position:absolute;top:77px;left:0;right:0;height:23px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+        +'<div style="position:absolute;bottom:0;left:0;right:0;height:25px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+        +'<div style="position:absolute;top:75px;left:0;right:0;bottom:0;display:flex;align-items:flex-start;justify-content:center;padding-top:4px;z-index:2;">'
+        +'<span style="font-family:var(--mono);font-size:15px;font-weight:700;color:#224F93;white-space:pre;line-height:1.3;text-align:center;">R\n1\n8\n9\n9</span>'
+        +'</div></div>';
+      // Remove col 40 from R+18M, R+18MD, R+18B (covered by rowspan=4)
+      [r18mRow,r18mdRow,r18bRow].forEach(function(row){
+        if(!row)return;
+        const td=row.querySelector('td[data-col="40"]');
+        if(td)td.parentNode.removeChild(td);
+      });
+    }
   }
 }
 
