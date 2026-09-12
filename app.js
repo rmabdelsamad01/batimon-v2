@@ -7586,6 +7586,16 @@ function renderNFDemo(){
     if(cell){
       const span=cell.querySelector('.c-type');
       if(span)span.textContent=r19Labels[col].split('').join('\n');
+      // col 35 only: orange dot strip in last 50px of c-bottom
+      if(col===35){
+        const cBottom=cell.querySelector('.c-bottom');
+        if(cBottom){
+          cBottom.style.cssText='width:100%;height:100px;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;';
+          const dots=document.createElement('div');
+          dots.style.cssText='position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
+          cBottom.appendChild(dots);
+        }
+      }
     }
   });
 }
