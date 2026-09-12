@@ -7559,8 +7559,14 @@ function applyNFDesignOverrides(tbl){
         const div=td.querySelector('div');
         if(div){
           const r17bCell=r17bRow?r17bRow.querySelector('td[data-col="'+col+'"] .wfc'):null;
-          const statusBg=r17bCell?getComputedStyle(r17bCell).backgroundColor:'#E8F0FB';
-          div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:'+statusBg+';border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;';
+          const r17bStatus=(typeof panels!=='undefined'&&panels['NF-R+17B-C'+col])?panels['NF-R+17B-C'+col].status:null;
+          if(r17bStatus==='installed'){
+            div.style.cssText='width:var(--cw);height:50px;background:#FF8C00;border:1px solid rgba(34,79,147,0.2);cursor:pointer;';
+            if(r17bCell)r17bCell.style.background='#2E9E5B';
+          } else {
+            const statusBg=r17bCell?getComputedStyle(r17bCell).backgroundColor:'#E8F0FB';
+            div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:'+statusBg+';border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;';
+          }
           div.onclick=function(){
             if(r17bRow){const b=r17bRow.querySelector('td[data-col="'+col+'"] .wfc');if(b)b.click();}
           };
@@ -7592,6 +7598,8 @@ function applyNFDesignOverrides(tbl){
       const wfc=td.querySelector('.wfc');
       const statusBg=wfc?getComputedStyle(wfc).backgroundColor:'#E8F0FB';
       const wfcOnclick=wfc?wfc.onclick:null;
+      const r18Status=(typeof panels!=='undefined'&&panels['NF-R+18T-C'+col])?panels['NF-R+18T-C'+col].status:null;
+      const r18Installed=r18Status==='installed';
       // Panel labels from NF_TYPES (same approach as r19Labels)
       const r18Labels={41:'R1841',40:'R1840',39:'R1839',38:'R1838',37:'R1837',36:'R1836',35:'R1835',34:'R1834',33:'R1833',32:'R1832',31:'C1831'};
       const labelText=(r18Labels[col]||'').split('').join('\n');
@@ -7600,12 +7608,17 @@ function applyNFDesignOverrides(tbl){
       td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;position:relative;';
       // Visual overlay (orange dots + real label) — pointer-events:none so it doesn't block clicks
       const vis=document.createElement('div');
-      vis.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;background:'+statusBg+';pointer-events:none;z-index:5;';
-      vis.innerHTML='<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
-        +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
-        +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-        +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-        +(labelText?'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:transparent;padding:2px 0;">'+labelText+'</span></div>':'');
+      if(r18Installed){
+        vis.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;background:#FF8C00;pointer-events:none;z-index:5;';
+        vis.innerHTML=(labelText?'<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:transparent;padding:2px 0;">'+labelText+'</span></div>':'');
+      } else {
+        vis.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;background:'+statusBg+';pointer-events:none;z-index:5;';
+        vis.innerHTML='<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
+          +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
+          +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+          +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+          +(labelText?'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:transparent;padding:2px 0;">'+labelText+'</span></div>':'');
+      }
       td.appendChild(vis);
       // Transparent full-height click div covering all 225px — delegates to wfc's onclick
       const clickDiv=document.createElement('div');
@@ -7632,6 +7645,14 @@ function applyNFDesignOverrides(tbl){
     const pid='NF-R+19-C'+col;
     const cell=tbl.querySelector('[data-pid="'+pid+'"]');
     if(cell){
+      const r19Status=(typeof panels!=='undefined'&&panels[pid])?panels[pid].status:null;
+      if(r19Status==='installed'){
+        const r19SavedOnclick=cell.onclick;
+        cell.style.cssText='width:var(--cw);height:150px;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(34,79,147,0.2);cursor:pointer;position:relative;';
+        cell.innerHTML='<div style="width:100%;height:100px;background:#2E9E5B;flex-shrink:0;"></div><div style="width:100%;height:50px;background:#FF8C00;flex-shrink:0;"></div>';
+        if(r19SavedOnclick)cell.onclick=r19SavedOnclick;
+        return;
+      }
       const span=cell.querySelector('.c-type');
       if(span)span.textContent=r19Labels[col].split('').join('\n');
       if(r19DotColsNoBorder.includes(col)) cell.style.borderLeft='1.5px solid rgba(34,79,147,0.2)';
