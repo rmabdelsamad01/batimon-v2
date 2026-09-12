@@ -7584,22 +7584,32 @@ function applyNFDesignOverrides(tbl){
   const r18mRow=tbl.querySelector('tr.tr-r18m');
   const r18mdRow=tbl.querySelector('tr.tr-r18md');
   const r18bRow=tbl.querySelector('tr.tr-r18b');
-  const r1899HTML='<div style="position:relative;width:100%;height:225px;overflow:hidden;background:#E8F0FB;">'
-    +'<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
-    +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
-    +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-    +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-    +'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;">'
-    +'<span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:rgba(232,240,251,0.75);padding:2px 0;">R\n1\n8\n9\n9</span>'
-    +'</div></div>';
   if(r18tRow){
     [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r18tRow.querySelector('td[data-col="'+col+'"]');
       if(!td)return;
+      const pid='NF-R+18T-C'+col;
+      const panelData=(typeof panels!=='undefined'?panels[pid]:null)||{};
+      const pType=panelData.panel_type||'';
+      const labelText=pType?pType.split('').join('\n'):'';
+      const wfc=td.querySelector('.wfc');
+      const statusBg=wfc?getComputedStyle(wfc).backgroundColor:'#E8F0FB';
       td.setAttribute('rowspan','4');
-      td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;';
-      const label=col===31?'R\n1\n8\n9\n8':'R\n1\n8\n9\n9';
-      td.innerHTML=r1899HTML.replace('R\\n1\\n8\\n9\\n9',label);
+      td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);vertical-align:top;position:relative;cursor:pointer;';
+      const vis=document.createElement('div');
+      vis.style.cssText='position:absolute;top:0;left:0;right:0;height:225px;overflow:hidden;background:'+statusBg+';pointer-events:none;';
+      vis.innerHTML='<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
+        +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
+        +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+        +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+        +(labelText?'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:rgba(232,240,251,0.75);padding:2px 0;">'+labelText+'</span></div>':'');
+      td.innerHTML='';
+      td.appendChild(vis);
+      if(wfc){
+        wfc.style.cssText='position:absolute;top:0;left:0;width:100%;height:225px;background:transparent !important;z-index:10;cursor:pointer;';
+        wfc.innerHTML='';
+        td.appendChild(wfc);
+      }
       [r18mRow,r18mdRow,r18bRow].forEach(function(row){
         if(!row)return;
         const td2=row.querySelector('td[data-col="'+col+'"]');
