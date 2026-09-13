@@ -7958,7 +7958,8 @@ function buildComplexTable(zone){
         if(selPanel===id)cell0.classList.add('sel');
         cell0.title=`Floor:${fl} Col:${col}\nStatus:${meta0.label}`;
         const redBot=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
-        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot}`;
+        const stBg45=(_custStBg[(panels[id]||{}).status||'pending'])||'#E8F0FB';
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:${stBg45} !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot}`;
         const vlines='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
         const dots1='background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
         const bottomHtml=fl==='R+19'
@@ -8016,7 +8017,8 @@ function buildComplexTable(zone){
         if(selPanel===id)cell0.classList.add('sel');
         cell0.title=`Floor:${fl} Col:${col}\nStatus:${meta0.label}`;
         const redBot23=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
-        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot23}`;
+        const stBg42=(_custStBg[(panels[id]||{}).status||'pending'])||'#E8F0FB';
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:${stBg42} !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot23}`;
         const hstripes42='background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
         const dots42='background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
         const r19ColLabels={42:'R1942',43:'R1943',44:'R1944'};
