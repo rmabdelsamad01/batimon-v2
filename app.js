@@ -8060,43 +8060,24 @@ function buildComplexTable(zone){
         }
       }
 
-      // NF: col 50 at R+18T — standalone rowspan=4 wfc cell (expanded by applyNFDesignOverrides)
+      // NF: col 50 at R+18T — colspan=4 + rowspan=4 wfc cell (expanded by applyNFDesignOverrides)
       if(zone.id==='NF' && col===50 && fl==='R+18T'){
+        td.setAttribute('colspan','4');
         td.setAttribute('rowspan','4');
-        td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;';
+        td.style.cssText='padding:0;width:150px;min-width:150px;height:225px;overflow:hidden;';
         const _st50t=(panels[id]||{}).status||'pending';
         const _bg50t=_st50t==='installed'?'#FF8C00':(_custStBg[_st50t]||'#E8F0FB');
         const c50t=document.createElement('div');
         c50t.className='wfc';
-        c50t.style.cssText=`width:var(--cw);height:225px;background:${_bg50t};border:1.5px solid rgba(34,79,147,0.2);cursor:pointer;`;
+        c50t.style.cssText=`width:100%;height:225px;background:${_bg50t};border:1.5px solid rgba(34,79,147,0.2);cursor:pointer;`;
         c50t.dataset.pid=id;
         c50t.onclick=(e)=>{e.currentTarget=c50t;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(c50t);tr.appendChild(td);return;
       }
-      // NF: cols 49,48,47 at R+18T — merged colspan=3, #595959
-      if(zone.id==='NF' && [49,48,47].includes(col) && fl==='R+18T'){
-        if(col===49){
-          td.setAttribute('colspan','3');
-          td.style.cssText='padding:0;';
-          const spacer=document.createElement('div');
-          spacer.style.cssText='width:100%;height:25px;background:#595959;';
-          td.appendChild(spacer);tr.appendChild(td);
-        }
-        return;
-      }
-      // NF: col 50 at R+18M — covered by rowspan=4 at R+18T, skip
-      if(zone.id==='NF' && col===50 && fl==='R+18M'){return;}
-      // NF: cols 49,48,47 at R+18M — merged colspan=3, orange
-      if(zone.id==='NF' && [49,48,47].includes(col) && fl==='R+18M'){
-        if(col===49){
-          td.setAttribute('colspan','3');
-          td.style.cssText='padding:0;';
-          const spacer=document.createElement('div');
-          spacer.style.cssText='width:100%;height:50px;background:#FF8C00;';
-          td.appendChild(spacer);tr.appendChild(td);
-        }
-        return;
-      }
+      // NF: cols 49,48,47 at R+18T — covered by colspan=4+rowspan=4 at col 50, skip
+      if(zone.id==='NF' && [49,48,47].includes(col) && fl==='R+18T'){return;}
+      // NF: cols 50,49,48,47 at R+18M — covered by colspan=4+rowspan=4 at R+18T, skip
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18M'){return;}
 
       // NF cols 54,53 at R+18T — merged rowspan=2 (25px+50px=75px), hstripes only (no orange)
       // at R+18M — skipped; at R+18B/17T/17B — separate hstripes cells
@@ -8143,22 +8124,9 @@ function buildComplexTable(zone){
         spacer.style.cssText='width:var(--cw);height:110px;background:#fafcff;';
         td.appendChild(spacer);tr.appendChild(td);return;
       }
-      // NF col 50 at R+18MD — covered by rowspan=4 at R+18T, skip
-      if(zone.id==='NF' && col===50 && fl==='R+18MD'){return;}
-      // NF cols 49,48,47 at R+18MD — merged colspan=3 + rowspan=2 (110px+40px=150px), orange
-      if(zone.id==='NF' && [49,48,47].includes(col) && fl==='R+18MD'){
-        if(col===49){
-          td.setAttribute('colspan','3');
-          td.setAttribute('rowspan','2');
-          td.style.cssText='padding:0;height:150px;';
-          const c=document.createElement('div');
-          c.style.cssText='width:100%;height:150px;background:#FF8C00;border:1.5px solid #cc6600;';
-          td.appendChild(c);tr.appendChild(td);
-        }
-        return;
-      }
-      // NF col 50 at R+18B — covered by rowspan=4 at R+18T, skip
-      // NF cols 49,48,47 at R+18B — covered by R+18MD colspan=3+rowspan=2, skip
+      // NF cols 50,49,48,47 at R+18MD — covered by colspan=4+rowspan=4 at R+18T, skip
+      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18MD'){return;}
+      // NF cols 50,49,48,47 at R+18B — covered by colspan=4+rowspan=4 at R+18T, skip
       if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18B'){return;}
       // NF cols 43-45 at R+18MD — covered by rowspan=4 at R+18T, skip
       if(zone.id==='NF' && [45,44,43].includes(col) && fl==='R+18MD'){return;}
