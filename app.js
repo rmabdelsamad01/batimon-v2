@@ -8044,7 +8044,20 @@ function buildComplexTable(zone){
         td.style.padding='0';td.style.verticalAlign='top';td.style.height='50px';
         td.appendChild(spacer);tr.appendChild(td);return;
       }
-      // NF: cols 50,49,48,47 at R+33–R+19 — same format as SF S-xx-99/98/97/96
+      // NF: cols 50,49,48,47 at R+19 — merged colspan=4, same visual + orange dots bottom 50px
+      if(zone.id==='NF' && col===50 && fl==='R+19'){
+        td.setAttribute('colspan','4');
+        td.style.cssText='padding:0;width:150px;min-width:150px;height:150px;position:relative;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);';
+        td.innerHTML=
+          '<div style="position:absolute;top:0;left:0;right:0;height:50px;background:#595959;"></div>'+
+          '<div style="position:absolute;top:50px;left:0;width:25px;height:50px;background:#595959;"></div>'+
+          '<div style="position:absolute;top:50px;left:25px;right:25px;height:50px;background:#A6C9EC;"></div>'+
+          '<div style="position:absolute;top:50px;right:0;width:25px;height:50px;background:#595959;"></div>'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:#E8F0FB;"></div>';
+        tr.appendChild(td);return;
+      }
+      if(zone.id==='NF' && [49,48,47].includes(col) && fl==='R+19'){return;}
+      // NF: cols 50,49,48,47 at R+33–R+20 — same format as SF S-xx-99/98/97/96
       if(zone.id==='NF' && [50,49,48,47].includes(col) && nfColorFloors.includes(fl)){
         if(col===50||col===47){
           // 25px wide, solid #595959 (same as S-xx-99 / S-xx-96)
