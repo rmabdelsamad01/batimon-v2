@@ -8056,7 +8056,7 @@ function buildComplexTable(zone){
           '<div style="position:absolute;top:50px;left:25px;right:25px;height:50px;background:#A6C9EC;"></div>'+
           '<div style="position:absolute;top:50px;right:0;width:25px;height:50px;background:#595959;"></div>'+
           '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:'+_dotsBg19+';"></div>'+
-          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);letter-spacing:1px;">R1946</span></div>'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;letter-spacing:1px;">R1946</span></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:25px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:75px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:125px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>';
