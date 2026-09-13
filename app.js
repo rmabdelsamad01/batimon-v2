@@ -7554,7 +7554,7 @@ function applyNFDesignOverrides(tbl){
   const r17bRow=tbl.querySelector('tr.tr-r17b');
   if(r17tRow){
     const r17tLabels={41:'R1741',42:'R1742',43:'R1743',44:'R1744',45:'R1745'};
-    const _r17StBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+    const _r17StBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#FF8C00',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
     [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r17tRow.querySelector('td[data-col="'+col+'"]');
       if(td){
