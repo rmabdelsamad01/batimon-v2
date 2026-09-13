@@ -8139,10 +8139,10 @@ function buildComplexTable(zone){
       }
       // NF cols 50,49,48,47 at R+18B — covered by R+18MD colspan=4+rowspan=2, skip
       if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18B'){return;}
-      // NF col 42 at R+18MD — covered by rowspan=4 at R+18T, skip
-      if(zone.id==='NF' && col===42 && fl==='R+18MD'){return;}
-      // NF cols 45-31 at R+18MD — rowspan=2 merging R+18MD(110px)+R+18B(40px)=150px
-      if(zone.id==='NF' && [45,44,43,41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18MD'){
+      // NF cols 42-45 at R+18MD — covered by rowspan=4 at R+18T, skip
+      if(zone.id==='NF' && [45,44,43,42].includes(col) && fl==='R+18MD'){return;}
+      // NF cols 41-31 at R+18MD — rowspan=2 merging R+18MD(110px)+R+18B(40px)=150px
+      if(zone.id==='NF' && [41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18MD'){
         td.setAttribute('rowspan','2');
         const w=col===45?'25px':'var(--cw)';
         td.style.cssText=`padding:0;width:${w};height:150px;overflow:hidden;`;
@@ -8299,29 +8299,23 @@ function buildComplexTable(zone){
       // NF cols 65-55,52 at R+17T and R+17B — covered by R+18B rowspan=3, skip
       // (cols 54,53 are handled separately above)
       if(zone.id==='NF' && [65,64,63,62,61,60,59,58,57,56,55,54].includes(col) && (fl==='R+17T'||fl==='R+17B')){return;}
-      // NF col 42 at R+18M — covered by rowspan=4 at R+18T, skip
-      if(zone.id==='NF' && col===42 && fl==='R+18M'){return;}
-      // NF cols 45-31 at R+18M — orange for 41-31, status-based for 43-45
-      if(zone.id==='NF' && [45,44,43,41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18M'){
-        const w=col===45?'25px':'50px';
+      // NF cols 42-45 at R+18M — covered by rowspan=4 at R+18T, skip
+      if(zone.id==='NF' && [45,44,43,42].includes(col) && fl==='R+18M'){return;}
+      // NF cols 41-31 at R+18M — orange
+      if(zone.id==='NF' && [41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18M'){
         const spacer=document.createElement('div');
-        if([45,44,43].includes(col)){
-          const _stM=(panels[id]||{}).status||'pending';
-          const _bgM=_custStBg[_stM]||'#E8F0FB';
-          spacer.style.cssText=`width:${w};height:50px;background:${_bgM};`;
-        } else {
-          spacer.style.cssText=`width:${w};height:50px;background:#FF8C00;`;
-        }
+        spacer.style.cssText='width:var(--cw);height:50px;background:#FF8C00;';
         td.appendChild(spacer);tr.appendChild(td);return;
       }
-      // NF col 42 at R+18T — rowspan=4 (R+18T 25px + R+18M 50px + R+18MD 110px + R+18B 40px = 225px)
-      if(zone.id==='NF' && col===42 && fl==='R+18T'){
+      // NF cols 42-45 at R+18T — rowspan=4 (25px+50px+110px+40px=225px), status-aware
+      if(zone.id==='NF' && [45,44,43,42].includes(col) && fl==='R+18T'){
         td.setAttribute('rowspan','4');
-        td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;';
-        const _st42=(panels[id]||{}).status||'pending';
-        const _bg42=_custStBg[_st42]||'#E8F0FB';
+        const w=col===45?'25px':'var(--cw)';
+        td.style.cssText=`padding:0;width:${w};height:225px;overflow:hidden;`;
+        const _st=(panels[id]||{}).status||'pending';
+        const _bg=_custStBg[_st]||'#E8F0FB';
         const c=document.createElement('div');
-        c.style.cssText=`width:var(--cw);height:225px;background:${_bg42};border:1.5px solid rgba(34,79,147,0.2);cursor:pointer;`;
+        c.style.cssText=`width:${w};height:225px;background:${_bg};border:1.5px solid rgba(34,79,147,0.2);cursor:pointer;`;
         c.dataset.pid=id;
         c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(c);tr.appendChild(td);return;
