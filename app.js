@@ -8316,9 +8316,9 @@ function buildComplexTable(zone){
         const meta42=SM[_st42]||SM.pending;
         const ref42=pType||pRef||'';
         const c=document.createElement('div');
-        c.className=`wfc ef-r18t ${meta42.cls}`;
-        c.style.cssText='width:var(--cw);height:225px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;';
-        c.innerHTML=`<div style="height:25px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(34,79,147,0.2);">${ref42?`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${ref42}</span>`:''}</div><div style="height:50px;flex-shrink:0;background:#FF8C00;"></div><div style="flex:1;background:#FF8C00;border:1.5px solid #cc6600;"></div>`;
+        c.className=`wfc ${meta42.cls}`;
+        c.style.cssText='width:var(--cw);height:225px!important;min-height:225px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;';
+        c.innerHTML=`<div style="height:25px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${_bg42};border:1.5px solid rgba(34,79,147,0.2);">${ref42?`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#224F93;">${ref42}</span>`:''}</div><div style="height:50px;flex-shrink:0;background:#FF8C00;"></div><div style="flex:1;background:#FF8C00;border:1.5px solid #cc6600;"></div>`;
         c.dataset.pid=id;
         c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(c);tr.appendChild(td);return;
