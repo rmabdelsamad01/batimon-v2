@@ -7964,7 +7964,7 @@ function buildComplexTable(zone){
         const bottomHtml=fl==='R+19'
           ?`<div style="width:100%;height:48px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:50px;flex-shrink:0;${dots1}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${vlines}"></div>`;
-        const lbl45=fl==='R+19'?'<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:8px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">R1945</span>':'';
+        const lbl45=fl==='R+19'?'<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">R1945</span>':'';
         cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>${bottomHtml}${lbl45}`;
         cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell0);tr.appendChild(td);return;
@@ -8023,7 +8023,7 @@ function buildComplexTable(zone){
         const bottom42=fl==='R+19'
           ?`<div style="width:100%;height:48px;flex-shrink:0;${hstripes42}"></div><div style="width:100%;height:50px;flex-shrink:0;${dots42}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${hstripes42}"></div>`;
-        const lbl42=fl==='R+19'&&r19ColLabels[col]?`<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:8px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">${r19ColLabels[col]}</span>`:'';
+        const lbl42=fl==='R+19'&&r19ColLabels[col]?`<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">${r19ColLabels[col]}</span>`:'';
         cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>${bottom42}${lbl42}`;
         cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell0);tr.appendChild(td);return;
