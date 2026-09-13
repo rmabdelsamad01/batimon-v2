@@ -109,7 +109,7 @@ const NF_TYPES={
   'R+21': nfRowBoth11(['C08','T02','T02','T12','T02','T10','T04','T06','T11','T04','T06','E04'],['G06','T02','T02','T02','T06','T04','T10','T04','T06','T04','C06']),
   'R+20': nfRowBoth11(['C07','T01','T01','T09','T05','T03','T01','T01','T05','T03','T05','E03'],['G05','T05','T03','T09','T09','T05','T03','T01','T01','T05','C09']),
   'R+19': nfRowBoth11(['C07','T01','T01','M12','M06','T03','T01','T01','M06','T03','M06','E04'],['R1941','R1940','R1939','R1938','R1937','R1936','R1935','R1934','R1933','R1932','C1931']),
-  'R+18T': nfRowBoth11(['C1803','R1851','R1851','R1856','R1853','R1852','R1851','R1851','R1853','R1852','R1853','E1852'],['R1841','R1840','R1839','R1838','R1837','R1836','R1835','R1834','R1833','R1832','C1831']),
+  'R+18T': [...['C1803','R1851','R1851','R1856','R1853','R1852','R1851','R1851','R1853','R1852','R1853','E1852'],'','','','','','','','','','R1842',...['R1841','R1840','R1839','R1838','R1837','R1836','R1835','R1834','R1833','R1832','C1831']],
   'R+18M':  Array(33).fill(''),
   'R+18MD': Array(33).fill(''),
   'R+18B':  nfRowLeft(['C1703','R1751','R1756','R1751','R1756','R1751','R1751','R1753','R1755','R1752','R1753','E1753']),
@@ -8307,8 +8307,24 @@ function buildComplexTable(zone){
         spacer.style.cssText='width:var(--cw);height:50px;background:#FF8C00;';
         td.appendChild(spacer);tr.appendChild(td);return;
       }
-      // NF cols 42-45 at R+18T — rowspan=4 (25px+50px+110px+40px=225px), status-aware
-      if(zone.id==='NF' && [45,44,43,42].includes(col) && fl==='R+18T'){
+      // NF col 42 at R+18T — rowspan=4, 3-section structure matching col 41 (label+orange+orange)
+      if(zone.id==='NF' && col===42 && fl==='R+18T'){
+        td.setAttribute('rowspan','4');
+        td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;vertical-align:top;';
+        const _st42=(panels[id]||{}).status||'pending';
+        const _bg42=_custStBg[_st42]||'#E8F0FB';
+        const meta42=SM[_st42]||SM.pending;
+        const ref42=pType||pRef||'';
+        const c=document.createElement('div');
+        c.className=`wfc ef-r18t ${meta42.cls}`;
+        c.style.cssText='width:var(--cw);height:225px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;';
+        c.innerHTML=`<div style="height:25px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(34,79,147,0.2);">${ref42?`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:inherit;">${ref42}</span>`:''}</div><div style="height:50px;flex-shrink:0;background:#FF8C00;"></div><div style="flex:1;background:#FF8C00;border:1.5px solid #cc6600;"></div>`;
+        c.dataset.pid=id;
+        c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(c);tr.appendChild(td);return;
+      }
+      // NF cols 43-45 at R+18T — rowspan=4 (25px+50px+110px+40px=225px), status-aware
+      if(zone.id==='NF' && [45,44,43].includes(col) && fl==='R+18T'){
         td.setAttribute('rowspan','4');
         const w=col===45?'25px':'var(--cw)';
         td.style.cssText=`padding:0;width:${w};height:225px;overflow:hidden;`;
