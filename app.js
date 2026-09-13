@@ -7960,7 +7960,7 @@ function buildComplexTable(zone){
         const redBot=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
         cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);${redBot}`;
         const vlines='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
-        const dots1='background-image:radial-gradient(circle,rgba(0,0,0,0.18) 0.5px,transparent 0.5px);background-size:4px 4px;';
+        const dots1='background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;';
         const bottomHtml=fl==='R+19'
           ?`<div style="width:100%;height:48px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:50px;flex-shrink:0;${dots1}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${vlines}"></div>`;
@@ -8017,7 +8017,7 @@ function buildComplexTable(zone){
         const redBot23=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
         cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);${redBot23}`;
         const hstripes42='background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
-        const dots42='background-image:radial-gradient(circle,rgba(0,0,0,0.18) 0.5px,transparent 0.5px);background-size:4px 4px;';
+        const dots42='background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;';
         const bottom42=fl==='R+19'
           ?`<div style="width:100%;height:48px;flex-shrink:0;${hstripes42}"></div><div style="width:100%;height:50px;flex-shrink:0;${dots42}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${hstripes42}"></div>`;
