@@ -8307,18 +8307,16 @@ function buildComplexTable(zone){
         spacer.style.cssText='width:var(--cw);height:50px;background:#FF8C00;';
         td.appendChild(spacer);tr.appendChild(td);return;
       }
-      // NF col 42 at R+18T — rowspan=4, 3-section structure matching col 41 (label+orange+orange)
+      // NF col 42 at R+18T — rowspan=4 (225px), label top 25px + orange body, matching col 41 layout
       if(zone.id==='NF' && col===42 && fl==='R+18T'){
         td.setAttribute('rowspan','4');
         td.style.cssText='padding:0;width:var(--cw);height:225px;overflow:hidden;vertical-align:top;';
         const _st42=(panels[id]||{}).status||'pending';
         const _bg42=_custStBg[_st42]||'#E8F0FB';
-        const meta42=SM[_st42]||SM.pending;
         const ref42=pType||pRef||'';
         const c=document.createElement('div');
-        c.className=`wfc ${meta42.cls}`;
-        c.style.cssText='width:var(--cw);height:225px!important;min-height:225px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;';
-        c.innerHTML=`<div style="height:25px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${_bg42};border:1.5px solid rgba(34,79,147,0.2);">${ref42?`<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#224F93;">${ref42}</span>`:''}</div><div style="height:50px;flex-shrink:0;background:#FF8C00;"></div><div style="flex:1;background:#FF8C00;border:1.5px solid #cc6600;"></div>`;
+        c.style.cssText=`width:var(--cw);height:225px;overflow:hidden;cursor:pointer;position:relative;background:linear-gradient(to bottom,${_bg42} 0px,${_bg42} 25px,#FF8C00 25px,#FF8C00 225px);border:1.5px solid rgba(34,79,147,0.2);border-bottom:1.5px solid #cc6600;`;
+        if(ref42)c.innerHTML=`<div style="position:absolute;top:0;left:0;right:0;height:25px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(34,79,147,0.2);"><span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#224F93;">${ref42}</span></div>`;
         c.dataset.pid=id;
         c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(c);tr.appendChild(td);return;
