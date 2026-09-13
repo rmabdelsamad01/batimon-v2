@@ -7959,11 +7959,11 @@ function buildComplexTable(zone){
         cell0.title=`Floor:${fl} Col:${col}\nStatus:${meta0.label}`;
         const redBot=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
         const stBg45=(_custStBg[(panels[id]||{}).status||'pending'])||'#E8F0FB';
-        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:${stBg45} !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot}`;
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot}`;
         const vlines='background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);';
         const dots1='background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
         const bottomHtml=fl==='R+19'
-          ?`<div style="width:100%;height:48px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:50px;flex-shrink:0;${dots1}"></div>`
+          ?`<div style="width:100%;height:48px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:50px;flex-shrink:0;background-color:${stBg45};${dots1}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${vlines}"></div>`;
         const lbl45=fl==='R+19'?'<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">R1945</span>':'';
         cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>${bottomHtml}${lbl45}`;
@@ -8018,12 +8018,12 @@ function buildComplexTable(zone){
         cell0.title=`Floor:${fl} Col:${col}\nStatus:${meta0.label}`;
         const redBot23=(nfRedBottomFloors.includes(fl)&&fl!=='R+19')?'border-bottom:5px double #ED1C24;':'';
         const stBg42=(_custStBg[(panels[id]||{}).status||'pending'])||'#E8F0FB';
-        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:${stBg42} !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot23}`;
+        cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot23}`;
         const hstripes42='background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
         const dots42='background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
         const r19ColLabels={42:'R1942',43:'R1943',44:'R1944'};
         const bottom42=fl==='R+19'
-          ?`<div style="width:100%;height:48px;flex-shrink:0;${hstripes42}"></div><div style="width:100%;height:50px;flex-shrink:0;${dots42}"></div>`
+          ?`<div style="width:100%;height:48px;flex-shrink:0;${hstripes42}"></div><div style="width:100%;height:50px;flex-shrink:0;background-color:${stBg42};${dots42}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${hstripes42}"></div>`;
         const lbl42=fl==='R+19'&&r19ColLabels[col]?`<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">${r19ColLabels[col]}</span>`:'';
         cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>${bottom42}${lbl42}`;
