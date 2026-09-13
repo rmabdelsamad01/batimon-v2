@@ -7554,6 +7554,7 @@ function applyNFDesignOverrides(tbl){
   const r17bRow=tbl.querySelector('tr.tr-r17b');
   if(r17tRow){
     const r17tLabels={41:'R1741',42:'R1742',43:'R1743',44:'R1744',45:'R1745'};
+    const _r17StBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
     [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r17tRow.querySelector('td[data-col="'+col+'"]');
       if(td){
@@ -7561,7 +7562,12 @@ function applyNFDesignOverrides(tbl){
         if(div){
           const r17bCell=r17bRow?r17bRow.querySelector('td[data-col="'+col+'"] .wfc'):null;
           const r17bStatus=(typeof panels!=='undefined'&&panels['NF-R+17B-C'+col])?panels['NF-R+17B-C'+col].status:null;
-          const r17StatusBg=(r17bStatus==='installed')?'#FF8C00':(r17bCell?getComputedStyle(r17bCell).backgroundColor:'#E8F0FB');
+          var r17StatusBg;
+          if([41,42,43,44,45].includes(col)){
+            r17StatusBg=_r17StBg[r17bStatus||'pending']||'#E8F0FB';
+          } else {
+            r17StatusBg=(r17bStatus==='installed')?'#FF8C00':(r17bCell?getComputedStyle(r17bCell).backgroundColor:'#E8F0FB');
+          }
           div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:'+r17StatusBg+';border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;'+(r17tLabels[col]?'position:relative;display:flex;align-items:center;justify-content:center;':'');
           if(r17tLabels[col]){
             div.innerHTML='<span style="position:relative;z-index:1;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;white-space:nowrap;background:rgba(232,240,251,0.7);padding:1px 2px;">'+r17tLabels[col]+'</span>';
@@ -8179,9 +8185,9 @@ function buildComplexTable(zone){
         td.style.height='100px';td.style.padding='0';
         td.appendChild(c);tr.appendChild(td);return;
       }
-      // NF cols 45,44,43,42,41 at R+17B — wfc cells (DB-linked), horizontal stripes preserved as overlay
+      // NF cols 45,44,43,42,41 at R+17B — wfc cells (DB-linked), always non-colored (status shown on R+17T only)
       if(zone.id==='NF' && [45,44,43,42,41].includes(col) && fl==='R+17B'){
-        const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const meta=SM['pending']||SM.pending;
         const c=document.createElement('div');
         c.className=`wfc ef-r17b ${meta.cls}`;
         const w=col===45?'25px':'var(--cw)';
