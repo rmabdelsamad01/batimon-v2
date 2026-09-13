@@ -8053,7 +8053,10 @@ function buildComplexTable(zone){
           '<div style="position:absolute;top:50px;left:0;width:25px;height:50px;background:#595959;"></div>'+
           '<div style="position:absolute;top:50px;left:25px;right:25px;height:50px;background:#A6C9EC;"></div>'+
           '<div style="position:absolute;top:50px;right:0;width:25px;height:50px;background:#595959;"></div>'+
-          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:#E8F0FB;"></div>';
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:#E8F0FB;"></div>'+
+          '<div style="position:absolute;top:0;bottom:0;left:25px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
+          '<div style="position:absolute;top:0;bottom:0;left:75px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
+          '<div style="position:absolute;top:0;bottom:0;left:125px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>';
         tr.appendChild(td);return;
       }
       if(zone.id==='NF' && [49,48,47].includes(col) && fl==='R+19'){return;}
