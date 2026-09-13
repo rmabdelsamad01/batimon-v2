@@ -10162,7 +10162,9 @@ function _panelDisplayRef(panelId){
 }
 
 function openComplexModal(id,fl,col,ref,type,zone){
-  selPanel=id;const p=panels[id]||{status:'pending',notes:'',assigned:''};
+  selPanel=id;
+  if(type&&!(panels[id]||{}).type)panels[id]={...(panels[id]||{status:'pending',notes:'',assigned:''}),type};
+  const p=panels[id]||{status:'pending',notes:'',assigned:''};
   const displayRef = zone.id==='EF' ? efPanelRef(fl,col) : zone.id==='WF' ? wfPanelRef(fl,col) : zone.id==='SF' ? sfPanelRef(fl,col) : (ref||p.panel_ref||'—');
   const displayType = type||p.panel_type||'—';
   const flClean = fl.replace('R+18T','R+18').replace('R+18M','R+18').replace('R+18MD','R+18').replace('R+18B','R+17').replace('R+17T','R+17').replace('R+17B','R+17');
