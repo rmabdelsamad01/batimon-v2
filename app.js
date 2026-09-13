@@ -8048,15 +8048,23 @@ function buildComplexTable(zone){
       if(zone.id==='NF' && col===50 && fl==='R+19'){
         td.setAttribute('colspan','4');
         td.style.cssText='padding:0;width:150px;min-width:150px;height:150px;position:relative;overflow:hidden;border:1.5px solid rgba(34,79,147,0.2);';
-        td.innerHTML=
+        const _st19=(typeof panels!=='undefined'&&panels[id])?panels[id].status:'pending';
+        const _dotsBg19=_st19==='installed'?'#FF8C00':(_custStBg[_st19]||'#E8F0FB');
+        const _wfc19=document.createElement('div');
+        _wfc19.className='wfc';
+        _wfc19.dataset.pid=id;
+        _wfc19.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;';
+        _wfc19.innerHTML=
           '<div style="position:absolute;top:0;left:0;right:0;height:50px;background:#595959;"></div>'+
           '<div style="position:absolute;top:50px;left:0;width:25px;height:50px;background:#595959;"></div>'+
           '<div style="position:absolute;top:50px;left:25px;right:25px;height:50px;background:#A6C9EC;"></div>'+
           '<div style="position:absolute;top:50px;right:0;width:25px;height:50px;background:#595959;"></div>'+
-          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:#E8F0FB;"></div>'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:'+_dotsBg19+';"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:25px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:75px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:125px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>';
+        _wfc19.onclick=(e)=>{e.currentTarget=_wfc19;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.appendChild(_wfc19);
         tr.appendChild(td);return;
       }
       if(zone.id==='NF' && [49,48,47].includes(col) && fl==='R+19'){return;}
