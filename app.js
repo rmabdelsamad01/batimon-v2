@@ -7553,7 +7553,7 @@ function applyNFDesignOverrides(tbl){
   const r17tRow=tbl.querySelector('tr.tr-r17t');
   const r17bRow=tbl.querySelector('tr.tr-r17b');
   if(r17tRow){
-    [40,39,38,37,36,35,34,33,32,31].forEach(function(col){
+    [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r17tRow.querySelector('td[data-col="'+col+'"]');
       if(td){
         const div=td.querySelector('div');
@@ -7568,17 +7568,6 @@ function applyNFDesignOverrides(tbl){
         }
       }
     });
-  }
-  // R+17T col 41: orange dots + label R1741
-  if(r17tRow){
-    const td41=r17tRow.querySelector('td[data-col="41"]');
-    if(td41){
-      const div=td41.querySelector('div');
-      if(div){
-        div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:#E8F0FB;border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;position:relative;display:flex;align-items:center;justify-content:center;';
-        div.innerHTML='<span style="position:relative;z-index:1;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;white-space:nowrap;background:rgba(232,240,251,0.7);padding:1px 2px;">R1741</span>';
-      }
-    }
   }
   // R+18 cols 31-41: merge all 4 sub-rows into 225px cell
   const r18tRow=tbl.querySelector('tr.tr-r18t');
