@@ -7553,7 +7553,7 @@ function applyNFDesignOverrides(tbl){
   const r17tRow=tbl.querySelector('tr.tr-r17t');
   const r17bRow=tbl.querySelector('tr.tr-r17b');
   if(r17tRow){
-    const r17tLabels={41:'R1741'};
+    const r17tLabels={41:'R1741',42:'R1742',43:'R1743',44:'R1744',45:'R1745'};
     [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r17tRow.querySelector('td[data-col="'+col+'"]');
       if(td){
