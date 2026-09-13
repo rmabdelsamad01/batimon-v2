@@ -8139,13 +8139,21 @@ function buildComplexTable(zone){
       }
       // NF cols 50,49,48,47 at R+18B — covered by R+18MD colspan=4+rowspan=2, skip
       if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+18B'){return;}
-      // NF cols 45-31 at R+18MD — rowspan=2 merging R+18MD(110px)+R+18B(40px)=150px, orange
+      // NF cols 45-31 at R+18MD — rowspan=2 merging R+18MD(110px)+R+18B(40px)=150px
       if(zone.id==='NF' && [45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18MD'){
         td.setAttribute('rowspan','2');
         const w=col===45?'25px':'var(--cw)';
         td.style.cssText=`padding:0;width:${w};height:150px;overflow:hidden;`;
         const c=document.createElement('div');
-        c.style.cssText=`width:${w};height:150px;background:#FF8C00;border:1.5px solid #cc6600;`;
+        if([45,44,43,42].includes(col)){
+          const _stMD=(panels[id]||{}).status||'pending';
+          const _bgMD=_custStBg[_stMD]||'#E8F0FB';
+          c.style.cssText=`width:${w};height:150px;background:${_bgMD};border:1.5px solid rgba(34,79,147,0.2);`;
+          c.dataset.pid=id;
+          c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        } else {
+          c.style.cssText=`width:${w};height:150px;background:#FF8C00;border:1.5px solid #cc6600;`;
+        }
         td.appendChild(c);tr.appendChild(td);return;
       }
       // NF cols 41-31 at R+18B — covered by R+18MD rowspan=2, skip
@@ -8289,11 +8297,17 @@ function buildComplexTable(zone){
       // NF cols 65-55,52 at R+17T and R+17B — covered by R+18B rowspan=3, skip
       // (cols 54,53 are handled separately above)
       if(zone.id==='NF' && [65,64,63,62,61,60,59,58,57,56,55,54].includes(col) && (fl==='R+17T'||fl==='R+17B')){return;}
-      // NF cols 45-31 at R+18M — orange
+      // NF cols 45-31 at R+18M — orange for 41-31, status-based for 42-45
       if(zone.id==='NF' && [45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col) && fl==='R+18M'){
         const w=col===45?'25px':'50px';
         const spacer=document.createElement('div');
-        spacer.style.cssText=`width:${w};height:50px;background:#FF8C00;`;
+        if([45,44,43,42].includes(col)){
+          const _stM=(panels[id]||{}).status||'pending';
+          const _bgM=_custStBg[_stM]||'#E8F0FB';
+          spacer.style.cssText=`width:${w};height:50px;background:${_bgM};`;
+        } else {
+          spacer.style.cssText=`width:${w};height:50px;background:#FF8C00;`;
+        }
         td.appendChild(spacer);tr.appendChild(td);return;
       }
       // NF cols 45-31 at R+18T — labelled cells (G1803, R1803, R1802, etc.), 25px, uses pType
