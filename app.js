@@ -7586,7 +7586,7 @@ function applyNFDesignOverrides(tbl){
   const r18mdRow=tbl.querySelector('tr.tr-r18md');
   const r18bRow=tbl.querySelector('tr.tr-r18b');
   if(r18tRow){
-    [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
+    [42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       const td=r18tRow.querySelector('td[data-col="'+col+'"]');
       if(!td)return;
       // Capture wfc reference and its onclick BEFORE any DOM changes
@@ -7596,7 +7596,7 @@ function applyNFDesignOverrides(tbl){
       const r18Status=(typeof panels!=='undefined'&&panels['NF-R+18T-C'+col])?panels['NF-R+18T-C'+col].status:null;
       const r18Installed=r18Status==='installed';
       // Panel labels from NF_TYPES (same approach as r19Labels)
-      const r18Labels={41:'R1841',40:'R1840',39:'R1839',38:'R1838',37:'R1837',36:'R1836',35:'R1835',34:'R1834',33:'R1833',32:'R1832',31:'C1831'};
+      const r18Labels={42:'R1842',41:'R1841',40:'R1840',39:'R1839',38:'R1838',37:'R1837',36:'R1836',35:'R1835',34:'R1834',33:'R1833',32:'R1832',31:'C1831'};
       const labelText=(r18Labels[col]||'').split('').join('\n');
       // Expand td to span all 4 sub-rows
       td.setAttribute('rowspan','4');
