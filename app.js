@@ -8179,13 +8179,19 @@ function buildComplexTable(zone){
         td.style.height=h;td.style.padding='0';
         td.appendChild(c);tr.appendChild(td);return;
       }
-      // NF cols 50,49,48,47 at R+17B — wfc cells (DB-linked), visual structure preserved
-      if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+17B'){
+      // NF cols 50,47 at R+17B — dark grey #595959 (structural, 25px wide)
+      if(zone.id==='NF' && (col===50||col===47) && fl==='R+17B'){
+        const spacer=document.createElement('div');
+        spacer.style.cssText='width:25px;height:100px;background:#595959;';
+        td.style.padding='0';td.style.verticalAlign='top';
+        td.appendChild(spacer);tr.appendChild(td);return;
+      }
+      // NF cols 49,48 at R+17B — wfc cells (DB-linked), visual structure preserved
+      if(zone.id==='NF' && [49,48].includes(col) && fl==='R+17B'){
         const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
         const c=document.createElement('div');
         c.className=`wfc ef-r17b ${meta.cls}`;
-        const w=(col===50||col===47)?'25px':'var(--cw)';
-        c.style.cssText=`width:${w};height:100px;min-height:100px;overflow:hidden;display:flex;align-items:center;justify-content:center;`;
+        c.style.cssText='width:var(--cw);height:100px;min-height:100px;overflow:hidden;display:flex;align-items:center;justify-content:center;';
         c.dataset.pid=id;
         c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.style.height='100px';td.style.padding='0';
