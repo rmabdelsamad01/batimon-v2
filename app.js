@@ -7571,7 +7571,7 @@ function applyNFDesignOverrides(tbl){
           }
           div.style.cssText='width:var(--cw);height:50px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;background-color:'+r17StatusBg+';border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;'+(r17tLabels[col]?'position:relative;display:flex;align-items:center;justify-content:center;':'');
           if(r17tLabels[col]){
-            div.innerHTML='<span style="position:relative;z-index:1;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;white-space:nowrap;background:rgba(232,240,251,0.7);padding:1px 2px;">'+r17tLabels[col]+'</span>';
+            div.innerHTML='<span style="position:relative;z-index:1;font-family:var(--mono);font-size:10px;font-weight:700;color:transparent;white-space:nowrap;padding:1px 2px;">'+r17tLabels[col]+'</span>';
           }
           div.onclick=function(){
             if(r17bRow){const b=r17bRow.querySelector('td[data-col="'+col+'"] .wfc');if(b)b.click();}
