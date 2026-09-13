@@ -8216,7 +8216,8 @@ function buildComplexTable(zone){
           const _st50=(panels[id]||{}).status||'pending';
           const _bg50=_custStBg[_st50]||'#E8F0FB';
           const c=document.createElement('div');
-          c.style.cssText=`width:150px;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:${_bg50};border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;`;
+          c.style.cssText=`width:150px;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:${_bg50};border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;`;
+          c.innerHTML='<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#224F93;pointer-events:none;z-index:1;">R1750</span>';
           c.dataset.pid=id;
           c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(c);tr.appendChild(td);
