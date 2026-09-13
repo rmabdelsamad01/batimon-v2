@@ -8186,16 +8186,12 @@ function buildComplexTable(zone){
         td.style.padding='0';td.style.verticalAlign='top';
         td.appendChild(spacer);tr.appendChild(td);return;
       }
-      // NF cols 49,48 at R+17B — wfc cells (DB-linked), visual structure preserved
+      // NF cols 49,48 at R+17B — light blue #A6C9EC (structural)
       if(zone.id==='NF' && [49,48].includes(col) && fl==='R+17B'){
-        const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
-        const c=document.createElement('div');
-        c.className=`wfc ef-r17b ${meta.cls}`;
-        c.style.cssText='width:var(--cw);height:100px;min-height:100px;overflow:hidden;display:flex;align-items:center;justify-content:center;';
-        c.dataset.pid=id;
-        c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
-        td.style.height='100px';td.style.padding='0';
-        td.appendChild(c);tr.appendChild(td);return;
+        const spacer=document.createElement('div');
+        spacer.style.cssText='width:var(--cw);height:100px;background:#A6C9EC;';
+        td.style.padding='0';td.style.verticalAlign='top';
+        td.appendChild(spacer);tr.appendChild(td);return;
       }
       // NF cols 45,44,43,42,41 at R+17B — wfc cells (DB-linked), always non-colored (status shown on R+17T only)
       if(zone.id==='NF' && [45,44,43,42,41].includes(col) && fl==='R+17B'){
