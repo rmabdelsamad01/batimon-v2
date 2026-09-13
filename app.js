@@ -8212,7 +8212,7 @@ function buildComplexTable(zone){
           td.setAttribute('colspan','4');
           td.style.cssText='padding:0;width:150px;min-width:150px;max-width:none;height:50px;';
           const c=document.createElement('div');
-          c.style.cssText='width:150px;height:50px;background:#FF8C00;border:1.5px solid #cc6600;';
+          c.style.cssText='width:150px;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:#E8F0FB;border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;';
           td.appendChild(c);tr.appendChild(td);
         }
         return;
