@@ -8318,6 +8318,7 @@ function buildComplexTable(zone){
         const _st=(panels[id]||{}).status||'pending';
         const _bg=_custStBg[_st]||'#E8F0FB';
         const c=document.createElement('div');
+        c.className='wfc';
         c.style.cssText=`width:${w};height:225px;background:${_bg};border:1.5px solid rgba(34,79,147,0.2);cursor:pointer;`;
         c.dataset.pid=id;
         c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
