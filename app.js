@@ -9941,6 +9941,11 @@ function openBulkStatusModal(){
   document.getElementById('bulk-count').textContent=multiSelPanels.size+' panel'+(multiSelPanels.size>1?'s':'')+' selected';
   // Reset button states
   document.querySelectorAll('.bso').forEach(el=>el.classList.remove('bss'));
+  // UCW mode: hide bracket-only statuses, relabel installed
+  const isUCW=navMode==='ucw';
+  document.getElementById('bso-c_and_d').style.display=isUCW?'none':'flex';
+  document.getElementById('bso-bottom_bracket').style.display=isUCW?'none':'flex';
+  document.getElementById('bso-installed-label').textContent=isUCW?'Installed':'Top Bracket';
   document.getElementById('bsm').style.display='flex';
 }
 
