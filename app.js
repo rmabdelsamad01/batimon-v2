@@ -8174,26 +8174,32 @@ function buildComplexTable(zone){
         td.style.height=h;td.style.padding='0';
         td.appendChild(c);tr.appendChild(td);return;
       }
-      // NF cols 50,49,48,47 at R+17B — individual cells matching N-19-xx formats
+      // NF cols 50,49,48,47 at R+17B — wfc cells (DB-linked), visual structure preserved
       if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+17B'){
-        if(col===50||col===47){
-          // solid #595959, 25px wide, 100px tall
-          const spacer=document.createElement('div');
-          spacer.style.cssText='width:25px;height:100px;background:#595959;';
-          td.appendChild(spacer);tr.appendChild(td);return;
-        } else {
-          // cols 49,48: full #A6C9EC, 100px
-          const spacer=document.createElement('div');
-          spacer.style.cssText='width:50px;height:100px;background:#A6C9EC;';
-          td.appendChild(spacer);tr.appendChild(td);return;
-        }
+        const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const c=document.createElement('div');
+        c.className=`wfc ef-r17b ${meta.cls}`;
+        const w=(col===50||col===47)?'25px':'var(--cw)';
+        c.style.cssText=`width:${w};height:100px;min-height:100px;overflow:hidden;display:flex;align-items:center;justify-content:center;`;
+        c.dataset.pid=id;
+        c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.style.height='100px';td.style.padding='0';
+        td.appendChild(c);tr.appendChild(td);return;
       }
-      // NF cols 45,44,43,42 at R+17B — horizontal stripes, 100px
+      // NF cols 45,44,43,42,41 at R+17B — wfc cells (DB-linked), horizontal stripes preserved as overlay
       if(zone.id==='NF' && [45,44,43,42,41].includes(col) && fl==='R+17B'){
+        const meta=SM[(panels[id]||{}).status||'pending']||SM.pending;
+        const c=document.createElement('div');
+        c.className=`wfc ef-r17b ${meta.cls}`;
         const w=col===45?'25px':'var(--cw)';
-        const spacer=document.createElement('div');
-        spacer.style.cssText=`width:${w};height:100px;background-color:transparent;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);`;
-        td.appendChild(spacer);tr.appendChild(td);return;
+        c.style.cssText=`width:${w};height:100px;min-height:100px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
+        const stripes=document.createElement('div');
+        stripes.style.cssText='position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);pointer-events:none;z-index:1;';
+        c.appendChild(stripes);
+        c.dataset.pid=id;
+        c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
+        td.style.height='100px';td.style.padding='0';
+        td.appendChild(c);tr.appendChild(td);return;
       }
       // NF cols 50,49,48,47 at R+17T — merged colspan=4, orange 50px
       if(zone.id==='NF' && [50,49,48,47].includes(col) && fl==='R+17T'){
