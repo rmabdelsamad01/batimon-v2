@@ -7591,7 +7591,7 @@ function applyNFDesignOverrides(tbl){
       if(!td)return;
       // Capture wfc reference and its onclick BEFORE any DOM changes
       const wfc=td.querySelector('.wfc');
-      const statusBg=wfc?getComputedStyle(wfc).backgroundColor:'#E8F0FB';
+      const statusBg=wfc?([42,43,44,45].includes(col)?(()=>{const _s=(typeof panels!=='undefined'&&panels['NF-R+18T-C'+col])?panels['NF-R+18T-C'+col].status:'pending';return _s==='installed'?'#FF8C00':(_custStBg[_s]||'#E8F0FB');})():getComputedStyle(wfc).backgroundColor):'#E8F0FB';
       const wfcOnclick=wfc?wfc.onclick:null;
       const r18Status=(typeof panels!=='undefined'&&panels['NF-R+18T-C'+col])?panels['NF-R+18T-C'+col].status:null;
       const r18Installed=r18Status==='installed';
