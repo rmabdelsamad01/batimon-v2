@@ -8213,8 +8213,10 @@ function buildComplexTable(zone){
         if(col===50){
           td.setAttribute('colspan','4');
           td.style.cssText='padding:0;width:150px;min-width:150px;max-width:none;height:50px;';
+          const _st50=(panels[id]||{}).status||'pending';
+          const _bg50=_custStBg[_st50]||'#E8F0FB';
           const c=document.createElement('div');
-          c.style.cssText='width:150px;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:#E8F0FB;border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;';
+          c.style.cssText=`width:150px;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:${_bg50};border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;`;
           c.dataset.pid=id;
           c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(c);tr.appendChild(td);
