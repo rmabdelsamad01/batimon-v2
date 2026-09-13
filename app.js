@@ -7605,10 +7605,13 @@ function applyNFDesignOverrides(tbl){
       const vis=document.createElement('div');
       const r18BgColor=r18Installed?'#FF8C00':statusBg;
       vis.style.cssText='position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;background:'+r18BgColor+';pointer-events:none;z-index:5;';
+      const r18UseHlines=[42,43].includes(col);
       vis.innerHTML='<div style="position:absolute;top:0;left:0;right:0;height:75px;background-image:radial-gradient(circle,#FF8C00 1.2px,transparent 1.2px);background-size:5px 5px;"></div>'
         +'<div style="position:absolute;top:75px;left:0;right:0;height:2px;background:#FF8C00;z-index:3;"></div>'
-        +'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
-        +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+        +(r18UseHlines
+          ?'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;background-image:repeating-linear-gradient(0deg,#FF8C00 0px,#FF8C00 3px,transparent 3px,transparent 6px);"></div>'
+          :'<div style="position:absolute;top:77px;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>'
+          +'<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:4px 4px;"></div>')
         +(labelText?'<div style="position:absolute;top:77px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;z-index:2;"><span style="font-family:var(--mono);font-size:20px;font-weight:700;color:#224F93;white-space:pre;line-height:1.4;text-align:center;background:transparent;padding:2px 0;">'+labelText+'</span></div>':'');
       td.appendChild(vis);
       // Transparent full-height click div covering all 225px — delegates to wfc's onclick
