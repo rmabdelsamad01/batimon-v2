@@ -4216,7 +4216,7 @@ async function renderCustomMonitoring(pageId){
     }
     // Restore plan view if it was active before re-render (works across facade navigation too)
     if(typeof _pvActiveView!=='undefined'&&_pvActiveView==='plan'&&typeof pvSwitchView==='function'){
-      if(typeof _pvState!=='undefined'){_pvState.pid=pid;_pvState.facade=facade;}
+      if(typeof _pvState!=='undefined'){_pvState.pid=pid;_pvState.facade=facadeDir;_pvState.dataFacade=facade;}
       pvSwitchView('plan');
     }
   },0);
