@@ -704,14 +704,15 @@ function pvRotHandleMD(e){
 // ─────────────────────────────────────────────────────────────────────────────
 
 function _pvRefreshSVG(){
-  const {pid,facade,floor}=_pvState;
+  const {pid,facade,dataFacade,floor}=_pvState;
+  const df=dataFacade||facade;
   const shapes=(_pvLayouts[`${pid}|${facade}`]?.[floor]?.rects)||[];
   const svg=document.getElementById('pv-svg'); if(!svg) return;
   const ghost=document.getElementById('pv-ghost');
   svg.querySelectorAll('.pv-rg').forEach(g=>g.remove());
   shapes.forEach(r=>{
     const tmp=document.createElementNS('http://www.w3.org/2000/svg','svg');
-    tmp.innerHTML=(r.type==='poly')?_pvPolySVG(r,pid,facade):_pvRectSVG(r,pid,facade);
+    tmp.innerHTML=(r.type==='poly')?_pvPolySVG(r,pid,df):_pvRectSVG(r,pid,df);
     const grp=tmp.querySelector('.pv-rg');
     if(grp) svg.insertBefore(grp,ghost);
   });

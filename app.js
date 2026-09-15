@@ -3969,8 +3969,8 @@ async function custCellSavePanel(){
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-function _pvInitState(pid,facade){
-  if(typeof _pvState!=='undefined'){ _pvState.pid=pid; _pvState.facade=facade; }
+function _pvInitState(pid,facade,dataFacade){
+  if(typeof _pvState!=='undefined'){ _pvState.pid=pid; _pvState.facade=facade; _pvState.dataFacade=dataFacade||facade; }
   // Do NOT reset _pvActiveView — let the view persist across navigation
 }
 
@@ -4121,12 +4121,12 @@ async function renderCustomMonitoring(pageId){
             style="font-size:11px;color:var(--text3);cursor:pointer;padding:3px 7px;border-radius:6px;transition:background 0.15s;"
             onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">(${nick})</div>`:''}
           <div style="margin-left:auto;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden;flex-shrink:0;">
-            <button id="pv-tab-facade" onclick="_pvInitState('${pid}','${facadeDir}');pvSwitchView('facade')"
+            <button id="pv-tab-facade" onclick="_pvInitState('${pid}','${facadeDir}','${facade}');pvSwitchView('facade')"
               style="padding:5px 13px;border:none;background:#224F93;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
               Facade View
             </button>
-            <button id="pv-tab-plan" onclick="_pvInitState('${pid}','${facadeDir}');pvSwitchView('plan')"
+            <button id="pv-tab-plan" onclick="_pvInitState('${pid}','${facadeDir}','${facade}');pvSwitchView('plan')"
               style="padding:5px 13px;border:none;border-left:1px solid var(--border);background:var(--surface);color:var(--text2);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.15s;">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M3 9h6M3 15h6"/><circle cx="16" cy="12" r="3"/></svg>
               Plan View
