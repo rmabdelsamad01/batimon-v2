@@ -80,7 +80,14 @@ async function pvLoadLayout(pid, facade){
   try{
     const {data}=await sb.from('project_info').select('value')
       .eq('project',pid).eq('key',`planlayout__${facade}`).maybeSingle();
-    _pvLayouts[k]=data?JSON.parse(data.value):{};
+    if(data?.value){_pvLayouts[k]=JSON.parse(data.value);return _pvLayouts[k];}
+    const df=_pvState?.dataFacade;
+    if(df&&df!==facade){
+      const {data:d2}=await sb.from('project_info').select('value')
+        .eq('project',pid).eq('key',`planlayout__${df}`).maybeSingle();
+      if(d2?.value){_pvLayouts[k]=JSON.parse(d2.value);return _pvLayouts[k];}
+    }
+    _pvLayouts[k]={};
   }catch(e){_pvLayouts[k]={};}
   return _pvLayouts[k];
 }
@@ -103,7 +110,14 @@ async function pvLoadBg(pid,facade,floor){
   try{
     const {data}=await sb.from('project_info').select('value')
       .eq('project',pid).eq('key',`planbg__${facade}__${floor}`).maybeSingle();
-    _pvBgs[k]=data?data.value:'';
+    if(data?.value){_pvBgs[k]=data.value;return _pvBgs[k];}
+    const df=_pvState?.dataFacade;
+    if(df&&df!==facade){
+      const {data:d2}=await sb.from('project_info').select('value')
+        .eq('project',pid).eq('key',`planbg__${df}__${floor}`).maybeSingle();
+      if(d2?.value){_pvBgs[k]=d2.value;return _pvBgs[k];}
+    }
+    _pvBgs[k]='';
   }catch(e){_pvBgs[k]='';}
   return _pvBgs[k];
 }
