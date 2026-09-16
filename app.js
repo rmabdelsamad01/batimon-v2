@@ -2501,7 +2501,7 @@ async function _renderSnagSection(pid,panelId,facade){
   const types=_snagTypesCache[pid]||[];
   const sel=document.getElementById('m-snag-type-sel');
   if(sel) sel.innerHTML='<option value="">Select snag type…</option>'+
-    types.map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+    types.map(t=>{const n=_snagTypeName(t);return`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`;}).join('');
   const list=document.getElementById('m-snags-list');
   if(!list) return;
   const openHtml=open.map(s=>`
@@ -2533,20 +2533,20 @@ async function _snagAdd(){
   const facade=_snagModalMeta.facadeId||_snagFacade();
   const sel=document.getElementById('m-snag-type-sel');
   const noteEl=document.getElementById('m-snag-note');
-  const natureEl=document.getElementById('m-snag-nature');
-  const positionEl=document.getElementById('m-snag-position');
   const snagType=sel?.value;
   if(!snagType){if(sel)sel.focus();return;}
+  const typeObj=(_snagTypesCache[pid]||[]).find(t=>_snagTypeName(t)===snagType);
+  const nature=_snagTypeNature(typeObj||{});
+  const position=_snagTypePosition(typeObj||{});
   const m=_snagModalMeta;
   const encodedId=`${panelId}:::${m.fl}:::${m.col}:::${m.ref}`;
   const {data,error}=await sb.from('project_snags').insert(
-    {project:pid,panel_id:encodedId,facade,snag_type:snagType,nature:natureEl?.value||'',position:positionEl?.value||'',note:noteEl?.value||''}
+    {project:pid,panel_id:encodedId,facade,snag_type:snagType,nature,position,note:noteEl?.value||''}
   ).select().single();
-  if(!error&&data){
+  if(error){showToast('Error saving snag: '+error.message);return;}
+  if(data){
     (_snagCache[pid]=_snagCache[pid]||[]).push(data);
     if(sel) sel.value='';
-    if(natureEl) natureEl.value='';
-    if(positionEl) positionEl.value='';
     if(noteEl) noteEl.value='';
     await _renderSnagSection(pid,panelId,facade);
     _applySnagIndicators(pid,facade);
@@ -2578,14 +2578,20 @@ async function _snagManageTypes(){
   _snagTypesRender(pid);
   document.getElementById('snag-types-modal').classList.add('open');
 }
+function _snagTypeName(t){return typeof t==='string'?t:t.name||'';}
+function _snagTypeNature(t){return typeof t==='string'?'':t.nature||'';}
+function _snagTypePosition(t){return typeof t==='string'?'':t.position||'';}
 function _snagTypesRender(pid){
   const types=_snagTypesCache[pid]||[];
   const list=document.getElementById('snag-types-list');
   if(!list) return;
   list.innerHTML=types.length
     ?types.map((t,i)=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border2);">
-        <div style="flex:1;font-size:12px;font-weight:600;color:var(--text);">${t}</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border2);">
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:600;color:var(--text);">${_snagTypeName(t)}</div>
+          ${(_snagTypeNature(t)||_snagTypePosition(t))?`<div style="font-size:10px;color:var(--text3);margin-top:2px;">${[_snagTypeNature(t),_snagTypePosition(t)].filter(Boolean).join(' · ')}</div>`:''}
+        </div>
         <button onclick="_snagTypeDelete(${i})" style="padding:2px 8px;border:1px solid rgba(192,32,32,0.2);border-radius:4px;background:#fff5f5;color:#c02020;font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;">✕</button>
       </div>`).join('')
     :'<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0;">No snag types yet — add one below</div>';
@@ -2593,11 +2599,15 @@ function _snagTypesRender(pid){
 async function _snagTypeAdd(){
   const pid=window._activeProjectId;
   const inp=document.getElementById('snag-type-new-inp');
+  const natureInp=document.getElementById('snag-type-new-nature');
+  const posInp=document.getElementById('snag-type-new-position');
   const val=inp?.value.trim();
   if(!val) return;
-  (_snagTypesCache[pid]=_snagTypesCache[pid]||[]).push(val);
+  (_snagTypesCache[pid]=_snagTypesCache[pid]||[]).push({name:val,nature:natureInp?.value.trim()||'',position:posInp?.value.trim()||''});
   await _saveSnagTypes(pid);
   if(inp) inp.value='';
+  if(natureInp) natureInp.value='';
+  if(posInp) posInp.value='';
   _snagTypesRender(pid);
   _snagTypesRefreshDropdown(pid);
 }
@@ -2611,7 +2621,7 @@ async function _snagTypeDelete(idx){
 function _snagTypesRefreshDropdown(pid){
   const sel=document.getElementById('m-snag-type-sel');
   if(sel) sel.innerHTML='<option value="">Select snag type…</option>'+
-    (_snagTypesCache[pid]||[]).map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+    (_snagTypesCache[pid]||[]).map(t=>{const n=_snagTypeName(t);return`<option value="${n.replace(/"/g,'&quot;')}">${n}</option>`;}).join('');
 }
 async function _openSnagSummary(){
   const pid=window._activeProjectId;

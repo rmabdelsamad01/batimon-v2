@@ -460,10 +460,6 @@ body.mobile-section-view .dash {
         </select>
         <button onclick="_snagAdd()" style="padding:5px 10px;border:none;border-radius:var(--r);background:#c02020;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;">Add</button>
       </div>
-      <div style="display:flex;gap:5px;margin-top:5px;">
-        <input id="m-snag-nature" placeholder="Nature" style="flex:1;box-sizing:border-box;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:11px;outline:none;">
-        <input id="m-snag-position" placeholder="Position" style="flex:1;box-sizing:border-box;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:11px;outline:none;">
-      </div>
       <input id="m-snag-note" placeholder="Note (optional)" style="width:100%;box-sizing:border-box;margin-top:5px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:11px;outline:none;">
       <div style="margin-top:5px;"><span onclick="_snagManageTypes()" style="font-size:10px;color:#224F93;cursor:pointer;text-decoration:underline;">Manage snag types</span></div>
     </div>
@@ -479,10 +475,16 @@ body.mobile-section-view .dash {
   <div class="modal">
     <div class="mh"><div><div class="mt">Snag Types</div><div class="ms">Manage types for this project</div></div><button class="xb" onclick="cm('snag-types-modal')">✕</button></div>
     <div id="snag-types-list" style="max-height:280px;overflow-y:auto;margin-bottom:12px;min-height:40px;"></div>
-    <div style="display:flex;gap:7px;">
-      <input id="snag-type-new-inp" placeholder="New snag type…"
-        onkeydown="if(event.key==='Enter')_snagTypeAdd()"
-        style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+    <div style="display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border2);padding-top:10px;">
+      <input id="snag-type-new-inp" placeholder="Type name…"
+        style="padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+      <div style="display:flex;gap:5px;">
+        <input id="snag-type-new-nature" placeholder="Nature…"
+          style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+        <input id="snag-type-new-position" placeholder="Position…"
+          onkeydown="if(event.key==='Enter')_snagTypeAdd()"
+          style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+      </div>
       <button onclick="_snagTypeAdd()" class="btn btn-d" style="padding:6px 14px;font-size:12px;">Add</button>
     </div>
   </div>
