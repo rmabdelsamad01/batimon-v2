@@ -2459,6 +2459,124 @@ const _custStatuses = ['pending','c_and_d','bottom_bracket','installed','deliver
 // In-memory cache: { 'projId|facade': { '1-A': {status,notes}, ... } }
 const _custFacadeCache = {};
 
+// Snag caches
+const _snagCache={};       // {pid:[{id,project,panel_id,facade,snag_type,status,note,created_at,closed_at}]}
+const _snagTypesCache={};  // {pid:['Broken glass','Vertical fin not installed',...]}
+
+async function _loadSnags(pid){
+  const {data}=await sb.from('project_snags').select('*').eq('project',pid);
+  _snagCache[pid]=data||[];
+}
+async function _loadSnagTypes(pid){
+  if(_snagTypesCache[pid]) return;
+  const {data}=await sb.from('project_info').select('value')
+    .eq('project',pid).eq('key','snag_types').maybeSingle();
+  _snagTypesCache[pid]=data?JSON.parse(data.value):[];
+}
+async function _saveSnagTypes(pid){
+  await sb.from('project_info').upsert(
+    {project:pid,key:'snag_types',value:JSON.stringify(_snagTypesCache[pid]||[])},
+    {onConflict:'project,key'}
+  );
+}
+function _snagFacade(){
+  const p=window._currentCustomPage||'';
+  const m=p.match(/^c(\d+)-([A-Z]+)$/);
+  if(m) return parseInt(m[1])===1?m[2]:p;
+  const L={'NF':'NF','BM-NF':'NF','SF':'SF','BM-SF':'SF','EF':'EF','BM-EF':'EF','WF':'WF','BM-WF':'WF'};
+  return L[p]||p;
+}
+async function _renderSnagSection(pid,panelId,facade){
+  const sec=document.getElementById('m-snags-section');
+  if(!sec) return;
+  sec.style.display='block';
+  const snags=(_snagCache[pid]||[]).filter(s=>s.panel_id===panelId&&s.facade===facade);
+  const open=snags.filter(s=>s.status==='open');
+  const closed=snags.filter(s=>s.status!=='open');
+  const types=_snagTypesCache[pid]||[];
+  const sel=document.getElementById('m-snag-type-sel');
+  if(sel) sel.innerHTML='<option value="">Select snag type…</option>'+
+    types.map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
+  const list=document.getElementById('m-snags-list');
+  if(!list) return;
+  const openHtml=open.map(s=>`
+    <div style="display:flex;align-items:flex-start;gap:6px;padding:5px 7px;border:1px solid rgba(192,32,32,0.2);border-radius:6px;margin-bottom:4px;background:#fff5f5;">
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:700;color:#c02020;">${s.snag_type}</div>
+        ${s.note?`<div style="font-size:10px;color:#8099b0;margin-top:1px;">${s.note}</div>`:''}
+      </div>
+      <button onclick="_snagResolve('${s.id}')" style="flex-shrink:0;padding:2px 7px;border:1px solid rgba(26,148,88,0.3);border-radius:4px;background:#f0fff4;color:#1a9458;font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;">Resolve</button>
+    </div>`).join('');
+  const closedHtml=closed.length?`
+    <div style="margin-top:4px;font-size:10px;color:var(--text3);cursor:pointer;text-decoration:underline;"
+      onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+      ${closed.length} resolved snag${closed.length>1?'s':''}
+    </div>
+    <div style="display:none;margin-top:4px;">
+      ${closed.map(s=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 7px;border-radius:5px;margin-bottom:3px;background:var(--surface2);opacity:0.7;">
+        <div style="text-decoration:line-through;font-size:10px;color:var(--text3);flex:1;">${s.snag_type}</div>
+        <div style="font-size:9px;color:#1a9458;font-weight:700;">✓ Resolved</div>
+      </div>`).join('')}
+    </div>`:'';
+  list.innerHTML=openHtml+closedHtml;
+}
+async function _snagAdd(){
+  const pid=window._activeProjectId;
+  const panelId=selPanel;
+  const facade=_snagFacade();
+  const sel=document.getElementById('m-snag-type-sel');
+  const noteEl=document.getElementById('m-snag-note');
+  const snagType=sel?.value;
+  if(!snagType){if(sel)sel.focus();return;}
+  const {data,error}=await sb.from('project_snags').insert(
+    {project:pid,panel_id:panelId,facade,snag_type:snagType,note:noteEl?.value||''}
+  ).select().single();
+  if(!error&&data){
+    (_snagCache[pid]=_snagCache[pid]||[]).push(data);
+    if(sel) sel.value='';
+    if(noteEl) noteEl.value='';
+    await _renderSnagSection(pid,panelId,facade);
+    _applySnagIndicators(pid,facade);
+  }
+}
+async function _snagResolve(snagId){
+  const pid=window._activeProjectId;
+  const panelId=selPanel;
+  const facade=_snagFacade();
+  const now=new Date().toISOString();
+  await sb.from('project_snags').update({status:'closed',closed_at:now}).eq('id',snagId);
+  const s=(_snagCache[pid]||[]).find(s=>s.id===snagId);
+  if(s){s.status='closed';s.closed_at=now;}
+  await _renderSnagSection(pid,panelId,facade);
+  _applySnagIndicators(pid,facade);
+}
+async function _snagManageTypes(){
+  const pid=window._activeProjectId;
+  const types=_snagTypesCache[pid]||[];
+  const input=prompt('Snag types (one per line):',types.join('\n'));
+  if(input===null) return;
+  _snagTypesCache[pid]=input.split('\n').map(t=>t.trim()).filter(Boolean);
+  await _saveSnagTypes(pid);
+  await _renderSnagSection(pid,selPanel,_snagFacade());
+}
+function _applySnagIndicators(pid,facade){
+  const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>s.panel_id));
+  document.querySelectorAll('#cg-grid-wrap td[data-pid]').forEach(td=>{
+    const hasTri=td.querySelector('.snag-tri');
+    if(open.has(td.dataset.pid)){
+      if(!hasTri){
+        if(!td.style.position||td.style.position==='static') td.style.position='relative';
+        const tri=document.createElement('div');
+        tri.className='snag-tri';
+        tri.style.cssText='position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 8px 8px 0;border-color:transparent #e53935 transparent transparent;z-index:10;pointer-events:none;';
+        td.appendChild(tri);
+      }
+    } else if(hasTri){
+      hasTri.remove();
+    }
+  });
+}
+
 // Extra facades (X→Y→Z→AA→AB…) per project, stored in project_info key 'extra_facades'
 const _custExtraFacadesCache = {};
 const _custExtraFacadeColors = ['#a07800','#c02020','#0a7a5a','#0097a7','#e65100','#2d6a8f','#10b981','#b45309','#0369a1','#7c3aed'];
@@ -4219,6 +4337,8 @@ async function renderCustomMonitoring(pageId){
       if(typeof _pvState!=='undefined'){_pvState.pid=pid;_pvState.facade=facadeDir;_pvState.dataFacade=facade;}
       pvSwitchView('plan');
     }
+    // Apply snag triangle indicators
+    _loadSnags(pid).then(()=>_applySnagIndicators(pid,facade));
   },0);
   // Escape cancels merge/unmerge mode
   document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
@@ -10215,6 +10335,12 @@ function openComplexModal(id,fl,col,ref,type,zone){
   if((p.status||'pending')==='delivered'){_dw2.style.display='block';_dd2.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw2.style.display='none';_dd2.value='';}
   selStat=p.status||'pending';document.querySelectorAll('.so').forEach(el=>{el.classList.remove('ss');if(el.classList.contains(SMAP[selStat]))el.classList.add('ss');});
   _pmSetMode();document.getElementById('pm').classList.add('open');
+  // Load snag section
+  const _spid=window._activeProjectId;
+  const _sfacade=_snagFacade();
+  document.getElementById('m-snags-section').style.display='none';
+  document.getElementById('m-snags-list').innerHTML='';
+  Promise.all([_loadSnags(_spid),_loadSnagTypes(_spid)]).then(()=>_renderSnagSection(_spid,id,_sfacade));
 }
 function _pmSetMode(){
   const isBM=selPanel&&selPanel.startsWith('BM-');

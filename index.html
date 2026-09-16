@@ -450,6 +450,18 @@ body.mobile-section-view .dash {
       <label class="fl2">Delivery Date</label>
       <input class="fi" type="date" id="m-del-date" style="width:100%;padding:7px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
     </div>
+    <div class="fg2" id="m-snags-section" style="display:none;">
+      <label class="fl2" style="color:#c02020;">Snags</label>
+      <div id="m-snags-list" style="margin-bottom:6px;"></div>
+      <div style="display:flex;gap:5px;">
+        <select id="m-snag-type-sel" style="flex:1;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:11px;outline:none;cursor:pointer;">
+          <option value="">Select snag type…</option>
+        </select>
+        <button onclick="_snagAdd()" style="padding:5px 10px;border:none;border-radius:var(--r);background:#c02020;color:#fff;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;">Add</button>
+      </div>
+      <input id="m-snag-note" placeholder="Note (optional)" style="width:100%;box-sizing:border-box;margin-top:5px;padding:6px 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:11px;outline:none;">
+      <div style="margin-top:5px;"><span onclick="_snagManageTypes()" style="font-size:10px;color:#224F93;cursor:pointer;text-decoration:underline;">Manage snag types</span></div>
+    </div>
     <div class="mf">
       <button class="btn" style="background:transparent;color:var(--text2);border-color:var(--border2)" onclick="cm('pm')">Cancel</button>
       <button class="btn btn-d" onclick="savePanel()">Save</button>
