@@ -18690,6 +18690,9 @@ function _buildMobileShell(prof){
       <button id="mob-btn-stock" onclick="mobileSetTab('stock')" style="flex:1;padding:10px 0 8px;border:none;border-top:3px solid transparent;background:transparent;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8099b0;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Stock
       </button>
+      <button id="mob-btn-snag" onclick="mobileSetTab('snag')" style="flex:1;padding:10px 0 8px;border:none;border-top:3px solid transparent;background:transparent;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8099b0;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Snag
+      </button>
     </div>`;
 }
 
@@ -18728,12 +18731,16 @@ window.mobileSetTab=function(tab){
   window._mobFilter='all';
   const isB=tab==='brackets';
   const isS=tab==='stock';
+  const isSn=tab==='snag';
+  const isU=!isB&&!isS&&!isSn;
   document.getElementById('mob-btn-brackets').style.color=isB?'#224F93':'#8099b0';
   document.getElementById('mob-btn-brackets').style.borderTopColor=isB?'#224F93':'transparent';
-  document.getElementById('mob-btn-ucw').style.color=(!isB&&!isS)?'#224F93':'#8099b0';
-  document.getElementById('mob-btn-ucw').style.borderTopColor=(!isB&&!isS)?'#224F93':'transparent';
+  document.getElementById('mob-btn-ucw').style.color=isU?'#224F93':'#8099b0';
+  document.getElementById('mob-btn-ucw').style.borderTopColor=isU?'#224F93':'transparent';
   document.getElementById('mob-btn-stock').style.color=isS?'#224F93':'#8099b0';
   document.getElementById('mob-btn-stock').style.borderTopColor=isS?'#224F93':'transparent';
+  document.getElementById('mob-btn-snag').style.color=isSn?'#224F93':'#8099b0';
+  document.getElementById('mob-btn-snag').style.borderTopColor=isSn?'#224F93':'transparent';
   _refreshMobileContent();
   _fixMobContentHeight();
 };
@@ -18750,6 +18757,11 @@ window.mobileSetFilter=function(f){
   _renderMobileFilterBar();
   if(window._mobTab==='brackets') _renderMobileBMGrid();
   else _renderMobileUCWGrid();
+};
+
+window._mobileSnagOpenPanel=function(pid,facadeId){
+  _snagModalMeta={fl:'',col:'',ref:'',facadeId:facadeId||''};
+  openComplexModal(pid,facadeId);
 };
 
 function _refreshMobileContent(){
