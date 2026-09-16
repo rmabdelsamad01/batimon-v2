@@ -2465,7 +2465,7 @@ const _snagTypesCache={};  // {pid:['Broken glass','Vertical fin not installed',
 let _snagModalMeta={fl:'',col:'',ref:'',facadeId:''};
 function _snagParts(s){const p=(s.panel_id||'').split(':::');return{id:p[0],fl:p[1]||'',col:p[2]||'',ref:p[3]||''};}
 let _snagSumSortState={col:'fl',dir:1};
-let _snagSumFilters={facade:'',type:''};
+let _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
 
 async function _loadSnags(pid){
   const {data}=await sb.from('project_snags').select('*').eq('project',pid);
@@ -2610,6 +2610,8 @@ function _snagTypesRefreshDropdown(pid){
 async function _openSnagSummary(){
   const pid=window._activeProjectId;
   if(!pid) return;
+  _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
+  _snagSumSortState={col:'fl',dir:1};
   document.getElementById('snag-summary-modal').classList.add('open');
   document.getElementById('snag-summary-body').innerHTML='<div style="color:#8099b0;padding:28px 0;text-align:center;">Loading…</div>';
   await Promise.all([_loadSnags(pid),_loadSnagTypes(pid)]);
@@ -2659,51 +2661,55 @@ function _renderSnagSummaryBody(pid){
       </div>
       <div style="overflow-x:auto;padding:0 16px 12px;">
         <table style="width:100%;border-collapse:collapse;" id="snag-sum-table">
-          <thead>
-            <tr>
-              ${['facade','fl','col','ref','type','note'].map(c=>{
-                const labels={facade:'Facade',fl:'Floor',col:'Column',ref:'Panel Ref',type:'Type',note:'Note'};
-                const arr=_snagSumSortState.col===c?(_snagSumSortState.dir===1?' ↑':' ↓'):'';
-                return`<th onclick="_snagSumSort('${c}','${pid}')" style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:${_snagSumSortState.col===c?'#1565c0':'#b0b8c8'};padding:10px 10px 8px 0;cursor:pointer;white-space:nowrap;user-select:none;">${labels[c]}${arr}</th>`;
-              }).join('')}
-            </tr>
-            <tr style="border-bottom:1px solid #e8edf5;">
-              <td style="padding:4px 10px 6px 0;">
-                <select id="snag-sum-f-facade" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;width:100%;">
-                  <option value="">All</option>${facades.map(f=>`<option value="${f}">${{NF:'North',SF:'South',EF:'East',WF:'West'}[f]||f}</option>`).join('')}
-                </select>
-              </td>
-              <td colspan="3" style="padding:4px 10px 6px 0;"></td>
-              <td style="padding:4px 10px 6px 0;">
-                <select id="snag-sum-f-type" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;width:100%;">
-                  <option value="">All</option>${allTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
-                </select>
-              </td>
-              <td></td>
-            </tr>
-          </thead>
+          <thead><tr>
+            ${['facade','fl','col','ref','type','note'].map(c=>{
+              const labels={facade:'Facade',fl:'Floor',col:'Column',ref:'Panel Ref',type:'Type',note:'Note'};
+              const active=_snagSumFilters[c];
+              const sorted=_snagSumSortState.col===c;
+              const arrow=sorted?(_snagSumSortState.dir===1?' ↑':' ↓'):'';
+              const dot=active?`<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#1565c0;margin-left:3px;vertical-align:middle;"></span>`:'';
+              return`<th id="snag-th-${c}" onclick="_snagSumHeaderClick(event,'${c}','${pid}')" style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:${active||sorted?'#1565c0':'#b0b8c8'};padding:10px 10px 8px 0;cursor:pointer;white-space:nowrap;user-select:none;position:relative;">${labels[c]}${arrow}${dot}</th>`;
+            }).join('')}
+          </tr></thead>
           <tbody id="snag-sum-tbody"></tbody>
         </table>
       </div>
     </div>`:`<div style="text-align:center;color:#0a7a5a;font-weight:700;padding:24px 0;font-size:14px;">✓ No open snags</div>`}`;
   if(open.length) _snagSumApply(pid);
 }
-function _snagSumSort(col,pid){
-  if(_snagSumSortState.col===col)_snagSumSortState.dir*=-1;else{_snagSumSortState.col=col;_snagSumSortState.dir=1;}
+function _snagSumHeaderClick(e,col,pid){
+  e.stopPropagation();
+  document.getElementById('snag-filter-popup')?.remove();
+  const _facadeLabel={NF:'North',SF:'South',EF:'East',WF:'West'};
+  const open=(_snagCache[pid]||[]).filter(s=>s.status==='open');
+  const allRows=open.map(s=>{const p=_snagParts(s);const isOld=!(s.panel_id||'').includes(':::');return{facade:s.facade,fl:isOld?'':p.fl,col:isOld?'':p.col,ref:isOld?p.id:p.ref,type:s.snag_type,note:s.note||''};});
+  const vals=[...new Set(allRows.map(r=>r[col]).filter(v=>v&&v!=='—'))].sort((a,b)=>{const n=s=>s.replace(/(\d+)/g,m=>m.padStart(10,'0'));return n(a)<n(b)?-1:n(a)>n(b)?1:0;});
+  const th=document.getElementById('snag-th-'+col);
+  if(!th) return;
+  const rect=th.getBoundingClientRect();
+  const pop=document.createElement('div');
+  pop.id='snag-filter-popup';
+  pop.style.cssText=`position:fixed;top:${rect.bottom+2}px;left:${rect.left}px;background:#fff;border:1.5px solid #dde3ee;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.13);z-index:9999;min-width:140px;max-height:240px;overflow-y:auto;font-family:'Barlow',sans-serif;`;
+  const cur=_snagSumFilters[col];
+  const items=[{val:'',label:'All'},...vals.map(v=>({val:v,label:col==='facade'?(_facadeLabel[v]||v):v}))];
+  pop.innerHTML=items.map(({val,label})=>`<div onclick="_snagSumSetFilter('${col}','${val}','${pid}')" style="padding:8px 14px;font-size:12px;cursor:pointer;color:${val===cur?'#1565c0':'#1a2a3a'};font-weight:${val===cur?'700':'400'};background:${val===cur?'#f0f4fb':'#fff'};">${label||'(blank)'}</div>`).join('');
+  document.body.appendChild(pop);
+  setTimeout(()=>document.addEventListener('click',function h(){pop.remove();document.removeEventListener('click',h);},{once:true}),10);
+}
+function _snagSumSetFilter(col,val,pid){
+  _snagSumFilters[col]=val;
+  document.getElementById('snag-filter-popup')?.remove();
   _renderSnagSummaryBody(pid);
 }
 function _snagSumApply(pid){
   const _facadeLabel={NF:'North',SF:'South',EF:'East',WF:'West'};
-  const fFacade=(document.getElementById('snag-sum-f-facade')||{}).value||'';
-  const fType=(document.getElementById('snag-sum-f-type')||{}).value||'';
   const open=(_snagCache[pid]||[]).filter(s=>s.status==='open');
   let rows=open.map(s=>{
     const p=_snagParts(s);
     const isOld=!(s.panel_id||'').includes(':::');
     return{s,facade:s.facade,fl:isOld?'—':p.fl||'—',col:isOld?'—':p.col||'—',ref:isOld?p.id:p.ref||'—',type:s.snag_type,note:s.note||''};
   });
-  if(fFacade) rows=rows.filter(r=>r.facade===fFacade);
-  if(fType) rows=rows.filter(r=>r.type===fType);
+  Object.entries(_snagSumFilters).forEach(([k,v])=>{if(v) rows=rows.filter(r=>r[k]===v);});
   const c=_snagSumSortState.col,d=_snagSumSortState.dir;
   rows.sort((a,b)=>{
     const av=a[c]||'',bv=b[c]||'';
