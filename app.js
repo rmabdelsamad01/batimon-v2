@@ -4389,8 +4389,6 @@ async function renderCustomMonitoring(pageId){
             ${_zoomControls}
             ${_printBtn}
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
-            <button onclick="_openSnagSummary()" style="${bs}color:#1565c0;font-weight:700;" title="View snag summary for this project">⚑ Snags</button>
-            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <button onclick="custOpenDuplicateModal('${pid}','${facade}',${catNum},'${facadeDir}')" style="${bs}" title="Copy this grid layout to another category or facade">⧉ Duplicate Layout</button>
           `:`
             <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
@@ -4398,8 +4396,6 @@ async function renderCustomMonitoring(pageId){
             ${_urEnabled?`<div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div><button onclick="_cgToggleSplitView()" style="${bs}${_cgSplitView?'background:#224F93;color:#fff;':''}">${_cgSplitView?'⊞ 1 Table':'⊟ Split View'}</button>`:''}
             ${_zoomControls}
             ${_printBtn}
-            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
-            <button onclick="_openSnagSummary()" style="${bs}color:#1565c0;font-weight:700;" title="View snag summary for this project">⚑ Snags</button>
           `}
         </div>
         <div id="pv-facade-view" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
