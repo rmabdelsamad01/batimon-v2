@@ -2528,7 +2528,7 @@ async function _renderSnagSection(pid,panelId,facade){
 async function _snagAdd(){
   const pid=window._activeProjectId;
   const panelId=selPanel;
-  const facade=_snagFacade();
+  const facade=_snagModalMeta.facadeId||_snagFacade();
   const sel=document.getElementById('m-snag-type-sel');
   const noteEl=document.getElementById('m-snag-note');
   const snagType=sel?.value;
@@ -2657,7 +2657,7 @@ function _renderSnagSummaryBody(pid){
       <div style="padding:10px 16px;border-bottom:1px solid #f0f4f9;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;flex:1;">Open snags</span>
         <select id="snag-sum-f-facade" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;">
-          <option value="">All facades</option>${facades.map(f=>`<option value="${f}">${f}</option>`).join('')}
+          <option value="">All facades</option>${facades.map(f=>`<option value="${f}">${{NF:'North',SF:'South',EF:'East',WF:'West'}[f]||f}</option>`).join('')}
         </select>
         <select id="snag-sum-f-type" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;">
           <option value="">All types</option>${allTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
@@ -2683,10 +2683,15 @@ function _snagSumSort(col,pid){
   _renderSnagSummaryBody(pid);
 }
 function _snagSumApply(pid){
+  const _facadeLabel={NF:'North',SF:'South',EF:'East',WF:'West'};
   const fFacade=(document.getElementById('snag-sum-f-facade')||{}).value||'';
   const fType=(document.getElementById('snag-sum-f-type')||{}).value||'';
   const open=(_snagCache[pid]||[]).filter(s=>s.status==='open');
-  let rows=open.map(s=>{const p=_snagParts(s);return{s,facade:s.facade,fl:p.fl,col:p.col,ref:p.ref,type:s.snag_type,note:s.note||''};});
+  let rows=open.map(s=>{
+    const p=_snagParts(s);
+    const isOld=!(s.panel_id||'').includes(':::');
+    return{s,facade:s.facade,fl:isOld?'—':p.fl||'—',col:isOld?'—':p.col||'—',ref:isOld?p.id:p.ref||'—',type:s.snag_type,note:s.note||''};
+  });
   if(fFacade) rows=rows.filter(r=>r.facade===fFacade);
   if(fType) rows=rows.filter(r=>r.type===fType);
   const c=_snagSumSortState.col,d=_snagSumSortState.dir;
@@ -2698,10 +2703,10 @@ function _snagSumApply(pid){
   const tbody=document.getElementById('snag-sum-tbody');
   if(!tbody) return;
   tbody.innerHTML=rows.map(r=>`<tr style="border-top:1px solid #f0f4f9;">
-    <td style="padding:7px 10px 7px 0;font-size:12px;font-weight:700;color:#1565c0;">${r.facade}</td>
-    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.fl||'—'}</td>
-    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.col||'—'}</td>
-    <td style="padding:7px 10px;font-size:12px;font-weight:700;color:#1a2a3a;font-family:var(--mono);">${r.ref||'—'}</td>
+    <td style="padding:7px 10px 7px 0;font-size:12px;font-weight:700;color:#1565c0;">${_facadeLabel[r.facade]||r.facade||'—'}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.fl}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.col}</td>
+    <td style="padding:7px 10px;font-size:12px;font-weight:700;color:#1a2a3a;font-family:var(--mono);">${r.ref}</td>
     <td style="padding:7px 10px;font-size:12px;color:#c02020;font-weight:600;">${r.type}</td>
     <td style="padding:7px 0;font-size:12px;color:#8099b0;font-style:${r.note?'normal':'italic'}">${r.note||'—'}</td>
   </tr>`).join('')||`<tr><td colspan="6" style="padding:16px 0;text-align:center;font-size:12px;color:#8099b0;">No results match the filter</td></tr>`;
@@ -10464,7 +10469,7 @@ function _panelDisplayRef(panelId){
 function openComplexModal(id,fl,col,ref,type,zone){
   selPanel=id;
   const _flClean=fl.replace('R+18T','R+18').replace('R+18M','R+18').replace('R+18MD','R+18').replace('R+18B','R+17').replace('R+17T','R+17').replace('R+17B','R+17');
-  const _dispRef=zone.id==='EF'?efPanelRef(fl,col):zone.id==='WF'?wfPanelRef(fl,col):zone.id==='SF'?sfPanelRef(fl,col):(ref||'');
+  const _dispRef=zone.id==='EF'?efPanelRef(fl,col):zone.id==='WF'?wfPanelRef(fl,col):zone.id==='SF'?sfPanelRef(fl,col):zone.id==='NF'?nfPanelRef(fl,col):(ref||'');
   _snagModalMeta={fl:_flClean,col:String(col),ref:_dispRef,facadeId:zone.id};
   if(type&&!(panels[id]||{}).type)panels[id]={...(panels[id]||{status:'pending',notes:'',assigned:''}),type};
   const p=panels[id]||{status:'pending',notes:'',assigned:''};
