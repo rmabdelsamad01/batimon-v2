@@ -2552,12 +2552,44 @@ async function _snagResolve(snagId){
 }
 async function _snagManageTypes(){
   const pid=window._activeProjectId;
+  await _loadSnagTypes(pid);
+  _snagTypesRender(pid);
+  document.getElementById('snag-types-modal').classList.add('open');
+}
+function _snagTypesRender(pid){
   const types=_snagTypesCache[pid]||[];
-  const input=prompt('Snag types (one per line):',types.join('\n'));
-  if(input===null) return;
-  _snagTypesCache[pid]=input.split('\n').map(t=>t.trim()).filter(Boolean);
+  const list=document.getElementById('snag-types-list');
+  if(!list) return;
+  list.innerHTML=types.length
+    ?types.map((t,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border2);">
+        <div style="flex:1;font-size:12px;font-weight:600;color:var(--text);">${t}</div>
+        <button onclick="_snagTypeDelete(${i})" style="padding:2px 8px;border:1px solid rgba(192,32,32,0.2);border-radius:4px;background:#fff5f5;color:#c02020;font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;">✕</button>
+      </div>`).join('')
+    :'<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0;">No snag types yet — add one below</div>';
+}
+async function _snagTypeAdd(){
+  const pid=window._activeProjectId;
+  const inp=document.getElementById('snag-type-new-inp');
+  const val=inp?.value.trim();
+  if(!val) return;
+  (_snagTypesCache[pid]=_snagTypesCache[pid]||[]).push(val);
   await _saveSnagTypes(pid);
-  await _renderSnagSection(pid,selPanel,_snagFacade());
+  if(inp) inp.value='';
+  _snagTypesRender(pid);
+  _snagTypesRefreshDropdown(pid);
+}
+async function _snagTypeDelete(idx){
+  const pid=window._activeProjectId;
+  (_snagTypesCache[pid]=_snagTypesCache[pid]||[]).splice(idx,1);
+  await _saveSnagTypes(pid);
+  _snagTypesRender(pid);
+  _snagTypesRefreshDropdown(pid);
+}
+function _snagTypesRefreshDropdown(pid){
+  const sel=document.getElementById('m-snag-type-sel');
+  if(sel) sel.innerHTML='<option value="">Select snag type…</option>'+
+    (_snagTypesCache[pid]||[]).map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
 }
 function _applySnagIndicators(pid,facade){
   const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>s.panel_id));

@@ -469,6 +469,20 @@ body.mobile-section-view .dash {
   </div>
 </div>
 
+<!-- SNAG TYPES MODAL -->
+<div class="mbk" id="snag-types-modal">
+  <div class="modal">
+    <div class="mh"><div><div class="mt">Snag Types</div><div class="ms">Manage types for this project</div></div><button class="xb" onclick="cm('snag-types-modal')">✕</button></div>
+    <div id="snag-types-list" style="max-height:280px;overflow-y:auto;margin-bottom:12px;min-height:40px;"></div>
+    <div style="display:flex;gap:7px;">
+      <input id="snag-type-new-inp" placeholder="New snag type…"
+        onkeydown="if(event.key==='Enter')_snagTypeAdd()"
+        style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+      <button onclick="_snagTypeAdd()" class="btn btn-d" style="padding:6px 14px;font-size:12px;">Add</button>
+    </div>
+  </div>
+</div>
+
 <!-- ISSUE MODAL -->
 <div class="mbk" id="im">
   <div class="modal">
