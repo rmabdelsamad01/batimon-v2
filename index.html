@@ -479,11 +479,19 @@ body.mobile-section-view .dash {
       <input id="snag-type-new-inp" placeholder="Type name…"
         style="padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
       <div style="display:flex;gap:5px;">
-        <input id="snag-type-new-nature" placeholder="Nature…"
-          style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
-        <input id="snag-type-new-position" placeholder="Position…"
-          onkeydown="if(event.key==='Enter')_snagTypeAdd()"
-          style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;">
+        <select id="snag-type-new-nature" style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;cursor:pointer;">
+          <option value="">Nature…</option>
+          <option>Esthétique</option>
+          <option>Structurel</option>
+          <option>Finition</option>
+          <option>Autres</option>
+        </select>
+        <select id="snag-type-new-position" style="flex:1;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;cursor:pointer;">
+          <option value="">Position…</option>
+          <option>Extérieur</option>
+          <option>Intérieur</option>
+          <option>Autres</option>
+        </select>
       </div>
       <button onclick="_snagTypeAdd()" class="btn btn-d" style="padding:6px 14px;font-size:12px;">Add</button>
     </div>
