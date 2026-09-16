@@ -10761,7 +10761,7 @@ async function saveIssue(){
   else{const z=ZONES.find(z=>z.id===curPage);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
   toast('Issue logged');
 }
-function cm(id){document.getElementById(id).classList.remove('open');if(id==='pm')selPanel=null;}
+function cm(id){const el=document.getElementById(id);el.classList.remove('open');if(id==='pm'){selPanel=null;el.style.zIndex='';}}
 function updateTabs(){ZONES.forEach(z=>{const c=zC(z.id);const pct=c.total?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/c.total*100):0;const el=document.getElementById('tp-'+z.id);if(el)el.textContent=pct+'%';});}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
@@ -19209,6 +19209,9 @@ function _attachMobilePinchZoom(container){
         const panelCell=e.target&&e.target.closest('[data-pid]');
         if(panelCell&&typeof panelCell.onclick==='function'){
           panelCell.onclick(e);
+          // Raise modal above mobile screen (z-index 9997)
+          const pm=document.getElementById('pm');
+          if(pm) pm.style.zIndex='9998';
         } else {
           scale=initialScale; tx=0; ty=0; clamp(); apply();
         }
