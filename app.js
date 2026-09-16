@@ -18769,11 +18769,25 @@ function _refreshMobileContent(){
   if(mc){mc.style.overflow='';mc.style.overflowX='';mc.style.overflowY='scroll';mc.style.touchAction='pan-y';mc.style.webkitOverflowScrolling='touch';mc.style.display='';mc.style.position='';mc.style.flexDirection='';}
   _renderMobileFacadeBar();
   const isOverview=window._mobFacade==='overview';
-  if(filterBar) filterBar.style.display=isOverview?'none':'';
+  const isSnags=window._mobFacade==='snags';
+  if(filterBar) filterBar.style.display=(isOverview||isSnags)?'none':'';
   if(isOverview){_renderMobileOverview();return;}
+  if(isSnags){_renderMobileSnagSummary();return;}
   _renderMobileFilterBar();
   if(window._mobTab==='brackets') _renderMobileBMGrid();
   else _renderMobileUCWGrid();
+}
+
+async function _renderMobileSnagSummary(){
+  const pid=window._activeProjectId||'shift-tower';
+  const cont=document.getElementById('mob-content');
+  if(!cont) return;
+  _snagSumFilters={facade:'',fl:'',col:'',ref:'',nature:'',position:'',type:'',note:''};
+  _snagSumSortState={col:'fl',dir:1};
+  _snagSumView='open';
+  cont.innerHTML='<div id="snag-summary-body" style="padding:16px;font-family:\'Barlow\',sans-serif;"><div style="color:#8099b0;padding:28px 0;text-align:center;">Loading…</div></div>';
+  await Promise.all([_loadSnags(pid),_loadSnagTypes(pid)]);
+  _renderSnagSummaryBody(pid);
 }
 
 async function _renderMobileStock(){
@@ -19017,7 +19031,8 @@ function _renderMobileFacadeBar(){
     {id:'overview',label:'Overview',color:'#224F93'},
     ...(isB
       ?[{id:'BM-NF',label:'North',color:'#2d65bd'},{id:'BM-SF',label:'South',color:'#1a9458'},{id:'BM-EF',label:'East',color:'#a07800'},{id:'BM-WF',label:'West',color:'#6d35d9'}]
-      :[{id:'NF',label:'North',color:'#2d65bd'},{id:'SF',label:'South',color:'#1a9458'},{id:'EF',label:'East',color:'#a07800'},{id:'WF',label:'West',color:'#6d35d9'}])
+      :[{id:'NF',label:'North',color:'#2d65bd'},{id:'SF',label:'South',color:'#1a9458'},{id:'EF',label:'East',color:'#a07800'},{id:'WF',label:'West',color:'#6d35d9'}]),
+    ...(!isB?[{id:'snags',label:'Snags',color:'#c02020'}]:[])
   ];
   bar.innerHTML=`<div style="display:flex;padding:0 8px;">`+facades.map(f=>{
     const active=window._mobFacade===f.id;
