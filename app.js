@@ -18907,8 +18907,7 @@ window._mobVerifyStock=function(){
 function _renderMobileOverview(){
   const cont=document.getElementById('mob-content');
   if(!cont) return;
-  // Grid renderers set overflow:hidden + touchAction:none for pinch-zoom.
-  // Reset them so normal finger-scroll works in the overview.
+  if(cont._pinchAbort){cont._pinchAbort.abort();cont._pinchAbort=null;}
   cont.style.overflow='';
   cont.style.overflowY='scroll';
   cont.style.touchAction='pan-y';
