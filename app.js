@@ -10219,12 +10219,12 @@ function buildComplexTable(zone){
 
 function _applyPendingClasses(tbl){
   if(!tbl) return;
+  const _allSt=Object.values(SM).map(v=>v.cls).concat(['st-pre-i','st-pre-d']);
   tbl.querySelectorAll('[data-pid]').forEach(cell=>{
     const p=panels[cell.dataset.pid]||{};
     if(!p.pending_status) return;
-    const realCls=(SM[p.pending_status]||SM.pending).cls;
     const preCls=p.pending_status==='installed'?'st-pre-i':'st-pre-d';
-    cell.classList.remove(realCls);
+    cell.classList.remove(..._allSt);
     cell.classList.add(preCls);
   });
 }
@@ -10570,7 +10570,7 @@ function openComplexModal(id,fl,col,ref,type,zone){
   // Pending approval banner
   const _pendingBanner=document.getElementById('pm-pending-banner');
   if(_pendingBanner){
-    if(p.pending_status){
+    if(p.pending_status && !window._mobPanelMode){
       const _pLabel=p.pending_status==='installed'?'Pre-installed':'Pre-delivered';
       const _pCls=p.pending_status==='installed'?'st-pre-i':'st-pre-d';
       _pendingBanner.style.display='flex';
