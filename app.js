@@ -2604,18 +2604,8 @@ function _snagTypesRefreshDropdown(pid){
 function _applySnagIndicators(pid,facade){
   const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>s.panel_id));
   document.querySelectorAll('td[data-pid]').forEach(td=>{
-    const hasTri=td.querySelector('.snag-tri');
-    if(open.has(td.dataset.pid)){
-      if(!hasTri){
-        if(!td.style.position||td.style.position==='static') td.style.position='relative';
-        const tri=document.createElement('div');
-        tri.className='snag-tri';
-        tri.style.cssText='position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 8px 8px 0;border-color:transparent #e53935 transparent transparent;z-index:10;pointer-events:none;';
-        td.appendChild(tri);
-      }
-    } else if(hasTri){
-      hasTri.remove();
-    }
+    if(open.has(td.dataset.pid)) td.classList.add('snag-ind');
+    else td.classList.remove('snag-ind');
   });
 }
 
