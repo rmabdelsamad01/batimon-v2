@@ -2601,6 +2601,80 @@ function _snagTypesRefreshDropdown(pid){
   if(sel) sel.innerHTML='<option value="">Select snag type…</option>'+
     (_snagTypesCache[pid]||[]).map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
 }
+async function _openSnagSummary(){
+  const pid=window._activeProjectId;
+  if(!pid) return;
+  document.getElementById('snag-summary-modal').classList.add('open');
+  document.getElementById('snag-summary-body').innerHTML='<div style="color:#8099b0;padding:28px 0;text-align:center;">Loading…</div>';
+  await Promise.all([_loadSnags(pid),_loadSnagTypes(pid)]);
+  _renderSnagSummaryBody(pid);
+}
+function _renderSnagSummaryBody(pid){
+  const snags=_snagCache[pid]||[];
+  const types=_snagTypesCache[pid]||[];
+  const open=snags.filter(s=>s.status==='open');
+  const closed=snags.filter(s=>s.status!=='open');
+  const openPanels=new Set(open.map(s=>`${s.facade}|${s.panel_id}`));
+  // By type
+  const byType={};
+  types.forEach(t=>{byType[t]={open:0,closed:0};});
+  snags.forEach(s=>{
+    if(!byType[s.snag_type])byType[s.snag_type]={open:0,closed:0};
+    if(s.status==='open')byType[s.snag_type].open++;else byType[s.snag_type].closed++;
+  });
+  // By facade
+  const byFacade={};
+  open.forEach(s=>{byFacade[s.facade]=(byFacade[s.facade]||0)+1;});
+  const maxF=Math.max(1,...Object.values(byFacade));
+  const bs2='font-size:11px;color:#1a2a3a;';
+  const kpi=(n,lbl,col)=>`<div style="flex:1;min-width:110px;background:#f0f4f9;border-radius:10px;padding:14px 16px;text-align:center;">
+    <span style="font-size:30px;font-weight:800;color:${col||'#1a2a3a'};display:block;">${n}</span>
+    <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;display:block;margin-top:3px;">${lbl}</span>
+  </div>`;
+  const th=t=>`<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#b0b8c8;padding-bottom:8px;padding-right:12px;">${t}</th>`;
+  const typeRows=Object.entries(byType).map(([t,v])=>{
+    const tot=v.open+v.closed;
+    const pct=tot?Math.round(v.closed/tot*100):0;
+    return`<tr style="border-top:1px solid #f0f4f9;">
+      <td style="padding:8px 12px 8px 0;font-size:13px;color:#1a2a3a;">${t}</td>
+      <td style="padding:8px 12px;text-align:center;font-size:14px;font-weight:800;color:${v.open>0?'#c02020':'#0a7a5a'};">${v.open}</td>
+      <td style="padding:8px 12px;text-align:center;font-size:13px;color:#8099b0;">${v.closed}</td>
+      <td style="padding:8px 0;width:90px;"><div style="background:#e0e8f5;border-radius:4px;height:6px;"><div style="background:#4caf50;border-radius:4px;height:6px;width:${pct}%;transition:width 0.4s;"></div></div></td>
+    </tr>`;
+  }).join('');
+  const facadeBars=Object.entries(byFacade).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+      <span style="font-size:12px;font-weight:700;min-width:58px;color:#1a2a3a;">${f}</span>
+      <div style="flex:1;background:#e0e8f5;border-radius:4px;height:10px;"><div style="background:#1565c0;border-radius:4px;height:10px;width:${Math.round(n/maxF*100)}%;"></div></div>
+      <span style="font-size:12px;font-weight:800;color:#1565c0;min-width:18px;text-align:right;">${n}</span>
+    </div>`).join('');
+  const openList=open.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const listRows=openList.map(s=>`<tr style="border-top:1px solid #f0f4f9;">
+    <td style="padding:7px 10px 7px 0;font-size:11px;color:#8099b0;">${s.facade}</td>
+    <td style="padding:7px 10px;font-size:13px;font-weight:700;color:#1a2a3a;font-family:var(--mono);">${s.panel_id}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${s.snag_type}</td>
+    <td style="padding:7px 0;font-size:12px;color:#8099b0;font-style:${s.note?'normal':'italic'}">${s.note||'—'}</td>
+  </tr>`).join('');
+  const sep='<div style="width:1px;background:#f0f4f9;flex-shrink:0;"></div>';
+  document.getElementById('snag-summary-body').innerHTML=`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">${kpi(open.length,'Open','#c02020')}${kpi(closed.length,'Resolved','#0a7a5a')}${kpi(openPanels.size,'Panels affected','#1565c0')}</div>
+    ${types.length?`<div style="display:flex;gap:0;flex-wrap:wrap;border:1px solid #e8edf5;border-radius:10px;overflow:hidden;margin-bottom:20px;">
+      <div style="flex:1;min-width:220px;padding:16px 18px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;margin-bottom:12px;">By type</div>
+        <table style="width:100%;border-collapse:collapse;"><thead><tr>${th('Type')}${th('Open')}${th('Done')}<th></th></tr></thead><tbody>${typeRows}</tbody></table>
+      </div>
+      ${Object.keys(byFacade).length?`${sep}<div style="flex:1;min-width:200px;padding:16px 18px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;margin-bottom:12px;">Open by facade</div>
+        ${facadeBars}
+      </div>`:''}
+    </div>`:''}
+    ${openList.length?`<div style="border:1px solid #e8edf5;border-radius:10px;overflow:hidden;">
+      <div style="padding:12px 18px;border-bottom:1px solid #f0f4f9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;">Open snags — ${openList.length}</div>
+      <div style="overflow-x:auto;padding:4px 18px 12px;">
+        <table style="width:100%;border-collapse:collapse;"><thead><tr>${th('Facade')}${th('Panel')}${th('Type')}${th('Note')}</tr></thead><tbody>${listRows}</tbody></table>
+      </div>
+    </div>`:`<div style="text-align:center;color:#0a7a5a;font-weight:700;padding:24px 0;font-size:14px;">✓ No open snags</div>`}`;
+}
 
 
 function _applySnagIndicators(pid,facade){
@@ -4315,6 +4389,8 @@ async function renderCustomMonitoring(pageId){
             ${_zoomControls}
             ${_printBtn}
             <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
+            <button onclick="_openSnagSummary()" style="${bs}color:#1565c0;font-weight:700;" title="View snag summary for this project">⚑ Snags</button>
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
             <button onclick="custOpenDuplicateModal('${pid}','${facade}',${catNum},'${facadeDir}')" style="${bs}" title="Copy this grid layout to another category or facade">⧉ Duplicate Layout</button>
           `:`
             <span style="font-size:10px;font-weight:600;color:var(--text3);">Filter:</span>
@@ -4322,6 +4398,8 @@ async function renderCustomMonitoring(pageId){
             ${_urEnabled?`<div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div><button onclick="_cgToggleSplitView()" style="${bs}${_cgSplitView?'background:#224F93;color:#fff;':''}">${_cgSplitView?'⊞ 1 Table':'⊟ Split View'}</button>`:''}
             ${_zoomControls}
             ${_printBtn}
+            <div style="width:1px;height:18px;background:rgba(34,79,147,0.12);margin:0 2px;flex-shrink:0;"></div>
+            <button onclick="_openSnagSummary()" style="${bs}color:#1565c0;font-weight:700;" title="View snag summary for this project">⚑ Snags</button>
           `}
         </div>
         <div id="pv-facade-view" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
