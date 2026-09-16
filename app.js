@@ -18782,6 +18782,8 @@ async function _renderMobileSnagSummary(){
   const pid=window._activeProjectId||'shift-tower';
   const cont=document.getElementById('mob-content');
   if(!cont) return;
+  // Kill any pinch-zoom listeners left over from the UCW grid
+  if(cont._pinchAbort){cont._pinchAbort.abort();cont._pinchAbort=null;}
   _snagSumFilters={facade:'',fl:'',col:'',ref:'',nature:'',position:'',type:'',note:''};
   _snagSumSortState={col:'fl',dir:1};
   _snagSumView='open';
