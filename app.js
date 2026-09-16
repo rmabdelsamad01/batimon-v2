@@ -10533,7 +10533,7 @@ function openComplexModal(id,fl,col,ref,type,zone){
   _pmSetMode();document.getElementById('pm').classList.add('open');
   // Load snag section
   const _spid=window._activeProjectId;
-  const _sfacade=_snagFacade();
+  const _sfacade=_snagModalMeta.facadeId||_snagFacade();
   document.getElementById('m-snags-section').style.display='none';
   document.getElementById('m-snags-list').innerHTML='';
   Promise.all([_loadSnags(_spid),_loadSnagTypes(_spid)]).then(()=>_renderSnagSection(_spid,id,_sfacade));
