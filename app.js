@@ -2466,6 +2466,7 @@ let _snagModalMeta={fl:'',col:'',ref:'',facadeId:''};
 function _snagParts(s){const p=(s.panel_id||'').split(':::');return{id:p[0],fl:p[1]||'',col:p[2]||'',ref:p[3]||''};}
 let _snagSumSortState={col:'fl',dir:1};
 let _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
+let _snagSumView='open';
 
 async function _loadSnags(pid){
   const {data}=await sb.from('project_snags').select('*').eq('project',pid);
@@ -2612,6 +2613,7 @@ async function _openSnagSummary(){
   if(!pid) return;
   _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
   _snagSumSortState={col:'fl',dir:1};
+  _snagSumView='open';
   document.getElementById('snag-summary-modal').classList.add('open');
   document.getElementById('snag-summary-body').innerHTML='<div style="color:#8099b0;padding:28px 0;text-align:center;">Loading…</div>';
   await Promise.all([_loadSnags(pid),_loadSnagTypes(pid)]);
@@ -2655,9 +2657,10 @@ function _renderSnagSummaryBody(pid){
         <table style="width:100%;border-collapse:collapse;"><thead><tr>${th('Type')}${th('Open')}${th('Done')}<th></th></tr></thead><tbody>${typeRows}</tbody></table>
       </div>
     </div>`:''}
-    ${open.length?`<div style="border:1px solid #e8edf5;border-radius:10px;overflow:hidden;">
-      <div style="padding:10px 16px;border-bottom:1px solid #f0f4f9;">
-        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;">Open snags</span>
+    ${(open.length||closed.length)?`<div style="border:1px solid #e8edf5;border-radius:10px;overflow:hidden;">
+      <div style="padding:10px 16px;border-bottom:1px solid #f0f4f9;display:flex;gap:0;">
+        <span onclick="_snagSumToggleView('open','${pid}')" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;cursor:pointer;padding:4px 12px 4px 0;border-bottom:2px solid ${_snagSumView==='open'?'#c02020':'transparent'};color:${_snagSumView==='open'?'#c02020':'#b0b8c8'};">Open (${open.length})</span>
+        <span onclick="_snagSumToggleView('closed','${pid}')" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;cursor:pointer;padding:4px 12px 4px 0;border-bottom:2px solid ${_snagSumView==='closed'?'#0a7a5a':'transparent'};color:${_snagSumView==='closed'?'#0a7a5a':'#b0b8c8'};">Closed (${closed.length})</span>
       </div>
       <div style="overflow-x:auto;padding:0 16px 12px;">
         <table style="width:100%;border-collapse:collapse;" id="snag-sum-table">
@@ -2674,15 +2677,20 @@ function _renderSnagSummaryBody(pid){
           <tbody id="snag-sum-tbody"></tbody>
         </table>
       </div>
-    </div>`:`<div style="text-align:center;color:#0a7a5a;font-weight:700;padding:24px 0;font-size:14px;">✓ No open snags</div>`}`;
-  if(open.length) _snagSumApply(pid);
+    </div>`:`<div style="text-align:center;color:#0a7a5a;font-weight:700;padding:24px 0;font-size:14px;">✓ No snags recorded</div>`}`;
+  if(open.length||closed.length) _snagSumApply(pid);
+}
+function _snagSumToggleView(view,pid){
+  _snagSumView=view;
+  _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
+  _renderSnagSummaryBody(pid);
 }
 function _snagSumHeaderClick(e,col,pid){
   e.stopPropagation();
   document.getElementById('snag-filter-popup')?.remove();
   const _facadeLabel={NF:'North',SF:'South',EF:'East',WF:'West'};
-  const open=(_snagCache[pid]||[]).filter(s=>s.status==='open');
-  const allRows=open.map(s=>{const p=_snagParts(s);const isOld=!(s.panel_id||'').includes(':::');return{facade:s.facade,fl:isOld?'':p.fl,col:isOld?'':p.col,ref:isOld?p.id:p.ref,type:s.snag_type,note:s.note||''};});
+  const viewSnags=(_snagCache[pid]||[]).filter(s=>_snagSumView==='open'?s.status==='open':s.status!=='open');
+  const allRows=viewSnags.map(s=>{const p=_snagParts(s);const isOld=!(s.panel_id||'').includes(':::');return{facade:s.facade,fl:isOld?'':p.fl,col:isOld?'':p.col,ref:isOld?p.id:p.ref,type:s.snag_type,note:s.note||''};});
   const vals=[...new Set(allRows.map(r=>r[col]).filter(v=>v&&v!=='—'))].sort((a,b)=>{const n=s=>s.replace(/(\d+)/g,m=>m.padStart(10,'0'));return n(a)<n(b)?-1:n(a)>n(b)?1:0;});
   const th=document.getElementById('snag-th-'+col);
   if(!th) return;
@@ -2703,8 +2711,8 @@ function _snagSumSetFilter(col,val,pid){
 }
 function _snagSumApply(pid){
   const _facadeLabel={NF:'North',SF:'South',EF:'East',WF:'West'};
-  const open=(_snagCache[pid]||[]).filter(s=>s.status==='open');
-  let rows=open.map(s=>{
+  const viewSnags=(_snagCache[pid]||[]).filter(s=>_snagSumView==='open'?s.status==='open':s.status!=='open');
+  let rows=viewSnags.map(s=>{
     const p=_snagParts(s);
     const isOld=!(s.panel_id||'').includes(':::');
     return{s,facade:s.facade,fl:isOld?'—':p.fl||'—',col:isOld?'—':p.col||'—',ref:isOld?p.id:p.ref||'—',type:s.snag_type,note:s.note||''};
