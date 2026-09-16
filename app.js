@@ -2462,6 +2462,10 @@ const _custFacadeCache = {};
 // Snag caches
 const _snagCache={};       // {pid:[{id,project,panel_id,facade,snag_type,status,note,created_at,closed_at}]}
 const _snagTypesCache={};  // {pid:['Broken glass','Vertical fin not installed',...]}
+let _snagModalMeta={fl:'',col:'',ref:'',facadeId:''};
+function _snagParts(s){const p=(s.panel_id||'').split(':::');return{id:p[0],fl:p[1]||'',col:p[2]||'',ref:p[3]||''};}
+let _snagSumSortState={col:'fl',dir:1};
+let _snagSumFilters={facade:'',type:''};
 
 async function _loadSnags(pid){
   const {data}=await sb.from('project_snags').select('*').eq('project',pid);
@@ -2490,7 +2494,7 @@ async function _renderSnagSection(pid,panelId,facade){
   const sec=document.getElementById('m-snags-section');
   if(!sec) return;
   sec.style.display='block';
-  const snags=(_snagCache[pid]||[]).filter(s=>s.panel_id===panelId&&s.facade===facade);
+  const snags=(_snagCache[pid]||[]).filter(s=>_snagParts(s).id===panelId&&s.facade===facade);
   const open=snags.filter(s=>s.status==='open');
   const closed=snags.filter(s=>s.status!=='open');
   const types=_snagTypesCache[pid]||[];
@@ -2529,8 +2533,10 @@ async function _snagAdd(){
   const noteEl=document.getElementById('m-snag-note');
   const snagType=sel?.value;
   if(!snagType){if(sel)sel.focus();return;}
+  const m=_snagModalMeta;
+  const encodedId=`${panelId}:::${m.fl}:::${m.col}:::${m.ref}`;
   const {data,error}=await sb.from('project_snags').insert(
-    {project:pid,panel_id:panelId,facade,snag_type:snagType,note:noteEl?.value||''}
+    {project:pid,panel_id:encodedId,facade,snag_type:snagType,note:noteEl?.value||''}
   ).select().single();
   if(!error&&data){
     (_snagCache[pid]=_snagCache[pid]||[]).push(data);
@@ -2614,7 +2620,7 @@ function _renderSnagSummaryBody(pid){
   const types=_snagTypesCache[pid]||[];
   const open=snags.filter(s=>s.status==='open');
   const closed=snags.filter(s=>s.status!=='open');
-  const openPanels=new Set(open.map(s=>`${s.facade}|${s.panel_id}`));
+  const openPanels=new Set(open.map(s=>`${s.facade}|${_snagParts(s).id}`));
   // By type
   const byType={};
   types.forEach(t=>{byType[t]={open:0,closed:0};});
@@ -2626,20 +2632,18 @@ function _renderSnagSummaryBody(pid){
   const byFacade={};
   open.forEach(s=>{byFacade[s.facade]=(byFacade[s.facade]||0)+1;});
   const maxF=Math.max(1,...Object.values(byFacade));
-  const bs2='font-size:11px;color:#1a2a3a;';
   const kpi=(n,lbl,col)=>`<div style="flex:1;min-width:110px;background:#f0f4f9;border-radius:10px;padding:14px 16px;text-align:center;">
     <span style="font-size:30px;font-weight:800;color:${col||'#1a2a3a'};display:block;">${n}</span>
     <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;display:block;margin-top:3px;">${lbl}</span>
   </div>`;
   const th=t=>`<th style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#b0b8c8;padding-bottom:8px;padding-right:12px;">${t}</th>`;
   const typeRows=Object.entries(byType).map(([t,v])=>{
-    const tot=v.open+v.closed;
-    const pct=tot?Math.round(v.closed/tot*100):0;
+    const tot=v.open+v.closed;const pct=tot?Math.round(v.closed/tot*100):0;
     return`<tr style="border-top:1px solid #f0f4f9;">
       <td style="padding:8px 12px 8px 0;font-size:13px;color:#1a2a3a;">${t}</td>
       <td style="padding:8px 12px;text-align:center;font-size:14px;font-weight:800;color:${v.open>0?'#c02020':'#0a7a5a'};">${v.open}</td>
       <td style="padding:8px 12px;text-align:center;font-size:13px;color:#8099b0;">${v.closed}</td>
-      <td style="padding:8px 0;width:90px;"><div style="background:#e0e8f5;border-radius:4px;height:6px;"><div style="background:#4caf50;border-radius:4px;height:6px;width:${pct}%;transition:width 0.4s;"></div></div></td>
+      <td style="padding:8px 0;width:90px;"><div style="background:#e0e8f5;border-radius:4px;height:6px;"><div style="background:#4caf50;border-radius:4px;height:6px;width:${pct}%;"></div></div></td>
     </tr>`;
   }).join('');
   const facadeBars=Object.entries(byFacade).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`
@@ -2648,14 +2652,10 @@ function _renderSnagSummaryBody(pid){
       <div style="flex:1;background:#e0e8f5;border-radius:4px;height:10px;"><div style="background:#1565c0;border-radius:4px;height:10px;width:${Math.round(n/maxF*100)}%;"></div></div>
       <span style="font-size:12px;font-weight:800;color:#1565c0;min-width:18px;text-align:right;">${n}</span>
     </div>`).join('');
-  const openList=open.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-  const listRows=openList.map(s=>`<tr style="border-top:1px solid #f0f4f9;">
-    <td style="padding:7px 10px 7px 0;font-size:11px;color:#8099b0;">${s.facade}</td>
-    <td style="padding:7px 10px;font-size:13px;font-weight:700;color:#1a2a3a;font-family:var(--mono);">${s.panel_id}</td>
-    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${s.snag_type}</td>
-    <td style="padding:7px 0;font-size:12px;color:#8099b0;font-style:${s.note?'normal':'italic'}">${s.note||'—'}</td>
-  </tr>`).join('');
   const sep='<div style="width:1px;background:#f0f4f9;flex-shrink:0;"></div>';
+  // Unique facades and types for filters
+  const facades=[...new Set(open.map(s=>s.facade))].sort();
+  const allTypes=[...new Set(open.map(s=>s.snag_type))].sort();
   document.getElementById('snag-summary-body').innerHTML=`
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">${kpi(open.length,'Open','#c02020')}${kpi(closed.length,'Resolved','#0a7a5a')}${kpi(openPanels.size,'Panels affected','#1565c0')}</div>
     ${types.length?`<div style="display:flex;gap:0;flex-wrap:wrap;border:1px solid #e8edf5;border-radius:10px;overflow:hidden;margin-bottom:20px;">
@@ -2668,17 +2668,63 @@ function _renderSnagSummaryBody(pid){
         ${facadeBars}
       </div>`:''}
     </div>`:''}
-    ${openList.length?`<div style="border:1px solid #e8edf5;border-radius:10px;overflow:hidden;">
-      <div style="padding:12px 18px;border-bottom:1px solid #f0f4f9;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;">Open snags — ${openList.length}</div>
-      <div style="overflow-x:auto;padding:4px 18px 12px;">
-        <table style="width:100%;border-collapse:collapse;"><thead><tr>${th('Facade')}${th('Panel')}${th('Type')}${th('Note')}</tr></thead><tbody>${listRows}</tbody></table>
+    ${open.length?`<div style="border:1px solid #e8edf5;border-radius:10px;overflow:hidden;">
+      <div style="padding:10px 16px;border-bottom:1px solid #f0f4f9;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;flex:1;">Open snags</span>
+        <select id="snag-sum-f-facade" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;">
+          <option value="">All facades</option>${facades.map(f=>`<option value="${f}">${f}</option>`).join('')}
+        </select>
+        <select id="snag-sum-f-type" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;">
+          <option value="">All types</option>${allTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
+        </select>
+      </div>
+      <div style="overflow-x:auto;padding:0 16px 12px;">
+        <table style="width:100%;border-collapse:collapse;" id="snag-sum-table">
+          <thead><tr>
+            ${['facade','fl','col','ref','type','note'].map(c=>{
+              const labels={facade:'Facade',fl:'Floor',col:'Column',ref:'Panel Ref',type:'Type',note:'Note'};
+              const arr=_snagSumSortState.col===c?(_snagSumSortState.dir===1?' ↑':' ↓'):'';
+              return`<th onclick="_snagSumSort('${c}','${pid}')" style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:${_snagSumSortState.col===c?'#1565c0':'#b0b8c8'};padding:10px 10px 8px 0;cursor:pointer;white-space:nowrap;user-select:none;">${labels[c]}${arr}</th>`;
+            }).join('')}
+          </tr></thead>
+          <tbody id="snag-sum-tbody"></tbody>
+        </table>
       </div>
     </div>`:`<div style="text-align:center;color:#0a7a5a;font-weight:700;padding:24px 0;font-size:14px;">✓ No open snags</div>`}`;
+  if(open.length) _snagSumApply(pid);
+}
+function _snagSumSort(col,pid){
+  if(_snagSumSortState.col===col)_snagSumSortState.dir*=-1;else{_snagSumSortState.col=col;_snagSumSortState.dir=1;}
+  _renderSnagSummaryBody(pid);
+}
+function _snagSumApply(pid){
+  const fFacade=(document.getElementById('snag-sum-f-facade')||{}).value||'';
+  const fType=(document.getElementById('snag-sum-f-type')||{}).value||'';
+  const open=(_snagCache[pid]||[]).filter(s=>s.status==='open');
+  let rows=open.map(s=>{const p=_snagParts(s);return{s,facade:s.facade,fl:p.fl,col:p.col,ref:p.ref,type:s.snag_type,note:s.note||''};});
+  if(fFacade) rows=rows.filter(r=>r.facade===fFacade);
+  if(fType) rows=rows.filter(r=>r.type===fType);
+  const c=_snagSumSortState.col,d=_snagSumSortState.dir;
+  rows.sort((a,b)=>{
+    const av=a[c]||'',bv=b[c]||'';
+    const n=(s)=>s.replace(/(\d+)/g,m=>m.padStart(10,'0'));
+    return d*(n(av)<n(bv)?-1:n(av)>n(bv)?1:0);
+  });
+  const tbody=document.getElementById('snag-sum-tbody');
+  if(!tbody) return;
+  tbody.innerHTML=rows.map(r=>`<tr style="border-top:1px solid #f0f4f9;">
+    <td style="padding:7px 10px 7px 0;font-size:12px;font-weight:700;color:#1565c0;">${r.facade}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.fl||'—'}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.col||'—'}</td>
+    <td style="padding:7px 10px;font-size:12px;font-weight:700;color:#1a2a3a;font-family:var(--mono);">${r.ref||'—'}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#c02020;font-weight:600;">${r.type}</td>
+    <td style="padding:7px 0;font-size:12px;color:#8099b0;font-style:${r.note?'normal':'italic'}">${r.note||'—'}</td>
+  </tr>`).join('')||`<tr><td colspan="6" style="padding:16px 0;text-align:center;font-size:12px;color:#8099b0;">No results match the filter</td></tr>`;
 }
 
 
 function _applySnagIndicators(pid,facade){
-  const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>s.panel_id));
+  const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>_snagParts(s).id));
   document.querySelectorAll('td[data-pid]').forEach(td=>{
     const sc=_custStBg[td.dataset.status]||'#E8F0FB';
     if(open.has(td.dataset.pid)){
@@ -10432,6 +10478,9 @@ function _panelDisplayRef(panelId){
 
 function openComplexModal(id,fl,col,ref,type,zone){
   selPanel=id;
+  const _flClean=fl.replace('R+18T','R+18').replace('R+18M','R+18').replace('R+18MD','R+18').replace('R+18B','R+17').replace('R+17T','R+17').replace('R+17B','R+17');
+  const _dispRef=zone.id==='EF'?efPanelRef(fl,col):zone.id==='WF'?wfPanelRef(fl,col):zone.id==='SF'?sfPanelRef(fl,col):(ref||'');
+  _snagModalMeta={fl:_flClean,col:String(col),ref:_dispRef,facadeId:zone.id};
   if(type&&!(panels[id]||{}).type)panels[id]={...(panels[id]||{status:'pending',notes:'',assigned:''}),type};
   const p=panels[id]||{status:'pending',notes:'',assigned:''};
   const displayRef = zone.id==='EF' ? efPanelRef(fl,col) : zone.id==='WF' ? wfPanelRef(fl,col) : zone.id==='SF' ? sfPanelRef(fl,col) : (ref||p.panel_ref||'—');
