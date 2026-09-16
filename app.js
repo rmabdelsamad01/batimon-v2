@@ -2593,7 +2593,7 @@ function _snagTypesRefreshDropdown(pid){
 }
 function _applySnagIndicators(pid,facade){
   const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>s.panel_id));
-  document.querySelectorAll('#cg-grid-wrap td[data-pid]').forEach(td=>{
+  document.querySelectorAll('td[data-pid]').forEach(td=>{
     const hasTri=td.querySelector('.snag-tri');
     if(open.has(td.dataset.pid)){
       if(!hasTri){
