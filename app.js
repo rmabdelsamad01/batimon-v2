@@ -2537,6 +2537,7 @@ async function _snagAdd(){
     if(sel) sel.value='';
     if(noteEl) noteEl.value='';
     await _renderSnagSection(pid,panelId,facade);
+    _applySnagIndicators(pid,facade);
   }
 }
 async function _snagResolve(snagId){
@@ -2548,6 +2549,7 @@ async function _snagResolve(snagId){
   const s=(_snagCache[pid]||[]).find(s=>s.id===snagId);
   if(s){s.status='closed';s.closed_at=now;}
   await _renderSnagSection(pid,panelId,facade);
+  _applySnagIndicators(pid,facade);
 }
 async function _snagDelete(snagId){
   const pid=window._activeProjectId;
@@ -2556,6 +2558,7 @@ async function _snagDelete(snagId){
   await sb.from('project_snags').delete().eq('id',snagId);
   _snagCache[pid]=(_snagCache[pid]||[]).filter(s=>s.id!==snagId);
   await _renderSnagSection(pid,panelId,facade);
+  _applySnagIndicators(pid,facade);
 }
 async function _snagManageTypes(){
   const pid=window._activeProjectId;
@@ -2600,6 +2603,19 @@ function _snagTypesRefreshDropdown(pid){
 }
 
 
+function _applySnagIndicators(pid,facade){
+  const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>s.panel_id));
+  document.querySelectorAll('td[data-pid]').forEach(td=>{
+    const sc=_custStBg[td.dataset.status]||'#E8F0FB';
+    if(open.has(td.dataset.pid)){
+      td.dataset.snag='1';
+      td.style.background=`linear-gradient(to bottom, #1565c0 15px, ${sc} 15px)`;
+    } else {
+      delete td.dataset.snag;
+      if(td.dataset.status) td.style.background=sc;
+    }
+  });
+}
 // Extra facades (X→Y→Z→AA→AB…) per project, stored in project_info key 'extra_facades'
 const _custExtraFacadesCache = {};
 const _custExtraFacadeColors = ['#a07800','#c02020','#0a7a5a','#0097a7','#e65100','#2d6a8f','#10b981','#b45309','#0369a1','#7c3aed'];
@@ -3795,7 +3811,8 @@ function saveCustPanel(){
       if(m){
         const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
         if(td){
-          td.style.outline='';td.style.background=_custStBg[status];td.style.color=_custStText[status];td.dataset.status=status;
+          td.style.outline='';td.dataset.status=status;td.style.color=_custStText[status];
+          td.style.background=td.dataset.snag?`linear-gradient(to bottom, #1565c0 15px, ${_custStBg[status]} 15px)`:_custStBg[status];
           const existRef=td.dataset.cellref||td.querySelector('div')?.textContent||'';
           const existPRef=(_custFacadeCache[_custMultiPid+'|'+_custMultiFacade]||{})[key]?.panelRef||'';
           td.innerHTML=_custCellInnerHTML(existRef,status,existPRef);
@@ -3822,7 +3839,8 @@ function saveCustPanel(){
       const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
       if(td){
         const _savedPRef=(_custFacadeCache[_custCurPid+'|'+_custCurFacade]||{})[_custCurCellKey]?.panelRef||'';
-        td.style.background=_custStBg[status];td.style.color=_custStText[status];td.dataset.status=status;
+        td.dataset.status=status;td.style.color=_custStText[status];
+        td.style.background=td.dataset.snag?`linear-gradient(to bottom, #1565c0 15px, ${_custStBg[status]} 15px)`:_custStBg[status];
         td.innerHTML=_custCellInnerHTML(_custCurCellRef,status,_savedPRef);
         td.title=`${_custCurCellRef} — ${_custStLabel[status]}`;
       }
@@ -4360,6 +4378,7 @@ async function renderCustomMonitoring(pageId){
       if(typeof _pvState!=='undefined'){_pvState.pid=pid;_pvState.facade=facadeDir;_pvState.dataFacade=facade;}
       pvSwitchView('plan');
     }
+    _loadSnags(pid).then(()=>_applySnagIndicators(pid,facade));
   },0);
   // Escape cancels merge/unmerge mode
   document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
