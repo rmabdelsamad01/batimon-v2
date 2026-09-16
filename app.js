@@ -10751,6 +10751,7 @@ async function savePanel(){
     panels[_ef81Id]={...(panels[_ef81Id]||{}),status:_sf81.status||'pending',fabDate:_sf81.fabDate||'',deliveryDate:_sf81.deliveryDate||'',installDate:_sf81.installDate||'',installRef:_sf81.installRef||'',notes:'',assigned:''};
     _dirtyPanels.add(_ef81Id);
   }
+  const _wasMobile=window._mobPanelMode;
   saveData();
   // Immediate single-row Supabase save — faster and more reliable than waiting for bulk sync
   (async()=>{
@@ -10780,6 +10781,7 @@ async function savePanel(){
     if(_e) console.warn('Direct panel save error:',_e.message);
   })();
   cm('pm');updateTabs();
+  if(_wasMobile){_refreshMobileContent();toast('Panel updated');return;}
   if(curPage==='dashboard')renderDash();
   else if(curPage==='BM-dashboard')renderBMDashboard();
   else if(curPage==='BM-WF')renderBMWF();
