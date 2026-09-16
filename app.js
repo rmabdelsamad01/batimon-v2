@@ -10223,9 +10223,12 @@ function _applyPendingClasses(tbl){
   tbl.querySelectorAll('[data-pid]').forEach(cell=>{
     const p=panels[cell.dataset.pid]||{};
     if(!p.pending_status) return;
-    const preCls=p.pending_status==='installed'?'st-pre-i':'st-pre-d';
+    const isInst=p.pending_status==='installed';
     cell.classList.remove(..._allSt);
-    cell.classList.add(preCls);
+    cell.classList.add(isInst?'st-pre-i':'st-pre-d');
+    cell.style.setProperty('background',isInst?'#ccffdd':'#fffccc','important');
+    cell.style.setProperty('border-color',isInst?'#66dd99':'#ddcc00','important');
+    cell.style.setProperty('color',isInst?'#006612':'#665e00','important');
   });
 }
 
