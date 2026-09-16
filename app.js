@@ -2513,9 +2513,10 @@ async function _renderSnagSection(pid,panelId,facade){
       ${closed.length} resolved snag${closed.length>1?'s':''}
     </div>
     <div style="display:none;margin-top:4px;">
-      ${closed.map(s=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 7px;border-radius:5px;margin-bottom:3px;background:var(--surface2);opacity:0.7;">
+      ${closed.map(s=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 7px;border-radius:5px;margin-bottom:3px;background:var(--surface2);">
         <div style="text-decoration:line-through;font-size:10px;color:var(--text3);flex:1;">${s.snag_type}</div>
-        <div style="font-size:9px;color:#1a9458;font-weight:700;">✓ Resolved</div>
+        <div style="font-size:9px;color:#1a9458;font-weight:700;flex-shrink:0;">✓</div>
+        <button onclick="_snagDelete('${s.id}')" style="flex-shrink:0;padding:1px 6px;border:1px solid rgba(192,32,32,0.2);border-radius:4px;background:#fff5f5;color:#c02020;font-family:var(--font);font-size:9px;font-weight:700;cursor:pointer;">Delete</button>
       </div>`).join('')}
     </div>`:'';
   list.innerHTML=openHtml+closedHtml;
@@ -2547,6 +2548,15 @@ async function _snagResolve(snagId){
   await sb.from('project_snags').update({status:'closed',closed_at:now}).eq('id',snagId);
   const s=(_snagCache[pid]||[]).find(s=>s.id===snagId);
   if(s){s.status='closed';s.closed_at=now;}
+  await _renderSnagSection(pid,panelId,facade);
+  _applySnagIndicators(pid,facade);
+}
+async function _snagDelete(snagId){
+  const pid=window._activeProjectId;
+  const panelId=selPanel;
+  const facade=_snagFacade();
+  await sb.from('project_snags').delete().eq('id',snagId);
+  _snagCache[pid]=(_snagCache[pid]||[]).filter(s=>s.id!==snagId);
   await _renderSnagSection(pid,panelId,facade);
   _applySnagIndicators(pid,facade);
 }
