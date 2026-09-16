@@ -2654,24 +2654,34 @@ function _renderSnagSummaryBody(pid){
       </div>
     </div>`:''}
     ${open.length?`<div style="border:1px solid #e8edf5;border-radius:10px;overflow:hidden;">
-      <div style="padding:10px 16px;border-bottom:1px solid #f0f4f9;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;flex:1;">Open snags</span>
-        <select id="snag-sum-f-facade" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;">
-          <option value="">All facades</option>${facades.map(f=>`<option value="${f}">${{NF:'North',SF:'South',EF:'East',WF:'West'}[f]||f}</option>`).join('')}
-        </select>
-        <select id="snag-sum-f-type" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;">
-          <option value="">All types</option>${allTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
-        </select>
+      <div style="padding:10px 16px;border-bottom:1px solid #f0f4f9;">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;">Open snags</span>
       </div>
       <div style="overflow-x:auto;padding:0 16px 12px;">
         <table style="width:100%;border-collapse:collapse;" id="snag-sum-table">
-          <thead><tr>
-            ${['facade','fl','col','ref','type','note'].map(c=>{
-              const labels={facade:'Facade',fl:'Floor',col:'Column',ref:'Panel Ref',type:'Type',note:'Note'};
-              const arr=_snagSumSortState.col===c?(_snagSumSortState.dir===1?' ↑':' ↓'):'';
-              return`<th onclick="_snagSumSort('${c}','${pid}')" style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:${_snagSumSortState.col===c?'#1565c0':'#b0b8c8'};padding:10px 10px 8px 0;cursor:pointer;white-space:nowrap;user-select:none;">${labels[c]}${arr}</th>`;
-            }).join('')}
-          </tr></thead>
+          <thead>
+            <tr>
+              ${['facade','fl','col','ref','type','note'].map(c=>{
+                const labels={facade:'Facade',fl:'Floor',col:'Column',ref:'Panel Ref',type:'Type',note:'Note'};
+                const arr=_snagSumSortState.col===c?(_snagSumSortState.dir===1?' ↑':' ↓'):'';
+                return`<th onclick="_snagSumSort('${c}','${pid}')" style="text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:${_snagSumSortState.col===c?'#1565c0':'#b0b8c8'};padding:10px 10px 8px 0;cursor:pointer;white-space:nowrap;user-select:none;">${labels[c]}${arr}</th>`;
+              }).join('')}
+            </tr>
+            <tr style="border-bottom:1px solid #e8edf5;">
+              <td style="padding:4px 10px 6px 0;">
+                <select id="snag-sum-f-facade" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;width:100%;">
+                  <option value="">All</option>${facades.map(f=>`<option value="${f}">${{NF:'North',SF:'South',EF:'East',WF:'West'}[f]||f}</option>`).join('')}
+                </select>
+              </td>
+              <td colspan="3" style="padding:4px 10px 6px 0;"></td>
+              <td style="padding:4px 10px 6px 0;">
+                <select id="snag-sum-f-type" onchange="_snagSumApply('${pid}')" style="font-size:11px;padding:3px 6px;border:1px solid #dde3ed;border-radius:5px;color:#1a2a3a;background:#fff;width:100%;">
+                  <option value="">All</option>${allTypes.map(t=>`<option value="${t}">${t}</option>`).join('')}
+                </select>
+              </td>
+              <td></td>
+            </tr>
+          </thead>
           <tbody id="snag-sum-tbody"></tbody>
         </table>
       </div>
