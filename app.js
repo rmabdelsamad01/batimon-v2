@@ -2628,10 +2628,6 @@ function _renderSnagSummaryBody(pid){
     if(!byType[s.snag_type])byType[s.snag_type]={open:0,closed:0};
     if(s.status==='open')byType[s.snag_type].open++;else byType[s.snag_type].closed++;
   });
-  // By facade
-  const byFacade={};
-  open.forEach(s=>{byFacade[s.facade]=(byFacade[s.facade]||0)+1;});
-  const maxF=Math.max(1,...Object.values(byFacade));
   const kpi=(n,lbl,col)=>`<div style="flex:1;min-width:110px;background:#f0f4f9;border-radius:10px;padding:14px 16px;text-align:center;">
     <span style="font-size:30px;font-weight:800;color:${col||'#1a2a3a'};display:block;">${n}</span>
     <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;display:block;margin-top:3px;">${lbl}</span>
@@ -2646,13 +2642,6 @@ function _renderSnagSummaryBody(pid){
       <td style="padding:8px 0;width:90px;"><div style="background:#e0e8f5;border-radius:4px;height:6px;"><div style="background:#4caf50;border-radius:4px;height:6px;width:${pct}%;"></div></div></td>
     </tr>`;
   }).join('');
-  const facadeBars=Object.entries(byFacade).sort((a,b)=>b[1]-a[1]).map(([f,n])=>`
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
-      <span style="font-size:12px;font-weight:700;min-width:58px;color:#1a2a3a;">${f}</span>
-      <div style="flex:1;background:#e0e8f5;border-radius:4px;height:10px;"><div style="background:#1565c0;border-radius:4px;height:10px;width:${Math.round(n/maxF*100)}%;"></div></div>
-      <span style="font-size:12px;font-weight:800;color:#1565c0;min-width:18px;text-align:right;">${n}</span>
-    </div>`).join('');
-  const sep='<div style="width:1px;background:#f0f4f9;flex-shrink:0;"></div>';
   // Unique facades and types for filters
   const facades=[...new Set(open.map(s=>s.facade))].sort();
   const allTypes=[...new Set(open.map(s=>s.snag_type))].sort();
@@ -2663,10 +2652,6 @@ function _renderSnagSummaryBody(pid){
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;margin-bottom:12px;">By type</div>
         <table style="width:100%;border-collapse:collapse;"><thead><tr>${th('Type')}${th('Open')}${th('Done')}<th></th></tr></thead><tbody>${typeRows}</tbody></table>
       </div>
-      ${Object.keys(byFacade).length?`${sep}<div style="flex:1;min-width:200px;padding:16px 18px;">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#8099b0;margin-bottom:12px;">Open by facade</div>
-        ${facadeBars}
-      </div>`:''}
     </div>`:''}
     ${open.length?`<div style="border:1px solid #e8edf5;border-radius:10px;overflow:hidden;">
       <div style="padding:10px 16px;border-bottom:1px solid #f0f4f9;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
