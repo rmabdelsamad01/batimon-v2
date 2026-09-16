@@ -65,10 +65,20 @@ body.mobile-section-view .dash {
   box-shadow: 0 2px 8px rgba(34,79,147,0.25);
 }
 td.snag-ind {
-  background-image: linear-gradient(to bottom left, #e53935 50%, transparent 50%) !important;
-  background-size: 10px 10px !important;
-  background-position: top right !important;
-  background-repeat: no-repeat !important;
+  position: relative;
+  overflow: hidden;
+}
+td.snag-ind::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background: #e53935;
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+  pointer-events: none;
+  z-index: 10;
 }
 </style>
 <!-- ── Service Worker registration ──────────────────────────────── -->
