@@ -2056,7 +2056,8 @@ async function load(){
             fabDate:row.fab_date||'',
             deliveryDate:row.delivery_date||'',
             installDate:row.install_date||'',
-            installRef:row.install_ref||''
+            installRef:row.install_ref||'',
+            ...(row.pending_status?{pending_status:row.pending_status}:{})
           };
         });
         totalLoaded+=data.length;
@@ -2203,15 +2204,16 @@ async function _doCloudSync(attempt){
         delivery_date:p.deliveryDate||null,
         install_date:p.installDate||null,
         install_ref:p.installRef||null,
+        pending_status:p.pending_status||null,
         updated_by:sbUser?.id||null,
         updated_at:new Date().toISOString()
       }));
     for(let i=0;i<rows.length;i+=500){
       const batch=rows.slice(i,i+500);
       let {error}=await sb.from('panels').upsert(batch,{onConflict:'id'});
-      // If new columns (delivery_date / install_ref) don't exist yet, retry without them
-      if(error&&error.message&&(error.message.includes('delivery_date')||error.message.includes('install_ref'))){
-        const safeBatch=batch.map(r=>{const s={...r};delete s.delivery_date;delete s.install_ref;return s;});
+      // If new columns don't exist yet, retry without them
+      if(error&&error.message&&(error.message.includes('delivery_date')||error.message.includes('install_ref')||error.message.includes('pending_status'))){
+        const safeBatch=batch.map(r=>{const s={...r};delete s.delivery_date;delete s.install_ref;delete s.pending_status;return s;});
         ({error}=await sb.from('panels').upsert(safeBatch,{onConflict:'id'}));
       }
       if(error){
@@ -10212,6 +10214,41 @@ function buildComplexTable(zone){
     }
   }
   if(zone.id==='NF') applyNFDesignOverrides(tbl);
+  _applyPendingClasses(tbl);
+}
+
+function _applyPendingClasses(tbl){
+  if(!tbl) return;
+  tbl.querySelectorAll('[data-pid]').forEach(cell=>{
+    const p=panels[cell.dataset.pid]||{};
+    if(!p.pending_status) return;
+    const realCls=(SM[p.pending_status]||SM.pending).cls;
+    const preCls=p.pending_status==='installed'?'st-pre-i':'st-pre-d';
+    cell.classList.remove(realCls);
+    cell.classList.add(preCls);
+  });
+}
+
+async function _approvePending(id){
+  if(!id||!panels[id]?.pending_status) return;
+  panels[id]={...panels[id],status:panels[id].pending_status,pending_status:null};
+  _dirtyPanels.add(id);
+  saveData();
+  cm('pm');
+  const z=ZONES.find(z=>z.id===curPage);
+  if(z&&!z.simple){const t=document.getElementById('tbl-'+curPage);if(t){t.innerHTML='';buildComplexTable(z);}}
+  toast('Status approved');
+}
+
+async function _rejectPending(id){
+  if(!id||!panels[id]?.pending_status) return;
+  panels[id]={...panels[id],pending_status:null};
+  _dirtyPanels.add(id);
+  saveData();
+  cm('pm');
+  const z=ZONES.find(z=>z.id===curPage);
+  if(z&&!z.simple){const t=document.getElementById('tbl-'+curPage);if(t){t.innerHTML='';buildComplexTable(z);}}
+  toast('Pending status rejected');
 }
 
 async function _loadAssemblyPanels(){
@@ -10530,6 +10567,18 @@ function openComplexModal(id,fl,col,ref,type,zone){
   const _dw2=document.getElementById('m-del-date-wrap'),_dd2=document.getElementById('m-del-date');
   if((p.status||'pending')==='delivered'){_dw2.style.display='block';_dd2.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw2.style.display='none';_dd2.value='';}
   selStat=p.status||'pending';document.querySelectorAll('.so').forEach(el=>{el.classList.remove('ss');if(el.classList.contains(SMAP[selStat]))el.classList.add('ss');});
+  // Pending approval banner
+  const _pendingBanner=document.getElementById('pm-pending-banner');
+  if(_pendingBanner){
+    if(p.pending_status){
+      const _pLabel=p.pending_status==='installed'?'Pre-installed':'Pre-delivered';
+      const _pCls=p.pending_status==='installed'?'st-pre-i':'st-pre-d';
+      _pendingBanner.style.display='flex';
+      _pendingBanner.innerHTML=`<div class="wfc ${_pCls}" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-right:8px;"></div><span style="flex:1;font-size:12px;font-weight:700;color:#1a2a3a;">⏳ ${_pLabel} — pending approval</span><button onclick="_approvePending('${id}')" style="padding:4px 12px;background:#00b33c;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px;">Approve</button><button onclick="_rejectPending('${id}')" style="padding:4px 12px;background:#e53935;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Reject</button>`;
+    } else {
+      _pendingBanner.style.display='none';
+    }
+  }
   _pmSetMode();document.getElementById('pm').classList.add('open');
   // Load snag section
   const _spid=window._activeProjectId;
@@ -10662,7 +10711,13 @@ async function savePanel(){
   const installRef = ['installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-install-ref').value : (panels[selPanel]||{}).installRef||'';
   const fabDate = ['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
   const deliveryDate = ['delivered','installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
-  panels[selPanel]={...panels[selPanel],status:selStat,installDate,installRef,fabDate,deliveryDate};
+  // Mobile users setting installed/delivered → save as pending_status, not real status
+  const _isMobChange=window._mobPanelMode&&['installed','delivered'].includes(selStat);
+  if(_isMobChange){
+    panels[selPanel]={...panels[selPanel],pending_status:selStat};
+  } else {
+    panels[selPanel]={...panels[selPanel],status:selStat,installDate,installRef,fabDate,deliveryDate,pending_status:null};
+  }
   _dirtyPanels.add(selPanel);
   // Mirror SF-{floor}-C15 → WF-{floor}-C15 (one-way, read-only mirror)
   const _sf15m=selPanel.match(/^SF-(.+)-C15$/);
@@ -10712,13 +10767,14 @@ async function savePanel(){
       delivery_date:p.deliveryDate||null,
       install_date:p.installDate||null,
       install_ref:p.installRef||null,
+      pending_status:p.pending_status||null,
       updated_by:sbUser?.id||null,
       updated_at:new Date().toISOString()
     };
     let{error:_e}=await sb.from('panels').upsert(_row,{onConflict:'id'});
     // If new columns missing in DB, retry without them
-    if(_e&&_e.message&&(_e.message.includes('delivery_date')||_e.message.includes('install_ref'))){
-      const safe={..._row};delete safe.delivery_date;delete safe.install_ref;
+    if(_e&&_e.message&&(_e.message.includes('delivery_date')||_e.message.includes('install_ref')||_e.message.includes('pending_status'))){
+      const safe={..._row};delete safe.delivery_date;delete safe.install_ref;delete safe.pending_status;
       ({error:_e}=await sb.from('panels').upsert(safe,{onConflict:'id'}));
     }
     if(_e) console.warn('Direct panel save error:',_e.message);
@@ -10761,7 +10817,7 @@ async function saveIssue(){
   else{const z=ZONES.find(z=>z.id===curPage);if(z&&z.simple)renderSimpleFP(z);else renderComplexFP(z);}
   toast('Issue logged');
 }
-function cm(id){const el=document.getElementById(id);el.classList.remove('open');if(id==='pm'){selPanel=null;el.style.zIndex='';}}
+function cm(id){const el=document.getElementById(id);el.classList.remove('open');if(id==='pm'){selPanel=null;el.style.zIndex='';window._mobPanelMode=false;}}
 function updateTabs(){ZONES.forEach(z=>{const c=zC(z.id);const pct=c.total?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/c.total*100):0;const el=document.getElementById('tp-'+z.id);if(el)el.textContent=pct+'%';});}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 
@@ -19208,6 +19264,7 @@ function _attachMobilePinchZoom(container){
         // Double-tap on a panel cell opens the modal; elsewhere resets zoom
         const panelCell=e.target&&e.target.closest('[data-pid]');
         if(panelCell&&typeof panelCell.onclick==='function'){
+          window._mobPanelMode=true;
           panelCell.onclick(e);
           // Raise modal above mobile screen (z-index 9997)
           const pm=document.getElementById('pm');

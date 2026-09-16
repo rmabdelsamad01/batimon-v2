@@ -235,6 +235,8 @@ td[rowspan]{overflow:visible !important;}
 .st-cip{background:#A349A4;border-color:#7a3679;color:#ffffff;}
 .st-x{background:#ED1C24;border-color:#b81219;color:#ffffff;}
 .st-p{background:#E8F0FB;border-color:#b8cef5;color:#224F93;}
+.st-pre-i{background:#ccffdd;border-color:#66dd99;color:#006612;}
+.st-pre-d{background:#fffccc;border-color:#ddcc00;color:#665e00;}
 
 /* UCW FREEZE PANE — sticky header row + floor label column, 0px gap to toolbar/sidebar */
 #gw-WF,#gw-EF,#gw-NF,#gw-SF{padding-top:0;padding-left:0;}
