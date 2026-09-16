@@ -2537,7 +2537,6 @@ async function _snagAdd(){
     if(sel) sel.value='';
     if(noteEl) noteEl.value='';
     await _renderSnagSection(pid,panelId,facade);
-    _applySnagIndicators(pid,facade);
   }
 }
 async function _snagResolve(snagId){
@@ -2549,7 +2548,6 @@ async function _snagResolve(snagId){
   const s=(_snagCache[pid]||[]).find(s=>s.id===snagId);
   if(s){s.status='closed';s.closed_at=now;}
   await _renderSnagSection(pid,panelId,facade);
-  _applySnagIndicators(pid,facade);
 }
 async function _snagDelete(snagId){
   const pid=window._activeProjectId;
@@ -2558,7 +2556,6 @@ async function _snagDelete(snagId){
   await sb.from('project_snags').delete().eq('id',snagId);
   _snagCache[pid]=(_snagCache[pid]||[]).filter(s=>s.id!==snagId);
   await _renderSnagSection(pid,panelId,facade);
-  _applySnagIndicators(pid,facade);
 }
 async function _snagManageTypes(){
   const pid=window._activeProjectId;
@@ -2601,13 +2598,7 @@ function _snagTypesRefreshDropdown(pid){
   if(sel) sel.innerHTML='<option value="">Select snag type…</option>'+
     (_snagTypesCache[pid]||[]).map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join('');
 }
-function _applySnagIndicators(pid,facade){
-  const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>s.panel_id));
-  document.querySelectorAll('td[data-pid]').forEach(td=>{
-    if(open.has(td.dataset.pid)) td.classList.add('snag-ind');
-    else td.classList.remove('snag-ind');
-  });
-}
+
 
 // Extra facades (X→Y→Z→AA→AB…) per project, stored in project_info key 'extra_facades'
 const _custExtraFacadesCache = {};
@@ -4369,8 +4360,6 @@ async function renderCustomMonitoring(pageId){
       if(typeof _pvState!=='undefined'){_pvState.pid=pid;_pvState.facade=facadeDir;_pvState.dataFacade=facade;}
       pvSwitchView('plan');
     }
-    // Apply snag triangle indicators
-    _loadSnags(pid).then(()=>_applySnagIndicators(pid,facade));
   },0);
   // Escape cancels merge/unmerge mode
   document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
