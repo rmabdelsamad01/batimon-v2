@@ -2465,7 +2465,7 @@ const _snagTypesCache={};  // {pid:['Broken glass','Vertical fin not installed',
 let _snagModalMeta={fl:'',col:'',ref:'',facadeId:''};
 function _snagParts(s){const p=(s.panel_id||'').split(':::');return{id:p[0],fl:p[1]||'',col:p[2]||'',ref:p[3]||''};}
 let _snagSumSortState={col:'fl',dir:1};
-let _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
+let _snagSumFilters={facade:'',fl:'',col:'',ref:'',nature:'',position:'',type:'',note:''};
 let _snagSumView='open';
 
 async function _loadSnags(pid){
@@ -2508,6 +2508,7 @@ async function _renderSnagSection(pid,panelId,facade){
     <div style="display:flex;align-items:flex-start;gap:6px;padding:5px 7px;border:1px solid rgba(192,32,32,0.2);border-radius:6px;margin-bottom:4px;background:#fff5f5;">
       <div style="flex:1;">
         <div style="font-size:11px;font-weight:700;color:#c02020;">${s.snag_type}</div>
+        ${(s.nature||s.position)?`<div style="font-size:10px;color:#1a2a3a;margin-top:1px;">${[s.nature,s.position].filter(Boolean).join(' · ')}</div>`:''}
         ${s.note?`<div style="font-size:10px;color:#8099b0;margin-top:1px;">${s.note}</div>`:''}
       </div>
       <button onclick="_snagResolve('${s.id}')" style="flex-shrink:0;padding:2px 7px;border:1px solid rgba(26,148,88,0.3);border-radius:4px;background:#f0fff4;color:#1a9458;font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;">Resolve</button>
@@ -2532,16 +2533,20 @@ async function _snagAdd(){
   const facade=_snagModalMeta.facadeId||_snagFacade();
   const sel=document.getElementById('m-snag-type-sel');
   const noteEl=document.getElementById('m-snag-note');
+  const natureEl=document.getElementById('m-snag-nature');
+  const positionEl=document.getElementById('m-snag-position');
   const snagType=sel?.value;
   if(!snagType){if(sel)sel.focus();return;}
   const m=_snagModalMeta;
   const encodedId=`${panelId}:::${m.fl}:::${m.col}:::${m.ref}`;
   const {data,error}=await sb.from('project_snags').insert(
-    {project:pid,panel_id:encodedId,facade,snag_type:snagType,note:noteEl?.value||''}
+    {project:pid,panel_id:encodedId,facade,snag_type:snagType,nature:natureEl?.value||'',position:positionEl?.value||'',note:noteEl?.value||''}
   ).select().single();
   if(!error&&data){
     (_snagCache[pid]=_snagCache[pid]||[]).push(data);
     if(sel) sel.value='';
+    if(natureEl) natureEl.value='';
+    if(positionEl) positionEl.value='';
     if(noteEl) noteEl.value='';
     await _renderSnagSection(pid,panelId,facade);
     _applySnagIndicators(pid,facade);
@@ -2611,7 +2616,7 @@ function _snagTypesRefreshDropdown(pid){
 async function _openSnagSummary(){
   const pid=window._activeProjectId;
   if(!pid) return;
-  _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
+  _snagSumFilters={facade:'',fl:'',col:'',ref:'',nature:'',position:'',type:'',note:''};
   _snagSumSortState={col:'fl',dir:1};
   _snagSumView='open';
   document.getElementById('snag-summary-modal').classList.add('open');
@@ -2665,8 +2670,8 @@ function _renderSnagSummaryBody(pid){
       <div style="overflow-x:auto;padding:0 16px 12px;">
         <table style="width:100%;border-collapse:collapse;" id="snag-sum-table">
           <thead><tr>
-            ${['facade','fl','col','ref','type','note'].map(c=>{
-              const labels={facade:'Facade',fl:'Floor',col:'Column',ref:'Panel Ref',type:'Type',note:'Note'};
+            ${['facade','fl','col','ref','nature','position','type','note'].map(c=>{
+              const labels={facade:'Facade',fl:'Floor',col:'Column',ref:'Panel Ref',nature:'Nature',position:'Position',type:'Type',note:'Note'};
               const active=_snagSumFilters[c];
               const sorted=_snagSumSortState.col===c;
               const arrow=sorted?(_snagSumSortState.dir===1?' ↑':' ↓'):'';
@@ -2682,7 +2687,7 @@ function _renderSnagSummaryBody(pid){
 }
 function _snagSumToggleView(view,pid){
   _snagSumView=view;
-  _snagSumFilters={facade:'',fl:'',col:'',ref:'',type:'',note:''};
+  _snagSumFilters={facade:'',fl:'',col:'',ref:'',nature:'',position:'',type:'',note:''};
   _renderSnagSummaryBody(pid);
 }
 function _snagSumHeaderClick(e,col,pid){
@@ -2690,7 +2695,7 @@ function _snagSumHeaderClick(e,col,pid){
   document.getElementById('snag-filter-popup')?.remove();
   const _facadeLabel={NF:'North',SF:'South',EF:'East',WF:'West'};
   const viewSnags=(_snagCache[pid]||[]).filter(s=>_snagSumView==='open'?s.status==='open':s.status!=='open');
-  const allRows=viewSnags.map(s=>{const p=_snagParts(s);const isOld=!(s.panel_id||'').includes(':::');return{facade:s.facade,fl:isOld?'':p.fl,col:isOld?'':p.col,ref:isOld?p.id:p.ref,type:s.snag_type,note:s.note||''};});
+  const allRows=viewSnags.map(s=>{const p=_snagParts(s);const isOld=!(s.panel_id||'').includes(':::');return{facade:s.facade,fl:isOld?'':p.fl,col:isOld?'':p.col,ref:isOld?p.id:p.ref,nature:s.nature||'',position:s.position||'',type:s.snag_type,note:s.note||''};});
   const vals=[...new Set(allRows.map(r=>r[col]).filter(v=>v&&v!=='—'))].sort((a,b)=>{const n=s=>s.replace(/(\d+)/g,m=>m.padStart(10,'0'));return n(a)<n(b)?-1:n(a)>n(b)?1:0;});
   const th=document.getElementById('snag-th-'+col);
   if(!th) return;
@@ -2715,7 +2720,7 @@ function _snagSumApply(pid){
   let rows=viewSnags.map(s=>{
     const p=_snagParts(s);
     const isOld=!(s.panel_id||'').includes(':::');
-    return{s,facade:s.facade,fl:isOld?'—':p.fl||'—',col:isOld?'—':p.col||'—',ref:isOld?p.id:p.ref||'—',type:s.snag_type,note:s.note||''};
+    return{s,facade:s.facade,fl:isOld?'—':p.fl||'—',col:isOld?'—':p.col||'—',ref:isOld?p.id:p.ref||'—',nature:s.nature||'',position:s.position||'',type:s.snag_type,note:s.note||''};
   });
   Object.entries(_snagSumFilters).forEach(([k,v])=>{if(v) rows=rows.filter(r=>r[k]===v);});
   const c=_snagSumSortState.col,d=_snagSumSortState.dir;
@@ -2731,9 +2736,11 @@ function _snagSumApply(pid){
     <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.fl}</td>
     <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.col}</td>
     <td style="padding:7px 10px;font-size:12px;font-weight:700;color:#1a2a3a;font-family:var(--mono);">${r.ref}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.nature||'—'}</td>
+    <td style="padding:7px 10px;font-size:12px;color:#1a2a3a;">${r.position||'—'}</td>
     <td style="padding:7px 10px;font-size:12px;color:#c02020;font-weight:600;">${r.type}</td>
     <td style="padding:7px 0;font-size:12px;color:#8099b0;font-style:${r.note?'normal':'italic'}">${r.note||'—'}</td>
-  </tr>`).join('')||`<tr><td colspan="6" style="padding:16px 0;text-align:center;font-size:12px;color:#8099b0;">No results match the filter</td></tr>`;
+  </tr>`).join('')||`<tr><td colspan="8" style="padding:16px 0;text-align:center;font-size:12px;color:#8099b0;">No results match the filter</td></tr>`;
 }
 
 
