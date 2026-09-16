@@ -2555,7 +2555,7 @@ async function _snagAdd(){
 async function _snagResolve(snagId){
   const pid=window._activeProjectId;
   const panelId=selPanel;
-  const facade=_snagFacade();
+  const facade=_snagModalMeta.facadeId||_snagFacade();
   const now=new Date().toISOString();
   await sb.from('project_snags').update({status:'closed',closed_at:now}).eq('id',snagId);
   const s=(_snagCache[pid]||[]).find(s=>s.id===snagId);
@@ -2566,7 +2566,7 @@ async function _snagResolve(snagId){
 async function _snagDelete(snagId){
   const pid=window._activeProjectId;
   const panelId=selPanel;
-  const facade=_snagFacade();
+  const facade=_snagModalMeta.facadeId||_snagFacade();
   await sb.from('project_snags').delete().eq('id',snagId);
   _snagCache[pid]=(_snagCache[pid]||[]).filter(s=>s.id!==snagId);
   await _renderSnagSection(pid,panelId,facade);
