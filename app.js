@@ -4577,7 +4577,11 @@ function _renderProjOverviewReport(){
   }
   const sections=[
     {label:'East Wing — RDC to R+16',
-     match:(z,n,col)=>(n<=16)&&(z==='EF'||(z==='NF'&&col>=52&&col<=64)||(z==='SF'&&col>=82&&col<=92))},
+     match:(z,n,col)=>
+       (z==='NF'&&n>=1&&n<=16&&col>=54&&col<=65)||
+       (z==='EF'&&n>=1&&n<=16&&col>=66&&col<=80)||
+       (z==='EF'&&n===0&&(col===79||col===80))||
+       (z==='SF'&&n>=0&&n<=16&&col>=81&&col<=92)},
     {label:'West Wing — RDC to R+16',
      match:(z,n,col)=>(n<=16)&&(z==='WF'||(z==='NF'&&col>=32&&col<=41)||(z==='SF'&&col>=4&&col<=14))},
     {label:'Shift — R+17 & R+18',
