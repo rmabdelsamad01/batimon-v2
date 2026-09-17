@@ -4583,7 +4583,10 @@ function _renderProjOverviewReport(){
        (z==='EF'&&n===0&&(col===79||col===80))||
        (z==='SF'&&n>=0&&n<=16&&col>=81&&col<=92)},
     {label:'West Wing — RDC to R+16',
-     match:(z,n,col)=>(n<=16)&&(z==='WF'||(z==='NF'&&col>=32&&col<=41)||(z==='SF'&&col>=4&&col<=14))},
+     match:(z,n,col)=>
+       (z==='SF'&&n>=2&&n<=16&&col>=4&&col<=15)||
+       (z==='WF'&&n>=2&&n<=16&&col>=16&&col<=30)||
+       (z==='NF'&&n>=2&&n<=16&&col>=31&&col<=41)},
     {label:'Shift — R+17 & R+18',
      match:(z,n,col)=>n===17||n===18},
     {label:'East Wing — R+18 to R+24',
