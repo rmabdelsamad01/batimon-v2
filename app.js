@@ -4588,7 +4588,13 @@ function _renderProjOverviewReport(){
        (z==='WF'&&n>=2&&n<=16&&col>=16&&col<=30)||
        (z==='NF'&&n>=2&&n<=16&&col>=31&&col<=41)},
     {label:'Shift — R+17 & R+18',
-     match:(z,n,col)=>n===17||n===18},
+     match:(z,n,col)=>
+       (z==='NF'&&(n===17||n===18)&&((col>=31&&col<=50)||(col>=54&&col<=65)))||
+       (z==='NF'&&n===19&&col>=31&&col<=50)||
+       (z==='EF'&&n===18&&col>=66&&col<=80)||
+       (z==='SF'&&(n===17||n===18)&&col>=81&&col<=85)||
+       (z==='SF'&&n===17&&((col>=86&&col<=92)||(col>=4&&col<=15)))||
+       (z==='WF'&&n===17&&col>=16&&col<=30)},
     {label:'East Wing — R+18 to R+24',
      match:(z,n,col)=>
        (z==='NF'&&n>=18&&n<=24&&col>=54&&col<=65)||
@@ -4622,6 +4628,13 @@ function _renderProjOverviewReport(){
     const dash=zf.indexOf('-');
     const z=zf.slice(0,dash);
     const fl=zf.slice(dash+1);
+    const zone=ZONES.find(zn=>zn.id===z);
+    if(!zone) return;
+    const ci=zone.colNums.indexOf(col);
+    if(ci<0) return;
+    const pType=((zone.types||{})[fl]||[])[ci]||'';
+    const pRef=((zone.refs||{})[fl]||[])[ci]||'';
+    if(!pType&&!pRef) return;
     const n=flNum(fl);
     const st=(panels[id]||{}).status||'pending';
     sections.forEach((sec,i)=>{if(sec.match(z,n,col)){counts[i].total++;counts[i][st]=(counts[i][st]||0)+1;}});
