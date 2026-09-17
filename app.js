@@ -4604,7 +4604,7 @@ function _renderProjOverviewReport(){
      match:(z,n,col)=>
        (z==='SF'&&n>=18&&n<=33&&col>=4&&col<=15)||
        (z==='WF'&&n>=18&&n<=33&&col>=16&&col<=30)||
-       (z==='NF'&&n>=20&&n<=33&&col>=32&&col<=41)},
+       (z==='NF'&&n>=20&&n<=33&&col>=31&&col<=41)},
     {label:'Coiffe — R+34',
      match:(z,n,col)=>
        (z==='SF'&&n===34&&col>=88&&col<=92)||
