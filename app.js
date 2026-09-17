@@ -19391,9 +19391,12 @@ function _attachMobilePinchZoom(container){
     clamp(); apply();
   }));
 
+  let pinchEndedAt=0;
+
   container.addEventListener('touchstart', e=>{
     if(e.touches.length===2){
       isPinching=true;
+      lastTapTime=0; // prevent pinch-end from triggering double-tap logic
       startDist=dist(e.touches);
       lastScale=scale;
       const r=container.getBoundingClientRect();
@@ -19426,11 +19429,13 @@ function _attachMobilePinchZoom(container){
   },{passive:false,signal:sig});
 
   container.addEventListener('touchend', e=>{
-    if(e.touches.length<2) isPinching=false;
+    if(e.touches.length<2){ isPinching=false; pinchEndedAt=Date.now(); }
     if(e.touches.length===0){
       const now=Date.now();
+      // Ignore double-tap detection for 400ms after a pinch ends
+      const justPinched=now-pinchEndedAt<400;
       const onInteractive=e.target&&e.target.closest('button,a,input,select,textarea');
-      if(now-lastTapTime<300&&!onInteractive){
+      if(!justPinched&&now-lastTapTime<300&&!onInteractive){
         // Double-tap on a panel cell opens the modal; elsewhere resets zoom
         const panelCell=e.target&&e.target.closest('[data-pid]');
         if(panelCell&&typeof panelCell.onclick==='function'){
@@ -19443,7 +19448,7 @@ function _attachMobilePinchZoom(container){
           scale=initialScale; tx=0; ty=0; clamp(); apply();
         }
       }
-      lastTapTime=now;
+      lastTapTime=justPinched?0:now;
       // Snap back if zoomed out below initial
       if(scale<initialScale*0.85){ scale=initialScale; tx=0; ty=0; clamp(); apply(); }
     }
