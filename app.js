@@ -19485,7 +19485,7 @@ function _attachMobilePinchZoom(container){
       lastPanY=e.touches[0].clientY;
       vx=0; vy=0;
     }
-    if(e.touches.length<2){ isPinching=false; pinchEndedAt=Date.now(); }
+    if(e.touches.length<2){ if(isPinching) pinchEndedAt=Date.now(); isPinching=false; }
     if(e.touches.length===0){
       const now=Date.now();
       const justPinched=now-pinchEndedAt<400;
