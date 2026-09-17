@@ -16619,6 +16619,7 @@ let _ssExtraTypes=[];
 let _ssVerified=false;
 let _ssDeliveredCounts={};
 let _ssSaveTimer=null;
+let _ssUndoTimer=null,_ssUndoState=null;
 
 async function _ssLoad(){
   try{
@@ -16647,10 +16648,11 @@ function _ssGetProjectTypes(){
   return[...s].sort();
 }
 
-function _ssChange(floor,type,delta){
+function _ssChange(floor,type,delta,_noUndo=false){
   if(!_ssData[floor])_ssData[floor]={};
   const cur=_ssData[floor][type]||0;
   const nv=Math.max(0,cur+delta);
+  const prevVal=cur;
   _ssData[floor][type]=nv;
   const numEl=document.getElementById(`ss-n-${floor}-${type}`);
   const minBtn=document.getElementById(`ss-m-${floor}-${type}`);
@@ -16695,7 +16697,33 @@ function _ssChange(floor,type,delta){
     }
     _ssUpdateBanner();
   }
+  if(!_noUndo&&nv!==prevVal)_ssShowUndoToast(floor,type,prevVal,nv);
   _ssSave();
+}
+
+function _ssShowUndoToast(floor,type,from,to){
+  clearTimeout(_ssUndoTimer);
+  _ssUndoState={floor,type,val:from};
+  document.getElementById('ss-undo-toast')?.remove();
+  const added=to>from;
+  const color=added?'#1a9458':'#c02020';
+  const toast=document.createElement('div');
+  toast.id='ss-undo-toast';
+  toast.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:99999;';
+  toast.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:13px 18px;background:#1a2a3a;color:#fff;font-family:\'Barlow\',sans-serif;font-size:13px;font-weight:600;"><span style="flex:1;">${floor} · ${type}&nbsp;&nbsp;<span style="color:#8099b0;font-size:11px;">was ${from}</span> → <span style="color:${color};font-size:15px;font-weight:800;">${to}</span></span><button onclick="_ssUndoLast()" style="padding:7px 18px;background:#224F93;color:#fff;border:none;border-radius:8px;font-family:\'Barlow\',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">Undo</button></div><div id="ss-undo-bar" style="height:3px;background:${color};transition:width 4s linear;width:100%;"></div>`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=document.getElementById('ss-undo-bar');if(b)b.style.width='0%';}));
+  _ssUndoTimer=setTimeout(()=>{document.getElementById('ss-undo-toast')?.remove();_ssUndoState=null;},4000);
+}
+function _ssUndoLast(){
+  if(!_ssUndoState)return;
+  clearTimeout(_ssUndoTimer);
+  const{floor,type,val}=_ssUndoState;
+  _ssUndoState=null;
+  document.getElementById('ss-undo-toast')?.remove();
+  const cur=(_ssData[floor]&&_ssData[floor][type])||0;
+  const d=val-cur;
+  if(d!==0)_ssChange(floor,type,d,true);
 }
 
 function _ssShowAddTypePopup(btn){
