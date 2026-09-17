@@ -19349,78 +19349,126 @@ function _getMobileBMData(zoneId){
 
 // ── Pinch-zoom + pan for mobile monitoring grids ─────────────────
 function _attachMobilePinchZoom(container){
-  // Cancel any previous gesture listeners attached to this element
   if(container._pinchAbort) container._pinchAbort.abort();
   const ac=new AbortController();
   container._pinchAbort=ac;
   const sig=ac.signal;
 
-  let scale=1,tx=0,ty=0;
-  let lastScale=1;
-  let startDist=0;
-  let pinchCX=0,pinchCY=0,pinchMX=0,pinchMY=0;
+  // Cache the target element once — no re-querying on every frame
+  const el=container.querySelector('#mob-pinch-target');
+
+  let scale=1, tx=0, ty=0;
+  let lastScale=1, startDist=0;
+  let pinchCX=0, pinchCY=0, pinchMX=0, pinchMY=0;
   let isPinching=false;
-  let panStartX=0,panStartY=0;
-  let lastTapTime=0;
+  let panStartX=0, panStartY=0, lastPanX=0, lastPanY=0;
+  let vx=0, vy=0;
+  let lastTapTime=0, pinchEndedAt=0;
   let initialScale=1;
+  // Cached layout values — offsetWidth never changes with CSS transforms
+  let elW=0, elH=0, cW=0, cH=0;
+  let rafPending=false, momentumRaf=null;
 
-  function target(){ return container.querySelector('#mob-pinch-target'); }
-
-  function apply(){
-    const el=target();
-    if(el) el.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  function measure(){
+    if(!el) return;
+    elW=el.offsetWidth; elH=el.offsetHeight;
+    cW=container.clientWidth; cH=container.clientHeight;
   }
 
   function clamp(){
-    const el=target(); if(!el) return;
-    const cw=container.clientWidth, ch=container.clientHeight;
-    const ew=el.offsetWidth*scale, eh=el.offsetHeight*scale;
-    tx = ew>cw ? Math.min(0,Math.max(tx,cw-ew)) : Math.max(0,(cw-ew)/2);
-    ty = eh>ch ? Math.min(0,Math.max(ty,ch-eh)) : 0;
+    const ew=elW*scale, eh=elH*scale;
+    tx = ew>cW ? Math.min(0,Math.max(tx,cW-ew)) : Math.max(0,(cW-ew)/2);
+    ty = eh>cH ? Math.min(0,Math.max(ty,cH-eh)) : 0;
+  }
+
+  // Write transform to DOM — called only from rAF
+  function commit(){
+    if(el) el.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+    rafPending=false;
+  }
+
+  // Batch all DOM writes to one per animation frame
+  function apply(){
+    if(rafPending) return;
+    rafPending=true;
+    requestAnimationFrame(commit);
   }
 
   function dist(t){ return Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY); }
 
-  // Auto-fit to container width after first layout paint
+  function stopMomentum(){
+    if(momentumRaf){cancelAnimationFrame(momentumRaf);momentumRaf=null;}
+  }
+
+  function startMomentum(){
+    stopMomentum();
+    const decay=0.92, minV=0.5;
+    function step(){
+      vx*=decay; vy*=decay;
+      if(Math.abs(vx)<minV&&Math.abs(vy)<minV){vx=0;vy=0;return;}
+      tx+=vx; ty+=vy; clamp(); commit();
+      momentumRaf=requestAnimationFrame(step);
+    }
+    momentumRaf=requestAnimationFrame(step);
+  }
+
+  // Animate back to initial scale/position
+  function snapBack(){
+    stopMomentum();
+    scale=initialScale; tx=0; ty=0; clamp();
+    if(el){
+      el.style.transition='transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94)';
+      requestAnimationFrame(()=>{
+        commit();
+        setTimeout(()=>{if(el) el.style.transition='';},300);
+      });
+    } else { commit(); }
+  }
+
+  // Auto-fit after first layout paint — the one place we read offsetWidth
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    const el=target(); if(!el) return;
-    const cw=container.clientWidth;
-    const ew=el.offsetWidth;
-    if(ew>cw) scale=Math.max((cw-8)/ew, 0.12);
+    measure();
+    if(elW>cW) scale=Math.max((cW-8)/elW, 0.12);
     initialScale=scale; tx=0; ty=0;
-    clamp(); apply();
+    clamp(); commit();
   }));
 
-  let pinchEndedAt=0;
-
   container.addEventListener('touchstart', e=>{
+    stopMomentum();
+    // Re-read container size in case browser chrome appeared/disappeared
+    cW=container.clientWidth; cH=container.clientHeight;
     if(e.touches.length===2){
       isPinching=true;
-      lastTapTime=0; // prevent pinch-end from triggering double-tap logic
+      lastTapTime=0;
       startDist=dist(e.touches);
       lastScale=scale;
       const r=container.getBoundingClientRect();
       pinchMX=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
       pinchMY=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
-      // Content-space point under the pinch midpoint (must stay fixed)
       pinchCX=(pinchMX-tx)/scale;
       pinchCY=(pinchMY-ty)/scale;
       e.preventDefault();
     } else if(e.touches.length===1){
       panStartX=e.touches[0].clientX-tx;
       panStartY=e.touches[0].clientY-ty;
+      lastPanX=e.touches[0].clientX;
+      lastPanY=e.touches[0].clientY;
+      vx=0; vy=0;
     }
   },{passive:false,signal:sig});
 
   container.addEventListener('touchmove', e=>{
     if(e.touches.length===2&&isPinching){
       scale=Math.min(Math.max(lastScale*dist(e.touches)/startDist, 0.12),5);
-      // Keep pinch midpoint fixed in content space
       tx=pinchMX-pinchCX*scale;
       ty=pinchMY-pinchCY*scale;
       clamp(); apply();
       e.preventDefault();
     } else if(e.touches.length===1&&!isPinching){
+      vx=e.touches[0].clientX-lastPanX;
+      vy=e.touches[0].clientY-lastPanY;
+      lastPanX=e.touches[0].clientX;
+      lastPanY=e.touches[0].clientY;
       tx=e.touches[0].clientX-panStartX;
       ty=e.touches[0].clientY-panStartY;
       clamp(); apply();
@@ -19430,32 +19478,33 @@ function _attachMobilePinchZoom(container){
 
   container.addEventListener('touchend', e=>{
     if(e.touches.length===1){
-      // Pinch → pan transition: reset pan anchor so single-finger move doesn't jump
+      // Pinch → pan: reset anchor from the remaining finger
       panStartX=e.touches[0].clientX-tx;
       panStartY=e.touches[0].clientY-ty;
+      lastPanX=e.touches[0].clientX;
+      lastPanY=e.touches[0].clientY;
+      vx=0; vy=0;
     }
     if(e.touches.length<2){ isPinching=false; pinchEndedAt=Date.now(); }
     if(e.touches.length===0){
       const now=Date.now();
-      // Ignore double-tap detection for 400ms after a pinch ends
       const justPinched=now-pinchEndedAt<400;
+      // Snap-back takes priority over everything else
+      if(scale<initialScale*0.85){ snapBack(); lastTapTime=justPinched?0:now; return; }
       const onInteractive=e.target&&e.target.closest('button,a,input,select,textarea');
       if(!justPinched&&now-lastTapTime<300&&!onInteractive){
-        // Double-tap on a panel cell opens the modal; elsewhere resets zoom
+        // Double-tap: open panel or reset view
         const panelCell=e.target&&e.target.closest('[data-pid]');
         if(panelCell&&typeof panelCell.onclick==='function'){
-          window._mobPanelMode=true;
-          panelCell.onclick(e);
-          // Raise modal above mobile screen (z-index 9997)
+          window._mobPanelMode=true; panelCell.onclick(e);
           const pm=document.getElementById('pm');
           if(pm) pm.style.zIndex='9998';
-        } else {
-          scale=initialScale; tx=0; ty=0; clamp(); apply();
-        }
+        } else { snapBack(); }
+        lastTapTime=justPinched?0:now; return;
       }
+      // Pan release with velocity → momentum scroll
+      if(!justPinched&&(Math.abs(vx)>1||Math.abs(vy)>1)) startMomentum();
       lastTapTime=justPinched?0:now;
-      // Snap back if zoomed out below initial
-      if(scale<initialScale*0.85){ scale=initialScale; tx=0; ty=0; clamp(); apply(); }
     }
   },{signal:sig});
 }
