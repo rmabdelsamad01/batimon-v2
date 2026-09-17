@@ -4571,8 +4571,68 @@ function _toggleProjOverviewReport(){
 function _renderProjOverviewReport(){
   const box=document.getElementById('proj-overview-report');
   if(!box) return;
-  // TODO: report content will be defined later
-  box.innerHTML='<div style="padding:16px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text3);">Report coming soon…</div>';
+  function flNum(fl){
+    if(fl==='RDC') return 0;
+    return parseInt(fl.replace('R+',''))||0;
+  }
+  const sections=[
+    {label:'East Wing — RDC to R+16',
+     match:(z,n,col)=>(n<=16)&&(z==='EF'||(z==='NF'&&col>=52&&col<=64)||(z==='SF'&&col>=82&&col<=92))},
+    {label:'West Wing — RDC to R+16',
+     match:(z,n,col)=>(n<=16)&&(z==='WF'||(z==='NF'&&col>=32&&col<=41)||(z==='SF'&&col>=4&&col<=14))},
+    {label:'Shift — R+17 & R+18',
+     match:(z,n,col)=>n===17||n===18},
+    {label:'East Wing — R+18 to R+24',
+     match:(z,n,col)=>(n>=19&&n<=24)&&(z==='EF'||(z==='NF'&&col>=52&&col<=64)||(z==='SF'&&col>=82&&col<=92))},
+    {label:'Coiffe — R+25',
+     match:(z,n,col)=>n===25},
+    {label:'West Wing — R+18 to R+33',
+     match:(z,n,col)=>(n>=19&&n<=33)&&(z==='WF'||(z==='NF'&&col>=32&&col<=41)||(z==='SF'&&col>=4&&col<=14))},
+    {label:'Coiffe — R+34',
+     match:(z,n,col)=>n===34},
+  ];
+  const zero=()=>({total:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0,pending:0});
+  const counts=sections.map(zero);
+  allPanelIds().forEach(id=>{
+    const lastC=id.lastIndexOf('-C');
+    if(lastC<0) return;
+    const col=parseInt(id.slice(lastC+2));
+    const zf=id.slice(0,lastC);
+    const dash=zf.indexOf('-');
+    const z=zf.slice(0,dash);
+    const fl=zf.slice(dash+1);
+    const n=flNum(fl);
+    const st=(panels[id]||{}).status||'pending';
+    sections.forEach((sec,i)=>{if(sec.match(z,n,col)){counts[i].total++;counts[i][st]=(counts[i][st]||0)+1;}});
+  });
+  const tot=counts.reduce((a,c)=>({total:a.total+c.total,installed:a.installed+c.installed,delivered:a.delivered+c.delivered,fabricated:a.fabricated+c.fabricated}),{total:0,installed:0,delivered:0,fabricated:0});
+  const bar=(v,t)=>{const p=t>0?Math.round(v/t*100):0;return `<div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;min-width:50px;height:5px;background:#e0e8f0;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${p}%;background:#1a9458;border-radius:3px;"></div></div><span style="font-size:10px;font-family:var(--mono);color:#8099b0;min-width:26px;text-align:right;">${p}%</span></div>`;};
+  const hth='padding:7px 11px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;';
+  const td=(v,clr)=>`<td style="padding:7px 11px;text-align:center;font-size:12px;font-family:var(--mono);font-weight:700;color:${clr||'#1a2a3a'};">${v}</td>`;
+  const rows=sections.map((s,i)=>{const c=counts[i];return `<tr style="border-top:1px solid var(--border);">
+    <td style="padding:8px 11px;font-size:12px;font-weight:600;color:#1a2a3a;white-space:nowrap;">${s.label}</td>
+    ${td(c.total)}${td(c.installed,'#1a9458')}${td(c.delivered,'#a07800')}${td(c.fabricated,'#1a5fa8')}
+    <td style="padding:7px 11px;min-width:110px;">${bar(c.installed,c.total)}</td>
+  </tr>`;}).join('');
+  box.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="background:var(--surface2);">
+        <th style="${hth}text-align:left;color:var(--text3);">Section</th>
+        <th style="${hth}text-align:center;color:var(--text3);">Total</th>
+        <th style="${hth}text-align:center;color:#1a9458;">Installed</th>
+        <th style="${hth}text-align:center;color:#a07800;">Delivered</th>
+        <th style="${hth}text-align:center;color:#1a5fa8;">Fabricated</th>
+        <th style="${hth}text-align:left;color:var(--text3);">Installed %</th>
+      </tr></thead>
+      <tbody>${rows}
+        <tr style="border-top:2px solid var(--border);background:var(--surface2);">
+          <td style="padding:8px 11px;font-size:12px;font-weight:700;color:#1a2a3a;">Total</td>
+          ${td(tot.total)}${td(tot.installed,'#1a9458')}${td(tot.delivered,'#a07800')}${td(tot.fabricated,'#1a5fa8')}
+          <td style="padding:7px 11px;">${bar(tot.installed,tot.total)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`;
 }
 function renderDash(){
   const gc=gC();
