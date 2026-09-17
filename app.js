@@ -2385,7 +2385,7 @@ function _renderPage(id){
 
   // Pages that need a pre-built HTML shell (inner IDs used by render fns)
   if(id==='dashboard'){
-    root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><div style="font-size:18px;font-weight:700;margin-bottom:3px;">Project Overview</div><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div></div></div></div>`;
+    root.innerHTML=`<div class="page active" id="page-dashboard"><div class="fpw"><div id="dash-sidebar-wrap"></div><div class="dash" style="flex:1;overflow-y:auto;"><button onclick="_toggleProjOverviewReport()" id="proj-overview-btn" style="font-size:18px;font-weight:700;margin-bottom:3px;background:none;border:none;padding:0;cursor:pointer;color:var(--text);font-family:var(--font);display:flex;align-items:center;gap:8px;text-align:left;">Project Overview<span id="proj-overview-btn-icon" style="font-size:13px;color:#224F93;transition:transform 0.2s;">\u25b6</span></button><div style="font-size:11px;color:var(--text3);margin-bottom:18px;">All facades \u2014 glass panel installation tracking</div><div id="proj-overview-report" style="display:none;margin-bottom:18px;"></div><div class="cr" id="dash-cards"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);">Facades</span><button id="facade-val-toggle" onclick="toggleFacadeValMode()" title="Switch to percentages" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 7px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text3);cursor:pointer;line-height:1.6;letter-spacing:0.05em;">%</button></div><div class="fg" id="facades-grid"></div></div></div></div>`;
   } else if(id==='batidoc'){
     // Only rebuild the shell if the iframe doesn't already exist (avoid destroying a live iframe)
     if(!document.getElementById('batidoc-frame')){
@@ -4552,6 +4552,27 @@ function toggleFacadeValMode(){
   if(btn){btn.textContent=facadeValMode==='numbers'?'%':'#';btn.title=facadeValMode==='numbers'?'Switch to percentages':'Switch to numbers';}
   document.getElementById('facades-grid').innerHTML='';
   renderDash();
+}
+let _projOverviewReportOpen=false;
+function _toggleProjOverviewReport(){
+  const box=document.getElementById('proj-overview-report');
+  const icon=document.getElementById('proj-overview-btn-icon');
+  if(!box) return;
+  _projOverviewReportOpen=!_projOverviewReportOpen;
+  if(_projOverviewReportOpen){
+    box.style.display='block';
+    if(icon) icon.style.transform='rotate(90deg)';
+    _renderProjOverviewReport();
+  } else {
+    box.style.display='none';
+    if(icon) icon.style.transform='';
+  }
+}
+function _renderProjOverviewReport(){
+  const box=document.getElementById('proj-overview-report');
+  if(!box) return;
+  // TODO: report content will be defined later
+  box.innerHTML='<div style="padding:16px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text3);">Report coming soon…</div>';
 }
 function renderDash(){
   const gc=gC();
