@@ -4554,6 +4554,11 @@ function toggleFacadeValMode(){
   renderDash();
 }
 let _projOverviewReportOpen=false;
+let _projOverviewValMode='numbers'; // 'numbers' | 'pct'
+function _toggleProjOverviewValMode(){
+  _projOverviewValMode=_projOverviewValMode==='numbers'?'pct':'numbers';
+  _renderProjOverviewReport();
+}
 function _toggleProjOverviewReport(){
   const box=document.getElementById('proj-overview-report');
   const icon=document.getElementById('proj-overview-btn-icon');
@@ -4647,14 +4652,15 @@ function _renderProjOverviewReport(){
   });
   const tot=counts.reduce((a,c)=>({total:a.total+c.total,installed:a.installed+c.installed,delivered:a.delivered+c.delivered}),{total:0,installed:0,delivered:0});
   const hth='padding:7px 11px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;';
-  const pct=(v,t)=>t>0?Math.round(v/t*100)+'%':'—';
-  const td=(v,t,clr)=>`<td style="padding:6px 11px;text-align:center;"><span style="display:block;font-size:12px;font-family:var(--mono);font-weight:700;color:${clr||'#1a2a3a'};">${v}</span>${t!=null?`<span style="display:block;font-size:9px;font-family:var(--mono);color:#8099b0;margin-top:1px;">${pct(v,t)}</span>`:''}</td>`;
+  const isPct=_projOverviewValMode==='pct';
+  const fmt=(v,t)=>isPct?(t>0?(v/t*100).toFixed(1)+'%':'—'):v;
+  const td=(v,t,clr)=>`<td style="padding:6px 11px;text-align:center;"><span style="font-size:12px;font-family:var(--mono);font-weight:700;color:${clr||'#1a2a3a'};">${fmt(v,t)}</span></td>`;
   const rows=sections.map((s,i)=>{
     const c=counts[i];
     const totDel=c.installed+c.delivered;
     return `<tr style="border-top:1px solid var(--border);">
       <td style="padding:8px 11px;font-size:12px;font-weight:600;color:#1a2a3a;white-space:nowrap;">${s.label}</td>
-      ${td(c.total,null)}
+      ${td(c.total,c.total)}
       ${td(c.installed,c.total,'#1a9458')}
       ${td(c.total-c.installed,c.total,'#cc4400')}
       ${td(c.delivered,c.total,'#a07800')}
@@ -4663,6 +4669,9 @@ function _renderProjOverviewReport(){
     </tr>`;}).join('');
   const totDel=tot.installed+tot.delivered;
   box.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px;">
+    <div style="display:flex;justify-content:flex-end;padding:8px 11px 0;">
+      <button onclick="_toggleProjOverviewValMode()" style="font-size:9px;font-weight:700;font-family:var(--mono);padding:2px 9px;border-radius:10px;border:1px solid var(--border);background:${isPct?'#224F93':'var(--card)'};color:${isPct?'#fff':'var(--text3)'};cursor:pointer;line-height:1.6;letter-spacing:0.05em;">${isPct?'#':'%'}</button>
+    </div>
     <table style="width:100%;border-collapse:collapse;">
       <thead><tr style="background:var(--surface2);">
         <th style="${hth}text-align:left;color:var(--text3);">Section</th>
@@ -4676,7 +4685,7 @@ function _renderProjOverviewReport(){
       <tbody>${rows}
         <tr style="border-top:2px solid var(--border);background:var(--surface2);">
           <td style="padding:8px 11px;font-size:12px;font-weight:700;color:#1a2a3a;">Total</td>
-          ${td(tot.total,null)}
+          ${td(tot.total,tot.total)}
           ${td(tot.installed,tot.total,'#1a9458')}
           ${td(tot.total-tot.installed,tot.total,'#cc4400')}
           ${td(tot.delivered,tot.total,'#a07800')}
