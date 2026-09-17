@@ -4786,6 +4786,14 @@ function renderDash(){
   // Use the same full sidebar as EF/WF
   const wrap=document.getElementById('dash-sidebar-wrap');
   if(wrap) wrap.innerHTML=efSidebarHTML();
+  // Restore project overview report if it was open before re-render
+  if(_projOverviewReportOpen){
+    const box=document.getElementById('proj-overview-report');
+    const icon=document.getElementById('proj-overview-btn-icon');
+    if(box){box.style.display='block';}
+    if(icon){icon.style.transform='rotate(90deg)';}
+    _renderProjOverviewReport();
+  }
 }
 
 function sidebarHTML(zid,color){
