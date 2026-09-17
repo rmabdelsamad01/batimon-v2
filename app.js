@@ -4591,7 +4591,10 @@ function _renderProjOverviewReport(){
        (z==='EF'&&n===25&&col>=66&&col<=80)||
        (z==='SF'&&n===25&&col>=81&&col<=94)},
     {label:'West Wing — R+18 to R+33',
-     match:(z,n,col)=>(n>=19&&n<=33)&&(z==='WF'||(z==='NF'&&col>=32&&col<=41)||(z==='SF'&&col>=4&&col<=14))},
+     match:(z,n,col)=>
+       (z==='SF'&&n>=18&&n<=33&&col>=4&&col<=15)||
+       (z==='WF'&&n>=18&&n<=33&&col>=16&&col<=30)||
+       (z==='NF'&&n>=20&&n<=33&&col>=32&&col<=41)},
     {label:'Coiffe — R+34',
      match:(z,n,col)=>
        (z==='SF'&&n===34&&col>=88&&col<=92)||
