@@ -19429,6 +19429,11 @@ function _attachMobilePinchZoom(container){
   },{passive:false,signal:sig});
 
   container.addEventListener('touchend', e=>{
+    if(e.touches.length===1){
+      // Pinch → pan transition: reset pan anchor so single-finger move doesn't jump
+      panStartX=e.touches[0].clientX-tx;
+      panStartY=e.touches[0].clientY-ty;
+    }
     if(e.touches.length<2){ isPinching=false; pinchEndedAt=Date.now(); }
     if(e.touches.length===0){
       const now=Date.now();
