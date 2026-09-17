@@ -4647,18 +4647,19 @@ function _renderProjOverviewReport(){
   });
   const tot=counts.reduce((a,c)=>({total:a.total+c.total,installed:a.installed+c.installed,delivered:a.delivered+c.delivered}),{total:0,installed:0,delivered:0});
   const hth='padding:7px 11px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;';
-  const td=(v,clr)=>`<td style="padding:7px 11px;text-align:center;font-size:12px;font-family:var(--mono);font-weight:700;color:${clr||'#1a2a3a'};">${v}</td>`;
+  const pct=(v,t)=>t>0?Math.round(v/t*100)+'%':'—';
+  const td=(v,t,clr)=>`<td style="padding:6px 11px;text-align:center;"><span style="display:block;font-size:12px;font-family:var(--mono);font-weight:700;color:${clr||'#1a2a3a'};">${v}</span>${t!=null?`<span style="display:block;font-size:9px;font-family:var(--mono);color:#8099b0;margin-top:1px;">${pct(v,t)}</span>`:''}</td>`;
   const rows=sections.map((s,i)=>{
     const c=counts[i];
     const totDel=c.installed+c.delivered;
     return `<tr style="border-top:1px solid var(--border);">
       <td style="padding:8px 11px;font-size:12px;font-weight:600;color:#1a2a3a;white-space:nowrap;">${s.label}</td>
-      ${td(c.total)}
-      ${td(c.installed,'#1a9458')}
-      ${td(c.total-c.installed,'#cc4400')}
-      ${td(c.delivered,'#a07800')}
-      ${td(totDel,'#224F93')}
-      ${td(c.total-totDel,'#884400')}
+      ${td(c.total,null)}
+      ${td(c.installed,c.total,'#1a9458')}
+      ${td(c.total-c.installed,c.total,'#cc4400')}
+      ${td(c.delivered,c.total,'#a07800')}
+      ${td(totDel,c.total,'#224F93')}
+      ${td(c.total-totDel,c.total,'#884400')}
     </tr>`;}).join('');
   const totDel=tot.installed+tot.delivered;
   box.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px;">
@@ -4675,12 +4676,12 @@ function _renderProjOverviewReport(){
       <tbody>${rows}
         <tr style="border-top:2px solid var(--border);background:var(--surface2);">
           <td style="padding:8px 11px;font-size:12px;font-weight:700;color:#1a2a3a;">Total</td>
-          ${td(tot.total)}
-          ${td(tot.installed,'#1a9458')}
-          ${td(tot.total-tot.installed,'#cc4400')}
-          ${td(tot.delivered,'#a07800')}
-          ${td(totDel,'#224F93')}
-          ${td(tot.total-totDel,'#884400')}
+          ${td(tot.total,null)}
+          ${td(tot.installed,tot.total,'#1a9458')}
+          ${td(tot.total-tot.installed,tot.total,'#cc4400')}
+          ${td(tot.delivered,tot.total,'#a07800')}
+          ${td(totDel,tot.total,'#224F93')}
+          ${td(tot.total-totDel,tot.total,'#884400')}
         </tr>
       </tbody>
     </table>
