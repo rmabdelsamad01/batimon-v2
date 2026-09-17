@@ -10763,6 +10763,12 @@ function _pmSetMode(){
   if(cdEl)cdEl.style.display=isBM?'':'none';
   if(bbEl)bbEl.style.display=isBM?'':'none';
   if(soiEl)soiEl.innerHTML=`<span class="si">✓</span>${isBM?'Top Bracket':'Installed'}`;
+  if(window._mobPanelMode){
+    ['sof','soc','socip','socni','sox','sop'].forEach(cls=>{
+      const el=document.querySelector(`.so.${cls}`);
+      if(el)el.style.display='none';
+    });
+  }
 }
 function setSt(s,el){
   // Remember previous status so we can revert if checklist is cancelled
