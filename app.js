@@ -4605,13 +4605,13 @@ function _renderProjOverviewReport(){
     const st=(panels[id]||{}).status||'pending';
     sections.forEach((sec,i)=>{if(sec.match(z,n,col)){counts[i].total++;counts[i][st]=(counts[i][st]||0)+1;}});
   });
-  const tot=counts.reduce((a,c)=>({total:a.total+c.total,installed:a.installed+c.installed,delivered:a.delivered+c.delivered,fabricated:a.fabricated+c.fabricated}),{total:0,installed:0,delivered:0,fabricated:0});
+  const tot=counts.reduce((a,c)=>({total:a.total+c.total,installed:a.installed+c.installed,delivered:a.delivered+c.delivered}),{total:0,installed:0,delivered:0});
   const bar=(v,t)=>{const p=t>0?Math.round(v/t*100):0;return `<div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;min-width:50px;height:5px;background:#e0e8f0;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${p}%;background:#1a9458;border-radius:3px;"></div></div><span style="font-size:10px;font-family:var(--mono);color:#8099b0;min-width:26px;text-align:right;">${p}%</span></div>`;};
   const hth='padding:7px 11px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;';
   const td=(v,clr)=>`<td style="padding:7px 11px;text-align:center;font-size:12px;font-family:var(--mono);font-weight:700;color:${clr||'#1a2a3a'};">${v}</td>`;
   const rows=sections.map((s,i)=>{const c=counts[i];return `<tr style="border-top:1px solid var(--border);">
     <td style="padding:8px 11px;font-size:12px;font-weight:600;color:#1a2a3a;white-space:nowrap;">${s.label}</td>
-    ${td(c.total)}${td(c.installed,'#1a9458')}${td(c.delivered,'#a07800')}${td(c.fabricated,'#1a5fa8')}
+    ${td(c.total)}${td(c.installed,'#1a9458')}${td(c.delivered,'#a07800')}
     <td style="padding:7px 11px;min-width:110px;">${bar(c.installed,c.total)}</td>
   </tr>`;}).join('');
   box.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px;">
@@ -4621,13 +4621,12 @@ function _renderProjOverviewReport(){
         <th style="${hth}text-align:center;color:var(--text3);">Total</th>
         <th style="${hth}text-align:center;color:#1a9458;">Installed</th>
         <th style="${hth}text-align:center;color:#a07800;">Delivered</th>
-        <th style="${hth}text-align:center;color:#1a5fa8;">Fabricated</th>
         <th style="${hth}text-align:left;color:var(--text3);">Installed %</th>
       </tr></thead>
       <tbody>${rows}
         <tr style="border-top:2px solid var(--border);background:var(--surface2);">
           <td style="padding:8px 11px;font-size:12px;font-weight:700;color:#1a2a3a;">Total</td>
-          ${td(tot.total)}${td(tot.installed,'#1a9458')}${td(tot.delivered,'#a07800')}${td(tot.fabricated,'#1a5fa8')}
+          ${td(tot.total)}${td(tot.installed,'#1a9458')}${td(tot.delivered,'#a07800')}
           <td style="padding:7px 11px;">${bar(tot.installed,tot.total)}</td>
         </tr>
       </tbody>
