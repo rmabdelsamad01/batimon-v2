@@ -3463,7 +3463,21 @@ function _cgZoomReset(){_cgZoomIdx=5;_cgApplyZoom();}
 function _cgApplyZoom(){
   const z=_CG_ZOOM_LEVELS[_cgZoomIdx];
   const wrap=document.getElementById('cg-grid-wrap');
+  const sw=document.getElementById('cg-scroll-wrap');
+  // Save fractional scroll position before zoom changes content size
+  let fracX=0,fracY=0;
+  if(sw){
+    const maxX=sw.scrollWidth-sw.clientWidth;
+    const maxY=sw.scrollHeight-sw.clientHeight;
+    if(maxX>0) fracX=sw.scrollLeft/maxX;
+    if(maxY>0) fracY=sw.scrollTop/maxY;
+  }
   if(wrap) wrap.style.zoom=z;
+  // Restore proportional scroll position after zoom
+  if(sw) requestAnimationFrame(()=>{
+    sw.scrollLeft=fracX*Math.max(0,sw.scrollWidth-sw.clientWidth);
+    sw.scrollTop=fracY*Math.max(0,sw.scrollHeight-sw.clientHeight);
+  });
   // Plan view zoom
   const pvWrap=document.getElementById('pv-canvas-wrap');
   if(pvWrap){pvWrap.style.transform=`scale(${z})`;pvWrap.style.transformOrigin='top left';}
