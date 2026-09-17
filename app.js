@@ -4583,7 +4583,10 @@ function _renderProjOverviewReport(){
     {label:'Shift — R+17 & R+18',
      match:(z,n,col)=>n===17||n===18},
     {label:'East Wing — R+18 to R+24',
-     match:(z,n,col)=>(n>=19&&n<=24)&&(z==='EF'||(z==='NF'&&col>=52&&col<=64)||(z==='SF'&&col>=82&&col<=92))},
+     match:(z,n,col)=>
+       (z==='NF'&&n>=18&&n<=24&&col>=54&&col<=65)||
+       (z==='EF'&&n>=18&&n<=24&&col>=66&&col<=80)||
+       (z==='SF'&&n>=18&&n<=24&&col>=81&&col<=92)},
     {label:'Coiffe — R+25',
      match:(z,n,col)=>
        (z==='NF'&&n===25&&col>=52&&col<=65)||
