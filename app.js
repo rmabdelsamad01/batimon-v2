@@ -4585,11 +4585,19 @@ function _renderProjOverviewReport(){
     {label:'East Wing — R+18 to R+24',
      match:(z,n,col)=>(n>=19&&n<=24)&&(z==='EF'||(z==='NF'&&col>=52&&col<=64)||(z==='SF'&&col>=82&&col<=92))},
     {label:'Coiffe — R+25',
-     match:(z,n,col)=>n===25},
+     match:(z,n,col)=>
+       (z==='NF'&&n===25&&col>=52&&col<=65)||
+       (z==='NF'&&n===26&&col>=53&&col<=55)||
+       (z==='EF'&&n===25&&col>=66&&col<=80)||
+       (z==='SF'&&n===25&&col>=81&&col<=94)},
     {label:'West Wing — R+18 to R+33',
      match:(z,n,col)=>(n>=19&&n<=33)&&(z==='WF'||(z==='NF'&&col>=32&&col<=41)||(z==='SF'&&col>=4&&col<=14))},
     {label:'Coiffe — R+34',
-     match:(z,n,col)=>n===34},
+     match:(z,n,col)=>
+       (z==='SF'&&n===34&&col>=88&&col<=92)||
+       (z==='SF'&&n===34&&col>=1&&col<=15)||
+       (z==='WF'&&n===34&&col>=16&&col<=30)||
+       (z==='NF'&&n===34&&col>=31&&col<=41)},
   ];
   const zero=()=>({total:0,installed:0,delivered:0,fabricated:0,cutting:0,cip:0,cl_not_issued:0,defect:0,pending:0});
   const counts=sections.map(zero);
