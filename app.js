@@ -114,7 +114,7 @@ const NF_TYPES={
   'R+18MD': Array(33).fill(''),
   'R+18B':  nfRowLeft(['C1703','R1751','R1756','R1751','R1756','R1751','R1751','R1753','R1755','R1752','R1753','E1753']),
   'R+17T':  [...Array(14).fill(''),'R1750',...Array(3).fill(''),'R1745','R1744','R1743','R1742','R1741',...Array(10).fill('')],
-  'R+17B':  nfRowRight10(['D1702','R1711','R1706','R1711','R1703','R1712','R1711','R1711','R1706','C1702']),
+  'R+17B':  nfRowRight10(['D1702','R1711','R1706','R1711','R1713','R1712','R1711','R1711','R1706','C1702']),
   'R+16': nfRowBoth10(['C08','T02','T12','T02','T12','T02','T02','T06','T11','T04','T06','E06'],['G04','T02','T12','T02','T06','T04','T02','T02','T12','C06']),
   'R+15': nfRowBoth10(['C07','T01','T05','T03','T01','T01','T09','T01','T09','T01','T05','E03'],['G05','T05','T03','T05','T03','T01','T01','T09','T05','C09']),
   'R+14': nfRowBoth10(['C08','T02','T06','T04','T02','T02','T12','T02','T12','T02','T06','E04'],['G06','T06','T04','T06','T04','T02','T02','T12','T06','C10']),
@@ -8665,7 +8665,7 @@ function buildComplexTable(zone){
         } else if(ref==='R1702'||ref==='R1712'||ref==='D1702'){
           c.style.borderLeft='5px double #ED1C24';
           c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${ref.split('').join('\n')}</span>`;
-        } else if(ref==='R1703'||ref==='G1703'){
+        } else if(ref==='R1703'||ref==='R1713'||ref==='G1703'){
           c.style.borderLeft='5px double #ED1C24';
           c.style.backgroundImage='repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px)';
           c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${ref.split('').join('\n')}</span>`;
