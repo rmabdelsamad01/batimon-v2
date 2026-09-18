@@ -9123,7 +9123,7 @@ function buildComplexTable(zone){
             const c17=document.createElement('div');
             c17.className=`wfc ef-r17b ${meta.cls}`;
             c17.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
-            if(r17ref==='R1701'||r17ref==='C1702'||r17ref==='C1701'){
+            if(r17ref==='R1701'||r17ref==='R1711'||r17ref==='C1702'||r17ref==='C1701'){
               c17.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${r17ref.split('').join('\n')}</span>`;
             } else if(r17ref==='R1702'){
               c17.style.borderLeft='5px double #ED1C24';
