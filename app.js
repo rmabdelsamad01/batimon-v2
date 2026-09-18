@@ -8453,7 +8453,7 @@ function buildComplexTable(zone){
         const bottomHtml=fl==='R+19'
           ?`<div style="width:100%;height:48px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:50px;flex-shrink:0;background-color:${stBg45};${dots1}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${vlines}"></div>`;
-        const lbl45=fl==='R+19'?'<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">R1945</span>':'';
+        const lbl45=fl==='R+19'?'<span style="position:absolute;top:125px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;pointer-events:none;z-index:2;white-space:nowrap;">S10</span>':'';
         cell0.innerHTML=`<div style="width:100%;height:50px;flex-shrink:0;${vlines}"></div><div style="width:100%;height:2px;flex-shrink:0;background:#000;"></div>${bottomHtml}${lbl45}`;
         cell0.onclick=(e)=>{e.currentTarget=cell0;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         td.appendChild(cell0);tr.appendChild(td);return;
@@ -8510,7 +8510,7 @@ function buildComplexTable(zone){
         cell0.style.cssText=`width:50px !important;height:150px !important;display:flex !important;flex-direction:column !important;align-items:stretch !important;justify-content:flex-start !important;background:transparent !important;overflow:hidden !important;box-sizing:border-box;cursor:pointer;border-radius:4px;border:1.5px solid rgba(34,79,147,0.15);position:relative;${redBot23}`;
         const hstripes42='background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0px,rgba(0,0,0,0.25) 2px,transparent 2px,transparent 5px);';
         const dots42='background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
-        const r19ColLabels={42:'R1942',43:'R1943',44:'R1944'};
+        const r19ColLabels={42:'S09',43:'S09',44:'S09'};
         const bottom42=fl==='R+19'
           ?`<div style="width:100%;height:48px;flex-shrink:0;${hstripes42}"></div><div style="width:100%;height:50px;flex-shrink:0;background-color:${stBg42};${dots42}"></div>`
           :`<div style="width:100%;height:98px;flex-shrink:0;${hstripes42}"></div>`;
@@ -8539,7 +8539,7 @@ function buildComplexTable(zone){
           '<div style="position:absolute;top:50px;left:25px;right:25px;height:50px;background:#A6C9EC;"></div>'+
           '<div style="position:absolute;top:50px;right:0;width:25px;height:50px;background:#595959;"></div>'+
           '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:'+_dotsBg19+';"></div>'+
-          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;letter-spacing:1px;">R1946</span></div>'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:center;z-index:3;pointer-events:none;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:#224F93;letter-spacing:1px;">S11</span></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:25px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:75px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:125px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>';
