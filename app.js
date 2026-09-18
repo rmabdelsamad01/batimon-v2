@@ -8122,6 +8122,7 @@ function applyNFDesignOverrides(tbl){
       const r19Status=(typeof panels!=='undefined'&&panels[pid])?panels[pid].status:null;
       const span=cell.querySelector('.c-type');
       if(span)span.textContent=r19Labels[col].split('').join('\n');
+      if(r19DotColsNoBorder.includes(col)&&span)span.style.cssText='font-size:17px;line-height:1.7;font-weight:700;color:inherit;white-space:pre;text-align:center;position:relative;z-index:1;';
       if(r19DotColsNoBorder.includes(col)) cell.style.borderLeft='1.5px solid rgba(34,79,147,0.2)';
       if(r19DotCols.includes(col)||r19DotColsNoBorder.includes(col)){
         const cBottom=cell.querySelector('.c-bottom');
