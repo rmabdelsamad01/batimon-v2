@@ -8660,7 +8660,7 @@ function buildComplexTable(zone){
         c.className=`wfc ef-r17b ${meta.cls}`;
         c.style.cssText=`height:${h} !important;min-height:${h};overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;`;
         c.dataset.pid=id;
-        if(ref==='R1701'||ref==='C1702'||ref==='C1701'){
+        if(ref==='R1701'||ref==='R1711'||ref==='C1702'||ref==='C1701'){
           c.innerHTML=`<span style="position:relative;z-index:2;font-family:var(--mono);font-size:15px;font-weight:700;color:inherit;white-space:pre;line-height:1.3;text-align:center;">${ref.split('').join('\n')}</span>`;
         } else if(ref==='R1702'||ref==='D1702'){
           c.style.borderLeft='5px double #ED1C24';
