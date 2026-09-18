@@ -113,7 +113,7 @@ const NF_TYPES={
   'R+18M':  Array(33).fill(''),
   'R+18MD': Array(33).fill(''),
   'R+18B':  nfRowLeft(['C1703','R1751','R1756','R1751','R1756','R1751','R1751','R1753','R1755','R1752','R1753','E1753']),
-  'R+17T':  [...Array(14).fill(''),'R1750',...Array(3).fill(''),'R1745','R1744','R1743','R1742','R1741',...Array(10).fill('')],
+  'R+17T':  [...Array(14).fill(''),'S08',...Array(3).fill(''),'S07','S06','S06','S06','S06',...Array(10).fill('')],
   'R+17B':  nfRowRight10(['D1712','R1711','R1716','R1711','R1713','R1712','R1711','R1711','R1716','C1702']),
   'R+16': nfRowBoth10(['C08','T02','T12','T02','T12','T02','T02','T06','T11','T04','T06','E06'],['G04','T02','T12','T02','T06','T04','T02','T02','T12','C06']),
   'R+15': nfRowBoth10(['C07','T01','T05','T03','T01','T01','T09','T01','T09','T01','T05','E03'],['G05','T05','T03','T05','T03','T01','T01','T09','T05','C09']),
@@ -8033,7 +8033,7 @@ function applyNFDesignOverrides(tbl){
   const r17tRow=tbl.querySelector('tr.tr-r17t');
   const r17bRow=tbl.querySelector('tr.tr-r17b');
   if(r17tRow){
-    const r17tLabels={41:'R1741',42:'R1742',43:'R1743',44:'R1744',45:'R1745'};
+    const r17tLabels={41:'S06',42:'S06',43:'S06',44:'S06',45:'S07'};
     const _r17StBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#FF8C00',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
     [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       if([50,49,48,47].includes(col))return; // merged colspan=4 in buildComplexTable
@@ -8717,7 +8717,7 @@ function buildComplexTable(zone){
           const _bg50=_custStBg[_st50]||'#E8F0FB';
           const c=document.createElement('div');
           c.style.cssText=`width:150px;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:${_bg50};border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;`;
-          c.innerHTML='<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#224F93;pointer-events:none;z-index:1;">R1750</span>';
+          c.innerHTML='<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:#224F93;pointer-events:none;z-index:1;">S08</span>';
           c.dataset.pid=id;
           c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(c);tr.appendChild(td);
