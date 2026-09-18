@@ -10257,7 +10257,7 @@ function buildComplexTable(zone){
           c.onclick=(e)=>{e.currentTarget=c;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
           td.appendChild(c);tr.appendChild(td);return;
         }
-        // WF R+19 cols 27,21 (R1804): T07 format, merge with R+18T (rowspan=2, 175px)
+        // WF R+19 cols 27,21 (R1808): T07 format, merge with R+18T (rowspan=2, 175px)
         if(zone.id==='WF' && fl==='R+19' && (col===27||col===21)){
           const mergedH=175;
           td.setAttribute('rowspan','2');
@@ -10272,7 +10272,7 @@ function buildComplexTable(zone){
           c.innerHTML=`
             <div style="width:25px;height:${mergedH}px;display:flex;flex-direction:column;flex-shrink:0;">
               <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
-              <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type">${cellLabel}</span></div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type" style="transform:translateY(-25px)">${cellLabel}</span></div>
             </div>
             <div style="width:25px;height:${mergedH}px;flex-shrink:0;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
           c.dataset.pid=id;
