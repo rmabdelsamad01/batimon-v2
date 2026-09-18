@@ -10272,7 +10272,7 @@ function buildComplexTable(zone){
           c.innerHTML=`
             <div style="width:25px;height:${mergedH}px;display:flex;flex-direction:column;flex-shrink:0;">
               <div style="height:50px;background-image:radial-gradient(circle,#000 1px,transparent 1px);background-size:5px 5px;flex-shrink:0;border-bottom:1px solid rgba(0,0,0,0.2);"></div>
-              <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type" style="transform:translateY(-25px)">${cellLabel}</span></div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span class="c-type" style="transform:translateY(-30px)">${cellLabel}</span></div>
             </div>
             <div style="width:25px;height:${mergedH}px;flex-shrink:0;border-left:5px double #ED1C24;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2) 0px,rgba(0,0,0,0.2) 2px,transparent 2px,transparent 5px);"></div>`;
           c.dataset.pid=id;
