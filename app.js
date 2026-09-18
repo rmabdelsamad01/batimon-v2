@@ -9661,7 +9661,7 @@ function buildComplexTable(zone){
           td.appendChild(cell);tr.appendChild(td);return;
         }
         // NF R+19 named panels: alias to base structural type for rendering, keep pType for display/click
-        const _nfAliases={'R1941':'GM06','R1940':'M06','R1939':'T03','R1938':'M12','R1937':'M12','R1936':'M06','R1935':'T03','R1934':'T01','R1933':'T01','R1932':'M06','C1931':'C1902'};
+        const _nfAliases={'R1941':'GM06','R1940':'M06','R1939':'T03','R1938':'M12','R1937':'M12','R1936':'M06','R1935':'T03','R1934':'T01','R1933':'T01','R1911':'T01','R1932':'M06','C1931':'C1902'};
         const pTypeStruct = _nfAliases[pType] || pType;
         // effType: use pTypeStruct, or pRef when pRef is a known D/G format code and pType is empty
         const effType = pTypeStruct || (['D05','D06','D07','D08','D10','D11','G03','G04','G05','G06'].includes(pRef) ? pRef : '');
