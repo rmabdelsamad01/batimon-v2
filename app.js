@@ -8117,11 +8117,13 @@ function applyNFDesignOverrides(tbl){
   const r19DotColsNoBorder=[34,33];
   [50,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
     const pid='NF-R+19-C'+col;
-    const cell=tbl.querySelector('[data-pid="'+pid+'"]');
+    let cell=tbl.querySelector('[data-pid="'+pid+'"]');
+    if(!cell){const refCell=tbl.querySelector('[data-pid="NF-R+19-C41"]');if(refCell){const tr=refCell.closest('tr');if(tr)cell=tr.querySelector('[data-col="'+col+'"]');}}
     if(cell){
       const r19Status=(typeof panels!=='undefined'&&panels[pid])?panels[pid].status:null;
       const span=cell.querySelector('.c-type');
       if(span)span.textContent=r19Labels[col].split('').join('\n');
+      else{const ls=cell.querySelector('span[style*="position:absolute"]');if(ls)ls.textContent=r19Labels[col];}
       if(r19DotColsNoBorder.includes(col)&&span)span.style.cssText='font-size:17px;line-height:1.7;font-weight:700;color:inherit;white-space:pre;text-align:center;position:relative;z-index:1;';
       if(r19DotColsNoBorder.includes(col)) cell.style.borderLeft='1.5px solid rgba(34,79,147,0.2)';
       if(r19DotCols.includes(col)||r19DotColsNoBorder.includes(col)){
