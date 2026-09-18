@@ -108,7 +108,7 @@ const NF_TYPES={
   'R+22': nfRowBoth11(['C07','T01','T01','T09','T01','T07','T03','T05','T08','T03','T05','E03'],['G05','T03','T01','T01','T05','T03','T07','T03','T05','T03','C05']),
   'R+21': nfRowBoth11(['C08','T02','T02','T12','T02','T10','T04','T06','T11','T04','T06','E04'],['G06','T04','T02','T02','T06','T04','T10','T04','T06','T04','C06']),
   'R+20': nfRowBoth11(['C07','T01','T01','T09','T05','T03','T01','T01','T05','T03','T05','E03'],['G05','T05','T03','T09','T09','T05','T03','T01','T01','T05','C09']),
-  'R+19': nfRowBoth11(['C07','T01','T01','M12','M06','T03','T01','T01','M06','T03','M06','E04'],['G1913','R1913','R1912','R1916','R1916','R1913','R1912','R1911','R1911','R1913','C1931']),
+  'R+19': nfRowBoth11(['C07','T01','T01','M12','M06','T03','T01','T01','M06','T03','M06','E04'],['G1913','R1913','R1912','R1916','R1916','R1913','R1912','R1911','R1911','R1913','C1901']),
   'R+18T': [...['C1803','R1851','R1851','R1856','R1853','R1852','R1851','R1851','R1853','R1852','R1853','E1852'],'','','S05','','','','S04','S03','S02','S02',...['S01','S01','S01','S01','S01','S01','S01','S01','S01','S01','S01']],
   'R+18M':  Array(33).fill(''),
   'R+18MD': Array(33).fill(''),
@@ -8112,7 +8112,7 @@ function applyNFDesignOverrides(tbl){
     });
   }
   // R+19 cols 31-41: rename + format by type
-  const r19Labels={41:'G1913',40:'R1913',39:'R1912',38:'R1916',37:'R1916',36:'R1913',35:'R1912',34:'R1911',33:'R1911',32:'R1913',31:'C1931'};
+  const r19Labels={41:'G1913',40:'R1913',39:'R1912',38:'R1916',37:'R1916',36:'R1913',35:'R1912',34:'R1911',33:'R1911',32:'R1913',31:'C1901'};
   const r19DotCols=[39,35,31];
   const r19DotColsNoBorder=[34,33];
   [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
@@ -9661,7 +9661,7 @@ function buildComplexTable(zone){
           td.appendChild(cell);tr.appendChild(td);return;
         }
         // NF R+19 named panels: alias to base structural type for rendering, keep pType for display/click
-        const _nfAliases={'R1941':'GM06','R1940':'M06','R1939':'T03','R1938':'M12','R1937':'M12','R1936':'M06','R1935':'T03','R1934':'T01','R1933':'T01','R1911':'T01','R1912':'T03','R1913':'M06','G1913':'GM06','R1916':'M12','R1932':'M06','C1931':'C1902'};
+        const _nfAliases={'R1941':'GM06','R1940':'M06','R1939':'T03','R1938':'M12','R1937':'M12','R1936':'M06','R1935':'T03','R1934':'T01','R1933':'T01','R1911':'T01','R1912':'T03','R1913':'M06','G1913':'GM06','R1916':'M12','R1932':'M06','C1931':'C1902','C1901':'C1902'};
         const pTypeStruct = _nfAliases[pType] || pType;
         // effType: use pTypeStruct, or pRef when pRef is a known D/G format code and pType is empty
         const effType = pTypeStruct || (['D05','D06','D07','D08','D10','D11','G03','G04','G05','G06'].includes(pRef) ? pRef : '');
