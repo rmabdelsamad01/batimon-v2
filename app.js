@@ -8112,7 +8112,7 @@ function applyNFDesignOverrides(tbl){
     });
   }
   // R+19 cols 31-41: rename + format by type
-  const r19Labels={41:'R1941',40:'R1940',39:'R1939',38:'R1938',37:'R1937',36:'R1936',35:'R1935',34:'R1934',33:'R1933',32:'R1932',31:'C1931'};
+  const r19Labels={41:'R1941',40:'R1940',39:'R1939',38:'R1938',37:'R1937',36:'R1936',35:'R1935',34:'R1911',33:'R1911',32:'R1932',31:'C1931'};
   const r19DotCols=[39,35,31];
   const r19DotColsNoBorder=[34,33];
   [41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
@@ -8130,7 +8130,7 @@ function applyNFDesignOverrides(tbl){
           const labelZone=document.createElement('div');
           labelZone.style.cssText='width:100%;height:50px;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
           const cType=cBottom.querySelector('.c-type');
-          if(cType)labelZone.appendChild(cType);
+          if(cType){labelZone.appendChild(cType);cType.style.cssText='font-size:17px;line-height:1.7;font-weight:700;color:inherit;white-space:pre;text-align:center;position:relative;z-index:1;';}
           const dots=document.createElement('div');
           dots.style.cssText='width:100%;height:50px;flex-shrink:0;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;';
           cBottom.innerHTML='';
