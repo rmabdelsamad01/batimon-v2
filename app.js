@@ -21042,10 +21042,6 @@ function renderAAABetaPage(){
     }
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')]);
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')]);
-    for(let i=-8;i<=22;i++){
-      faces.push(line2([i,0,-26],[i,0,15],'#111b28',0.4));
-      faces.push(line2([-9,0,i],[23,0,i],'#111b28',0.4));
-    }
     return faces;
   }
 
