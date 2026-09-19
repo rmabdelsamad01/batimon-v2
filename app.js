@@ -20766,11 +20766,11 @@ function renderAAABetaPage(){
 
   // 1 world unit = 1 panel column = BASE_W px in flat table
   const PANEL=1.0,JG=0.07;
-  const W_SPAN=17,NW_SPAN=15,SW_SPAN=12,NW_EX=4,SW_EX=2;
+  const W_SPAN=17,NW_SPAN=15,SW_SPAN=12,NW_EX=4,SW_EX=3;
   const WF_C=Array.from({length:17},(_,c)=>15+c);
   const NF_C=Array.from({length:15},(_,c)=>31+c);
   const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4];
-  const SW_EX_C=['15-B','15-A'];
+  const SW_EX_C=['15-B','15-A','15-A'];
 
   function getColor(zid,fi,col){
     const fl=FLOORS_BTT[fi];
