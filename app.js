@@ -20933,6 +20933,20 @@ function renderAAABetaPage(){
       faces.push(line2([i,0,-26],[i,0,15],'#111b28',0.4));
       faces.push(line2([-9,0,i],[23,0,i],'#111b28',0.4));
     }
+    {
+      const cx0=0.2,cx1=14.8,cz0=-0.2,cz1=-16.8;
+      const cy0=0,cy1=yPos[FLOORS_BTT.indexOf('R+33')]+flH('R+33');
+      const W='#ffffff',lw=1.5;
+      for(const y of[cy0,cy1]){
+        faces.push(line2([cx0,y,cz0],[cx1,y,cz0],W,lw));
+        faces.push(line2([cx1,y,cz0],[cx1,y,cz1],W,lw));
+        faces.push(line2([cx1,y,cz1],[cx0,y,cz1],W,lw));
+        faces.push(line2([cx0,y,cz1],[cx0,y,cz0],W,lw));
+      }
+      for(const[x,z]of[[cx0,cz0],[cx1,cz0],[cx1,cz1],[cx0,cz1]]){
+        faces.push(line2([x,cy0,z],[x,cy1,z],W,lw));
+      }
+    }
     return faces;
   }
 
