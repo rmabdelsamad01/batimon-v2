@@ -20978,7 +20978,7 @@ function renderAAABetaPage(){
     lX=e.clientX;lY=e.clientY;render();
   });
   vp.addEventListener('wheel',e=>{
-    zoom=Math.max(0.2,Math.min(4.0,zoom*(1-e.deltaY*0.0012)));
+    zoom=Math.max(0.1,Math.min(7,zoom*(e.deltaY<0?1.08:0.93)));
     render();e.preventDefault();
   },{passive:false});
   let lastPinch=0,lT=null;
@@ -20995,7 +20995,7 @@ function renderAAABetaPage(){
       lT={x:e.touches[0].clientX,y:e.touches[0].clientY};render();
     }else if(e.touches.length===2){
       const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      if(lastPinch){zoom=Math.max(0.2,Math.min(4.0,zoom*d/lastPinch));render();}
+      if(lastPinch){zoom=Math.max(0.1,Math.min(7,zoom*d/lastPinch));render();}
       lastPinch=d;
     }
   },{passive:false});
