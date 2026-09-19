@@ -20793,23 +20793,58 @@ function renderAAABetaPage(){
     const lerp=(a,b,t)=>[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])];
     const pt=(hp,y)=>[hp[0],y,hp[1]];
     const add=(p3,clr)=>{const f=quad(p3,clr,null,0);f.depth-=0.01;res.push(f);};
-    if(/^T0[1-4]$/.test(type)){
+    // Pattern map matching the 2D _TM table: sp/st/2c/2cf/dt
+    const TM={'C01':'sp','C02':'sp','C03':'sp','C04':'sp','C05':'sp','C06':'sp','C07':'sp','C08':'sp','C09':'sp','C10':'sp',
+      'C101':'st','C102':'st','C1902':'sp',
+      'D01':'sp','D02':'sp','D03':'sp','D04':'sp','D05':'st','D06':'st','DM06':'st',
+      'D07':'2c','D08':'2c','D09':'2cf','D10':'2c','D11':'2c','D12':'2cf',
+      'E01':'sp','E02':'sp','E03':'sp','E04':'sp','E05':'st','E06':'st',
+      'E07':'2c','E08':'2c','E09':'2cf','E10':'2c','E11':'2c','E12':'2cf',
+      'G03':'sp','G04':'sp','G05':'st','G06':'st','GM06':'st',
+      'M06':'st','M10':'2c','M11':'2c','M12':'2cf',
+      'R201':'dt','C201':'dt','R202':'dt','E202':'dt','R203':'st','R204':'2c','R211':'2c',
+      'R301':'dt','C301':'dt','C302':'dt','R302':'dt','R303':'st','G303':'st',
+      'R304':'2c','D304':'2c','R305':'2c','R306':'2cf'};
+    // Resolve pattern key
+    let pat=null;
+    if(type==='Door'){pat='door';}
+    else if(TM[type]){pat=TM[type];}
+    else if(/^T0[1-4]$/.test(type)){pat='sp';}
+    else if(/^T(07|08|10|11)$/.test(type)){pat='2c';}
+    else if(/^T(09|12)$/.test(type)){pat='2cf';}
+    else if(/^T(0[5-9]|1[0-2])$/.test(type)){pat='st';}
+    else if(/^R(25|34)\d{2,}$|^R4\d{3,}$/.test(type)){pat=null;} // status colour only
+    else if(/^[A-Za-z]\d{3,}/.test(type)){
+      const sfx=type.slice(-2);
+      if(sfx==='01'||sfx==='51')pat='dt';
+      else if(sfx==='02'||sfx==='52')pat='dt';
+      else if(sfx==='03'||sfx==='53'||sfx==='06'||sfx==='56')pat='st';
+      else if(sfx==='04'||sfx==='54')pat='2c';
+      else if(sfx==='05'||sfx==='55')pat='2c';
+    }
+    // Draw pattern
+    if(pat==='sp'){
       const ym=ya+(yb-ya)*2/3;
       add([pt(p0,ym),pt(p0,yb),pt(p1,yb),pt(p1,ym)],'rgba(255,255,255,0.18)');
-    }
-    if(/^T(07|08|10|11)$/.test(type)){
+    }else if(pat==='2c'){
       const pm=lerp(p0,p1,0.5);
       add([pt(p0,ya),pt(p0,yb),pt(pm,yb),pt(pm,ya)],'rgba(0,0,0,0.18)');
-    }else if(/^T(09|12)$/.test(type)){
+      const N=5;for(let s=0;s<N;s++){const t0=s/N,t1=t0+0.5/N;add([pt(lerp(p0,p1,t0),ya),pt(lerp(p0,p1,t0),yb),pt(lerp(p0,p1,t1),yb),pt(lerp(p0,p1,t1),ya)],'rgba(0,0,0,0.28)');}
+    }else if(pat==='2cf'){
       const pm=lerp(p0,p1,0.5);
       add([pt(pm,ya),pt(pm,yb),pt(p1,yb),pt(p1,ya)],'rgba(0,0,0,0.18)');
-    }
-    if(/^T(0[5-9]|1[0-2])$/.test(type)){
-      const N=5;
-      for(let s=0;s<N;s++){
-        const t0=s/N,t1=t0+0.5/N;
-        add([pt(lerp(p0,p1,t0),ya),pt(lerp(p0,p1,t0),yb),pt(lerp(p0,p1,t1),yb),pt(lerp(p0,p1,t1),ya)],'rgba(0,0,0,0.28)');
+      const N=5;for(let s=0;s<N;s++){const t0=s/N,t1=t0+0.5/N;add([pt(lerp(p0,p1,t0),ya),pt(lerp(p0,p1,t0),yb),pt(lerp(p0,p1,t1),yb),pt(lerp(p0,p1,t1),ya)],'rgba(0,0,0,0.28)');}
+    }else if(pat==='st'){
+      const N=5;for(let s=0;s<N;s++){const t0=s/N,t1=t0+0.5/N;add([pt(lerp(p0,p1,t0),ya),pt(lerp(p0,p1,t0),yb),pt(lerp(p0,p1,t1),yb),pt(lerp(p0,p1,t1),ya)],'rgba(0,0,0,0.28)');}
+    }else if(pat==='dt'){
+      const NX=4,NY=4;
+      for(let ix=0;ix<NX;ix++)for(let iy=0;iy<NY;iy++){
+        const t0=(ix+0.3)/NX,t1=(ix+0.5)/NX;
+        const yy0=ya+(iy+0.3)/NY*(yb-ya),yy1=ya+(iy+0.5)/NY*(yb-ya);
+        add([pt(lerp(p0,p1,t0),yy0),pt(lerp(p0,p1,t0),yy1),pt(lerp(p0,p1,t1),yy1),pt(lerp(p0,p1,t1),yy0)],'rgba(0,0,0,0.28)');
       }
+    }else if(pat==='door'){
+      add([pt(p0,ya),pt(p0,yb),pt(p1,yb),pt(p1,ya)],'rgba(0,0,0,0.35)');
     }
     return res;
   }
