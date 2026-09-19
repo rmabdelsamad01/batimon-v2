@@ -20767,7 +20767,7 @@ function renderAAABetaPage(){
   const centerY=totalH/2;
 
   // 1 world unit = 1 panel column = BASE_W px in flat table
-  const PANEL=1.0,JG=0.07;
+  const PANEL=1.0,JG=0;
   const W_SPAN=17,NW_SPAN=15,SW_SPAN=15,NW_EX=4,SW_EX=1;
   const NW_END=NW_SPAN-0.5,SW_END=SW_SPAN-0.5; // last col of NF/SF is half-width
   const WF_C=Array.from({length:17},(_,c)=>15+c);
