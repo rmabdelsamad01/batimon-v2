@@ -20769,6 +20769,7 @@ function renderAAABetaPage(){
   // 1 world unit = 1 panel column = BASE_W px in flat table
   const PANEL=1.0,JG=0.07;
   const W_SPAN=17,NW_SPAN=15,SW_SPAN=15,NW_EX=4,SW_EX=1;
+  const NW_END=NW_SPAN-0.5,SW_END=SW_SPAN-0.5; // last col of NF/SF is half-width
   const WF_C=Array.from({length:17},(_,c)=>15+c);
   const NF_C=Array.from({length:15},(_,c)=>31+c);
   const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4,3,2,1];
@@ -20908,8 +20909,8 @@ function renderAAABetaPage(){
     const faces=[];
     const bg=(p3)=>{const f=quad(p3,JOINT,null,0);f.depth+=1000;return f;};
     faces.push(bg([[0,0,0],[0,totalH,0],[0,totalH,-W_SPAN],[0,0,-W_SPAN]]));
-    faces.push(bg([[0,0,-W_SPAN],[0,totalH,-W_SPAN],[NW_SPAN,totalH,-W_SPAN],[NW_SPAN,0,-W_SPAN]]));
-    faces.push(bg([[0,0,0],[0,totalH,0],[SW_SPAN,totalH,0],[SW_SPAN,0,0]]));
+    faces.push(bg([[0,0,-W_SPAN],[0,totalH,-W_SPAN],[NW_END,totalH,-W_SPAN],[NW_END,0,-W_SPAN]]));
+    faces.push(bg([[0,0,0],[0,totalH,0],[SW_END,totalH,0],[SW_END,0,0]]));
     const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
     faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
@@ -20936,8 +20937,9 @@ function renderAAABetaPage(){
         }
         for(let c=0;c<NW_SPAN;c++){
           const col=NF_C[c];
-          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          const x0s=c*PANEL,x1s=(c+1)*PANEL;
+          const eR=(c===NW_SPAN-1)?NW_END:c+1;
+          const x0=c*PANEL+JG,x1=eR*PANEL-JG;
+          const x0s=c*PANEL,x1s=eR*PANEL;
           if(c<=10){ // cols 31-41 have R+34 trapezoid panels
             const n=10-c;
             const tl=82.5+n*3.25,tr2=tl+2.5;
@@ -20951,8 +20953,9 @@ function renderAAABetaPage(){
         for(let c=0;c<SW_SPAN;c++){
           const col=SF_C[c],n=15-col;
           const tl_sf=Math.round(16+n*79/11),tr_sf=Math.round(20+n*80/11);
-          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          const x0s=c*PANEL,x1s=(c+1)*PANEL;
+          const eR=(c===SW_SPAN-1)?SW_END:c+1;
+          const x0=c*PANEL+JG,x1=eR*PANEL-JG;
+          const x0s=c*PANEL,x1s=eR*PANEL;
           const ytL=base+(165-tl_sf)/165*H,ytR=base+(165-tr_sf)/165*H;
           faces.push(quad([[x0,yBot,0],[x0,ytL,0],[x1,ytR,0],[x1,yBot,0]],getColor('SF',fi,SF_C[c]),null,0));
           faces.push(quad([[x0s,ytL,0],[x0s,base+H,0],[x1s,base+H,0],[x1s,ytR,0]],SKY,null,0));
@@ -20973,12 +20976,12 @@ function renderAAABetaPage(){
           }
         }
         for(let c=0;c<NW_SPAN;c++){
-          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG,col=NF_C[c];
+          const x0=c*PANEL+JG,x1=((c===NW_SPAN-1)?NW_END:c+1)*PANEL-JG,col=NF_C[c];
           faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],ya,yb));
         }
         for(let c=0;c<SW_SPAN;c++){
-          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG,col=SF_C[c];
+          const x0=c*PANEL+JG,x1=((c===SW_SPAN-1)?SW_END:c+1)*PANEL-JG,col=SF_C[c];
           const sfZ=(!white&&sfShiftFloors.has(fl))?PANEL:0;
           faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
@@ -21005,13 +21008,13 @@ function renderAAABetaPage(){
         }
         // NF
         for(let c=1;c<NW_SPAN;c++)faces.push(jl([c*PANEL,ya,-W_SPAN],[c*PANEL,yb,-W_SPAN]));
-        faces.push(jl([0,ya,-W_SPAN],[NW_SPAN,ya,-W_SPAN]));
-        faces.push(jl([0,yb,-W_SPAN],[NW_SPAN,yb,-W_SPAN]));
+        faces.push(jl([0,ya,-W_SPAN],[NW_END,ya,-W_SPAN]));
+        faces.push(jl([0,yb,-W_SPAN],[NW_END,yb,-W_SPAN]));
         // SF
         {const sfZ=(!white&&sfShiftFloors.has(fl))?PANEL:0;
         for(let c=1;c<SW_SPAN;c++)faces.push(jl([c*PANEL,ya,sfZ],[c*PANEL,yb,sfZ]));
-        faces.push(jl([0,ya,sfZ],[SW_SPAN,ya,sfZ]));
-        faces.push(jl([0,yb,sfZ],[SW_SPAN,yb,sfZ]));}
+        faces.push(jl([0,ya,sfZ],[SW_END,ya,sfZ]));
+        faces.push(jl([0,yb,sfZ],[SW_END,yb,sfZ]));}
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21022,15 +21025,15 @@ function renderAAABetaPage(){
     }
     for(const y of[shY0,shY1]){
       faces.push(line2([0,y,PANEL],[0,y,-W_SPAN],'#886600',0.9));
-      faces.push(line2([0,y,-W_SPAN],[NW_SPAN,y,-W_SPAN],'#224488',0.9));
-      faces.push(line2([0,y,0],[SW_SPAN,y,0],'#226633',0.9));
+      faces.push(line2([0,y,-W_SPAN],[NW_END,y,-W_SPAN],'#224488',0.9));
+      faces.push(line2([0,y,0],[SW_END,y,0],'#226633',0.9));
       faces.push(line2([-NW_EX,y,-W_SPAN],[0,y,-W_SPAN],'#3366aa',0.9));
-      faces.push(line2([-SW_EX,y,PANEL],[SW_SPAN,y,PANEL],'#338855',0.9));
+      faces.push(line2([-SW_EX,y,PANEL],[SW_END,y,PANEL],'#338855',0.9));
     }
     // roof 18 polyline — draws at given y level
     function drawRoof18(ry){
       const v1=[-NW_EX,ry,-W_SPAN],v2=[0,ry,-W_SPAN],v3=[0,ry,0];
-      const v4=[SW_SPAN,ry,0],v5=[SW_SPAN,ry,PANEL],v6=[-SW_EX,ry,PANEL];
+      const v4=[SW_END,ry,0],v5=[SW_END,ry,PANEL],v6=[-SW_EX,ry,PANEL];
       faces.push(quad([v1,v2,v3,v6],'#ffffff',null,0));
       faces.push(quad([v3,v4,v5,v6],'#ffffff',null,0));
       const pts=[v1,v2,v3,v4,v5,v6];
