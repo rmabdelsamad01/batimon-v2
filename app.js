@@ -20794,6 +20794,7 @@ function renderAAABetaPage(){
     const lerp=(a,b,t)=>[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])];
     const pt=(hp,y)=>[hp[0],y,hp[1]];
     const add=(p3,clr)=>{const f=quad(p3,clr,null,0);f.depth-=0.01;res.push(f);};
+    const addLine=(a3,b3,clr,lw)=>{const f=line2(a3,b3,clr,lw);f.depth-=0.01;res.push(f);};
     // Pattern map matching the 2D _TM table: sp/st/2c/2cf/dt
     const TM={'C01':'sp','C02':'sp','C03':'sp','C04':'sp','C05':'sp','C06':'sp','C07':'sp','C08':'sp','C09':'sp','C10':'sp',
       'C101':'st','C102':'st','C1902':'sp',
@@ -20806,20 +20807,28 @@ function renderAAABetaPage(){
       'R201':'dt','C201':'dt','R202':'dt','E202':'dt','R203':'st','R204':'2c','R211':'2c',
       'R301':'dt','C301':'dt','C302':'dt','R302':'dt','R303':'st','G303':'st',
       'R304':'2c','D304':'2c','R305':'2c','R306':'2cf'};
-    // Resolve pattern key
-    let pat=null;
+    // Types that carry a red left border in the 2D table
+    const redLSet=new Set(['C102',
+      'D03','D04','D05','D06','DM06','D08','D09','D11','D12',
+      'E03','E04','E05','E06','E08','E09','E11','E12',
+      'G03','G04','G05','G06','GM06','M06','M11','M12',
+      'R202','E202','R203','R302','R303','G303','R305','R306']);
+    // Resolve pattern key + red-left flag
+    let pat=null, redL=false;
     if(type==='Door'){pat='door';}
-    else if(TM[type]){pat=TM[type];}
-    else if(/^T0[1-4]$/.test(type)){pat='sp';}
-    else if(/^T(07|08|10|11)$/.test(type)){pat='2c';}
-    else if(/^T(09|12)$/.test(type)){pat='2cf';}
-    else if(/^T(0[5-9]|1[0-2])$/.test(type)){pat='st';}
+    else if(TM[type]){pat=TM[type]; redL=redLSet.has(type);}
+    else if(/^T0[12]$/.test(type)){pat='sp';}
+    else if(/^T0[34]$/.test(type)){pat='sp'; redL=true;}
+    else if(/^T0[56]$/.test(type)){pat='st'; redL=true;}
+    else if(/^T(07|10)$/.test(type)){pat='2c';}
+    else if(/^T(08|11)$/.test(type)){pat='2c'; redL=true;}
+    else if(/^T(09|12)$/.test(type)){pat='2cf'; redL=true;}
     else if(/^R(25|34)\d{2,}$|^R4\d{3,}$/.test(type)){pat=null;} // status colour only
     else if(/^[A-Za-z]\d{3,}/.test(type)){
       const sfx=type.slice(-2);
       if(sfx==='01'||sfx==='51')pat='dt';
       else if(sfx==='02'||sfx==='52')pat='dt';
-      else if(sfx==='03'||sfx==='53'||sfx==='06'||sfx==='56')pat='st';
+      else if(sfx==='03'||sfx==='53'||sfx==='06'||sfx==='56'){pat='st'; redL=true;}
       else if(sfx==='04'||sfx==='54')pat='2c';
       else if(sfx==='05'||sfx==='55')pat='2c';
     }
@@ -20847,6 +20856,8 @@ function renderAAABetaPage(){
     }else if(pat==='door'){
       add([pt(p0,ya),pt(p0,yb),pt(p1,yb),pt(p1,ya)],'rgba(0,0,0,0.35)');
     }
+    // Red left border line (matches 2D table's border-left:#ED1C24)
+    if(redL)addLine(pt(p0,ya),pt(p0,yb),'#ED1C24',2);
     return res;
   }
 
