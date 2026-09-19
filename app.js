@@ -20936,16 +20936,13 @@ function renderAAABetaPage(){
     {
       const cx0=0.2,cx1=14.8,cz0=-0.2,cz1=-16.8;
       const cy0=0,cy1=yPos[FLOORS_BTT.indexOf('R+33')]+flH('R+33');
-      const W='#ffffff',lw=1.5;
-      for(const y of[cy0,cy1]){
-        faces.push(line2([cx0,y,cz0],[cx1,y,cz0],W,lw));
-        faces.push(line2([cx1,y,cz0],[cx1,y,cz1],W,lw));
-        faces.push(line2([cx1,y,cz1],[cx0,y,cz1],W,lw));
-        faces.push(line2([cx0,y,cz1],[cx0,y,cz0],W,lw));
-      }
-      for(const[x,z]of[[cx0,cz0],[cx1,cz0],[cx1,cz1],[cx0,cz1]]){
-        faces.push(line2([x,cy0,z],[x,cy1,z],W,lw));
-      }
+      const W='#ffffff';
+      faces.push(quad([[cx0,cy0,cz0],[cx0,cy1,cz0],[cx1,cy1,cz0],[cx1,cy0,cz0]],W,null,0));
+      faces.push(quad([[cx1,cy0,cz1],[cx1,cy1,cz1],[cx0,cy1,cz1],[cx0,cy0,cz1]],W,null,0));
+      faces.push(quad([[cx0,cy0,cz1],[cx0,cy1,cz1],[cx0,cy1,cz0],[cx0,cy0,cz0]],W,null,0));
+      faces.push(quad([[cx1,cy0,cz0],[cx1,cy1,cz0],[cx1,cy1,cz1],[cx1,cy0,cz1]],W,null,0));
+      faces.push(quad([[cx0,cy0,cz0],[cx1,cy0,cz0],[cx1,cy0,cz1],[cx0,cy0,cz1]],W,null,0));
+      faces.push(quad([[cx0,cy1,cz1],[cx1,cy1,cz1],[cx1,cy1,cz0],[cx0,cy1,cz0]],W,null,0));
     }
     return faces;
   }
