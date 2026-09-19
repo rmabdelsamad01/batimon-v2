@@ -20741,7 +20741,7 @@ function renderAAABetaPage(){
 
   // ── Canvas corner 3D ─────────────────────────────────────────────────────
   // Row heights from the flat table (px); default 150. Scale: 1 world unit = BASE_W px.
-  const TABLE_ROW_H={'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,'R+18B':40,'R+17T':50,'R+17B':100,'R+02':50};
+  const TABLE_ROW_H={'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,'R+18B':40,'R+17T':50,'R+17B':100};
   const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B']);
   const BASE_W=50;
   const STRUCT_CLR='#1c1000';
@@ -20846,26 +20846,33 @@ function renderAAABetaPage(){
       const fl=FLOORS_BTT[fi];
       const y0=yPos[fi]+JG,y1=yPos[fi]+flH(fl)-JG;
       if(y1<=y0)continue;
-      for(let c=0;c<W_SPAN;c++){
-        const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
-        faces.push(quad([[0,y0,z0],[0,y1,z0],[0,y1,z1],[0,y0,z1]],getColor('WF',fi,WF_C[c]),null,0));
-      }
-      for(let c=0;c<NW_SPAN;c++){
-        const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-        faces.push(quad([[x0,y0,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,y0,-W_SPAN]],getColor('NF',fi,NF_C[c]),null,0));
-      }
-      for(let c=0;c<SW_SPAN;c++){
-        const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-        faces.push(quad([[x0,y0,0],[x0,y1,0],[x1,y1,0],[x1,y0,0]],getColor('SF',fi,SF_C[c]),null,0));
-      }
-      if(shiftFloors.has(fl)){
-        for(let c=0;c<NW_EX;c++){
-          const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-          faces.push(quad([[x0,y0,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,y0,-W_SPAN]],SC.pending,null,0));
+      // R+02: bottom 2wu = white structural base, top 1wu = panel status
+      const segs=fl==='R+02'
+        ?[{ya:y0,yb:Math.min(yPos[fi]+2,y1),white:true},{ya:Math.max(yPos[fi]+2,y0),yb:y1,white:false}]
+        :[{ya:y0,yb:y1,white:false}];
+      for(const{ya,yb,white}of segs){
+        if(yb<=ya)continue;
+        for(let c=0;c<W_SPAN;c++){
+          const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
+          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?'#ffffff':getColor('WF',fi,WF_C[c]),null,0));
         }
-        for(let c=0;c<SW_EX;c++){
-          const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-          faces.push(quad([[x0,y0,0],[x0,y1,0],[x1,y1,0],[x1,y0,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
+        for(let c=0;c<NW_SPAN;c++){
+          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+          faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?'#ffffff':getColor('NF',fi,NF_C[c]),null,0));
+        }
+        for(let c=0;c<SW_SPAN;c++){
+          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+          faces.push(quad([[x0,ya,0],[x0,yb,0],[x1,yb,0],[x1,ya,0]],white?'#ffffff':getColor('SF',fi,SF_C[c]),null,0));
+        }
+        if(!white&&shiftFloors.has(fl)){
+          for(let c=0;c<NW_EX;c++){
+            const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
+            faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
+          }
+          for(let c=0;c<SW_EX;c++){
+            const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
+            faces.push(quad([[x0,ya,0],[x0,yb,0],[x1,yb,0],[x1,ya,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
+          }
         }
       }
     }
