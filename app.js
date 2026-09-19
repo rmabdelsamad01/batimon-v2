@@ -20975,8 +20975,8 @@ function renderAAABetaPage(){
       const ry=shY1;
       const v1=[-NW_EX,ry,-W_SPAN],v2=[0,ry,-W_SPAN],v3=[0,ry,0];
       const v4=[SW_SPAN,ry,0],v5=[SW_SPAN,ry,PANEL],v6=[-SW_EX,ry,PANEL];
-      faces.push(quad([v1,v2,v3,v6],'rgba(255,255,255,0.2)',null,0));
-      faces.push(quad([v3,v4,v5,v6],'rgba(255,255,255,0.2)',null,0));
+      faces.push(quad([v1,v2,v3,v6],'#ffffff',null,0));
+      faces.push(quad([v3,v4,v5,v6],'#ffffff',null,0));
       const roof18=[v1,v2,v3,v4,v5,v6];
       for(let i=0;i<roof18.length;i++)
         faces.push(line2(roof18[i],roof18[(i+1)%roof18.length],'#ffffff',2));
