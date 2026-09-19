@@ -18940,7 +18940,7 @@ function _buildMobileShell(prof){
         </div>
       </div>
     </div>
-    <div id="mob-facade-bar" style="background:#fff;border-bottom:1px solid #e0e8f0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div id="mob-facade-bar" style="background:#fff;border-bottom:1px solid #e0e8f0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;"></div>
     <div id="mob-filter-bar" style="background:#f7f9fc;border-bottom:1px solid #e0e8f0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 12px;"></div>
     <div id="mob-content" style="flex:1;height:0;overflow-y:scroll;-webkit-overflow-scrolling:touch;touch-action:pan-y;background:#f7f9fc;"></div>
     <div style="background:#fff;border-top:2px solid #e0e8f0;display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);">
