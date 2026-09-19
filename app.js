@@ -20875,26 +20875,6 @@ function renderAAABetaPage(){
     faces.push(bg([[0,0,0],[0,totalH,0],[SW_SPAN,totalH,0],[SW_SPAN,0,0]]));
     faces.push(bg([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shY0,PANEL]]));
-    // Closing faces to seal the building shell from all viewing angles
-    {
-      const C=JOINT;
-      // East wall — closes the open east side
-      faces.push(quad([[NW_SPAN,0,0],[NW_SPAN,totalH,0],[NW_SPAN,totalH,-W_SPAN],[NW_SPAN,0,-W_SPAN]],C,null,0));
-      // Roof — closes the top (blocks cube from above view / plan)
-      faces.push(quad([[0,totalH,0],[NW_SPAN,totalH,0],[NW_SPAN,totalH,-W_SPAN],[0,totalH,-W_SPAN]],C,null,0));
-      // Floor plan — ground-level horizontal footprint
-      faces.push(quad([[0,0,0],[0,0,-W_SPAN],[NW_SPAN,0,-W_SPAN],[NW_SPAN,0,0]],C,null,0));
-      // NW extension shell (shift floors only)
-      faces.push(quad([[-NW_EX,shY0,0],[-NW_EX,shY1,0],[-NW_EX,shY1,-W_SPAN],[-NW_EX,shY0,-W_SPAN]],C,null,0)); // west
-      faces.push(quad([[-NW_EX,shY0,0],[0,shY0,0],[0,shY0,-W_SPAN],[-NW_EX,shY0,-W_SPAN]],C,null,0));           // bottom slab
-      faces.push(quad([[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shY1,0],[-NW_EX,shY1,0]],C,null,0));           // top slab (NW plan)
-      faces.push(quad([[-NW_EX,shY0,0],[-NW_EX,shY1,0],[0,shY1,0],[0,shY0,0]],C,null,0));                       // south inner
-      // SW extension shell (shift floors only)
-      faces.push(quad([[-SW_EX,shY0,0],[-SW_EX,shY1,0],[-SW_EX,shY1,PANEL],[-SW_EX,shY0,PANEL]],C,null,0));    // west
-      faces.push(quad([[-SW_EX,shY0,PANEL],[0,shY0,PANEL],[0,shY0,0],[-SW_EX,shY0,0]],C,null,0));               // bottom slab
-      faces.push(quad([[-SW_EX,shY1,0],[0,shY1,0],[0,shY1,PANEL],[-SW_EX,shY1,PANEL]],C,null,0));               // top slab (SW plan)
-      faces.push(quad([[-SW_EX,shY0,0],[-SW_EX,shY1,0],[0,shY1,0],[0,shY0,0]],C,null,0));                       // north inner
-    }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
       const y0=yPos[fi]+JG,y1=yPos[fi]+flH(fl)-JG;
