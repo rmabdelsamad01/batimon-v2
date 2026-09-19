@@ -20799,7 +20799,7 @@ function renderAAABetaPage(){
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${legendHTML}</div>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
-    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:#07111e;position:relative;cursor:grab;user-select:none;">
+    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);position:relative;cursor:grab;user-select:none;">
       <canvas id="aaab-cvs" style="display:block;position:absolute;inset:0;"></canvas>
       <div style="position:absolute;top:10px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:5px 10px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;pointer-events:none;">⚡ Shift Zone · R+17 &amp; R+18</div>
       <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom</div>
@@ -20901,7 +20901,10 @@ function renderAAABetaPage(){
 
   function render(){
     cW=cvs.width=vp.clientWidth;cH=cvs.height=vp.clientHeight;
-    ctx.clearRect(0,0,cW,cH);ctx.fillStyle=JOINT;ctx.fillRect(0,0,cW,cH);
+    ctx.clearRect(0,0,cW,cH);
+    const grad=ctx.createRadialGradient(cW*.5,cH*.4,0,cW*.5,cH*.4,Math.max(cW,cH)*.7);
+    grad.addColorStop(0,'#cde8f8');grad.addColorStop(1,'#a8d4ef');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,cW,cH);
     const faces=buildScene();
     faces.sort((a,b)=>b.depth-a.depth);
     for(const f of faces){
