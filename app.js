@@ -20894,11 +20894,9 @@ function renderAAABetaPage(){
         :[{ya:y0,yb:y1,white:false}];
       for(const{ya,yb,white}of segs){
         if(yb<=ya)continue;
-        const wspan=(!white&&shiftFloors.has(fl))?W_SPAN+1:W_SPAN;
-        for(let c=0;c<wspan;c++){
+        for(let c=0;c<W_SPAN;c++){
           const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
-          const col=c<WF_C.length?WF_C[c]:'15-A';
-          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,col),null,0));
+          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,WF_C[c]),null,0));
         }
         for(let c=0;c<NW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
