@@ -20854,15 +20854,15 @@ function renderAAABetaPage(){
         if(yb<=ya)continue;
         for(let c=0;c<W_SPAN;c++){
           const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
-          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?'#ffffff':getColor('WF',fi,WF_C[c]),null,0));
+          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,WF_C[c]),null,0));
         }
         for(let c=0;c<NW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?'#ffffff':getColor('NF',fi,NF_C[c]),null,0));
+          faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,NF_C[c]),null,0));
         }
         for(let c=0;c<SW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,ya,0],[x0,yb,0],[x1,yb,0],[x1,ya,0]],white?'#ffffff':getColor('SF',fi,SF_C[c]),null,0));
+          faces.push(quad([[x0,ya,0],[x0,yb,0],[x1,yb,0],[x1,ya,0]],white?SC.pending:getColor('SF',fi,SF_C[c]),null,0));
         }
         if(!white&&shiftFloors.has(fl)){
           for(let c=0;c<NW_EX;c++){
