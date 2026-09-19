@@ -20900,7 +20900,7 @@ function renderAAABetaPage(){
     <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);position:relative;cursor:grab;user-select:none;">
       <canvas id="aaab-cvs" style="display:block;position:absolute;inset:0;"></canvas>
       <div style="position:absolute;top:10px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:5px 10px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;pointer-events:none;">⚡ Shift Zone · R+17 &amp; R+18</div>
-      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom</div>
+      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right drag: Orbit</div>
     </div>
   </div>`;
 
@@ -21125,19 +21125,21 @@ function renderAAABetaPage(){
 
   render();
 
-  let drag=false,lX=0,lY=0;
+  let drag=false,dragBtn=0,lX=0,lY=0;
   vp.addEventListener('mousedown',e=>{
-    if(e.button!==0)return;
-    drag=true;lX=e.clientX;lY=e.clientY;e.preventDefault();
-    vp.style.cursor=e.shiftKey?'grabbing':'move';
+    if(e.button!==0&&e.button!==2)return;
+    drag=true;dragBtn=e.button;lX=e.clientX;lY=e.clientY;e.preventDefault();
+    vp.style.cursor=(e.button===2||e.shiftKey)?'grabbing':'move';
   });
+  vp.addEventListener('contextmenu',e=>e.preventDefault());
   window.addEventListener('mouseup',()=>{drag=false;if(vp.isConnected)vp.style.cursor='grab';});
   window.addEventListener('mousemove',e=>{
     if(!drag||!vp.isConnected)return;
     const dx=e.clientX-lX,dy=e.clientY-lY;
-    if(e.shiftKey&&e.buttons===1){
-      theta-=dx*0.007;
-      phi+=dy*0.007;
+    if(dragBtn===2||(e.shiftKey&&e.buttons===1)){
+      theta+=dx*0.007;
+      phi-=dy*0.007;
+      phi=Math.max(-88*Math.PI/180,Math.min(88*Math.PI/180,phi));
     }else{
       panX+=dx;panY+=dy;
     }
