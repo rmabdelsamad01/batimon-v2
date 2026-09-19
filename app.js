@@ -20766,11 +20766,11 @@ function renderAAABetaPage(){
 
   // 1 world unit = 1 panel column = BASE_W px in flat table
   const PANEL=1.0,JG=0.07;
-  const W_SPAN=17,NW_SPAN=15,SW_SPAN=12,NW_EX=4,SW_EX=2;
+  const W_SPAN=17,NW_SPAN=15,SW_SPAN=12,NW_EX=4,SW_EX=1;
   const WF_C=Array.from({length:17},(_,c)=>15+c);
   const NF_C=Array.from({length:15},(_,c)=>31+c);
   const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4];
-  const SW_EX_C=['15-B','15-A'];
+  const SW_EX_C=['15-B'];
 
   function getColor(zid,fi,col){
     const fl=FLOORS_BTT[fi];
@@ -20841,7 +20841,7 @@ function renderAAABetaPage(){
     faces.push(bg([[0,0,-W_SPAN],[0,totalH,-W_SPAN],[NW_SPAN,totalH,-W_SPAN],[NW_SPAN,0,-W_SPAN]]));
     faces.push(bg([[0,0,0],[0,totalH,0],[SW_SPAN,totalH,0],[SW_SPAN,0,0]]));
     faces.push(bg([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shY0,-W_SPAN]]));
-    faces.push(bg([[-SW_EX,shY0,0],[-SW_EX,shY1,0],[0,shY1,0],[0,shY0,0]]));
+    faces.push(bg([[-SW_EX,shY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shY0,PANEL]]));
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
       const y0=yPos[fi]+JG,y1=yPos[fi]+flH(fl)-JG;
@@ -20902,29 +20902,32 @@ function renderAAABetaPage(){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
           faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,NF_C[c]),null,0));
         }
+        const sfZ=(!white&&shiftFloors.has(fl))?PANEL:0;
         for(let c=0;c<SW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,ya,0],[x0,yb,0],[x1,yb,0],[x1,ya,0]],white?SC.pending:getColor('SF',fi,SF_C[c]),null,0));
+          faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,SF_C[c]),null,0));
         }
         if(!white&&shiftFloors.has(fl)){
+          // Extra WF panel going south (z=0→+PANEL) using col 15-A
+          faces.push(quad([[0,ya,PANEL-JG],[0,yb,PANEL-JG],[0,yb,JG],[0,ya,JG]],getColor('WF',fi,'15-A'),null,0));
           for(let c=0;c<NW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
             faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
           }
           for(let c=0;c<SW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-            faces.push(quad([[x1,ya,0],[x1,yb,0],[x0,yb,0],[x0,ya,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
+            faces.push(quad([[x1,ya,PANEL],[x1,yb,PANEL],[x0,yb,PANEL],[x0,ya,PANEL]],getColor('SF',fi,SW_EX_C[c]),null,0));
           }
         }
       }
     }
-    faces.push(quad([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[-SW_EX,shY1,0],[-SW_EX,shY0,0]],'#c85a1a','#ff9944',1.2));
+    faces.push(quad([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[-SW_EX,shY1,PANEL],[-SW_EX,shY0,PANEL]],'#c85a1a','#ff9944',1.2));
     for(const y of[shY0,shY1]){
-      faces.push(line2([0,y,0],[0,y,-W_SPAN],'#886600',0.9));
+      faces.push(line2([0,y,PANEL],[0,y,-W_SPAN],'#886600',0.9));
       faces.push(line2([0,y,-W_SPAN],[NW_SPAN,y,-W_SPAN],'#224488',0.9));
       faces.push(line2([0,y,0],[SW_SPAN,y,0],'#226633',0.9));
       faces.push(line2([-NW_EX,y,-W_SPAN],[0,y,-W_SPAN],'#3366aa',0.9));
-      faces.push(line2([-SW_EX,y,0],[0,y,0],'#338855',0.9));
+      faces.push(line2([-SW_EX,y,PANEL],[0,y,PANEL],'#338855',0.9));
     }
     for(let i=-8;i<=22;i++){
       faces.push(line2([i,0,-26],[i,0,15],'#111b28',0.4));
