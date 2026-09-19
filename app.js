@@ -20956,7 +20956,7 @@ function renderAAABetaPage(){
           }
         }
         // permanent joint lines — always on top (depth-=0.01)
-        const jc='#111111',jw=Math.max(0.5,zoom*1.27);
+        const jc='#111111',jw=0.7;
         const jl=(a,b)=>{const f=line2(a,b,jc,jw);f.depth-=0.01;return f;};
         // WF
         if(!(shiftFloors.has(fl)&&!white)){
