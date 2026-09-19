@@ -20772,9 +20772,9 @@ function renderAAABetaPage(){
   const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4];
   const SW_EX_C=['15-B'];
 
-  function getColor(zid,fi,col){
+  function getColor(zid,fi,col,noStruct=false){
     const fl=FLOORS_BTT[fi];
-    if(STRUCT_FLOORS.has(fl))return STRUCT_CLR;
+    if(!noStruct&&STRUCT_FLOORS.has(fl))return STRUCT_CLR;
     const p=panels[`${zid}-${fl}-C${col}`];
     return SC[(p||{}).status||'pending']||SC.pending;
   }
@@ -20900,7 +20900,7 @@ function renderAAABetaPage(){
         }
         for(let c=0;c<NW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,NF_C[c]),null,0));
+          faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,NF_C[c],true),null,0));
         }
         const sfZ=(!white&&shiftFloors.has(fl))?PANEL:0;
         for(let c=0;c<SW_SPAN;c++){
