@@ -20896,7 +20896,7 @@ function renderAAABetaPage(){
         if(yb<=ya)continue;
         for(let c=0;c<W_SPAN;c++){
           const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
-          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,WF_C[c]),null,0));
+          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,WF_C[c],true),null,0));
         }
         for(let c=0;c<NW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
@@ -20905,18 +20905,18 @@ function renderAAABetaPage(){
         const sfZ=(!white&&shiftFloors.has(fl))?PANEL:0;
         for(let c=0;c<SW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,SF_C[c]),null,0));
+          faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,SF_C[c],true),null,0));
         }
         if(!white&&shiftFloors.has(fl)){
           // Extra WF panel going south (z=0→+PANEL) using col 15-A
-          faces.push(quad([[0,ya,PANEL-JG],[0,yb,PANEL-JG],[0,yb,JG],[0,ya,JG]],getColor('WF',fi,'15-A'),null,0));
+          faces.push(quad([[0,ya,PANEL-JG],[0,yb,PANEL-JG],[0,yb,JG],[0,ya,JG]],getColor('WF',fi,'15-A',true),null,0));
           for(let c=0;c<NW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
             faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
           }
           for(let c=0;c<SW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-            faces.push(quad([[x1,ya,PANEL],[x1,yb,PANEL],[x0,yb,PANEL],[x0,ya,PANEL]],getColor('SF',fi,SW_EX_C[c]),null,0));
+            faces.push(quad([[x1,ya,PANEL],[x1,yb,PANEL],[x0,yb,PANEL],[x0,ya,PANEL]],getColor('SF',fi,SW_EX_C[c],true),null,0));
           }
         }
       }
