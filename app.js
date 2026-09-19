@@ -20891,20 +20891,7 @@ function renderAAABetaPage(){
     return faces;
   }
 
-  function drawLabels(){
-    const lbs=[
-      {t:'W',     x:-1.8,       y:centerY,    z:-W_SPAN/2,  c:'#d4a017',s:15,b:true},
-      {t:'NW',    x:NW_SPAN/2,  y:totalH+4,   z:-W_SPAN-.5, c:'#6699ff',s:12,b:true},
-      {t:'SW',    x:SW_SPAN/2,  y:totalH+4,   z:.5,         c:'#44cc66',s:12,b:true},
-      {t:'Corner',x:(-NW_EX-SW_EX)/2,y:(shY0+shY1)/2+4,z:-W_SPAN/2,c:'#ff9944',s:10,b:true},
-    ];
-    for(const lb of lbs){
-      const p=proj(lb.x,lb.y,lb.z);
-      ctx.save();ctx.font=`${lb.b?'bold ':''}${lb.s}px 'IBM Plex Mono',monospace`;
-      ctx.fillStyle=lb.c;ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.shadowColor='#07111e';ctx.shadowBlur=8;ctx.fillText(lb.t,p.sx,p.sy);ctx.restore();
-    }
-  }
+  function drawLabels(){}
 
   function render(){
     cW=cvs.width=vp.clientWidth;cH=cvs.height=vp.clientHeight;
