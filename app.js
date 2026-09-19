@@ -20955,6 +20955,24 @@ function renderAAABetaPage(){
             faces.push(quad([[x1,ya,PANEL],[x1,yb,PANEL],[x0,yb,PANEL],[x0,ya,PANEL]],getColor('SF',fi,SW_EX_C[c],true),null,0));
           }
         }
+        // permanent joint lines — always on top (depth-=0.01)
+        const jc='#111111',jw=0.7;
+        const jl=(a,b)=>{const f=line2(a,b,jc,jw);f.depth-=0.01;return f;};
+        // WF
+        if(!(shiftFloors.has(fl)&&!white)){
+          for(let c=1;c<W_SPAN;c++)faces.push(jl([0,ya,-c*PANEL],[0,yb,-c*PANEL]));
+          faces.push(jl([0,ya,0],[0,ya,-W_SPAN]));
+          faces.push(jl([0,yb,0],[0,yb,-W_SPAN]));
+        }
+        // NF
+        for(let c=1;c<NW_SPAN;c++)faces.push(jl([c*PANEL,ya,-W_SPAN],[c*PANEL,yb,-W_SPAN]));
+        faces.push(jl([0,ya,-W_SPAN],[NW_SPAN,ya,-W_SPAN]));
+        faces.push(jl([0,yb,-W_SPAN],[NW_SPAN,yb,-W_SPAN]));
+        // SF
+        {const sfZ=(!white&&shiftFloors.has(fl))?PANEL:0;
+        for(let c=1;c<SW_SPAN;c++)faces.push(jl([c*PANEL,ya,sfZ],[c*PANEL,yb,sfZ]));
+        faces.push(jl([0,ya,sfZ],[SW_SPAN,ya,sfZ]));
+        faces.push(jl([0,yb,sfZ],[SW_SPAN,yb,sfZ]));}
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
