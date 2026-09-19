@@ -20861,8 +20861,13 @@ function renderAAABetaPage(){
           faces.push(quad([[0,yBot,z0],[0,ytR,z0],[0,ytL,z1],[0,yBot,z1]],getColor('WF',fi,col),null,0));
         }
         for(let c=0;c<NW_SPAN;c++){
+          const col=NF_C[c]; // 31+c; col41=outer(left in 2D,x1 in 3D), col31=corner(right in 2D,x0 in 3D)
+          const n=10-c; // at c=0(col31): n=10; at c=9(col40): n=1
+          const tl=82.5+n*3.25; // top at 0%(outer/x1 side)
+          const tr2=tl+2.5;     // top at 100%(corner/x0 side)
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,yBot,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,NF_C[c]),null,0));
+          const ytCorner=base+(165-tr2)/165*H,ytOuter=base+(165-tl)/165*H;
+          faces.push(quad([[x0,yBot,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,col),null,0));
         }
         for(let c=0;c<SW_SPAN;c++){
           const col=SF_C[c],n=15-col;
