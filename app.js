@@ -20761,6 +20761,7 @@ function renderAAABetaPage(){
   const totalH=FLOORS_BTT.reduce((s,fl)=>s+flH(fl),0);
   const shiftFloors=new Set(['R+17T','R+17B','R+18T','R+18M','R+18MD','R+18B']);
   const sfShiftFloors=new Set(['R+17T','R+18B','R+18MD','R+18M']); // SF at y=-1; R+17B and R+18T stay at y=0
+  const wfShiftFloors=new Set(['R+17T','R+18B','R+18MD','R+18M']); // WF diagonal; R+17B and R+18T use normal x=0 WF
   const shY0=yPos[FLOORS_BTT.indexOf('R+17B')];
   const shY1=yPos[FLOORS_BTT.indexOf('R+18T')]+flH('R+18T');
   const centerY=totalH/2;
@@ -20928,7 +20929,7 @@ function renderAAABetaPage(){
         :[{ya:y0,yb:y1,white:false}];
       for(const{ya,yb,white}of segs){
         if(yb<=ya)continue;
-        if(!(shiftFloors.has(fl)&&!white)){
+        if(!(wfShiftFloors.has(fl)&&!white)){
           for(let c=0;c<W_SPAN;c++){
             const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG,col=WF_C[c];
             faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,col,true),null,0));
@@ -20946,7 +20947,7 @@ function renderAAABetaPage(){
           faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
         }
-        if(!white&&shiftFloors.has(fl)){
+        if(!white&&wfShiftFloors.has(fl)){
           for(let c=0;c<NW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
             faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
@@ -20960,7 +20961,7 @@ function renderAAABetaPage(){
         const jc='#111111',jw=2;
         const jl=(a,b)=>{const f=line2(a,b,jc,jw);f.depth-=0.01;return f;};
         // WF
-        if(!(shiftFloors.has(fl)&&!white)){
+        if(!(wfShiftFloors.has(fl)&&!white)){
           for(let c=1;c<W_SPAN;c++)faces.push(jl([0,ya,-c*PANEL],[0,yb,-c*PANEL]));
           faces.push(jl([0,ya,0],[0,ya,-W_SPAN]));
           faces.push(jl([0,yb,0],[0,yb,-W_SPAN]));
@@ -20978,7 +20979,7 @@ function renderAAABetaPage(){
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
-      if(!shiftFloors.has(fl))continue;
+      if(!wfShiftFloors.has(fl))continue;
       const ya=yPos[fi]+JG,yb=yPos[fi]+flH(fl)-JG;
       faces.push(quad([[-NW_EX,ya,-W_SPAN],[-NW_EX,yb,-W_SPAN],[-SW_EX,yb,PANEL],[-SW_EX,ya,PANEL]],getColor('WF',fi,WF_C[0],true),null,0));
     }
