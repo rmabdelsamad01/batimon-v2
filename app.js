@@ -1,4 +1,4 @@
-// ══════════════════════════════════════════════════════════════
+﻿// ══════════════════════════════════════════════════════════════
 // WEST FACADE DATA (from west_1.pdf)
 // Cols 31→15, Floors R+33→RDC
 // ══════════════════════════════════════════════════════════════
@@ -2396,7 +2396,7 @@ function _renderPage(id){
   }
 
   // Hide nav bar for full-screen pages, show for everything else
-  const _noNavPages = ['3d','aaa','aaab','aaac','builder','sitepictures'];
+  const _noNavPages = ['3d','aaa','aaab','builder','sitepictures'];
   const _navEl = document.querySelector('nav.nav-tabs');
   if(_navEl) _navEl.style.display = _noNavPages.includes(id) ? 'none' : '';
 
@@ -2430,7 +2430,6 @@ function _renderPage(id){
   else if(id==='3d')render3DPage();
   else if(id==='aaa')renderAAAPage();
   else if(id==='aaab')renderAAABetaPage();
-  else if(id==='aaac')renderCorner3DPage();
   else if(id==='builder')renderBuilderPage();
   else if(id==='site-stock')renderSiteStock();
   else if(id==='agenda')renderAgendaPage();
@@ -20740,226 +20739,57 @@ function renderAAABetaPage(){
     return;
   }
 
-  const CELL=7;
-  const GAP=1;
-  const JOINT='#07111e';
-  const BASE_H=150;
-  const BASE_W=50;
-
-  const TABLE_ROW_H={
-    'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,
-    'R+18B':40,'R+17T':50,'R+17B':100,
-  };
+  // ── Canvas corner 3D ─────────────────────────────────────────────────────
+  // Row heights from the flat table (px); default 150. Scale: 1 world unit = BASE_W px.
+  const TABLE_ROW_H={'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,'R+18B':40,'R+17T':50,'R+17B':100};
   const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B']);
-
-  function rowPx(fl){
-    return Math.max(2,Math.round((TABLE_ROW_H[fl]||BASE_H)*CELL/BASE_W));
-  }
-  function totalH(floors){
-    return floors.reduce((s,fl)=>s+rowPx(fl),0)+(floors.length-1)*GAP;
-  }
-
-  const SC={
-    installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',
-    cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',
-    defect:'#ED1C24',pending:'#E8F0FB'
-  };
+  const BASE_W=50;
   const STRUCT_CLR='#1c1000';
 
-  function colsW(n){return n*CELL+(n-1)*GAP;}
+  // Floor heights in world units (1 unit = BASE_W px = 1 panel column width)
+  function flH(fl){return(TABLE_ROW_H[fl]||150)/BASE_W;}
 
-  const sfCols3D=SF_COLS.filter(c=>c!=='15-A'&&c!=='15-B');
-  const wfCols3D=WF_COLS.filter(c=>c!=='15-A');
-  const sfTypes3D={},wfTypes3D={};
-  SF_FLOORS.forEach(fl=>{sfTypes3D[fl]=(SF_TYPES[fl]||[]).slice(2);});
-  WF_FLOORS.forEach(fl=>{wfTypes3D[fl]=(WF_TYPES[fl]||[]).slice(0,-1);});
+  // Build bottom-to-top floor list with Y positions
+  const FLOORS_BTT=[...SF_FLOORS].reverse();
+  const yPos=[];
+  {let _y=0;for(const fl of FLOORS_BTT){yPos.push(_y);_y+=flH(fl);}}
 
-  const sfW=colsW(sfCols3D.length);
-  const nfW=colsW(NF_COLS.length);
-  const efW=colsW(EF_COLS.length);
-  const wfW=colsW(wfCols3D.length);
-  const fH =totalH(SF_FLOORS);
+  const SC={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const JOINT='#07111e';
 
-  const W=Math.max(sfW,nfW);
-  const D=Math.max(efW,wfW);
+  // Derived geometry
+  const totalH=FLOORS_BTT.reduce((s,fl)=>s+flH(fl),0);
+  const shiftFloors=new Set(['R+17T','R+17B','R+18T','R+18M','R+18MD','R+18B']);
+  const shY0=yPos[FLOORS_BTT.indexOf('R+17B')];
+  const shY1=yPos[FLOORS_BTT.indexOf('R+18T')]+flH('R+18T');
+  const centerY=totalH/2;
 
-  function faceGrid(zid,cols,floors,types,extraRowH,merges){
-    function faceRowPx(fl){
-      if(extraRowH&&extraRowH[fl]!=null)return Math.max(2,Math.round(extraRowH[fl]*CELL/BASE_W));
-      return rowPx(fl);
-    }
-    const rowHeights=floors.map(faceRowPx);
-    const colTpl=Array(cols.length).fill(`${CELL}px`).join(' ');
-    const rowTpl=rowHeights.map(h=>`${h}px`).join(' ');
-    const w=colsW(cols.length);
-    const h=rowHeights.reduce((s,rh)=>s+rh,0)+(floors.length-1)*GAP;
+  // 1 world unit = 1 panel column = BASE_W px in flat table
+  const PANEL=1.0,JG=0.07;
+  const W_SPAN=17,NW_SPAN=10,SW_SPAN=12,NW_EX=4,SW_EX=2;
+  const WF_C=Array.from({length:17},(_,c)=>15+c);
+  const NF_C=Array.from({length:10},(_,c)=>31+c);
+  const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4];
+  const SW_EX_C=['15-B','15-A'];
 
-    const DOTS   =`radial-gradient(circle,rgba(0,0,0,0.28) 1px,transparent 1px) 0 0/4px 4px`;
-    const STRIPES=`repeating-linear-gradient(90deg,rgba(0,0,0,0.28) 0,rgba(0,0,0,0.28) 1px,transparent 1px,transparent 4px)`;
-    const redL=`border-left:2px solid #ED1C24;`;
-    const redB=`border-bottom:1px solid #ED1C24;`;
-    const _sp=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);`;
-    const _2c=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};`;
-    const _2cf=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};`;
-    const _st=`background-image:${STRIPES};`;
-    const _dt=`background-image:${DOTS};`;
-    const redR=`border-right:2px solid #ED1C24;`;
-    const _TM={
-      'C01':_sp,'C02':_sp+redB,'C03':_sp,'C04':_sp+redB,
-      'C05':_sp,'C06':_sp+redB,'C07':_sp,'C08':_sp+redB,
-      'C09':_sp,'C10':_sp+redB,
-      'C101':_st,'C102':_st+redL,
-      'C1902':_sp,
-      'D01':_sp,'D02':_sp+redB,'D03':_sp+redL,'D04':_sp+redL+redB,
-      'D05':_st+redL,'D06':_st+redL+redB,'DM06':_st+redL,
-      'D07':_2c,'D08':_2c+redL,'D09':_2cf+redL,'D10':_2c+redB,
-      'D11':_2c+redL+redB,'D12':_2cf+redL+redB,
-      'E01':_sp,'E02':_sp+redB,'E03':_sp+redL,'E04':_sp+redL+redB,
-      'E05':_st+redL,'E06':_st+redL+redB,
-      'E07':_2c,'E08':_2c+redL,'E09':_2cf+redL,'E10':_2c+redB,
-      'E11':_2c+redL+redB,'E12':_2cf+redL+redB,
-      'G03':_sp+redL,'G04':_sp+redL+redB,'G05':_st+redL,'G06':_st+redL+redB,
-      'GM06':_st+redL,
-      'M06':_st+redL,'M10':_2c,'M11':_2c+redL,'M12':_2cf+redL,
-      'R201':_dt,'C201':_dt,
-      'R202':_dt+redL,'E202':_dt+redL+redR,
-      'R203':_st+redL,
-      'R204':_2c,'R211':_2c,
-      'R301':_dt+redB,'C301':_dt+redB,'C302':_dt+redB,
-      'R302':_dt+redL+redB,
-      'R303':_st+redL+redB,'G303':_st+redL+redB,
-      'R304':_2c+redB,'D304':_2c+redB,
-      'R305':_2c+redL+redB,'R306':_2cf+redL+redB,
-    };
-
-    let cells='';
-    floors.forEach((fl,fi)=>{
-      const isStruct=STRUCT_FLOORS.has(fl);
-      cols.forEach((col,ci)=>{
-        const type=(types[fl]||[])[ci]||'';
-        let s;
-        if(isStruct){
-          s=`background:${STRUCT_CLR};`;
-        }else if(!type){
-          s=`background:${JOINT};`;
-        }else{
-          const pid=`${zid}-${fl}-C${col}`;
-          const sb=SC[(panels[pid]||{}).status||'pending']||SC.pending;
-          s=`background-color:${sb};`;
-          if(type==='T01'){s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);`;}
-          else if(type==='T02'){s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);${redB}`;}
-          else if(type==='T03'){s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);${redL}`;}
-          else if(type==='T04'){s+=`background-image:linear-gradient(180deg,rgba(255,255,255,0.18) 0 33%,transparent 33%);${redL}${redB}`;}
-          else if(type==='T05'){s+=`background-image:${STRIPES};${redL}`;}
-          else if(type==='T06'){s+=`background-image:${STRIPES};${redL}${redB}`;}
-          else if(type==='T07'){s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};`;}
-          else if(type==='T08'){s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};${redL}`;}
-          else if(type==='T09'){s+=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};${redL}`;}
-          else if(type==='T10'){s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};${redB}`;}
-          else if(type==='T11'){s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%),${STRIPES};${redL}${redB}`;}
-          else if(type==='T12'){s+=`background-image:linear-gradient(90deg,transparent 50%,rgba(0,0,0,0.18) 50%),${STRIPES};${redL}${redB}`;}
-          else if(_TM[type]){s+=_TM[type];}
-          else if(/^R(25|34)\d{2,}$|^R4\d{3,}$/.test(type)){/* status colour only */}
-          else if(/^[A-Za-z]\d{3,}/.test(type)){
-            const sfx=type.slice(-2);
-            const pfx=type[0].toUpperCase();
-            if(sfx==='01'||sfx==='51'){s+=`background-image:${DOTS};background-size:4px 4px;${redB}`;}
-            else if(sfx==='02'){s+=`background-image:${DOTS};background-size:4px 4px;`;s+=pfx==='C'?redB:`${redL}${redB}`;}
-            else if(sfx==='52'){s+=`background-image:${DOTS};background-size:4px 4px;${redL}${redB}`;if(pfx==='E')s+=`border-right:2px solid #ED1C24;`;}
-            else if(sfx==='03'||sfx==='53'){s+=`background-image:${STRIPES};${redL}${redB}`;}
-            else if(sfx==='04'||sfx==='54'){s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%);${redB}`;}
-            else if(sfx==='05'||sfx==='55'){s+=`background-image:linear-gradient(90deg,rgba(0,0,0,0.18) 50%,transparent 50%);${redL}${redB}`;}
-            else if(sfx==='06'||sfx==='56'){s+=`background-image:${STRIPES};${redL}${redB}`;}
-          }
-        }
-        cells+=`<div style="${s}"></div>`;
-      });
-    });
-
-    const gridDiv=`<div style="display:grid;grid-template-columns:${colTpl};grid-template-rows:${rowTpl};gap:${GAP}px;background:${JOINT};width:${w}px;height:${h}px;">${cells}</div>`;
-    if(!merges||!merges.length)return gridDiv;
-    const rowTops={};let _y=0;
-    floors.forEach((fl,fi)=>{rowTops[fl]=_y;_y+=rowHeights[fi]+GAP;});
-    const colLefts={};let _x=0;
-    cols.forEach((col,ci)=>{colLefts[String(col)]=_x;_x+=CELL+GAP;});
-    let overlays='';
-    merges.forEach(m=>{
-      const fi1=floors.indexOf(m.fl1),fi2=floors.indexOf(m.fl2);
-      if(fi1<0||fi2<0)return;
-      const mH=rowHeights[fi1]+GAP+rowHeights[fi2];
-      const top=rowTops[m.fl1];
-      m.mCols.forEach(col=>{
-        const left=colLefts[String(col)];
-        if(left==null)return;
-        const pid=`${zid}-${m.fl1}-C${col}`;
-        const clr=SC[(panels[pid]||{}).status||'pending']||SC.pending;
-        overlays+=`<div style="position:absolute;left:${left}px;top:${top}px;width:${CELL}px;height:${mH}px;background:${clr};"></div>`;
-      });
-    });
-    return`<div style="position:relative;width:${w}px;height:${h}px;">${gridDiv}${overlays}</div>`;
+  function getColor(zid,fi,col){
+    const fl=FLOORS_BTT[fi];
+    if(STRUCT_FLOORS.has(fl))return STRUCT_CLR;
+    const p=panels[`${zid}-${fl}-C${col}`];
+    return SC[(p||{}).status||'pending']||SC.pending;
   }
 
-  function face(id,transform,w,shade,label,labelColor,content){
-    const h=fH;
-    const overlay=shade>0?`<div style="position:absolute;inset:0;background:rgba(0,0,0,${shade});pointer-events:none;"></div>`:'';
-    const lbl=`<div style="position:absolute;bottom:0;left:0;right:0;padding:3px 0;text-align:center;font-size:9px;font-weight:800;letter-spacing:0.2em;color:${labelColor};background:rgba(0,0,0,0.6);pointer-events:none;text-transform:uppercase;">${label}</div>`;
-    return`<div id="${id}" style="position:absolute;width:${w}px;height:${h}px;left:${-w/2}px;top:${-h/2}px;transform:${transform};backface-visibility:hidden;overflow:hidden;outline:1px solid rgba(255,255,255,0.11);">${content}${overlay}${lbl}</div>`;
-  }
-
-  const SMALL_R01={'R+01':25};
-  const SMALL_R02={'R+02':50};
-  const SMALL_R01_R02={'R+01':25,'R+02':50};
-  {
-    const nfSplit=12;
-    const nfSmCols=NF_COLS.slice(0,nfSplit), nfNmCols=NF_COLS.slice(nfSplit);
-    const nfTypSm={}, nfTypNm={};
-    NF_FLOORS.forEach(fl=>{const r=NF_TYPES[fl]||[];nfTypSm[fl]=r.slice(0,nfSplit);nfTypNm[fl]=r.slice(nfSplit);});
-    var nfGrid=`<div style="width:${nfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
-      +faceGrid('NF',nfSmCols,NF_FLOORS,nfTypSm,SMALL_R01,[{fl1:'R+02',fl2:'R+01',mCols:[60,59,58]}])
-      +faceGrid('NF',nfNmCols,NF_FLOORS,nfTypNm,SMALL_R02)
-      +`</div>`;
-  }
-  {
-    const sfSplit=15;
-    const sfSmCols=sfCols3D.slice(0,sfSplit), sfNmCols=sfCols3D.slice(sfSplit);
-    const sfTypSm={}, sfTypNm={};
-    SF_FLOORS.forEach(fl=>{const r=sfTypes3D[fl]||[];sfTypSm[fl]=r.slice(0,sfSplit);sfTypNm[fl]=r.slice(sfSplit);});
-    var sfGrid=`<div style="width:${sfW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
-      +faceGrid('SF',sfSmCols,SF_FLOORS,sfTypSm,SMALL_R02)
-      +faceGrid('SF',sfNmCols,SF_FLOORS,sfTypNm)
-      +`</div>`;
-  }
-  {
-    const efSplit=3;
-    const efNmCols=EF_COLS.slice(0,efSplit), efSmCols=EF_COLS.slice(efSplit);
-    const efTypNm={}, efTypSm={};
-    EF_FLOORS.forEach(fl=>{const r=EF_TYPES[fl]||[];efTypNm[fl]=r.slice(0,efSplit);efTypSm[fl]=r.slice(efSplit);});
-    var efGrid=`<div style="width:${efW}px;height:${fH}px;background:${JOINT};display:flex;gap:${GAP}px;align-items:flex-start;">`
-      +faceGrid('EF',efNmCols,EF_FLOORS,efTypNm)
-      +faceGrid('EF',efSmCols,EF_FLOORS,efTypSm,SMALL_R01,[{fl1:'R+02',fl2:'R+01',mCols:[75,74,73,71,70,69]}])
-      +`</div>`;
-  }
-  const wfGrid=faceGrid('WF',wfCols3D,WF_FLOORS,wfTypes3D,SMALL_R02);
-
-  const LEGEND=[
-    {label:'Installed',    color:'#00FF32'},
-    {label:'Delivered',    color:'#FFF000'},
-    {label:'Fabricated',   color:'#002DFF'},
-    {label:'CL Issued',    color:'#C98BCA'},
-    {label:'CL in Prog.',  color:'#A349A4'},
-    {label:'CL Not Issued',color:'#FFB3B3'},
-    {label:'Defect',       color:'#ED1C24'},
-    {label:'Pending',      color:'#E8F0FB'},
+  const LEGEND_DATA=[
+    {label:'Installed',color:'#00FF32'},{label:'Delivered',color:'#FFF000'},
+    {label:'Fabricated',color:'#002DFF'},{label:'CL Issued',color:'#C98BCA'},
+    {label:'CL In Prog.',color:'#A349A4'},{label:'CL Not Issued',color:'#FFB3B3'},
+    {label:'Defect',color:'#ED1C24'},{label:'Pending',color:'#E8F0FB'},
   ];
-  const legendHTML=LEGEND.map(l=>`
+  const legendHTML=LEGEND_DATA.map(l=>`
     <div style="display:flex;align-items:center;gap:4px;">
       <div style="width:11px;height:11px;border-radius:2px;background:${l.color};border:1px solid rgba(255,255,255,0.18);flex-shrink:0;"></div>
       <span style="font-size:10px;color:var(--text2);white-space:nowrap;">${l.label}</span>
     </div>`).join('');
-
-  const roof=`<div style="position:absolute;width:${W}px;height:${D}px;left:${-W/2}px;top:${-D/2}px;transform:rotateX(90deg) translateZ(${fH/2}px);backface-visibility:hidden;background:linear-gradient(135deg,#1e2f45,#111c2a);outline:1px solid rgba(255,255,255,0.1);"></div>`;
-  const gW=W*2.4,gD=D*2.4;
-  const ground=`<div style="position:absolute;width:${gW}px;height:${gD}px;left:${-gW/2}px;top:${-gD/2}px;transform:rotateX(90deg) translateZ(${-fH/2}px);backface-visibility:hidden;background:radial-gradient(ellipse at center,rgba(14,101,169,0.12) 0%,transparent 68%);"></div>`;
 
   el.innerHTML=`<div class="fpw" style="flex-direction:column;">
     <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:6px 14px;">
@@ -20969,155 +20799,18 @@ function renderAAABetaPage(){
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${legendHTML}</div>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
-    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);position:relative;cursor:grab;user-select:none;">
-      <div id="aaab-scene" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:1400px;perspective-origin:50% 48%;">
-        <div id="aaab-bld" style="position:relative;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-22deg) rotateY(30deg);">
-          ${face('aaab-front', `translateZ(${D/2}px)`,                  nfW, 0,    'North','#60a5fa', nfGrid)}
-          ${face('aaab-back',  `rotateY(180deg) translateZ(${D/2}px)`,  sfW, 0.18, 'South','#4ade80', sfGrid)}
-          ${face('aaab-east',  `rotateY(-90deg) translateZ(${W/2}px)`,  efW, 0.28, 'East', '#fbbf24', efGrid)}
-          ${face('aaab-west',  `rotateY(90deg)  translateZ(${W/2}px)`,  wfW, 0.42, 'West', '#c084fc', wfGrid)}
-          ${roof}${ground}
-        </div>
-      </div>
-      <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;letter-spacing:0.03em;">
-        🖱 Left drag: Pan &nbsp;·&nbsp; Right drag: Orbit &nbsp;·&nbsp; Scroll: Zoom
-      </div>
+    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:#07111e;position:relative;cursor:grab;user-select:none;">
+      <canvas id="aaab-cvs" style="display:block;position:absolute;inset:0;"></canvas>
+      <div style="position:absolute;top:10px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:5px 10px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;pointer-events:none;">⚡ Shift Zone · R+17 &amp; R+18</div>
+      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Drag: rotate · Scroll: zoom</div>
     </div>
   </div>`;
 
-  const bld=document.getElementById('aaab-bld');
-  const vp =document.getElementById('aaab-vp');
-  let rotX=-22,rotY=30,zoom=1,panX=0,panY=0;
-  let dragging=false,lastX=0,lastY=0;
-
-  function applyT(){
-    bld.style.transform=`translate(${panX}px,${panY}px) scale(${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-  }
-
-  vp.addEventListener('mousedown',e=>{
-    if(e.button!==0)return;
-    dragging=true;lastX=e.clientX;lastY=e.clientY;
-    vp.style.cursor=e.shiftKey?'grabbing':'move';
-    e.preventDefault();
-  });
-  window.addEventListener('mouseup',()=>{dragging=false;if(vp.isConnected)vp.style.cursor='grab';});
-  window.addEventListener('mousemove',e=>{
-    if(!dragging)return;
-    const dx=e.clientX-lastX,dy=e.clientY-lastY;
-    if(e.shiftKey&&e.buttons===1){
-      rotY+=dx*0.4;rotX-=dy*0.4;
-      rotX=Math.max(-88,Math.min(88,rotX));
-    }else{
-      panX+=dx;panY+=dy;
-    }
-    lastX=e.clientX;lastY=e.clientY;
-    applyT();
-  });
-
-  vp.addEventListener('wheel',e=>{
-    e.preventDefault();
-    zoom*=e.deltaY<0?1.08:0.93;
-    zoom=Math.max(0.1,Math.min(7,zoom));
-    applyT();
-  },{passive:false});
-
-  let lastPinch=0;
-  vp.addEventListener('touchstart',e=>{
-    e.preventDefault();
-    if(e.touches.length===1){lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;}
-    if(e.touches.length===2)lastPinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-  },{passive:false});
-  vp.addEventListener('touchmove',e=>{
-    e.preventDefault();
-    if(e.touches.length===1){
-      panX+=e.touches[0].clientX-lastX;panY+=e.touches[0].clientY-lastY;
-      lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;
-      applyT();
-    }else if(e.touches.length===2){
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      if(lastPinch){zoom*=d/lastPinch;zoom=Math.max(0.1,Math.min(7,zoom));applyT();}
-      lastPinch=d;
-    }
-  },{passive:false});
-}
-
-// Corner 3D — canvas-based perspective view of the Shift Tower west corner
-// NW (north), W (west), SW (south) facades with live panel status from batimon
-function renderCorner3DPage(){
-  const el=document.getElementById('page-aaac');
-  if(!el)return;
-
-  if(window._activeProjectId&&window._activeProjectId!=='shift-tower'){
-    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;font-family:'Barlow',sans-serif;color:#8099b0;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><div style="font-size:15px;font-weight:600;">3D not configured for this project</div></div>`;
-    return;
-  }
-
-  // Building constants
-  const FL=1.5,PANEL=1.0,JG=0.07;
-  const W_SPAN=17,NW_SPAN=10,SW_SPAN=12;
-  const TOT_FL=35,SH=17,SH_N=2,NW_EX=4,SW_EX=2;
-
-  // Map canvas floor index (0=RDC, 34=R+34) to batimon floor label
-  const FLOOR_MAP=[
-    'RDC','R+01','R+02','R+03','R+04','R+05','R+06','R+07','R+08','R+09',
-    'R+10','R+11','R+12','R+13','R+14','R+15','R+16','R+17T','R+18T','R+19',
-    'R+20','R+21','R+22','R+23','R+24','R+25','R+26','R+27','R+28','R+29',
-    'R+30','R+31','R+32','R+33','R+34'
-  ];
-
-  // Column maps: canvas col index → batimon column number / id
-  const WF_C=Array.from({length:17},(_,c)=>15+c);   // c=0→col15 (S end), c=16→col31 (N end)
-  const NF_C=Array.from({length:10},(_,c)=>31+c);   // c=0→col31 (corner), c=9→col40 (E)
-  const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4];       // c=0→col15 (corner), c=11→col4 (E)
-  const SW_EX_C=['15-B','15-A'];                     // c=0→15-B (outer), c=1→15-A (inner)
-
-  const SC={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-  const JOINT='#07111e';
-  const LEGEND=[
-    {label:'Installed',color:'#00FF32'},{label:'Delivered',color:'#FFF000'},
-    {label:'Fabricated',color:'#002DFF'},{label:'CL Issued',color:'#C98BCA'},
-    {label:'CL In Prog.',color:'#A349A4'},{label:'CL Not Issued',color:'#FFB3B3'},
-    {label:'Defect',color:'#ED1C24'},{label:'Pending',color:'#E8F0FB'},
-  ];
-
-  function getColor(zid,fi,col){
-    const fl=FLOOR_MAP[fi];
-    if(!fl)return SC.pending;
-    const p=panels[`${zid}-${fl}-C${col}`];
-    return SC[(p||{}).status||'pending']||SC.pending;
-  }
-
-  const dot=(c)=>`<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c};margin-right:7px;vertical-align:middle;"></span>`;
-  const legendRows=LEGEND.map(l=>`<div>${dot(l.color)}${l.label}</div>`).join('');
-
-  el.style.cssText='position:relative;overflow:hidden;background:#07111e;';
-  el.innerHTML=`
-    <canvas id="c3d-cvs" style="display:block;position:absolute;inset:0;"></canvas>
-    <div style="position:absolute;top:12px;right:12px;color:#8b949e;font-size:10px;font-family:'IBM Plex Mono',monospace;">Drag to rotate · Scroll to zoom</div>
-    <div style="position:absolute;top:12px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:6px 12px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;">⚡ Shift Zone · R+17 &amp; R+18</div>
-    <div style="position:absolute;bottom:12px;left:12px;background:rgba(7,17,30,0.95);border:1px solid #1e2d42;border-radius:8px;padding:10px 14px;color:#e6edf3;font-size:10px;line-height:2.1;font-family:'IBM Plex Mono',monospace;">
-      <div style="color:#6b7280;font-size:9px;letter-spacing:.1em;margin-bottom:2px;">PANEL STATUS</div>
-      ${legendRows}
-    </div>
-    <div style="position:absolute;bottom:12px;right:12px;background:rgba(7,17,30,0.95);border:1px solid #1e2d42;border-radius:8px;padding:10px 14px;color:#e6edf3;font-size:10px;line-height:2.1;font-family:'IBM Plex Mono',monospace;">
-      <div style="color:#6b7280;font-size:9px;letter-spacing:.1em;margin-bottom:2px;">FACADES</div>
-      <div>${dot('#4a85e0')}NW — North (cols 31–40)</div>
-      <div>${dot('#c8a020')}W — West (cols 15–31)</div>
-      <div>${dot('#2ea855')}SW — South (cols 4–15)</div>
-      <div>${dot('#c85a1a')}Corner Panel R+17/18</div>
-    </div>
-    <button onclick="renderCorner3DPage()" style="position:absolute;top:12px;right:240px;padding:4px 12px;font-size:11px;font-weight:700;background:rgba(14,25,42,0.85);border:1px solid #2d3748;border-radius:6px;color:#8b949e;cursor:pointer;">↺ Refresh</button>
-  `;
-
-  const cvs=document.getElementById('c3d-cvs');
+  const vp=document.getElementById('aaab-vp');
+  const cvs=document.getElementById('aaab-cvs');
   const ctx=cvs.getContext('2d');
-  let cW=cvs.width=el.clientWidth||innerWidth;
-  let cH=cvs.height=el.clientHeight||innerHeight;
-
-  let theta=-0.85,phi=0.42,zoom=1.0;
-  const totalH=TOT_FL*FL;
-  const shY0=SH*FL,shY1=(SH+SH_N)*FL;
-  const centerY=totalH/2;
+  let cW,cH;
+  let theta=-0.85,phi=0.42,zoom=0.55;
 
   function proj(x,y,z){
     const oy=y-centerY,oz=z+W_SPAN/2;
@@ -21134,8 +20827,7 @@ function renderCorner3DPage(){
     return{pts:sp.map(p=>[p.sx,p.sy]),depth:sp.reduce((s,p)=>s+p.depth,0)/sp.length};
   }
   function quad(p3,fill,stroke,lw){
-    const{pts,depth}=projPoly(p3);
-    return{pts,depth,fill,stroke,lw:lw||0,isLine:false};
+    const{pts,depth}=projPoly(p3);return{pts,depth,fill,stroke,lw:lw||0,isLine:false};
   }
   function line2(a3,b3,stroke,lw){
     const pa=proj(...a3),pb=proj(...b3);
@@ -21150,9 +20842,10 @@ function renderCorner3DPage(){
     faces.push(bg([[0,0,0],[0,totalH,0],[SW_SPAN,totalH,0],[SW_SPAN,0,0]]));
     faces.push(bg([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shY0,0],[-SW_EX,shY1,0],[0,shY1,0],[0,shY0,0]]));
-
-    for(let fi=0;fi<TOT_FL;fi++){
-      const y0=fi*FL+JG,y1=(fi+1)*FL-JG;
+    for(let fi=0;fi<FLOORS_BTT.length;fi++){
+      const fl=FLOORS_BTT[fi];
+      const y0=yPos[fi]+JG,y1=yPos[fi]+flH(fl)-JG;
+      if(y1<=y0)continue;
       for(let c=0;c<W_SPAN;c++){
         const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
         faces.push(quad([[0,y0,z0],[0,y1,z0],[0,y1,z1],[0,y0,z1]],getColor('WF',fi,WF_C[c]),null,0));
@@ -21165,25 +20858,18 @@ function renderCorner3DPage(){
         const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
         faces.push(quad([[x0,y0,0],[x0,y1,0],[x1,y1,0],[x1,y0,0]],getColor('SF',fi,SF_C[c]),null,0));
       }
-    }
-
-    for(let c=0;c<NW_EX;c++){
-      const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-      for(let fi=SH;fi<SH+SH_N;fi++){
-        const y0=fi*FL+JG,y1=(fi+1)*FL-JG;
-        faces.push(quad([[x0,y0,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,y0,-W_SPAN]],SC.pending,null,0));
+      if(shiftFloors.has(fl)){
+        for(let c=0;c<NW_EX;c++){
+          const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
+          faces.push(quad([[x0,y0,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,y0,-W_SPAN]],SC.pending,null,0));
+        }
+        for(let c=0;c<SW_EX;c++){
+          const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
+          faces.push(quad([[x0,y0,0],[x0,y1,0],[x1,y1,0],[x1,y0,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
+        }
       }
     }
-    for(let c=0;c<SW_EX;c++){
-      const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-      for(let fi=SH;fi<SH+SH_N;fi++){
-        const y0=fi*FL+JG,y1=(fi+1)*FL-JG;
-        faces.push(quad([[x0,y0,0],[x0,y1,0],[x1,y1,0],[x1,y0,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
-      }
-    }
-
     faces.push(quad([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[-SW_EX,shY1,0],[-SW_EX,shY0,0]],'#c85a1a','#ff9944',1.2));
-
     for(const y of[shY0,shY1]){
       faces.push(line2([0,y,0],[0,y,-W_SPAN],'#886600',0.9));
       faces.push(line2([0,y,-W_SPAN],[NW_SPAN,y,-W_SPAN],'#224488',0.9));
@@ -21199,34 +20885,23 @@ function renderCorner3DPage(){
   }
 
   function drawLabels(){
-    const labels=[
-      {text:'W',     x:-1.8,         y:centerY,      z:-W_SPAN/2,   color:'#d4a017',size:15,bold:true},
-      {text:'NW',    x:NW_SPAN/2,    y:totalH+1.3,   z:-W_SPAN-0.5, color:'#6699ff',size:12,bold:true},
-      {text:'SW',    x:SW_SPAN/2,    y:totalH+1.3,   z:0.5,         color:'#44cc66',size:12,bold:true},
-      {text:'Corner',x:(-NW_EX-SW_EX)/2-0.8,y:(shY0+shY1)/2+2.5,z:-W_SPAN/2,color:'#ff9944',size:10,bold:true},
-      {text:'31w',   x:-NW_EX,       y:shY1+0.7,     z:-W_SPAN,     color:'#88aaff',size:9, bold:false},
-      {text:'15-B',  x:-SW_EX,       y:shY1+0.7,     z:0,           color:'#55dd99',size:9, bold:false},
+    const lbs=[
+      {t:'W',     x:-1.8,       y:centerY,    z:-W_SPAN/2,  c:'#d4a017',s:15,b:true},
+      {t:'NW',    x:NW_SPAN/2,  y:totalH+4,   z:-W_SPAN-.5, c:'#6699ff',s:12,b:true},
+      {t:'SW',    x:SW_SPAN/2,  y:totalH+4,   z:.5,         c:'#44cc66',s:12,b:true},
+      {t:'Corner',x:(-NW_EX-SW_EX)/2,y:(shY0+shY1)/2+4,z:-W_SPAN/2,c:'#ff9944',s:10,b:true},
     ];
-    for(const lb of labels){
+    for(const lb of lbs){
       const p=proj(lb.x,lb.y,lb.z);
-      ctx.save();
-      ctx.font=`${lb.bold?'bold ':''}${lb.size}px 'IBM Plex Mono',monospace`;
-      ctx.fillStyle=lb.color;
-      ctx.textAlign='center';
-      ctx.textBaseline='middle';
-      ctx.shadowColor='#07111e';
-      ctx.shadowBlur=8;
-      ctx.fillText(lb.text,p.sx,p.sy);
-      ctx.restore();
+      ctx.save();ctx.font=`${lb.b?'bold ':''}${lb.s}px 'IBM Plex Mono',monospace`;
+      ctx.fillStyle=lb.c;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.shadowColor='#07111e';ctx.shadowBlur=8;ctx.fillText(lb.t,p.sx,p.sy);ctx.restore();
     }
   }
 
   function render(){
-    cW=cvs.width=el.clientWidth;
-    cH=cvs.height=el.clientHeight;
-    ctx.clearRect(0,0,cW,cH);
-    ctx.fillStyle=JOINT;
-    ctx.fillRect(0,0,cW,cH);
+    cW=cvs.width=vp.clientWidth;cH=cvs.height=vp.clientHeight;
+    ctx.clearRect(0,0,cW,cH);ctx.fillStyle=JOINT;ctx.fillRect(0,0,cW,cH);
     const faces=buildScene();
     faces.sort((a,b)=>b.depth-a.depth);
     for(const f of faces){
@@ -21246,27 +20921,36 @@ function renderCorner3DPage(){
   render();
 
   let drag=false,lX=0,lY=0;
-  cvs.addEventListener('mousedown',e=>{drag=true;lX=e.clientX;lY=e.clientY;e.preventDefault();});
-  window.addEventListener('mouseup',()=>{drag=false;});
-  cvs.addEventListener('mousemove',e=>{
-    if(!drag||!cvs.isConnected)return;
+  vp.addEventListener('mousedown',e=>{drag=true;lX=e.clientX;lY=e.clientY;e.preventDefault();vp.style.cursor='grabbing';});
+  window.addEventListener('mouseup',()=>{drag=false;if(vp.isConnected)vp.style.cursor='grab';});
+  window.addEventListener('mousemove',e=>{
+    if(!drag||!vp.isConnected)return;
     theta-=(e.clientX-lX)*0.007;
     phi=Math.max(0.05,Math.min(1.4,phi+(e.clientY-lY)*0.007));
     lX=e.clientX;lY=e.clientY;render();
   });
-  cvs.addEventListener('wheel',e=>{
-    if(!cvs.isConnected)return;
-    zoom=Math.max(0.3,Math.min(3.0,zoom*(1-e.deltaY*0.0012)));
+  vp.addEventListener('wheel',e=>{
+    zoom=Math.max(0.2,Math.min(4.0,zoom*(1-e.deltaY*0.0012)));
     render();e.preventDefault();
   },{passive:false});
-  let lT=null;
-  cvs.addEventListener('touchstart',e=>{lT={x:e.touches[0].clientX,y:e.touches[0].clientY};e.preventDefault();},{passive:false});
-  cvs.addEventListener('touchend',()=>{lT=null;});
-  cvs.addEventListener('touchmove',e=>{
-    if(!lT||!cvs.isConnected)return;
-    const t=e.touches[0];
-    theta-=(t.clientX-lT.x)*0.007;
-    phi=Math.max(0.05,Math.min(1.4,phi+(t.clientY-lT.y)*0.007));
-    lT={x:t.clientX,y:t.clientY};render();e.preventDefault();
+  let lastPinch=0,lT=null;
+  vp.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){lT={x:e.touches[0].clientX,y:e.touches[0].clientY};}
+    if(e.touches.length===2)lastPinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+  },{passive:false});
+  vp.addEventListener('touchend',()=>{lT=null;});
+  vp.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1&&lT){
+      theta-=(e.touches[0].clientX-lT.x)*0.007;
+      phi=Math.max(0.05,Math.min(1.4,phi+(e.touches[0].clientY-lT.y)*0.007));
+      lT={x:e.touches[0].clientX,y:e.touches[0].clientY};render();
+    }else if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(lastPinch){zoom=Math.max(0.2,Math.min(4.0,zoom*d/lastPinch));render();}
+      lastPinch=d;
+    }
   },{passive:false});
 }
+
