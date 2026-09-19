@@ -20942,7 +20942,9 @@ function renderAAABetaPage(){
     faces.push(bg([[14.5,0,0],[14.5,totalH,0],[14.5,totalH,-4.5],[14.5,0,-4.5]]));
     faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
     faces.push(bg([[17.5,0,-4.5],[17.5,totalH,-4.5],[17.5,totalH,-1],[17.5,0,-1]]));
+    faces.push(bg([[17.5,0,-1],[17.5,totalH,-1],[31.5,totalH,-1],[31.5,0,-1]])); // south ext wall cols94-81
     const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
+    const R25fi=FLOORS_BTT.indexOf('R+25');
     faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21060,6 +21062,12 @@ function renderAAABetaPage(){
           for(const{z0,z1}of EP3)faces.push(quad([[17.5,ya,z0],[17.5,yb,z0],[17.5,yb,z1],[17.5,ya,z1]],SC.pending,null,0));
           faces.push(jl([17.5,ya,-4.5],[17.5,ya,-1]));faces.push(jl([17.5,yb,-4.5],[17.5,yb,-1]));
           for(let i=0;i<EP3.length-1;i++)faces.push(jl([17.5,ya,EP3[i].z1],[17.5,yb,EP3[i].z1]));
+        }
+        // South ext wall: z=-1, x=17.5→31.5, cols 94→81 (RDC–R+25)
+        if(!white && fi<=R25fi){
+          for(let i=0;i<14;i++){const x0=17.5+i,x1=x0+1;faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],SC.pending,null,0));}
+          faces.push(jl([17.5,ya,-1],[31.5,ya,-1]));faces.push(jl([17.5,yb,-1],[31.5,yb,-1]));
+          for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
         }
       }
     }
