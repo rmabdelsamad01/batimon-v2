@@ -19172,6 +19172,8 @@ window._mobVerifyStock=function(){
 function _renderMobileInstallRate(){
   const cont=document.getElementById('mob-content');
   if(!cont) return;
+  if(cont._pinchAbort){cont._pinchAbort.abort();cont._pinchAbort=null;}
+  cont.style.overflow='';cont.style.overflowY='scroll';cont.style.touchAction='pan-y';
   const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
