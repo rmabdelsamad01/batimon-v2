@@ -20946,9 +20946,6 @@ function renderAAABetaPage(){
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
         }
         if(!white&&shiftFloors.has(fl)){
-          // Extra WF panel going south (z=0→+PANEL) using col 15-A
-          faces.push(quad([[0,ya,PANEL-JG],[0,yb,PANEL-JG],[0,yb,JG],[0,ya,JG]],getColor('WF',fi,'15-A',true),null,0));
-          faces.push(...typeOverlays(getType('WF',fi,'15-A'),[0,PANEL-JG],[0,JG],ya,yb));
           for(let c=0;c<NW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
             faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
