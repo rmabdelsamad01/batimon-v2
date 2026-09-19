@@ -20849,6 +20849,7 @@ function renderAAABetaPage(){
       // R+34: trapezoidal cells matching 2D clip-path slopes
       if(fl==='R+34'){
         const H=flH('R+34'),base=yPos[fi],yBot=base+JG;
+        const SKY='#cde8f8'; // sky fill above trapezoid top edges
         const wfCI=[31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15];
         for(let c=0;c<W_SPAN;c++){
           const col=WF_C[c];const ci=wfCI.indexOf(col);
@@ -20859,15 +20860,17 @@ function renderAAABetaPage(){
           const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
           const ytL=base+(165-tl)/165*H,ytR=base+(165-tr)/165*H;
           faces.push(quad([[0,yBot,z0],[0,ytR,z0],[0,ytL,z1],[0,yBot,z1]],getColor('WF',fi,col),null,0));
+          // sky above panel
+          faces.push(quad([[0,base,z0],[0,ytR,z0],[0,ytL,z1],[0,base,z1]],SKY,null,0));
         }
         for(let c=0;c<NW_SPAN;c++){
-          const col=NF_C[c]; // 31+c; col41=outer(left in 2D,x1 in 3D), col31=corner(right in 2D,x0 in 3D)
-          const n=10-c; // at c=0(col31): n=10; at c=9(col40): n=1
-          const tl=82.5+n*3.25; // top at 0%(outer/x1 side)
-          const tr2=tl+2.5;     // top at 100%(corner/x0 side)
+          const col=NF_C[c];
+          const n=10-c;
+          const tl=82.5+n*3.25,tr2=tl+2.5;
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
           const ytCorner=base+(165-tr2)/165*H,ytOuter=base+(165-tl)/165*H;
           faces.push(quad([[x0,yBot,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,col),null,0));
+          faces.push(quad([[x0,base,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,base,-W_SPAN]],SKY,null,0));
         }
         for(let c=0;c<SW_SPAN;c++){
           const col=SF_C[c],n=15-col;
@@ -20875,6 +20878,7 @@ function renderAAABetaPage(){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
           const ytL=base+(165-tl_sf)/165*H,ytR=base+(165-tr_sf)/165*H;
           faces.push(quad([[x0,yBot,0],[x0,ytL,0],[x1,ytR,0],[x1,yBot,0]],getColor('SF',fi,SF_C[c]),null,0));
+          faces.push(quad([[x0,base,0],[x0,ytL,0],[x1,ytR,0],[x1,base,0]],SKY,null,0));
         }
         continue;
       }
