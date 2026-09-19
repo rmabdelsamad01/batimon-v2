@@ -20958,7 +20958,12 @@ function renderAAABetaPage(){
         }
       }
     }
-    faces.push(quad([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[-SW_EX,shY1,PANEL],[-SW_EX,shY0,PANEL]],'#c85a1a','#ff9944',1.2));
+    for(let fi=0;fi<FLOORS_BTT.length;fi++){
+      const fl=FLOORS_BTT[fi];
+      if(!shiftFloors.has(fl))continue;
+      const ya=yPos[fi]+JG,yb=yPos[fi]+flH(fl)-JG;
+      faces.push(quad([[-NW_EX,ya,-W_SPAN],[-NW_EX,yb,-W_SPAN],[-SW_EX,yb,PANEL],[-SW_EX,ya,PANEL]],getColor('WF',fi,WF_C[0],true),null,0));
+    }
     for(const y of[shY0,shY1]){
       faces.push(line2([0,y,PANEL],[0,y,-W_SPAN],'#886600',0.9));
       faces.push(line2([0,y,-W_SPAN],[NW_SPAN,y,-W_SPAN],'#224488',0.9));
