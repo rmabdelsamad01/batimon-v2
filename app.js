@@ -20871,7 +20871,7 @@ function renderAAABetaPage(){
           }
           for(let c=0;c<SW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-            faces.push(quad([[x0,ya,0],[x0,yb,0],[x1,yb,0],[x1,ya,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
+            faces.push(quad([[x1,ya,0],[x1,yb,0],[x0,yb,0],[x0,ya,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
           }
         }
       }
