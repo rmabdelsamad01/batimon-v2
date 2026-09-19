@@ -20985,7 +20985,7 @@ function renderAAABetaPage(){
     const dx=e.clientX-lX,dy=e.clientY-lY;
     if(e.shiftKey&&e.buttons===1){
       theta-=dx*0.007;
-      phi=Math.max(0.05,Math.min(1.4,phi+dy*0.007));
+      phi+=dy*0.007;
     }else{
       panX+=dx;panY+=dy;
     }
