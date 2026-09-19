@@ -20919,10 +20919,6 @@ function renderAAABetaPage(){
         ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);ctx.lineTo(f.pts[1][0],f.pts[1][1]);
         ctx.strokeStyle=f.stroke;ctx.lineWidth=f.lw;ctx.stroke();
       }else{
-        // Back-face culling: skip faces whose projected winding is clockwise (facing away)
-        const[p0,p1,p2]=f.pts;
-        const cross=(p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
-        if(cross>0)continue;
         ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);
         for(let i=1;i<f.pts.length;i++)ctx.lineTo(f.pts[i][0],f.pts[i][1]);
         ctx.closePath();ctx.fillStyle=f.fill;ctx.fill();
