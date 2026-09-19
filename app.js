@@ -20947,7 +20947,7 @@ function renderAAABetaPage(){
           faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
         }
-        if(!white&&shiftFloors.has(fl)){
+        if(!white&&shiftFloors.has(fl)&&fl!=='R+17B'){
           for(let c=0;c<NW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
             faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
