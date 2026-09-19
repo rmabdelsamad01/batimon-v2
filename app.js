@@ -20794,7 +20794,7 @@ function renderAAABetaPage(){
     const lerp=(a,b,t)=>[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])];
     const pt=(hp,y)=>[hp[0],y,hp[1]];
     const add=(p3,clr)=>{const f=quad(p3,clr,null,0);f.depth-=0.01;res.push(f);};
-    const addLine=(a3,b3,clr,lw)=>{const f=line2(a3,b3,clr,lw);f.depth-=0.01;res.push(f);};
+    const addLine=(a3,b3,clr,lw)=>{const f=line2(a3,b3,clr,lw);f.depth-=0.02;res.push(f);};
     // Pattern map matching the 2D _TM table: sp/st/2c/2cf/dt
     const TM={'C01':'sp','C02':'sp','C03':'sp','C04':'sp','C05':'sp','C06':'sp','C07':'sp','C08':'sp','C09':'sp','C10':'sp',
       'C101':'st','C102':'st','C1902':'sp',
