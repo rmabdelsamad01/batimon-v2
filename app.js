@@ -20778,6 +20778,39 @@ function renderAAABetaPage(){
     const p=panels[`${zid}-${fl}-C${col}`];
     return SC[(p||{}).status||'pending']||SC.pending;
   }
+  function getType(zid,fi,col){
+    const fl=FLOORS_BTT[fi];
+    if(zid==='WF'){const ci=WF_COLS.indexOf(col);return ci>=0?(WF_TYPES[fl]||[])[ci]||''  :'';}
+    if(zid==='SF'){const ci=SF_COLS.indexOf(col);return ci>=0?(SF_TYPES[fl]||[])[ci]||''  :'';}
+    if(zid==='NF'){const ci=NF_COLS.indexOf(col);return ci>=0?(NF_TYPES[fl]||[])[ci]||''  :'';}
+    return '';
+  }
+  function typeOverlays(type,p0,p1,ya,yb){
+    const res=[];
+    if(!type)return res;
+    const lerp=(a,b,t)=>[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])];
+    const pt=(hp,y)=>[hp[0],y,hp[1]];
+    const add=(p3,clr)=>{const f=quad(p3,clr,null,0);f.depth-=0.01;res.push(f);};
+    if(/^T0[1-4]$/.test(type)){
+      const ym=ya+(yb-ya)*2/3;
+      add([pt(p0,ym),pt(p0,yb),pt(p1,yb),pt(p1,ym)],'rgba(255,255,255,0.18)');
+    }
+    if(/^T(07|08|10|11)$/.test(type)){
+      const pm=lerp(p0,p1,0.5);
+      add([pt(p0,ya),pt(p0,yb),pt(pm,yb),pt(pm,ya)],'rgba(0,0,0,0.18)');
+    }else if(/^T(09|12)$/.test(type)){
+      const pm=lerp(p0,p1,0.5);
+      add([pt(pm,ya),pt(pm,yb),pt(p1,yb),pt(p1,ya)],'rgba(0,0,0,0.18)');
+    }
+    if(/^T(0[5-9]|1[0-2])$/.test(type)){
+      const N=5;
+      for(let s=0;s<N;s++){
+        const t0=s/N,t1=t0+0.5/N;
+        add([pt(lerp(p0,p1,t0),ya),pt(lerp(p0,p1,t0),yb),pt(lerp(p0,p1,t1),yb),pt(lerp(p0,p1,t1),ya)],'rgba(0,0,0,0.28)');
+      }
+    }
+    return res;
+  }
 
   const LEGEND_DATA=[
     {label:'Installed',color:'#00FF32'},{label:'Delivered',color:'#FFF000'},
@@ -20895,21 +20928,25 @@ function renderAAABetaPage(){
       for(const{ya,yb,white}of segs){
         if(yb<=ya)continue;
         for(let c=0;c<W_SPAN;c++){
-          const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
-          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,WF_C[c],true),null,0));
+          const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG,col=WF_C[c];
+          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,col,true),null,0));
+          if(!white)faces.push(...typeOverlays(getType('WF',fi,col),[0,z0],[0,z1],ya,yb));
         }
         for(let c=0;c<NW_SPAN;c++){
-          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,NF_C[c],true),null,0));
+          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG,col=NF_C[c];
+          faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,col,true),null,0));
+          if(!white)faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],ya,yb));
         }
         const sfZ=(!white&&shiftFloors.has(fl))?PANEL:0;
         for(let c=0;c<SW_SPAN;c++){
-          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,SF_C[c],true),null,0));
+          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG,col=SF_C[c];
+          faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
+          if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
         }
         if(!white&&shiftFloors.has(fl)){
           // Extra WF panel going south (z=0→+PANEL) using col 15-A
           faces.push(quad([[0,ya,PANEL-JG],[0,yb,PANEL-JG],[0,yb,JG],[0,ya,JG]],getColor('WF',fi,'15-A',true),null,0));
+          faces.push(...typeOverlays(getType('WF',fi,'15-A'),[0,PANEL-JG],[0,JG],ya,yb));
           for(let c=0;c<NW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
             faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
