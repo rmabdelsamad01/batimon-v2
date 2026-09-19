@@ -20990,17 +20990,6 @@ function renderAAABetaPage(){
       faces.push(line2([i,0,-26],[i,0,15],'#111b28',0.4));
       faces.push(line2([-9,0,i],[23,0,i],'#111b28',0.4));
     }
-    {
-      const cx0=0.7,cx1=14.2,cz0=-0.7,cz1=-16.2;
-      const cy0=0,cy1=yPos[FLOORS_BTT.indexOf('R+33')]+flH('R+33');
-      const W='#000000';
-      faces.push(quad([[cx0,cy0,cz0],[cx0,cy1,cz0],[cx1,cy1,cz0],[cx1,cy0,cz0]],W,null,0));
-      faces.push(quad([[cx1,cy0,cz1],[cx1,cy1,cz1],[cx0,cy1,cz1],[cx0,cy0,cz1]],W,null,0));
-      faces.push(quad([[cx0,cy0,cz1],[cx0,cy1,cz1],[cx0,cy1,cz0],[cx0,cy0,cz0]],W,null,0));
-      faces.push(quad([[cx1,cy0,cz0],[cx1,cy1,cz0],[cx1,cy1,cz1],[cx1,cy0,cz1]],W,null,0));
-      faces.push(quad([[cx0,cy0,cz0],[cx1,cy0,cz0],[cx1,cy0,cz1],[cx0,cy0,cz1]],W,null,0));
-      faces.push(quad([[cx0,cy1,cz1],[cx1,cy1,cz1],[cx1,cy1,cz0],[cx0,cy1,cz0]],W,null,0));
-    }
     return faces;
   }
 
