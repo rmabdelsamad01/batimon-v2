@@ -20861,7 +20861,7 @@ function renderAAABetaPage(){
           const z0s=-c*PANEL,z1s=-(c+1)*PANEL; // full width for sky (covers joint strips)
           const ytL=base+(165-tl)/165*H,ytR=base+(165-tr)/165*H;
           faces.push(quad([[0,yBot,z0],[0,ytR,z0],[0,ytL,z1],[0,yBot,z1]],getColor('WF',fi,col),null,0));
-          faces.push(quad([[0,base,z0s],[0,ytR,z0s],[0,ytL,z1s],[0,base,z1s]],SKY,null,0));
+          faces.push(quad([[0,ytR,z0s],[0,base+H,z0s],[0,base+H,z1s],[0,ytL,z1s]],SKY,null,0));
         }
         for(let c=0;c<NW_SPAN;c++){
           const col=NF_C[c];
@@ -20872,9 +20872,9 @@ function renderAAABetaPage(){
             const tl=82.5+n*3.25,tr2=tl+2.5;
             const ytCorner=base+(165-tr2)/165*H,ytOuter=base+(165-tl)/165*H;
             faces.push(quad([[x0,yBot,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,col),null,0));
-            faces.push(quad([[x0s,base,-W_SPAN],[x0s,ytCorner,-W_SPAN],[x1s,ytOuter,-W_SPAN],[x1s,base,-W_SPAN]],SKY,null,0));
+            faces.push(quad([[x0s,ytCorner,-W_SPAN],[x0s,base+H,-W_SPAN],[x1s,base+H,-W_SPAN],[x1s,ytOuter,-W_SPAN]],SKY,null,0));
           } else { // cols 42-45: gap zone, no R+34 panel — all sky
-            faces.push(quad([[x0s,base,-W_SPAN],[x0s,base+H,-W_SPAN],[x1s,base+H,-W_SPAN],[x1s,base,-W_SPAN]],SKY,null,0));
+            faces.push(quad([[x0s,yBot,-W_SPAN],[x0s,base+H,-W_SPAN],[x1s,base+H,-W_SPAN],[x1s,yBot,-W_SPAN]],SKY,null,0));
           }
         }
         for(let c=0;c<SW_SPAN;c++){
@@ -20884,7 +20884,7 @@ function renderAAABetaPage(){
           const x0s=c*PANEL,x1s=(c+1)*PANEL;
           const ytL=base+(165-tl_sf)/165*H,ytR=base+(165-tr_sf)/165*H;
           faces.push(quad([[x0,yBot,0],[x0,ytL,0],[x1,ytR,0],[x1,yBot,0]],getColor('SF',fi,SF_C[c]),null,0));
-          faces.push(quad([[x0s,base,0],[x0s,ytL,0],[x1s,ytR,0],[x1s,base,0]],SKY,null,0));
+          faces.push(quad([[x0s,ytL,0],[x0s,base+H,0],[x1s,base+H,0],[x1s,ytR,0]],SKY,null,0));
         }
         continue;
       }
