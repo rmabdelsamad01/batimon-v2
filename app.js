@@ -21136,8 +21136,8 @@ function renderAAABetaPage(){
     if(!drag||!vp.isConnected)return;
     const dx=e.clientX-lX,dy=e.clientY-lY;
     if(dragBtn===2||(e.shiftKey&&e.buttons===1)){
-      theta+=dx*0.007;
-      phi-=dy*0.007;
+      theta-=dx*0.007;
+      phi+=dy*0.007;
       phi=Math.max(-88*Math.PI/180,Math.min(88*Math.PI/180,phi));
     }else{
       panX+=dx;panY+=dy;
