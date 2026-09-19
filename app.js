@@ -2410,7 +2410,7 @@ function _renderPage(id){
   else if(id==='proj-org')renderProjOrg();
   else if(id==='proj-financial')renderProjFinancial();
   else if(id==='dashboard'){ const isCustom=window._activeProjectId&&window._activeProjectId!=='shift-tower'; if(isCustom){ window._activeCatNum=1; renderAllCategoriesOverview(); } else { updateNavFacadeLabels(); renderDash(); } }
-  else if(id==='NFD')renderNFDemo();
+
   else if(id==='BM-dashboard')renderBMDashboard();
   else if(id==='BM-NF')renderBMNF();
   else if(id==='BM-SF')renderBMSF();
@@ -6828,7 +6828,7 @@ function efSidebarHTML(){
      subs:isCustomProject?[]:['Bracket Monitoring','UCW Monitoring'],
      subSubs:isCustomProject?{}:{
        'Bracket Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF],
-       'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF,'NF Demo']
+       'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]
      },
      customSubHTML:_customMonHTML},
     {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['Fabrication Rate','Delivery Rate','Installation Rate','Fabrication Counting']},
@@ -7045,7 +7045,7 @@ function efSidebarHTML(){
                   const isTemplate=sub==='Template Checklist';
                   const isSigned=sub==='Signed Checklist';
                   const isCashOut=sub==='Cash-Out';
-                  const ucwMap={'Overview':'dashboard',[_sbn.NF]:'NF',[_sbn.SF]:'SF',[_sbn.EF]:'EF',[_sbn.WF]:'WF','NF Demo':'NFD'};
+                  const ucwMap={'Overview':'dashboard',[_sbn.NF]:'NF',[_sbn.SF]:'SF',[_sbn.EF]:'EF',[_sbn.WF]:'WF'};
                   const bmMap={'Overview':'BM-dashboard',[_sbn.NF]:'BM-NF',[_sbn.SF]:'BM-SF',[_sbn.EF]:'BM-EF',[_sbn.WF]:'BM-WF'};
                   const checklistMap={'Bracket Installation':'bracket-installation','Panel Assembly':'panel-assembly','Panel Prep et Inst':'panel-preparation'};
                   const signedMap={'Signed Bracket Installation':'bracket-installation','Signed Panel Assembly':'panel-assembly','Signed Panel Prep et Inst':'panel-preparation'};
@@ -8001,20 +8001,6 @@ async function _confirmDeleteChecklist(recordId, typeId, label){
   }
 }
 
-function renderNFDemo(){
-  const cont=document.getElementById('page-NFD');
-  const nfZone=ZONES.find(z=>z.id==='NF');
-  if(!nfZone||!cont)return;
-  cont.innerHTML=`<div class="fpw">${efSidebarHTML()}<div class="fpm"><div style="background:#c53030;color:#fff;font-size:10px;font-weight:700;padding:5px 14px;letter-spacing:1px;flex-shrink:0;">⚠ DEMO — North Facade Copy · Design review only · Changes here do not affect live data</div>${filterBarHTML('NF')}<div class="gw" id="gw-NFD" style="overflow:auto;"><div class="wf-wrap" id="wf-wrap-NFD" style="transform-origin:top left;display:inline-block;--ch:150px;"><div class="wftitle">North Facade (Demo)</div><table class="wft" id="tbl-NFD"></table></div></div></div></div>`;
-  const demoTbl=document.getElementById('tbl-NFD');
-  const realTbl=document.getElementById('tbl-NF');
-  if(realTbl&&realTbl!==demoTbl) realTbl.id='_real_tbl_NF';
-  demoTbl.id='tbl-NF';
-  buildComplexTable(nfZone);
-  demoTbl.id='tbl-NFD';
-  if(realTbl&&realTbl!==demoTbl) realTbl.id='tbl-NF';
-  applyNFDesignOverrides(demoTbl);
-}
 
 function renderComplexFP(zone){
   const cont=document.getElementById('page-'+zone.id);
