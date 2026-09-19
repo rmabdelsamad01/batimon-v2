@@ -19033,9 +19033,11 @@ function _refreshMobileContent(){
   _renderMobileFacadeBar();
   const isOverview=window._mobFacade==='overview';
   const isSnags=window._mobFacade==='snags';
-  if(filterBar) filterBar.style.display=(isOverview||isSnags)?'none':'';
+  const isInstallRate=window._mobFacade==='install-rate';
+  if(filterBar) filterBar.style.display=(isOverview||isSnags||isInstallRate)?'none':'';
   if(isOverview){_renderMobileOverview();return;}
   if(isSnags){_renderMobileSnagSummary();return;}
+  if(isInstallRate){_renderMobileInstallRate();return;}
   _renderMobileFilterBar();
   if(window._mobTab==='brackets') _renderMobileBMGrid();
   else _renderMobileUCWGrid();
@@ -19167,6 +19169,56 @@ window._mobVerifyStock=function(){
   }
 };
 
+function _renderMobileInstallRate(){
+  const cont=document.getElementById('mob-content');
+  if(!cont) return;
+  const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthsFull=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  // Build date→count map from all 4 facades
+  const dateMap={};
+  ['NF','SF','EF','WF'].forEach(zid=>{
+    allIds(zid).forEach(id=>{
+      const p=panels[id]||{};
+      if(p.status==='installed'&&p.installDate){
+        dateMap[p.installDate]=(dateMap[p.installDate]||0)+1;
+      }
+    });
+  });
+  // Build sorted rows (newest first), only days with installs
+  const rows=[];
+  const start=new Date('2026-01-01');
+  const end=new Date('2027-12-31');
+  for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)){
+    const key=d.toISOString().split('T')[0];
+    const count=dateMap[key]||0;
+    if(count>0) rows.push({key,count,day:days[d.getDay()],date:d.getDate(),month:monthsFull[d.getMonth()],monthKey:key.slice(0,7),year:d.getFullYear(),monthLabel:months[d.getMonth()]+' '+d.getFullYear()});
+  }
+  rows.reverse();
+  const totalInstalled=allPanelIds().filter(id=>(panels[id]||{}).status==='installed').length;
+  const _gc=gC();
+  const total=Object.values(_gc).reduce((a,b)=>a+(b||0),0);
+  // Render
+  let html='';
+  let lastMonth='';
+  rows.forEach(r=>{
+    if(r.monthKey!==lastMonth){
+      lastMonth=r.monthKey;
+      html+=`<div style="padding:10px 16px 4px;font-size:10px;font-weight:700;letter-spacing:0.08em;color:#224F93;text-transform:uppercase;background:#f4f7fb;border-bottom:1px solid #e0e8f0;${rows.indexOf(r)>0?'border-top:2px solid #d0dae8;':''}">${r.monthLabel}</div>`;
+    }
+    html+=`<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #e0e8f0;background:rgba(26,148,88,0.05);">
+      <div style="flex:1;font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;color:#1a2a3a;">${r.day} ${r.date} ${r.month} ${r.year}</div>
+      <div style="font-family:monospace;font-size:18px;font-weight:700;color:#1a9458;">+${r.count}</div>
+    </div>`;
+  });
+  if(!rows.length) html=`<div style="padding:40px 16px;text-align:center;font-family:'Barlow',sans-serif;font-size:14px;color:#8099b0;">No installations recorded yet</div>`;
+  html+=`<div style="display:flex;align-items:center;padding:12px 16px;background:#f4f7fb;border-top:2px solid #d0dae8;">
+    <div style="flex:1;font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;color:#4a6080;">Total installed</div>
+    <div style="font-family:monospace;font-size:15px;font-weight:700;color:#1a2a3a;">${totalInstalled} / ${total}</div>
+  </div>`;
+  cont.innerHTML=html;
+}
+
 function _renderMobileOverview(){
   const cont=document.getElementById('mob-content');
   if(!cont) return;
@@ -19296,7 +19348,7 @@ function _renderMobileFacadeBar(){
     ...(isB
       ?[{id:'BM-NF',label:'North',color:'#2d65bd'},{id:'BM-SF',label:'South',color:'#1a9458'},{id:'BM-EF',label:'East',color:'#a07800'},{id:'BM-WF',label:'West',color:'#6d35d9'}]
       :[{id:'NF',label:'North',color:'#2d65bd'},{id:'SF',label:'South',color:'#1a9458'},{id:'EF',label:'East',color:'#a07800'},{id:'WF',label:'West',color:'#6d35d9'}]),
-    ...(!isB?[{id:'snags',label:'Snags',color:'#c02020'}]:[])
+    ...(!isB?[{id:'snags',label:'Snags',color:'#c02020'},{id:'install-rate',label:'Installation Rate',color:'#1a9458'}]:[])
   ];
   bar.innerHTML=`<div style="display:flex;padding:0 8px;">`+facades.map(f=>{
     const active=window._mobFacade===f.id;
