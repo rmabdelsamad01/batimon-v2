@@ -20910,8 +20910,9 @@ function renderAAABetaPage(){
     faces.push(bg([[0,0,0],[0,totalH,0],[0,totalH,-W_SPAN],[0,0,-W_SPAN]]));
     faces.push(bg([[0,0,-W_SPAN],[0,totalH,-W_SPAN],[NW_SPAN,totalH,-W_SPAN],[NW_SPAN,0,-W_SPAN]]));
     faces.push(bg([[0,0,0],[0,totalH,0],[SW_SPAN,totalH,0],[SW_SPAN,0,0]]));
-    faces.push(bg([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shY0,-W_SPAN]]));
-    faces.push(bg([[-SW_EX,shY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shY0,PANEL]]));
+    const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
+    faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
+    faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
       const y0=yPos[fi]+JG,y1=yPos[fi]+flH(fl)-JG;
