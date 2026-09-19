@@ -20766,9 +20766,9 @@ function renderAAABetaPage(){
 
   // 1 world unit = 1 panel column = BASE_W px in flat table
   const PANEL=1.0,JG=0.07;
-  const W_SPAN=17,NW_SPAN=10,SW_SPAN=12,NW_EX=4,SW_EX=2;
+  const W_SPAN=17,NW_SPAN=15,SW_SPAN=12,NW_EX=4,SW_EX=2;
   const WF_C=Array.from({length:17},(_,c)=>15+c);
-  const NF_C=Array.from({length:10},(_,c)=>31+c);
+  const NF_C=Array.from({length:15},(_,c)=>31+c);
   const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4];
   const SW_EX_C=['15-B','15-A'];
 
@@ -20864,12 +20864,16 @@ function renderAAABetaPage(){
         }
         for(let c=0;c<NW_SPAN;c++){
           const col=NF_C[c];
-          const n=10-c;
-          const tl=82.5+n*3.25,tr2=tl+2.5;
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
-          const ytCorner=base+(165-tr2)/165*H,ytOuter=base+(165-tl)/165*H;
-          faces.push(quad([[x0,yBot,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,col),null,0));
-          faces.push(quad([[x0,base,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,base,-W_SPAN]],SKY,null,0));
+          if(c<=10){ // cols 31-41 have R+34 trapezoid panels
+            const n=10-c;
+            const tl=82.5+n*3.25,tr2=tl+2.5;
+            const ytCorner=base+(165-tr2)/165*H,ytOuter=base+(165-tl)/165*H;
+            faces.push(quad([[x0,yBot,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,col),null,0));
+            faces.push(quad([[x0,base,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,base,-W_SPAN]],SKY,null,0));
+          } else { // cols 42-45: gap zone, no R+34 panel — all sky
+            faces.push(quad([[x0,base,-W_SPAN],[x0,base+H,-W_SPAN],[x1,base+H,-W_SPAN],[x1,base,-W_SPAN]],SKY,null,0));
+          }
         }
         for(let c=0;c<SW_SPAN;c++){
           const col=SF_C[c],n=15-col;
