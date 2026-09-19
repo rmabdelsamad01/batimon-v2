@@ -20916,8 +20916,7 @@ function renderAAABetaPage(){
     const rx=x*c1-oz*s1,rz1=x*s1+oz*c1;
     const c2=Math.cos(phi),s2=Math.sin(phi);
     const ry=oy*c2-rz1*s2,rz2=oy*s2+rz1*c2;
-    const fov=Math.min(cW,cH)*0.52*zoom;
-    const sc=fov/(55+rz2);
+    const sc=Math.min(cW,cH)*0.028*zoom;
     return{sx:cW/2-rx*sc+panX,sy:cH/2-ry*sc+panY,depth:rz2};
   }
   function projPoly(pts3){
