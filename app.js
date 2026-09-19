@@ -20970,17 +20970,18 @@ function renderAAABetaPage(){
       faces.push(line2([-NW_EX,y,-W_SPAN],[0,y,-W_SPAN],'#3366aa',0.9));
       faces.push(line2([-SW_EX,y,PANEL],[SW_SPAN,y,PANEL],'#338855',0.9));
     }
-    // roof 18 — filled plane surface at R+18 top level
-    {
-      const ry=shY1;
+    // roof 18 polyline — draws at given y level
+    function drawRoof18(ry){
       const v1=[-NW_EX,ry,-W_SPAN],v2=[0,ry,-W_SPAN],v3=[0,ry,0];
       const v4=[SW_SPAN,ry,0],v5=[SW_SPAN,ry,PANEL],v6=[-SW_EX,ry,PANEL];
       faces.push(quad([v1,v2,v3,v6],'#ffffff',null,0));
       faces.push(quad([v3,v4,v5,v6],'#ffffff',null,0));
-      const roof18=[v1,v2,v3,v4,v5,v6];
-      for(let i=0;i<roof18.length;i++)
-        faces.push(line2(roof18[i],roof18[(i+1)%roof18.length],'#ffffff',2));
+      const pts=[v1,v2,v3,v4,v5,v6];
+      for(let i=0;i<pts.length;i++)
+        faces.push(line2(pts[i],pts[(i+1)%pts.length],'#ffffff',2));
     }
+    drawRoof18(shY1);
+    drawRoof18(yPos[FLOORS_BTT.indexOf('R+16')]+flH('R+16'));
     for(let i=-8;i<=22;i++){
       faces.push(line2([i,0,-26],[i,0,15],'#111b28',0.4));
       faces.push(line2([-9,0,i],[23,0,i],'#111b28',0.4));
