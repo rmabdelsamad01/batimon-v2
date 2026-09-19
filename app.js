@@ -20927,10 +20927,12 @@ function renderAAABetaPage(){
         :[{ya:y0,yb:y1,white:false}];
       for(const{ya,yb,white}of segs){
         if(yb<=ya)continue;
-        for(let c=0;c<W_SPAN;c++){
-          const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG,col=WF_C[c];
-          faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,col,true),null,0));
-          if(!white)faces.push(...typeOverlays(getType('WF',fi,col),[0,z0],[0,z1],ya,yb));
+        if(!(shiftFloors.has(fl)&&!white)){
+          for(let c=0;c<W_SPAN;c++){
+            const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG,col=WF_C[c];
+            faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,col,true),null,0));
+            if(!white)faces.push(...typeOverlays(getType('WF',fi,col),[0,z0],[0,z1],ya,yb));
+          }
         }
         for(let c=0;c<NW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG,col=NF_C[c];
