@@ -20760,6 +20760,7 @@ function renderAAABetaPage(){
   // Derived geometry
   const totalH=FLOORS_BTT.reduce((s,fl)=>s+flH(fl),0);
   const shiftFloors=new Set(['R+17T','R+17B','R+18T','R+18M','R+18MD','R+18B']);
+  const sfShiftFloors=new Set(['R+17T','R+18B','R+18MD','R+18M']); // SF at y=-1; R+17B and R+18T stay at y=0
   const shY0=yPos[FLOORS_BTT.indexOf('R+17B')];
   const shY1=yPos[FLOORS_BTT.indexOf('R+18T')]+flH('R+18T');
   const centerY=totalH/2;
@@ -20941,7 +20942,7 @@ function renderAAABetaPage(){
         }
         for(let c=0;c<SW_SPAN;c++){
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG,col=SF_C[c];
-          const sfZ=(!white&&shiftFloors.has(fl))?PANEL:0;
+          const sfZ=(!white&&sfShiftFloors.has(fl))?PANEL:0;
           faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
         }
@@ -20969,7 +20970,7 @@ function renderAAABetaPage(){
         faces.push(jl([0,ya,-W_SPAN],[NW_SPAN,ya,-W_SPAN]));
         faces.push(jl([0,yb,-W_SPAN],[NW_SPAN,yb,-W_SPAN]));
         // SF
-        {const sfZ=(!white&&shiftFloors.has(fl))?PANEL:0;
+        {const sfZ=(!white&&sfShiftFloors.has(fl))?PANEL:0;
         for(let c=1;c<SW_SPAN;c++)faces.push(jl([c*PANEL,ya,sfZ],[c*PANEL,yb,sfZ]));
         faces.push(jl([0,ya,sfZ],[SW_SPAN,ya,sfZ]));
         faces.push(jl([0,yb,sfZ],[SW_SPAN,yb,sfZ]));}
