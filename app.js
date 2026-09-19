@@ -20802,7 +20802,7 @@ function renderAAABetaPage(){
     <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:#07111e;position:relative;cursor:grab;user-select:none;">
       <canvas id="aaab-cvs" style="display:block;position:absolute;inset:0;"></canvas>
       <div style="position:absolute;top:10px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:5px 10px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;pointer-events:none;">⚡ Shift Zone · R+17 &amp; R+18</div>
-      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Drag: rotate · Scroll: zoom</div>
+      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom</div>
     </div>
   </div>`;
 
@@ -20810,7 +20810,7 @@ function renderAAABetaPage(){
   const cvs=document.getElementById('aaab-cvs');
   const ctx=cvs.getContext('2d');
   let cW,cH;
-  let theta=-0.85,phi=0.42,zoom=0.55;
+  let theta=-0.85,phi=0.42,zoom=0.55,panX=0,panY=0;
 
   function proj(x,y,z){
     const oy=y-centerY,oz=z+W_SPAN/2;
@@ -20820,7 +20820,7 @@ function renderAAABetaPage(){
     const ry=oy*c2-rz1*s2,rz2=oy*s2+rz1*c2;
     const fov=Math.min(cW,cH)*0.52*zoom;
     const sc=fov/(55+rz2);
-    return{sx:cW/2-rx*sc,sy:cH/2-ry*sc,depth:rz2};
+    return{sx:cW/2-rx*sc+panX,sy:cH/2-ry*sc+panY,depth:rz2};
   }
   function projPoly(pts3){
     const sp=pts3.map(([x,y,z])=>proj(x,y,z));
@@ -20921,12 +20921,21 @@ function renderAAABetaPage(){
   render();
 
   let drag=false,lX=0,lY=0;
-  vp.addEventListener('mousedown',e=>{drag=true;lX=e.clientX;lY=e.clientY;e.preventDefault();vp.style.cursor='grabbing';});
+  vp.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    drag=true;lX=e.clientX;lY=e.clientY;e.preventDefault();
+    vp.style.cursor=e.shiftKey?'grabbing':'move';
+  });
   window.addEventListener('mouseup',()=>{drag=false;if(vp.isConnected)vp.style.cursor='grab';});
   window.addEventListener('mousemove',e=>{
     if(!drag||!vp.isConnected)return;
-    theta-=(e.clientX-lX)*0.007;
-    phi=Math.max(0.05,Math.min(1.4,phi+(e.clientY-lY)*0.007));
+    const dx=e.clientX-lX,dy=e.clientY-lY;
+    if(e.shiftKey&&e.buttons===1){
+      theta-=dx*0.007;
+      phi=Math.max(0.05,Math.min(1.4,phi+dy*0.007));
+    }else{
+      panX+=dx;panY+=dy;
+    }
     lX=e.clientX;lY=e.clientY;render();
   });
   vp.addEventListener('wheel',e=>{
@@ -20943,8 +20952,7 @@ function renderAAABetaPage(){
   vp.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(e.touches.length===1&&lT){
-      theta-=(e.touches[0].clientX-lT.x)*0.007;
-      phi=Math.max(0.05,Math.min(1.4,phi+(e.touches[0].clientY-lT.y)*0.007));
+      panX+=e.touches[0].clientX-lT.x;panY+=e.touches[0].clientY-lT.y;
       lT={x:e.touches[0].clientX,y:e.touches[0].clientY};render();
     }else if(e.touches.length===2){
       const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
