@@ -20858,30 +20858,33 @@ function renderAAABetaPage(){
           else if(col===15){tl=20;tr=15;}
           else{tl=Math.round(111-(ci-1)*91/15);tr=105-(ci-1)*6;}
           const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
+          const z0s=-c*PANEL,z1s=-(c+1)*PANEL; // full width for sky (covers joint strips)
           const ytL=base+(165-tl)/165*H,ytR=base+(165-tr)/165*H;
           faces.push(quad([[0,yBot,z0],[0,ytR,z0],[0,ytL,z1],[0,yBot,z1]],getColor('WF',fi,col),null,0));
-          faces.push(quad([[0,base,z0],[0,ytR,z0],[0,ytL,z1],[0,base,z1]],SKY,null,0));
+          faces.push(quad([[0,base,z0s],[0,ytR,z0s],[0,ytL,z1s],[0,base,z1s]],SKY,null,0));
         }
         for(let c=0;c<NW_SPAN;c++){
           const col=NF_C[c];
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+          const x0s=c*PANEL,x1s=(c+1)*PANEL;
           if(c<=10){ // cols 31-41 have R+34 trapezoid panels
             const n=10-c;
             const tl=82.5+n*3.25,tr2=tl+2.5;
             const ytCorner=base+(165-tr2)/165*H,ytOuter=base+(165-tl)/165*H;
             faces.push(quad([[x0,yBot,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,col),null,0));
-            faces.push(quad([[x0,base,-W_SPAN],[x0,ytCorner,-W_SPAN],[x1,ytOuter,-W_SPAN],[x1,base,-W_SPAN]],SKY,null,0));
+            faces.push(quad([[x0s,base,-W_SPAN],[x0s,ytCorner,-W_SPAN],[x1s,ytOuter,-W_SPAN],[x1s,base,-W_SPAN]],SKY,null,0));
           } else { // cols 42-45: gap zone, no R+34 panel — all sky
-            faces.push(quad([[x0,base,-W_SPAN],[x0,base+H,-W_SPAN],[x1,base+H,-W_SPAN],[x1,base,-W_SPAN]],SKY,null,0));
+            faces.push(quad([[x0s,base,-W_SPAN],[x0s,base+H,-W_SPAN],[x1s,base+H,-W_SPAN],[x1s,base,-W_SPAN]],SKY,null,0));
           }
         }
         for(let c=0;c<SW_SPAN;c++){
           const col=SF_C[c],n=15-col;
           const tl_sf=Math.round(16+n*79/11),tr_sf=Math.round(20+n*80/11);
           const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+          const x0s=c*PANEL,x1s=(c+1)*PANEL;
           const ytL=base+(165-tl_sf)/165*H,ytR=base+(165-tr_sf)/165*H;
           faces.push(quad([[x0,yBot,0],[x0,ytL,0],[x1,ytR,0],[x1,yBot,0]],getColor('SF',fi,SF_C[c]),null,0));
-          faces.push(quad([[x0,base,0],[x0,ytL,0],[x1,ytR,0],[x1,base,0]],SKY,null,0));
+          faces.push(quad([[x0s,base,0],[x0s,ytL,0],[x1s,ytR,0],[x1s,base,0]],SKY,null,0));
         }
         continue;
       }
