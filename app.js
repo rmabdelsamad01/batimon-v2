@@ -20947,14 +20947,15 @@ function renderAAABetaPage(){
           faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
         }
-        if(!white&&wfShiftFloors.has(fl)){
+        if(!white&&shiftFloors.has(fl)){
           for(let c=0;c<NW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
             faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],SC.pending,null,0));
           }
+          const swZ=sfShiftFloors.has(fl)?PANEL:0;
           for(let c=0;c<SW_EX;c++){
             const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
-            faces.push(quad([[x1,ya,PANEL],[x1,yb,PANEL],[x0,yb,PANEL],[x0,ya,PANEL]],getColor('SF',fi,SW_EX_C[c],true),null,0));
+            faces.push(quad([[x1,ya,swZ],[x1,yb,swZ],[x0,yb,swZ],[x0,ya,swZ]],getColor('SF',fi,SW_EX_C[c],true),null,0));
           }
         }
         // permanent joint lines — always on top (depth-=0.01)
