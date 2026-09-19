@@ -2396,7 +2396,7 @@ function _renderPage(id){
   }
 
   // Hide nav bar for full-screen pages, show for everything else
-  const _noNavPages = ['3d','aaa','aaab','builder','sitepictures'];
+  const _noNavPages = ['3d','aaa','aaab','aaac','builder','sitepictures'];
   const _navEl = document.querySelector('nav.nav-tabs');
   if(_navEl) _navEl.style.display = _noNavPages.includes(id) ? 'none' : '';
 
@@ -2430,6 +2430,7 @@ function _renderPage(id){
   else if(id==='3d')render3DPage();
   else if(id==='aaa')renderAAAPage();
   else if(id==='aaab')renderAAABetaPage();
+  else if(id==='aaac')renderCorner3DPage();
   else if(id==='builder')renderBuilderPage();
   else if(id==='site-stock')renderSiteStock();
   else if(id==='agenda')renderAgendaPage();
@@ -21037,5 +21038,235 @@ function renderAAABetaPage(){
       if(lastPinch){zoom*=d/lastPinch;zoom=Math.max(0.1,Math.min(7,zoom));applyT();}
       lastPinch=d;
     }
+  },{passive:false});
+}
+
+// Corner 3D — canvas-based perspective view of the Shift Tower west corner
+// NW (north), W (west), SW (south) facades with live panel status from batimon
+function renderCorner3DPage(){
+  const el=document.getElementById('page-aaac');
+  if(!el)return;
+
+  if(window._activeProjectId&&window._activeProjectId!=='shift-tower'){
+    el.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;font-family:'Barlow',sans-serif;color:#8099b0;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><div style="font-size:15px;font-weight:600;">3D not configured for this project</div></div>`;
+    return;
+  }
+
+  // Building constants
+  const FL=1.5,PANEL=1.0,JG=0.07;
+  const W_SPAN=17,NW_SPAN=10,SW_SPAN=12;
+  const TOT_FL=35,SH=17,SH_N=2,NW_EX=4,SW_EX=2;
+
+  // Map canvas floor index (0=RDC, 34=R+34) to batimon floor label
+  const FLOOR_MAP=[
+    'RDC','R+01','R+02','R+03','R+04','R+05','R+06','R+07','R+08','R+09',
+    'R+10','R+11','R+12','R+13','R+14','R+15','R+16','R+17T','R+18T','R+19',
+    'R+20','R+21','R+22','R+23','R+24','R+25','R+26','R+27','R+28','R+29',
+    'R+30','R+31','R+32','R+33','R+34'
+  ];
+
+  // Column maps: canvas col index → batimon column number / id
+  const WF_C=Array.from({length:17},(_,c)=>15+c);   // c=0→col15 (S end), c=16→col31 (N end)
+  const NF_C=Array.from({length:10},(_,c)=>31+c);   // c=0→col31 (corner), c=9→col40 (E)
+  const SF_C=[15,14,13,12,11,10,9,8,7,6,5,4];       // c=0→col15 (corner), c=11→col4 (E)
+  const SW_EX_C=['15-B','15-A'];                     // c=0→15-B (outer), c=1→15-A (inner)
+
+  const SC={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const JOINT='#07111e';
+  const LEGEND=[
+    {label:'Installed',color:'#00FF32'},{label:'Delivered',color:'#FFF000'},
+    {label:'Fabricated',color:'#002DFF'},{label:'CL Issued',color:'#C98BCA'},
+    {label:'CL In Prog.',color:'#A349A4'},{label:'CL Not Issued',color:'#FFB3B3'},
+    {label:'Defect',color:'#ED1C24'},{label:'Pending',color:'#E8F0FB'},
+  ];
+
+  function getColor(zid,fi,col){
+    const fl=FLOOR_MAP[fi];
+    if(!fl)return SC.pending;
+    const p=panels[`${zid}-${fl}-C${col}`];
+    return SC[(p||{}).status||'pending']||SC.pending;
+  }
+
+  const dot=(c)=>`<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c};margin-right:7px;vertical-align:middle;"></span>`;
+  const legendRows=LEGEND.map(l=>`<div>${dot(l.color)}${l.label}</div>`).join('');
+
+  el.style.cssText='position:relative;overflow:hidden;background:#07111e;';
+  el.innerHTML=`
+    <canvas id="c3d-cvs" style="display:block;position:absolute;inset:0;"></canvas>
+    <div style="position:absolute;top:12px;right:12px;color:#8b949e;font-size:10px;font-family:'IBM Plex Mono',monospace;">Drag to rotate · Scroll to zoom</div>
+    <div style="position:absolute;top:12px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:6px 12px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;">⚡ Shift Zone · R+17 &amp; R+18</div>
+    <div style="position:absolute;bottom:12px;left:12px;background:rgba(7,17,30,0.95);border:1px solid #1e2d42;border-radius:8px;padding:10px 14px;color:#e6edf3;font-size:10px;line-height:2.1;font-family:'IBM Plex Mono',monospace;">
+      <div style="color:#6b7280;font-size:9px;letter-spacing:.1em;margin-bottom:2px;">PANEL STATUS</div>
+      ${legendRows}
+    </div>
+    <div style="position:absolute;bottom:12px;right:12px;background:rgba(7,17,30,0.95);border:1px solid #1e2d42;border-radius:8px;padding:10px 14px;color:#e6edf3;font-size:10px;line-height:2.1;font-family:'IBM Plex Mono',monospace;">
+      <div style="color:#6b7280;font-size:9px;letter-spacing:.1em;margin-bottom:2px;">FACADES</div>
+      <div>${dot('#4a85e0')}NW — North (cols 31–40)</div>
+      <div>${dot('#c8a020')}W — West (cols 15–31)</div>
+      <div>${dot('#2ea855')}SW — South (cols 4–15)</div>
+      <div>${dot('#c85a1a')}Corner Panel R+17/18</div>
+    </div>
+    <button onclick="renderCorner3DPage()" style="position:absolute;top:12px;right:240px;padding:4px 12px;font-size:11px;font-weight:700;background:rgba(14,25,42,0.85);border:1px solid #2d3748;border-radius:6px;color:#8b949e;cursor:pointer;">↺ Refresh</button>
+  `;
+
+  const cvs=document.getElementById('c3d-cvs');
+  const ctx=cvs.getContext('2d');
+  let cW=cvs.width=el.clientWidth||innerWidth;
+  let cH=cvs.height=el.clientHeight||innerHeight;
+
+  let theta=-0.85,phi=0.42,zoom=1.0;
+  const totalH=TOT_FL*FL;
+  const shY0=SH*FL,shY1=(SH+SH_N)*FL;
+  const centerY=totalH/2;
+
+  function proj(x,y,z){
+    const oy=y-centerY,oz=z+W_SPAN/2;
+    const c1=Math.cos(theta),s1=Math.sin(theta);
+    const rx=x*c1-oz*s1,rz1=x*s1+oz*c1;
+    const c2=Math.cos(phi),s2=Math.sin(phi);
+    const ry=oy*c2-rz1*s2,rz2=oy*s2+rz1*c2;
+    const fov=Math.min(cW,cH)*0.52*zoom;
+    const sc=fov/(55+rz2);
+    return{sx:cW/2-rx*sc,sy:cH/2-ry*sc,depth:rz2};
+  }
+  function projPoly(pts3){
+    const sp=pts3.map(([x,y,z])=>proj(x,y,z));
+    return{pts:sp.map(p=>[p.sx,p.sy]),depth:sp.reduce((s,p)=>s+p.depth,0)/sp.length};
+  }
+  function quad(p3,fill,stroke,lw){
+    const{pts,depth}=projPoly(p3);
+    return{pts,depth,fill,stroke,lw:lw||0,isLine:false};
+  }
+  function line2(a3,b3,stroke,lw){
+    const pa=proj(...a3),pb=proj(...b3);
+    return{pts:[[pa.sx,pa.sy],[pb.sx,pb.sy]],depth:(pa.depth+pb.depth)/2,fill:null,stroke,lw,isLine:true};
+  }
+
+  function buildScene(){
+    const faces=[];
+    const bg=(p3)=>{const f=quad(p3,JOINT,null,0);f.depth+=1000;return f;};
+    faces.push(bg([[0,0,0],[0,totalH,0],[0,totalH,-W_SPAN],[0,0,-W_SPAN]]));
+    faces.push(bg([[0,0,-W_SPAN],[0,totalH,-W_SPAN],[NW_SPAN,totalH,-W_SPAN],[NW_SPAN,0,-W_SPAN]]));
+    faces.push(bg([[0,0,0],[0,totalH,0],[SW_SPAN,totalH,0],[SW_SPAN,0,0]]));
+    faces.push(bg([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shY0,-W_SPAN]]));
+    faces.push(bg([[-SW_EX,shY0,0],[-SW_EX,shY1,0],[0,shY1,0],[0,shY0,0]]));
+
+    for(let fi=0;fi<TOT_FL;fi++){
+      const y0=fi*FL+JG,y1=(fi+1)*FL-JG;
+      for(let c=0;c<W_SPAN;c++){
+        const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
+        faces.push(quad([[0,y0,z0],[0,y1,z0],[0,y1,z1],[0,y0,z1]],getColor('WF',fi,WF_C[c]),null,0));
+      }
+      for(let c=0;c<NW_SPAN;c++){
+        const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+        faces.push(quad([[x0,y0,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,y0,-W_SPAN]],getColor('NF',fi,NF_C[c]),null,0));
+      }
+      for(let c=0;c<SW_SPAN;c++){
+        const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+        faces.push(quad([[x0,y0,0],[x0,y1,0],[x1,y1,0],[x1,y0,0]],getColor('SF',fi,SF_C[c]),null,0));
+      }
+    }
+
+    for(let c=0;c<NW_EX;c++){
+      const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
+      for(let fi=SH;fi<SH+SH_N;fi++){
+        const y0=fi*FL+JG,y1=(fi+1)*FL-JG;
+        faces.push(quad([[x0,y0,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,y0,-W_SPAN]],SC.pending,null,0));
+      }
+    }
+    for(let c=0;c<SW_EX;c++){
+      const x0=-(c+1)*PANEL+JG,x1=-c*PANEL-JG;
+      for(let fi=SH;fi<SH+SH_N;fi++){
+        const y0=fi*FL+JG,y1=(fi+1)*FL-JG;
+        faces.push(quad([[x0,y0,0],[x0,y1,0],[x1,y1,0],[x1,y0,0]],getColor('SF',fi,SW_EX_C[c]),null,0));
+      }
+    }
+
+    faces.push(quad([[-NW_EX,shY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[-SW_EX,shY1,0],[-SW_EX,shY0,0]],'#c85a1a','#ff9944',1.2));
+
+    for(const y of[shY0,shY1]){
+      faces.push(line2([0,y,0],[0,y,-W_SPAN],'#886600',0.9));
+      faces.push(line2([0,y,-W_SPAN],[NW_SPAN,y,-W_SPAN],'#224488',0.9));
+      faces.push(line2([0,y,0],[SW_SPAN,y,0],'#226633',0.9));
+      faces.push(line2([-NW_EX,y,-W_SPAN],[0,y,-W_SPAN],'#3366aa',0.9));
+      faces.push(line2([-SW_EX,y,0],[0,y,0],'#338855',0.9));
+    }
+    for(let i=-8;i<=22;i++){
+      faces.push(line2([i,0,-26],[i,0,15],'#111b28',0.4));
+      faces.push(line2([-9,0,i],[23,0,i],'#111b28',0.4));
+    }
+    return faces;
+  }
+
+  function drawLabels(){
+    const labels=[
+      {text:'W',     x:-1.8,         y:centerY,      z:-W_SPAN/2,   color:'#d4a017',size:15,bold:true},
+      {text:'NW',    x:NW_SPAN/2,    y:totalH+1.3,   z:-W_SPAN-0.5, color:'#6699ff',size:12,bold:true},
+      {text:'SW',    x:SW_SPAN/2,    y:totalH+1.3,   z:0.5,         color:'#44cc66',size:12,bold:true},
+      {text:'Corner',x:(-NW_EX-SW_EX)/2-0.8,y:(shY0+shY1)/2+2.5,z:-W_SPAN/2,color:'#ff9944',size:10,bold:true},
+      {text:'31w',   x:-NW_EX,       y:shY1+0.7,     z:-W_SPAN,     color:'#88aaff',size:9, bold:false},
+      {text:'15-B',  x:-SW_EX,       y:shY1+0.7,     z:0,           color:'#55dd99',size:9, bold:false},
+    ];
+    for(const lb of labels){
+      const p=proj(lb.x,lb.y,lb.z);
+      ctx.save();
+      ctx.font=`${lb.bold?'bold ':''}${lb.size}px 'IBM Plex Mono',monospace`;
+      ctx.fillStyle=lb.color;
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.shadowColor='#07111e';
+      ctx.shadowBlur=8;
+      ctx.fillText(lb.text,p.sx,p.sy);
+      ctx.restore();
+    }
+  }
+
+  function render(){
+    cW=cvs.width=el.clientWidth;
+    cH=cvs.height=el.clientHeight;
+    ctx.clearRect(0,0,cW,cH);
+    ctx.fillStyle=JOINT;
+    ctx.fillRect(0,0,cW,cH);
+    const faces=buildScene();
+    faces.sort((a,b)=>b.depth-a.depth);
+    for(const f of faces){
+      if(f.isLine){
+        ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);ctx.lineTo(f.pts[1][0],f.pts[1][1]);
+        ctx.strokeStyle=f.stroke;ctx.lineWidth=f.lw;ctx.stroke();
+      }else{
+        ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);
+        for(let i=1;i<f.pts.length;i++)ctx.lineTo(f.pts[i][0],f.pts[i][1]);
+        ctx.closePath();ctx.fillStyle=f.fill;ctx.fill();
+        if(f.stroke){ctx.strokeStyle=f.stroke;ctx.lineWidth=f.lw;ctx.stroke();}
+      }
+    }
+    drawLabels();
+  }
+
+  render();
+
+  let drag=false,lX=0,lY=0;
+  cvs.addEventListener('mousedown',e=>{drag=true;lX=e.clientX;lY=e.clientY;e.preventDefault();});
+  window.addEventListener('mouseup',()=>{drag=false;});
+  cvs.addEventListener('mousemove',e=>{
+    if(!drag||!cvs.isConnected)return;
+    theta-=(e.clientX-lX)*0.007;
+    phi=Math.max(0.05,Math.min(1.4,phi+(e.clientY-lY)*0.007));
+    lX=e.clientX;lY=e.clientY;render();
+  });
+  cvs.addEventListener('wheel',e=>{
+    if(!cvs.isConnected)return;
+    zoom=Math.max(0.3,Math.min(3.0,zoom*(1-e.deltaY*0.0012)));
+    render();e.preventDefault();
+  },{passive:false});
+  let lT=null;
+  cvs.addEventListener('touchstart',e=>{lT={x:e.touches[0].clientX,y:e.touches[0].clientY};e.preventDefault();},{passive:false});
+  cvs.addEventListener('touchend',()=>{lT=null;});
+  cvs.addEventListener('touchmove',e=>{
+    if(!lT||!cvs.isConnected)return;
+    const t=e.touches[0];
+    theta-=(t.clientX-lT.x)*0.007;
+    phi=Math.max(0.05,Math.min(1.4,phi+(t.clientY-lT.y)*0.007));
+    lT={x:t.clientX,y:t.clientY};render();e.preventDefault();
   },{passive:false});
 }
