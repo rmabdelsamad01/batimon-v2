@@ -19196,25 +19196,28 @@ function _renderMobileInstallRate(){
     const count=dateMap[key]||0;
     if(count>0) rows.push({key,count,day:days[d.getDay()],date:d.getDate(),month:monthsFull[d.getMonth()],monthKey:key.slice(0,7),year:d.getFullYear(),monthLabel:months[d.getMonth()]+' '+d.getFullYear()});
   }
-  // Cumulative from first date upward
+  // Cumulative from first date upward + monthly summaries
   let cum=0;
-  rows.forEach(r=>{cum+=r.count;r.cum=cum;});
+  const monthSummary={};
+  rows.forEach(r=>{cum+=r.count;r.cum=cum;monthSummary[r.monthKey]={count:(monthSummary[r.monthKey]?.count||0)+r.count,cum};});
   rows.reverse();
-  const totalInstalled=allPanelIds().filter(id=>(panels[id]||{}).status==='installed').length;
-  const _gc=gC();
-  const total=Object.values(_gc).reduce((a,b)=>a+(b||0),0);
   // Header row
-  const hdrStyle='flex:1;font-family:\'Barlow\',sans-serif;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;';
+  const lbl='font-family:\'Barlow\',sans-serif;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;';
   let html=`<div style="display:flex;align-items:center;padding:8px 16px;background:#f4f7fb;border-bottom:2px solid #d0dae8;position:sticky;top:0;z-index:1;">
-    <div style="${hdrStyle}">Date</div>
-    <div style="font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;width:52px;text-align:right;">Qty</div>
-    <div style="font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;width:60px;text-align:right;">Cum.</div>
+    <div style="${lbl}flex:1;">Date</div>
+    <div style="${lbl}width:52px;text-align:right;">Qty</div>
+    <div style="${lbl}width:60px;text-align:right;">Cum.</div>
   </div>`;
   let lastMonth='';
   rows.forEach((r,i)=>{
     if(r.monthKey!==lastMonth){
       lastMonth=r.monthKey;
-      html+=`<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;letter-spacing:0.08em;color:#224F93;text-transform:uppercase;background:#f4f7fb;border-bottom:1px solid #e0e8f0;${i>0?'border-top:2px solid #d0dae8;':''}">${r.monthLabel}</div>`;
+      const ms=monthSummary[r.monthKey];
+      html+=`<div style="display:flex;align-items:center;padding:8px 16px;background:#f4f7fb;border-bottom:1px solid #e0e8f0;${i>0?'border-top:2px solid #d0dae8;':''}">
+        <div style="flex:1;font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.08em;color:#224F93;text-transform:uppercase;">${r.monthLabel}</div>
+        <div style="font-family:monospace;font-size:11px;font-weight:700;color:#1a9458;width:52px;text-align:right;">+${ms.count}</div>
+        <div style="font-family:monospace;font-size:11px;font-weight:700;color:#224F93;width:60px;text-align:right;">${ms.cum}</div>
+      </div>`;
     }
     html+=`<div style="display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #e0e8f0;background:rgba(26,148,88,0.05);">
       <div style="flex:1;font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;color:#1a2a3a;">${r.day} ${r.date} ${r.month} ${r.year}</div>
@@ -19223,10 +19226,6 @@ function _renderMobileInstallRate(){
     </div>`;
   });
   if(!rows.length) html+=`<div style="padding:40px 16px;text-align:center;font-family:'Barlow',sans-serif;font-size:14px;color:#8099b0;">No installations recorded yet</div>`;
-  html+=`<div style="display:flex;align-items:center;padding:12px 16px;background:#f4f7fb;border-top:2px solid #d0dae8;">
-    <div style="flex:1;font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;color:#4a6080;">Total installed</div>
-    <div style="font-family:monospace;font-size:15px;font-weight:700;color:#1a2a3a;">${totalInstalled} / ${total}</div>
-  </div>`;
   cont.innerHTML=html;
 }
 
