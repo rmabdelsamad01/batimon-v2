@@ -20813,16 +20813,28 @@ function renderAAABetaPage(){
       'E03','E04','E05','E06','E08','E09','E11','E12',
       'G03','G04','G05','G06','GM06','M06','M11','M12',
       'R202','E202','R203','R302','R303','G303','R305','R306']);
-    // Resolve pattern key + red-left flag
-    let pat=null, redL=false;
+    // Types that carry a red bottom border in the 2D table
+    const redBSet=new Set(['C02','C04','C06','C08','C10',
+      'D02','D04','D06','D10','D11','D12',
+      'E02','E04','E06','E10','E11','E12',
+      'G04','G06',
+      'R301','C301','C302','R302','R303','G303','R304','D304','R305','R306']);
+    // Resolve pattern key + red border flags
+    let pat=null, redL=false, redB=false;
     if(type==='Door'){pat='door';}
-    else if(TM[type]){pat=TM[type]; redL=redLSet.has(type);}
-    else if(/^T0[12]$/.test(type)){pat='sp';}
-    else if(/^T0[34]$/.test(type)){pat='sp'; redL=true;}
-    else if(/^T0[56]$/.test(type)){pat='st'; redL=true;}
-    else if(/^T(07|10)$/.test(type)){pat='2c';}
-    else if(/^T(08|11)$/.test(type)){pat='2c'; redL=true;}
-    else if(/^T(09|12)$/.test(type)){pat='2cf'; redL=true;}
+    else if(TM[type]){pat=TM[type]; redL=redLSet.has(type); redB=redBSet.has(type);}
+    else if(type==='T01'){pat='sp';}
+    else if(type==='T02'){pat='sp'; redB=true;}
+    else if(type==='T03'){pat='sp'; redL=true;}
+    else if(type==='T04'){pat='sp'; redL=true; redB=true;}
+    else if(type==='T05'){pat='st'; redL=true;}
+    else if(type==='T06'){pat='st'; redL=true; redB=true;}
+    else if(type==='T07'){pat='2c';}
+    else if(type==='T08'){pat='2c'; redL=true;}
+    else if(type==='T09'){pat='2cf'; redL=true;}
+    else if(type==='T10'){pat='2c'; redB=true;}
+    else if(type==='T11'){pat='2c'; redL=true; redB=true;}
+    else if(type==='T12'){pat='2cf'; redL=true; redB=true;}
     else if(/^R(25|34)\d{2,}$|^R4\d{3,}$/.test(type)){pat=null;} // status colour only
     else if(/^[A-Za-z]\d{3,}/.test(type)){
       const sfx=type.slice(-2);
@@ -20858,6 +20870,10 @@ function renderAAABetaPage(){
     }
     // Red left border line (matches 2D table's border-left:#ED1C24)
     if(redL)addLine(pt(p0,ya),pt(p0,yb),'#ED1C24',2);
+    // Red middle line for double panels (2c/2cf = T07-T12 and similar)
+    if(pat==='2c'||pat==='2cf'){const pm=lerp(p0,p1,0.5);addLine(pt(pm,ya),pt(pm,yb),'#ED1C24',2);}
+    // Red bottom border line (matches 2D table's border-bottom:#ED1C24)
+    if(redB)addLine(pt(p0,ya),pt(p1,ya),'#ED1C24',2);
     return res;
   }
 
