@@ -20846,6 +20846,33 @@ function renderAAABetaPage(){
       const fl=FLOORS_BTT[fi];
       const y0=yPos[fi]+JG,y1=yPos[fi]+flH(fl)-JG;
       if(y1<=y0)continue;
+      // R+34: trapezoidal cells matching 2D clip-path slopes
+      if(fl==='R+34'){
+        const H=flH('R+34'),base=yPos[fi],yBot=base+JG;
+        const wfCI=[31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15];
+        for(let c=0;c<W_SPAN;c++){
+          const col=WF_C[c];const ci=wfCI.indexOf(col);
+          let tl,tr;
+          if(col===31){tl=115;tr=111;}
+          else if(col===15){tl=20;tr=15;}
+          else{tl=Math.round(111-(ci-1)*91/15);tr=105-(ci-1)*6;}
+          const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
+          const ytL=base+(165-tl)/165*H,ytR=base+(165-tr)/165*H;
+          faces.push(quad([[0,yBot,z0],[0,ytR,z0],[0,ytL,z1],[0,yBot,z1]],getColor('WF',fi,col),null,0));
+        }
+        for(let c=0;c<NW_SPAN;c++){
+          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+          faces.push(quad([[x0,yBot,-W_SPAN],[x0,y1,-W_SPAN],[x1,y1,-W_SPAN],[x1,yBot,-W_SPAN]],getColor('NF',fi,NF_C[c]),null,0));
+        }
+        for(let c=0;c<SW_SPAN;c++){
+          const col=SF_C[c],n=15-col;
+          const tl_sf=Math.round(16+n*79/11),tr_sf=Math.round(20+n*80/11);
+          const x0=c*PANEL+JG,x1=(c+1)*PANEL-JG;
+          const ytL=base+(165-tl_sf)/165*H,ytR=base+(165-tr_sf)/165*H;
+          faces.push(quad([[x0,yBot,0],[x0,ytL,0],[x1,ytR,0],[x1,yBot,0]],getColor('SF',fi,SF_C[c]),null,0));
+        }
+        continue;
+      }
       // R+02: bottom 2wu = white structural base, top 1wu = panel status
       const segs=fl==='R+02'
         ?[{ya:y0,yb:Math.min(yPos[fi]+2,y1),white:true},{ya:Math.max(yPos[fi]+2,y0),yb:y1,white:false}]
