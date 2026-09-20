@@ -21097,6 +21097,9 @@ function renderAAABetaPage(){
           }
         }
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
+      } else {
+        const ya=y0,yb=y1;
+        for(let i=0;i<14;i++){const x0=17.5+i,x1=x0+1;faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#cde8f8',null,0));}
       }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
       if(fi<=R25fi){
