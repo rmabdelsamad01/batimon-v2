@@ -21047,21 +21047,21 @@ function renderAAABetaPage(){
         for(let c=1;c<SW_SPAN;c++)faces.push(jl([c*PANEL,ya,sfZ],[c*PANEL,yb,sfZ]));
         faces.push(jl([0,ya,sfZ],[SW_END,ya,sfZ]));
         faces.push(jl([0,yb,sfZ],[SW_END,yb,sfZ]));}
-        // SE extension: east stub (x=14.5,z=0→-4.5) + SF ext (z=-4.5,x=14.5→17.5) + second stub (x=17.5,z=-4.5→-1)
-        if(!white){
-          const EP1=[{z0:0,z1:-0.5},{z0:-0.5,z1:-1.5},{z0:-1.5,z1:-2.5},{z0:-2.5,z1:-3.5},{z0:-3.5,z1:-4.5}];
-          for(const{z0,z1}of EP1)faces.push(quad([[14.5,ya,z0],[14.5,yb,z0],[14.5,yb,z1],[14.5,ya,z1]],SC.pending,null,0));
-          faces.push(jl([14.5,ya,0],[14.5,ya,-4.5]));faces.push(jl([14.5,yb,0],[14.5,yb,-4.5]));
-          for(let i=0;i<EP1.length-1;i++)faces.push(jl([14.5,ya,EP1[i].z1],[14.5,yb,EP1[i].z1]));
-          const EP2=[{x0:14.5,x1:15},{x0:15,x1:16},{x0:16,x1:17},{x0:17,x1:17.5}];
-          for(const{x0,x1}of EP2)faces.push(quad([[x0,ya,-4.5],[x0,yb,-4.5],[x1,yb,-4.5],[x1,ya,-4.5]],SC.pending,null,0));
-          faces.push(jl([14.5,ya,-4.5],[17.5,ya,-4.5]));faces.push(jl([14.5,yb,-4.5],[17.5,yb,-4.5]));
-          faces.push(jl([15,ya,-4.5],[15,yb,-4.5]));faces.push(jl([16,ya,-4.5],[16,yb,-4.5]));faces.push(jl([17,ya,-4.5],[17,yb,-4.5]));
-          const EP3=[{z0:-4.5,z1:-3.5},{z0:-3.5,z1:-2.5},{z0:-2.5,z1:-1.5},{z0:-1.5,z1:-1}];
-          for(const{z0,z1}of EP3)faces.push(quad([[17.5,ya,z0],[17.5,yb,z0],[17.5,yb,z1],[17.5,ya,z1]],SC.pending,null,0));
-          faces.push(jl([17.5,ya,-4.5],[17.5,ya,-1]));faces.push(jl([17.5,yb,-4.5],[17.5,yb,-1]));
-          for(let i=0;i<EP3.length-1;i++)faces.push(jl([17.5,ya,EP3[i].z1],[17.5,yb,EP3[i].z1]));
-        }
+      }
+      // SE extension: full floor height (outside segs — same reason as south ext wall)
+      {const ya=y0,yb=y1;
+        const EP1=[{z0:0,z1:-0.5},{z0:-0.5,z1:-1.5},{z0:-1.5,z1:-2.5},{z0:-2.5,z1:-3.5},{z0:-3.5,z1:-4.5}];
+        for(const{z0,z1}of EP1)faces.push(quad([[14.5,ya,z0],[14.5,yb,z0],[14.5,yb,z1],[14.5,ya,z1]],SC.pending,null,0));
+        faces.push(jl([14.5,ya,0],[14.5,ya,-4.5]));faces.push(jl([14.5,yb,0],[14.5,yb,-4.5]));
+        for(let i=0;i<EP1.length-1;i++)faces.push(jl([14.5,ya,EP1[i].z1],[14.5,yb,EP1[i].z1]));
+        const EP2=[{x0:14.5,x1:15},{x0:15,x1:16},{x0:16,x1:17},{x0:17,x1:17.5}];
+        for(const{x0,x1}of EP2)faces.push(quad([[x0,ya,-4.5],[x0,yb,-4.5],[x1,yb,-4.5],[x1,ya,-4.5]],SC.pending,null,0));
+        faces.push(jl([14.5,ya,-4.5],[17.5,ya,-4.5]));faces.push(jl([14.5,yb,-4.5],[17.5,yb,-4.5]));
+        faces.push(jl([15,ya,-4.5],[15,yb,-4.5]));faces.push(jl([16,ya,-4.5],[16,yb,-4.5]));faces.push(jl([17,ya,-4.5],[17,yb,-4.5]));
+        const EP3=[{z0:-4.5,z1:-3.5},{z0:-3.5,z1:-2.5},{z0:-2.5,z1:-1.5},{z0:-1.5,z1:-1}];
+        for(const{z0,z1}of EP3)faces.push(quad([[17.5,ya,z0],[17.5,yb,z0],[17.5,yb,z1],[17.5,ya,z1]],SC.pending,null,0));
+        faces.push(jl([17.5,ya,-4.5],[17.5,ya,-1]));faces.push(jl([17.5,yb,-4.5],[17.5,yb,-1]));
+        for(let i=0;i<EP3.length-1;i++)faces.push(jl([17.5,ya,EP3[i].z1],[17.5,yb,EP3[i].z1]));
       }
       // South ext wall: full floor height (outside segs — not split by R+02 white/panel logic)
       if(fi<=R25fi){
