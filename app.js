@@ -20741,7 +20741,7 @@ function renderAAABetaPage(){
 
   // ── Canvas corner 3D ─────────────────────────────────────────────────────
   // Row heights from the flat table (px); default 150. Scale: 1 world unit = BASE_W px.
-  const TABLE_ROW_H={'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,'R+18B':40,'R+17T':50,'R+17B':100};
+  const TABLE_ROW_H={'RDC':200,'R+34':166,'R+18T':25,'R+18M':50,'R+18MD':110,'R+18B':40,'R+17T':50,'R+17B':100};
   const STRUCT_FLOORS=new Set(['R+18M','R+18MD','R+18B']);
   const BASE_W=50;
   const STRUCT_CLR='#1c1000';
