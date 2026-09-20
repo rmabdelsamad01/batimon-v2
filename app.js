@@ -21177,15 +21177,16 @@ function renderAAABetaPage(){
         }
         for(let i=0;i<EP1.length-1;i++)faces.push(jl([14.5,ya,EP1[i].z1],[14.5,yb,EP1[i].z1]));
 
+        const ep2Z=sfShiftFloors.has(fl)?PANEL:-4.5;
         const EP2=[{x0:14.5,x1:15,half:true},{x0:15,x1:16,half:false},{x0:16,x1:17,half:false},{x0:17,x1:17.5,half:true}];
         for(const{x0,x1,half}of EP2){
           if(fl==='R+18B') continue; // covered by R+18MD rowspan
           if(fl==='R+18MD'){
-            faces.push(quad([[x0,sfMergedYa18MD,-4.5],[x0,sfMergedYb18MD,-4.5],[x1,sfMergedYb18MD,-4.5],[x1,sfMergedYa18MD,-4.5]],'#FF8C00',null,0));
+            faces.push(quad([[x0,sfMergedYa18MD,ep2Z],[x0,sfMergedYb18MD,ep2Z],[x1,sfMergedYb18MD,ep2Z],[x1,sfMergedYa18MD,ep2Z]],'#FF8C00',null,0));
             continue;
           }
           if(fl==='R+18M'||fl==='R+17T'){
-            faces.push(quad([[x0,ya,-4.5],[x0,yb,-4.5],[x1,yb,-4.5],[x1,ya,-4.5]],'#FF8C00',null,0));
+            faces.push(quad([[x0,ya,ep2Z],[x0,yb,ep2Z],[x1,yb,ep2Z],[x1,ya,ep2Z]],'#FF8C00',null,0));
             continue;
           }
           if(half){
@@ -21214,7 +21215,7 @@ function renderAAABetaPage(){
         if(fl!=='R+18B'){
           const ep2Ya=(fl==='R+18MD')?sfMergedYa18MD:ya;
           const ep2Yb=(fl==='R+18MD')?sfMergedYb18MD:yb;
-          faces.push(jl([15,ep2Ya,-4.5],[15,ep2Yb,-4.5]));faces.push(jl([16,ep2Ya,-4.5],[16,ep2Yb,-4.5]));faces.push(jl([17,ep2Ya,-4.5],[17,ep2Yb,-4.5]));
+          faces.push(jl([15,ep2Ya,ep2Z],[15,ep2Yb,ep2Z]));faces.push(jl([16,ep2Ya,ep2Z],[16,ep2Yb,ep2Z]));faces.push(jl([17,ep2Ya,ep2Z],[17,ep2Yb,ep2Z]));
         }
         const EP3=[{z0:-4.5,z1:-3.5,fmt:'col1'},{z0:-3.5,z1:-2.5,fmt:'col3'},{z0:-2.5,z1:-1.5,fmt:'col3'},{z0:-1.5,z1:-1,fmt:'col1'}];
         for(const{z0,z1,fmt}of EP3){
@@ -21284,14 +21285,14 @@ function renderAAABetaPage(){
           } else if(fl==='R+18M'){
             // col 94 = gap; cols 81-85 covered by R+18T rowspan=2
             if(col===94||[81,82,83,84,85].includes(col)) continue;
-            faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#FF8C00',null,0));
+            faces.push(quad([[x0,ya,PANEL],[x0,yb,PANEL],[x1,yb,PANEL],[x1,ya,PANEL]],'#FF8C00',null,0));
           } else if(fl==='R+18MD'){
-            // col 94 = gap; cols 81-85 = peach #FFD9A0; cols 86-93 = orange merged with R+18B (150px=3wu)
+            // col 94 = gap; cols 81-85 = peach #FFD9A0 at z=-1; cols 86-93 = orange merged shifted to z=PANEL
             if(col===94) continue;
             if([81,82,83,84,85].includes(col)){
               faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#FFD9A0',null,0));
             } else {
-              faces.push(quad([[x0,sfMergedYa18MD,-1],[x0,sfMergedYb18MD,-1],[x1,sfMergedYb18MD,-1],[x1,sfMergedYa18MD,-1]],'#FF8C00',null,0));
+              faces.push(quad([[x0,sfMergedYa18MD,PANEL],[x0,sfMergedYb18MD,PANEL],[x1,sfMergedYb18MD,PANEL],[x1,sfMergedYa18MD,PANEL]],'#FF8C00',null,0));
             }
           } else if(fl==='R+18B'){
             // cols 86-94 covered by R+18MD rowspan=2; cols 81-85 = rowspan=3 (190px=3.8wu) using R+17B type
@@ -21302,12 +21303,12 @@ function renderAAABetaPage(){
               faces.push(...typeOverlays(getType('SF',r17bFi,col),[x0,-1],[x1,-1],efMergedYa18B,efMergedYb18B));
             }
           } else if(fl==='R+17T'){
-            // col 94 = gap; cols 81-85 covered by R+18B rowspan=3; col 93 = red; others = orange
+            // col 94 = gap; cols 81-85 covered by R+18B rowspan=3; col 93 = red; others = orange; all shifted to z=PANEL
             if(col===94||[81,82,83,84,85].includes(col)) continue;
             if(col===93){
-              faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#ED1C24',null,0));
+              faces.push(quad([[x0,ya,PANEL],[x0,yb,PANEL],[x1,yb,PANEL],[x1,ya,PANEL]],'#ED1C24',null,0));
             } else {
-              faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#FF8C00',null,0));
+              faces.push(quad([[x0,ya,PANEL],[x0,yb,PANEL],[x1,yb,PANEL],[x1,ya,PANEL]],'#FF8C00',null,0));
             }
           } else if(fl==='R+17B'){
             // cols 81-85 covered by R+18B rowspan=3; col 93/94 = hstripes; cols 86-92 = normal type
@@ -21342,7 +21343,7 @@ function renderAAABetaPage(){
             }
           }
         }
-        for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
+        for(let i=1;i<14;i++){const extJlZ=sfShiftFloors.has(fl)&&i<=8?PANEL:-1;faces.push(jl([17.5+i,ya,extJlZ],[17.5+i,yb,extJlZ]));}
       }
       // EF R+18MD: light orange architectural band (110px in 2D, between R+18T and R+18B merged cells)
       if(fl==='R+18MD'&&fi<=R25fi){
