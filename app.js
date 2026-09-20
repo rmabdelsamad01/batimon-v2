@@ -20938,13 +20938,14 @@ function renderAAABetaPage(){
     faces.push(bg([[0,0,0],[0,totalH,0],[0,totalH,-W_SPAN],[0,0,-W_SPAN]]));
     faces.push(bg([[0,0,-W_SPAN],[0,totalH,-W_SPAN],[NW_END,totalH,-W_SPAN],[NW_END,0,-W_SPAN]]));
     faces.push(bg([[0,0,0],[0,totalH,0],[SW_END,totalH,0],[SW_END,0,0]]));
+    const R25fi=FLOORS_BTT.indexOf('R+25');
+    const R25top=yPos[R25fi]+flH('R+25'); // top of R+25 — south ext wall stops here
     // SE extension backgrounds (east stub x=14.5, SF ext z=-4.5, second stub x=17.5)
     faces.push(bg([[14.5,0,0],[14.5,totalH,0],[14.5,totalH,-4.5],[14.5,0,-4.5]]));
     faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
     faces.push(bg([[17.5,0,-4.5],[17.5,totalH,-4.5],[17.5,totalH,-1],[17.5,0,-1]]));
-    faces.push(bg([[17.5,0,-1],[17.5,totalH,-1],[31.5,totalH,-1],[31.5,0,-1]])); // south ext wall cols94-81
+    faces.push(bg([[17.5,0,-1],[17.5,R25top,-1],[31.5,R25top,-1],[31.5,0,-1]])); // south ext wall cols94-81, capped at R+25
     const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
-    const R25fi=FLOORS_BTT.indexOf('R+25');
     faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21097,9 +21098,6 @@ function renderAAABetaPage(){
           }
         }
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
-      } else {
-        const ya=y0,yb=y1;
-        for(let i=0;i<14;i++){const x0=17.5+i,x1=x0+1;faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#cde8f8',null,0));}
       }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
       if(fi<=R25fi){
