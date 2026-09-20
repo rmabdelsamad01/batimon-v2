@@ -21080,9 +21080,19 @@ function renderAAABetaPage(){
             if(col===90||col===92)faces.push(jl([x0,panYb-1,-1],[x1,panYb-1,-1]));
             else if(col===89)faces.push(jl([x0,panYb-0.9,-1],[x1,panYb-0.9,-1]));
           } else if((col===94||col===93)&&sf9493Act.has(fl)){
-            // 2D: top 50px vlines | 2px black divider | bottom 98px hstripes; render status color + divider line
+            // 2D: top 50px vlines | 2px black divider | bottom 98px hstripes + red border on even floors
             faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
-            faces.push(jl([x0,yb-1,-1],[x1,yb-1,-1]));
+            const divY=yb-1; // 50px from top
+            // grey vlines in top section (vertical lines every 0.2wu in [x0,divY]→[x0,yb])
+            for(let v=0.2;v<1;v+=0.2){const f=line2([x0+v,divY,-1],[x0+v,yb,-1],'#777',1);f.depth-=0.005;faces.push(f);}
+            // black divider
+            faces.push(jl([x0,divY,-1],[x1,divY,-1]));
+            // grey hstripes in bottom section (horizontal lines every 0.2wu in [ya,divY])
+            for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([x0,h,-1],[x1,h,-1],'#777',1);f.depth-=0.005;faces.push(f);}
+            // red double border at bottom of even floors (matches 2D borderBottom)
+            if(['R+02','R+04','R+06','R+08','R+10','R+12','R+14','R+16','R+21','R+23'].includes(fl)){
+              const rf=line2([x0,ya,-1],[x1,ya,-1],'#ED1C24',3);rf.depth-=0.01;faces.push(rf);
+            }
           } else if(fl==='R+25'){
             // R+25: trapezoid slope — panel bottom is flush, top is sloped (matches 2D clip-path)
             const sfTrapC=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
