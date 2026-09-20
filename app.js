@@ -21159,6 +21159,7 @@ function renderAAABetaPage(){
         const sfCF3D=new Set(['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03']);
         const sfRedEP1=new Set(['R+33','R+31','R+29','R+27','R+25','R+23','R+21','R+16','R+14','R+12','R+10','R+08','R+06','R+04']);
         const EP1=[{z0:0,z1:-0.5,fmt:'col1'},{z0:-0.5,z1:-1.5,fmt:'col3'},{z0:-1.5,z1:-2.5,fmt:'col3'},{z0:-2.5,z1:-3.5,fmt:'col1'},{z0:-3.5,z1:-4.5,fmt:'col1'}];
+        if(!sfShiftFloors.has(fl)){
         for(const{z0,z1,fmt}of EP1){
           faces.push(quad([[14.5,ya,z0],[14.5,yb,z0],[14.5,yb,z1],[14.5,ya,z1]],SC.pending,null,0));
           if(sfCF3D.has(fl)){
@@ -21176,19 +21177,12 @@ function renderAAABetaPage(){
           }
         }
         for(let i=0;i<EP1.length-1;i++)faces.push(jl([14.5,ya,EP1[i].z1],[14.5,yb,EP1[i].z1]));
+        }
 
         const ep2Z=sfShiftFloors.has(fl)?PANEL:-4.5;
         const EP2=[{x0:14.5,x1:15,half:true},{x0:15,x1:16,half:false},{x0:16,x1:17,half:false},{x0:17,x1:17.5,half:true}];
         for(const{x0,x1,half}of EP2){
-          if(fl==='R+18B') continue; // covered by R+18MD rowspan
-          if(fl==='R+18MD'){
-            faces.push(quad([[x0,sfMergedYa18MD,ep2Z],[x0,sfMergedYb18MD,ep2Z],[x1,sfMergedYb18MD,ep2Z],[x1,sfMergedYa18MD,ep2Z]],'#FF8C00',null,0));
-            continue;
-          }
-          if(fl==='R+18M'||fl==='R+17T'){
-            faces.push(quad([[x0,ya,ep2Z],[x0,yb,ep2Z],[x1,yb,ep2Z],[x1,ya,ep2Z]],'#FF8C00',null,0));
-            continue;
-          }
+          if(sfShiftFloors.has(fl)) continue; // hide 94-A to 94-D for shift floors
           if(half){
             const clr=(sfCF3D.has(fl)||['RDC','R+01','R+02','R+17B','R+18T'].includes(fl))?'#595959':SC.pending;
             faces.push(quad([[x0,ya,-4.5],[x0,yb,-4.5],[x1,yb,-4.5],[x1,ya,-4.5]],clr,null,0));
@@ -21212,10 +21206,8 @@ function renderAAABetaPage(){
             }
           }
         }
-        if(fl!=='R+18B'){
-          const ep2Ya=(fl==='R+18MD')?sfMergedYa18MD:ya;
-          const ep2Yb=(fl==='R+18MD')?sfMergedYb18MD:yb;
-          faces.push(jl([15,ep2Ya,ep2Z],[15,ep2Yb,ep2Z]));faces.push(jl([16,ep2Ya,ep2Z],[16,ep2Yb,ep2Z]));faces.push(jl([17,ep2Ya,ep2Z],[17,ep2Yb,ep2Z]));
+        if(!sfShiftFloors.has(fl)){
+          faces.push(jl([15,ya,-4.5],[15,yb,-4.5]));faces.push(jl([16,ya,-4.5],[16,yb,-4.5]));faces.push(jl([17,ya,-4.5],[17,yb,-4.5]));
         }
         const EP3=[{z0:-4.5,z1:-3.5,fmt:'col1'},{z0:-3.5,z1:-2.5,fmt:'col3'},{z0:-2.5,z1:-1.5,fmt:'col3'},{z0:-1.5,z1:-1,fmt:'col1'}];
         for(const{z0,z1,fmt}of EP3){
