@@ -21069,8 +21069,23 @@ function renderAAABetaPage(){
         const EXT_C=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
         for(let i=0;i<14;i++){
           const x0=17.5+i,x1=x0+1,col=EXT_C[i];
-          faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
-          faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],ya,yb));
+          if(fl==='RDC'&&[85,86,87,88].includes(col)){
+            // 50px panel at top of 200px floor (1wu out of 4wu); structural fill below
+            const panYa=yb-1,panYb=yb;
+            faces.push(quad([[x0,ya,-1],[x0,panYa,-1],[x1,panYa,-1],[x1,ya,-1]],'#FFFFFF',null,0));
+            faces.push(quad([[x0,panYa,-1],[x0,panYb,-1],[x1,panYb,-1],[x1,panYa,-1]],getColor('SF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],panYa,panYb));
+            faces.push(jl([x0,panYa,-1],[x1,panYa,-1]));
+          } else {
+            faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],ya,yb));
+            if(fl==='RDC'){
+              if(col===90||col===92)faces.push(jl([x0,yb-1,-1],[x1,yb-1,-1]));
+              else if(col===89)faces.push(jl([x0,yb-0.9,-1],[x1,yb-0.9,-1]));
+              else if(col===84){faces.push(jl([x0,yb-0.9,-1],[x1,yb-0.9,-1]));faces.push(jl([x0,yb-1.4,-1],[x1,yb-1.4,-1]));}
+              else if(col===83||col===82||col===81)faces.push(jl([x0,yb-1,-1],[x1,yb-1,-1]));
+            }
+          }
         }
         faces.push(jl([17.5,ya,-1],[31.5,ya,-1]));faces.push(jl([17.5,yb,-1],[31.5,yb,-1]));
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
