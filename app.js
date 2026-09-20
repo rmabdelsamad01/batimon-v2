@@ -20896,6 +20896,7 @@ function renderAAABetaPage(){
       <span style="font-size:13px;font-weight:700;color:var(--text);">3D Beta</span>
       <div style="flex:1;min-width:8px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${legendHTML}</div>
+      <button id="aaab-labels-btn" onclick="window._aaabToggleLabels()" title="Toggle panel labels" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">🏷 Labels</button>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
     <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);position:relative;cursor:grab;user-select:none;">
@@ -20910,6 +20911,13 @@ function renderAAABetaPage(){
   const ctx=cvs.getContext('2d');
   let cW,cH;
   let theta=-0.85,phi=0.42,zoom=0.55,panX=0,panY=0;
+  let showLabels=false;
+  window._aaabToggleLabels=function(){
+    showLabels=!showLabels;
+    const btn=document.getElementById('aaab-labels-btn');
+    if(btn){btn.style.background=showLabels?'#224F93':'var(--surface2)';btn.style.color=showLabels?'#fff':'var(--text2)';}
+    render();
+  };
 
   function proj(x,y,z){
     const oy=y-centerY,oz=z+W_SPAN/2;
@@ -21431,7 +21439,56 @@ function renderAAABetaPage(){
     return faces;
   }
 
-  function drawLabels(){}
+  function drawLabels(){
+    if(!showLabels)return;
+    const fi18B=FLOORS_BTT.indexOf('R+18B');
+    const fi18MD=FLOORS_BTT.indexOf('R+18MD');
+    const sfMYa=yPos[fi18B], sfMYb=yPos[fi18MD]+flH('R+18MD');
+    const EXT_C=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+    const sc=Math.min(cW,cH)*0.028*zoom;
+    const fontSize=Math.max(6,Math.min(11,sc*0.55));
+    ctx.font=`700 ${fontSize}px 'IBM Plex Mono',monospace`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    for(let fi=0;fi<FLOORS_BTT.length;fi++){
+      const fl=FLOORS_BTT[fi];
+      if(fl==='R+18B')continue; // covered by R+18MD rowspan
+      const ya=yPos[fi],yb=ya+flH(fl);
+      const isMD=fl==='R+18MD';
+      const cyBase=isMD?(sfMYa+sfMYb)/2:(ya+yb)/2;
+      const sfZ=sfShiftFloors.has(fl)?PANEL:0;
+      // SF cols 1-15
+      for(let c=0;c<SW_SPAN;c++){
+        const x0=c*PANEL,x1=(c===SW_SPAN-1?SW_END:(c+1)*PANEL),col=SF_C[c];
+        const t=getType('SF',fi,col);if(!t)continue;
+        const p=proj((x0+x1)/2,cyBase,sfZ);
+        ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillText(t,p.sx,p.sy);
+      }
+      // NF cols 31-45
+      for(let c=0;c<NW_SPAN;c++){
+        const x0=c*PANEL,x1=(c===NW_SPAN-1?NW_END:(c+1)*PANEL),col=NF_C[c];
+        const t=getType('NF',fi,col);if(!t)continue;
+        const p=proj((x0+x1)/2,(ya+yb)/2,-W_SPAN);
+        ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillText(t,p.sx,p.sy);
+      }
+      // WF cols 15-31
+      for(let c=0;c<W_SPAN;c++){
+        const col=WF_C[c];
+        const z0=-c*PANEL,z1=-(c===W_SPAN-1?W_SPAN:(c+1)*PANEL);
+        const t=getType('WF',fi,col);if(!t)continue;
+        const p=proj(0,(ya+yb)/2,(z0+z1)/2);
+        ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillText(t,p.sx,p.sy);
+      }
+      // South ext wall cols 81-94
+      for(let i=0;i<EXT_C.length;i++){
+        const col=EXT_C[i],x0=17.5+i,x1=x0+1;
+        const t=getType('SF',fi,col);if(!t)continue;
+        const cy=isMD&&[86,87,88,89,90,91,92,93,94].includes(col)?cyBase:(ya+yb)/2;
+        const p=proj((x0+x1)/2,cy,-1);
+        ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillText(t,p.sx,p.sy);
+      }
+    }
+  }
 
   function render(){
     cW=cvs.width=vp.clientWidth;cH=cvs.height=vp.clientHeight;
