@@ -21211,7 +21211,7 @@ function renderAAABetaPage(){
       // EF R+18MD: light orange architectural band (110px in 2D, between R+18T and R+18B merged cells)
       if(fl==='R+18MD'&&fi<=R25fi){
         const ya18MD=yPos[fi]+JG,yb18MD=yPos[fi]+flH('R+18MD')-JG;
-        faces.push(quad([[31.5,ya18MD,-1],[31.5,yb18MD,-1],[31.5,yb18MD,-18],[31.5,ya18MD,-18]],'#FFD9A0',null,0));
+        faces.push(quad([[29.5,ya18MD,-1],[29.5,yb18MD,-1],[29.5,yb18MD,-16],[29.5,ya18MD,-16]],'#FFD9A0',null,0));
       }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
       // R+18M, R+18MD, R+17T, R+17B are phantom EF floors (no panels in 2D — R+18MD handled above)
