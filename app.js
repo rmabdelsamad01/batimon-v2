@@ -20952,6 +20952,9 @@ function renderAAABetaPage(){
     const sfMergedYa18MD=yPos[fi18B], sfMergedYb18MD=yPos[fi18MD]+flH('R+18MD');
     // NF cols 43-45 R+18T rowspan=4: spans R+18T+R+18M+R+18MD+R+18B (25+50+110+40=225px)
     const nfMergedYa18T=yPos[fi18B], nfMergedYb18T=yPos[fi18T]+flH('R+18T');
+    // WF R+19 rowspan=2 for cols 21-23/27-29: spans R+19+R+18T (25+25=50px)
+    const fi_R19=FLOORS_BTT.indexOf('R+19');
+    const wfMergedYa19=yPos[fi18T], wfMergedYb19=yPos[fi_R19]+flH('R+19');
     // SE extension backgrounds (east stub x=14.5, SF ext z=-4.5, second stub x=17.5)
     faces.push(bg([[14.5,0,0],[14.5,totalH,0],[14.5,totalH,-4.5],[14.5,0,-4.5]]));
     faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
@@ -21021,8 +21024,35 @@ function renderAAABetaPage(){
         if(!(wfShiftFloors.has(fl)&&!white)){
           for(let c=0;c<W_SPAN;c++){
             const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG,col=WF_C[c];
+            // R+19: cols 21-23 and 27-29 span rowspan=2 down into R+18T (50px merged)
+            if(!white&&fl==='R+19'&&(col===21||col===22||col===23||col===27||col===28||col===29)){
+              faces.push(quad([[0,wfMergedYa19,z0],[0,wfMergedYb19,z0],[0,wfMergedYb19,z1],[0,wfMergedYa19,z1]],getColor('WF',fi,col,true),null,0));
+              faces.push(...typeOverlays(getType('WF',fi,col),[0,z0],[0,z1],wfMergedYa19,wfMergedYb19));
+              continue;
+            }
+            // R+18T: cols 21-23 and 27-29 are covered by R+19 rowspan=2
+            if(!white&&fl==='R+18T'&&(col===21||col===22||col===23||col===27||col===28||col===29)) continue;
             faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],white?SC.pending:getColor('WF',fi,col,true),null,0));
             if(!white)faces.push(...typeOverlays(getType('WF',fi,col),[0,z0],[0,z1],ya,yb));
+          }
+        }
+        // WF shift floor rendering: R+18M / R+18MD / R+18B / R+17T
+        if(!white&&wfShiftFloors.has(fl)){
+          if(fl==='R+18B'){
+            // skip — all cols covered by R+18MD rowspan=2
+          } else if(fl==='R+18MD'){
+            for(let c=0;c<W_SPAN;c++){
+              const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
+              faces.push(quad([[0,sfMergedYa18MD,z0],[0,sfMergedYb18MD,z0],[0,sfMergedYb18MD,z1],[0,sfMergedYa18MD,z1]],'#FF8C00',null,0));
+            }
+            for(let c=1;c<W_SPAN;c++)faces.push(jl([0,sfMergedYa18MD,-c*PANEL],[0,sfMergedYb18MD,-c*PANEL]));
+          } else {
+            // R+18M, R+17T: orange at normal floor height
+            for(let c=0;c<W_SPAN;c++){
+              const z0=-c*PANEL-JG,z1=-(c+1)*PANEL+JG;
+              faces.push(quad([[0,ya,z0],[0,yb,z0],[0,yb,z1],[0,ya,z1]],'#FF8C00',null,0));
+            }
+            for(let c=1;c<W_SPAN;c++)faces.push(jl([0,ya,-c*PANEL],[0,yb,-c*PANEL]));
           }
         }
         for(let c=0;c<NW_SPAN;c++){
