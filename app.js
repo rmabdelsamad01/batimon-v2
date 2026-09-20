@@ -21097,6 +21097,19 @@ function renderAAABetaPage(){
         faces.push(jl([17.5,ya,-1],[31.5,ya,-1]));faces.push(jl([17.5,yb,-1],[31.5,yb,-1]));
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
       }
+      // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
+      if(fi<=R25fi){
+        const ya=y0,yb=y1;
+        const EF2_C=[81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65];
+        for(let i=0;i<17;i++){
+          const z0=-(1+i),z1=-(2+i),col=EF2_C[i];
+          faces.push(quad([[31.5,ya,z0],[31.5,yb,z0],[31.5,yb,z1],[31.5,ya,z1]],getColor('SF',fi,col,true),null,0));
+          faces.push(...typeOverlays(getType('SF',fi,col),[31.5,z0],[31.5,z1],ya,yb));
+        }
+        faces.push(jl([31.5,ya,-1],[31.5,ya,-18]));
+        faces.push(jl([31.5,yb,-1],[31.5,yb,-18]));
+        for(let i=1;i<17;i++)faces.push(jl([31.5,ya,-(1+i)],[31.5,yb,-(1+i)]));
+      }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
