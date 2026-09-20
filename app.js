@@ -20998,6 +20998,8 @@ function renderAAABetaPage(){
       const segs=fl==='R+02'
         ?[{ya:y0,yb:Math.min(yPos[fi]+2,y1),white:true},{ya:Math.max(yPos[fi]+2,y0),yb:y1,white:false}]
         :[{ya:y0,yb:y1,white:false}];
+      const jc='#111111',jw=2;
+      const jl=(a,b)=>{const f=line2(a,b,jc,jw);f.depth-=0.01;return f;};
       for(const{ya,yb,white}of segs){
         if(yb<=ya)continue;
         if(!(wfShiftFloors.has(fl)&&!white)){
@@ -21030,8 +21032,6 @@ function renderAAABetaPage(){
           }
         }
         // permanent joint lines — always on top (depth-=0.01)
-        const jc='#111111',jw=2;
-        const jl=(a,b)=>{const f=line2(a,b,jc,jw);f.depth-=0.01;return f;};
         // WF
         if(!(wfShiftFloors.has(fl)&&!white)){
           for(let c=1;c<W_SPAN;c++)faces.push(jl([0,ya,-c*PANEL],[0,yb,-c*PANEL]));
@@ -21062,17 +21062,17 @@ function renderAAABetaPage(){
           faces.push(jl([17.5,ya,-4.5],[17.5,ya,-1]));faces.push(jl([17.5,yb,-4.5],[17.5,yb,-1]));
           for(let i=0;i<EP3.length-1;i++)faces.push(jl([17.5,ya,EP3[i].z1],[17.5,yb,EP3[i].z1]));
         }
-        // South ext wall: z=-1, x=17.5→31.5, cols 94→81 (RDC–R+25)
-        // No typeOverlays here: SF_TYPES right12 values are 2D-table decorations, not south-ext-wall types
-        if(!white && fi<=R25fi){
-          const EXT_C=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
-          for(let i=0;i<14;i++){
-            const x0=17.5+i,x1=x0+1,col=EXT_C[i];
-            faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
-          }
-          faces.push(jl([17.5,ya,-1],[31.5,ya,-1]));faces.push(jl([17.5,yb,-1],[31.5,yb,-1]));
-          for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
+      }
+      // South ext wall: full floor height (outside segs — not split by R+02 white/panel logic)
+      if(fi<=R25fi){
+        const ya=y0,yb=y1;
+        const EXT_C=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+        for(let i=0;i<14;i++){
+          const x0=17.5+i,x1=x0+1,col=EXT_C[i];
+          faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
         }
+        faces.push(jl([17.5,ya,-1],[31.5,ya,-1]));faces.push(jl([17.5,yb,-1],[31.5,yb,-1]));
+        for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
