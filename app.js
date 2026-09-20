@@ -21010,6 +21010,23 @@ function renderAAABetaPage(){
     const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
     faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
+    // Sky-colored masks for hidden floors so black structural bg doesn't show through
+    if(floorFilter.size){
+      const SKY='#cde8f8';
+      for(let fi=0;fi<FLOORS_BTT.length;fi++){
+        const fl=FLOORS_BTT[fi];
+        if(floorFilter.has(fl))continue;
+        const y0=yPos[fi],y1=y0+flH(fl);
+        faces.push(quad([[-SW_EX,y0,PANEL],[-SW_EX,y1,PANEL],[SW_END,y1,PANEL],[SW_END,y0,PANEL]],SKY,null,0));
+        faces.push(quad([[-NW_EX,y0,-W_SPAN],[-NW_EX,y1,-W_SPAN],[NW_END,y1,-W_SPAN],[NW_END,y0,-W_SPAN]],SKY,null,0));
+        faces.push(quad([[0,y0,PANEL],[0,y1,PANEL],[0,y1,-W_SPAN],[0,y0,-W_SPAN]],SKY,null,0));
+        faces.push(quad([[14.5,y0,0],[14.5,y1,0],[14.5,y1,-4.5],[14.5,y0,-4.5]],SKY,null,0));
+        faces.push(quad([[14.5,y0,-4.5],[14.5,y1,-4.5],[17.5,y1,-4.5],[17.5,y0,-4.5]],SKY,null,0));
+        faces.push(quad([[17.5,y0,-4.5],[17.5,y1,-4.5],[17.5,y1,-1],[17.5,y0,-1]],SKY,null,0));
+        faces.push(quad([[17.5,y0,-1],[17.5,y1,-1],[31.5,y1,-1],[31.5,y0,-1]],SKY,null,0));
+        faces.push(quad([[31.5,y0,-1],[31.5,y1,-1],[31.5,y1,-18],[31.5,y0,-18]],SKY,null,0));
+      }
+    }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
       if(floorFilter.size&&!floorFilter.has(fl))continue;
