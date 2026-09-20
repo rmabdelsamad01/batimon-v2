@@ -21064,7 +21064,12 @@ function renderAAABetaPage(){
         }
         // South ext wall: z=-1, x=17.5→31.5, cols 94→81 (RDC–R+25)
         if(!white && fi<=R25fi){
-          for(let i=0;i<14;i++){const x0=17.5+i,x1=x0+1;faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],SC.pending,null,0));}
+          const EXT_C=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+          for(let i=0;i<14;i++){
+            const x0=17.5+i,x1=x0+1,col=EXT_C[i];
+            faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],ya,yb));
+          }
           faces.push(jl([17.5,ya,-1],[31.5,ya,-1]));faces.push(jl([17.5,yb,-1],[31.5,yb,-1]));
           for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
         }
