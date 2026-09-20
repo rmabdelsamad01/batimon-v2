@@ -21208,8 +21208,13 @@ function renderAAABetaPage(){
         }
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
       }
+      // EF R+18MD: light orange architectural band (110px in 2D, between R+18T and R+18B merged cells)
+      if(fl==='R+18MD'&&fi<=R25fi){
+        const ya18MD=yPos[fi]+JG,yb18MD=yPos[fi]+flH('R+18MD')-JG;
+        faces.push(quad([[31.5,ya18MD,-1],[31.5,yb18MD,-1],[31.5,yb18MD,-18],[31.5,ya18MD,-18]],'#FFD9A0',null,0));
+      }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
-      // R+18M, R+18MD, R+17T, R+17B are phantom EF floors (no panels in 2D — show joint background)
+      // R+18M, R+18MD, R+17T, R+17B are phantom EF floors (no panels in 2D — R+18MD handled above)
       // R+18T rowspan=2 (merged with R+18M below), R+18B rowspan=3 (merged with R+17T+R+17B below)
       if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const ya=fl==='R+18T'?efMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
