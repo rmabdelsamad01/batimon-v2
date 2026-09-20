@@ -20897,7 +20897,16 @@ function renderAAABetaPage(){
       <div style="flex:1;min-width:8px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${legendHTML}</div>
       <button id="aaab-labels-btn" onclick="window._aaabToggleLabels()" title="Toggle panel labels" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">🏷 Labels</button>
-      <select id="aaab-floor-sel" title="Filter by floor" style="padding:4px 8px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onchange="window._aaabSetFloor(this.value)"><option value="">All Floors</option>${SF_FLOORS.map(fl=>`<option value="${fl}">${fl}</option>`).join('')}</select>
+      <div style="position:relative;display:inline-block;">
+        <button id="aaab-floor-btn" onclick="window._aaabToggleFloorPanel()" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">📐 Floors <span id="aaab-floor-lbl">All</span> ▾</button>
+        <div id="aaab-floor-panel" style="display:none;position:absolute;top:calc(100% + 4px);right:0;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.18);min-width:130px;max-height:320px;overflow-y:auto;padding:6px 0;">
+          <div style="padding:4px 10px;border-bottom:1px solid var(--border);display:flex;gap:6px;">
+            <button onclick="window._aaabFloorAll()" style="flex:1;font-size:10px;padding:2px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);cursor:pointer;">All</button>
+            <button onclick="window._aaabFloorNone()" style="flex:1;font-size:10px;padding:2px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text2);cursor:pointer;">None</button>
+          </div>
+          ${SF_FLOORS.map(fl=>`<label style="display:flex;align-items:center;gap:7px;padding:3px 10px;cursor:pointer;font-size:11px;color:var(--text2);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><input type="checkbox" data-floor="${fl}" checked onchange="window._aaabFloorChange()" style="cursor:pointer;"> ${fl}</label>`).join('')}
+        </div>
+      </div>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
     <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);position:relative;cursor:grab;user-select:none;">
@@ -20913,8 +20922,35 @@ function renderAAABetaPage(){
   let cW,cH;
   let theta=-0.85,phi=0.42,zoom=0.55,panX=0,panY=0;
   let showLabels=false;
-  let floorFilter='';
-  window._aaabSetFloor=function(v){floorFilter=v;render();};
+  let floorFilter=new Set(); // empty = show all
+  function _aaabUpdateFloorLabel(){
+    const lbl=document.getElementById('aaab-floor-lbl');
+    if(!lbl)return;
+    lbl.textContent=floorFilter.size===0?'All':floorFilter.size===1?[...floorFilter][0]:`${floorFilter.size} floors`;
+  }
+  window._aaabToggleFloorPanel=function(){
+    const p=document.getElementById('aaab-floor-panel');
+    if(p)p.style.display=p.style.display==='none'?'block':'none';
+  };
+  window._aaabFloorChange=function(){
+    const checks=document.querySelectorAll('#aaab-floor-panel input[data-floor]');
+    floorFilter=new Set([...checks].filter(c=>!c.checked).length===0?[]:[...checks].filter(c=>c.checked).map(c=>c.dataset.floor));
+    _aaabUpdateFloorLabel();render();
+  };
+  window._aaabFloorAll=function(){
+    document.querySelectorAll('#aaab-floor-panel input[data-floor]').forEach(c=>c.checked=true);
+    floorFilter=new Set();_aaabUpdateFloorLabel();render();
+  };
+  window._aaabFloorNone=function(){
+    document.querySelectorAll('#aaab-floor-panel input[data-floor]').forEach(c=>c.checked=false);
+    floorFilter=new Set(SF_FLOORS);_aaabUpdateFloorLabel();render();
+  };
+  // Close panel when clicking outside
+  document.addEventListener('click',function _aaabOutside(e){
+    const btn=document.getElementById('aaab-floor-btn');
+    const pnl=document.getElementById('aaab-floor-panel');
+    if(btn&&pnl&&!btn.contains(e.target)&&!pnl.contains(e.target))pnl.style.display='none';
+  },{capture:true});
   window._aaabToggleLabels=function(){
     showLabels=!showLabels;
     const btn=document.getElementById('aaab-labels-btn');
@@ -20976,7 +21012,7 @@ function renderAAABetaPage(){
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
-      if(floorFilter&&fl!==floorFilter)continue;
+      if(floorFilter.size&&!floorFilter.has(fl))continue;
       const y0=yPos[fi]+JG,y1=yPos[fi]+flH(fl)-JG;
       if(y1<=y0)continue;
       // R+34: trapezoidal cells matching 2D clip-path slopes
@@ -21399,7 +21435,7 @@ function renderAAABetaPage(){
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
-      if(floorFilter&&fl!==floorFilter)continue;
+      if(floorFilter.size&&!floorFilter.has(fl))continue;
       if(!wfShiftFloors.has(fl))continue;
       const ya=yPos[fi]+JG,yb=yPos[fi]+flH(fl)-JG;
       if(fl==='R+18B') continue; // covered by R+18MD rowspan=2
@@ -21482,7 +21518,7 @@ function renderAAABetaPage(){
     const efLabVis= _sT*_cP<0;  // EF normal (+1,0,0)
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
-      if(floorFilter&&fl!==floorFilter)continue;
+      if(floorFilter.size&&!floorFilter.has(fl))continue;
       if(fl==='R+18B')continue;
       const ya=yPos[fi],yb=ya+flH(fl);
       const isMD=fl==='R+18MD';
