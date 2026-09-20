@@ -20947,6 +20947,9 @@ function renderAAABetaPage(){
     // R+18B rowspan=3: spans R+18B+R+17T+R+17B (bottom of R+17B → top of R+18B)
     const fi17B=FLOORS_BTT.indexOf('R+17B'),fi18B=FLOORS_BTT.indexOf('R+18B');
     const efMergedYa18B=yPos[fi17B], efMergedYb18B=yPos[fi18B]+flH('R+18B');
+    // SF R+18MD rowspan=2 for cols 86-93: spans R+18MD+R+18B (110+40=150px)
+    const fi18MD=FLOORS_BTT.indexOf('R+18MD');
+    const sfMergedYa18MD=yPos[fi18B], sfMergedYb18MD=yPos[fi18MD]+flH('R+18MD');
     // SE extension backgrounds (east stub x=14.5, SF ext z=-4.5, second stub x=17.5)
     faces.push(bg([[14.5,0,0],[14.5,totalH,0],[14.5,totalH,-4.5],[14.5,0,-4.5]]));
     faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
@@ -21186,6 +21189,56 @@ function renderAAABetaPage(){
             // red double border at bottom of even floors (matches 2D borderBottom)
             if(['R+02','R+04','R+06','R+08','R+10','R+12','R+14','R+16','R+21','R+23'].includes(fl)){
               const rf=line2([x0,ya,-1],[x1,ya,-1],'#ED1C24',3);rf.depth-=0.8;faces.push(rf);
+            }
+          // Shift zone floors for south ext wall (R+18T–R+17B)
+          } else if(fl==='R+18T'){
+            // cols 89/90/91 covered by R+19 rowspan=2; cols 81-85 merge with R+18M (75px=1.5wu)
+            if([89,90,91].includes(col)) continue;
+            const isM=[81,82,83,84,85].includes(col);
+            const yaMerge=isM?efMergedYa18T:ya,ybMerge=isM?efMergedYb18T:yb;
+            faces.push(quad([[x0,yaMerge,-1],[x0,ybMerge,-1],[x1,ybMerge,-1],[x1,yaMerge,-1]],getColor('SF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],yaMerge,ybMerge));
+          } else if(fl==='R+18M'){
+            // col 94 = gap; cols 81-85 covered by R+18T rowspan=2
+            if(col===94||[81,82,83,84,85].includes(col)) continue;
+            faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#FF8C00',null,0));
+          } else if(fl==='R+18MD'){
+            // col 94 = gap; cols 81-85 = peach #FFD9A0; cols 86-93 = orange merged with R+18B (150px=3wu)
+            if(col===94) continue;
+            if([81,82,83,84,85].includes(col)){
+              faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#FFD9A0',null,0));
+            } else {
+              faces.push(quad([[x0,sfMergedYa18MD,-1],[x0,sfMergedYb18MD,-1],[x1,sfMergedYb18MD,-1],[x1,sfMergedYa18MD,-1]],'#FF8C00',null,0));
+            }
+          } else if(fl==='R+18B'){
+            // cols 86-94 covered by R+18MD rowspan=2; cols 81-85 = rowspan=3 (190px=3.8wu) using R+17B type
+            if(col===94||col===93||[86,87,88,89,90,91,92].includes(col)) continue;
+            if([81,82,83,84,85].includes(col)){
+              const r17bFi=FLOORS_BTT.indexOf('R+17B');
+              faces.push(quad([[x0,efMergedYa18B,-1],[x0,efMergedYb18B,-1],[x1,efMergedYb18B,-1],[x1,efMergedYa18B,-1]],getColor('SF',r17bFi,col,true),null,0));
+              faces.push(...typeOverlays(getType('SF',r17bFi,col),[x0,-1],[x1,-1],efMergedYa18B,efMergedYb18B));
+            }
+          } else if(fl==='R+17T'){
+            // col 94 = gap; cols 81-85 covered by R+18B rowspan=3; col 93 = red; others = orange
+            if(col===94||[81,82,83,84,85].includes(col)) continue;
+            if(col===93){
+              faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#ED1C24',null,0));
+            } else {
+              faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#FF8C00',null,0));
+            }
+          } else if(fl==='R+17B'){
+            // cols 81-85 covered by R+18B rowspan=3; col 93/94 = hstripes; cols 86-92 = normal type
+            if([81,82,83,84,85].includes(col)) continue;
+            if(col===94||col===93){
+              faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
+              const divY17B=yb-1;
+              for(let v=0.2;v<1;v+=0.2){const f=line2([x0+v,divY17B,-1],[x0+v,yb,-1],'#777',1);f.depth-=0.8;faces.push(f);}
+              faces.push(jl([x0,divY17B,-1],[x1,divY17B,-1]));
+              const hAdj17B=Math.sin(theta)*Math.tan(phi);
+              for(let h=ya+0.2;h<divY17B;h+=0.2){const f=line2([x0,h,-1],[x1,h+hAdj17B,-1],'#777',1);f.depth-=0.8;faces.push(f);}
+            } else {
+              faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
+              faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],ya,yb));
             }
           } else if(fl==='R+25'){
             // R+25: trapezoid slope — panel bottom is flush, top is sloped (matches 2D clip-path)
