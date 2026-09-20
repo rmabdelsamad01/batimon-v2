@@ -21108,8 +21108,23 @@ function renderAAABetaPage(){
           }
         }
         faces.push(jl([15,ya,-4.5],[15,yb,-4.5]));faces.push(jl([16,ya,-4.5],[16,yb,-4.5]));faces.push(jl([17,ya,-4.5],[17,yb,-4.5]));
-        const EP3=[{z0:-4.5,z1:-3.5},{z0:-3.5,z1:-2.5},{z0:-2.5,z1:-1.5},{z0:-1.5,z1:-1}];
-        for(const{z0,z1}of EP3)faces.push(quad([[17.5,ya,z0],[17.5,yb,z0],[17.5,yb,z1],[17.5,ya,z1]],SC.pending,null,0));
+        const EP3=[{z0:-4.5,z1:-3.5,fmt:'col1'},{z0:-3.5,z1:-2.5,fmt:'col3'},{z0:-2.5,z1:-1.5,fmt:'col3'},{z0:-1.5,z1:-1,fmt:'col1'}];
+        for(const{z0,z1,fmt}of EP3){
+          faces.push(quad([[17.5,ya,z0],[17.5,yb,z0],[17.5,yb,z1],[17.5,ya,z1]],SC.pending,null,0));
+          if(sfCF3D.has(fl)){
+            const divY=yb-1;
+            const width=z1-z0; // positive for EP3 (z0 < z1)
+            for(let v=0.2;v<width;v+=0.2){const f=line2([17.5,divY,z0+v],[17.5,yb,z0+v],'#777',1);f.depth-=0.8;faces.push(f);}
+            faces.push(jl([17.5,divY,z0],[17.5,divY,z1]));
+            if(fmt==='col3'){
+              const hAdjEP=Math.tan(phi)*Math.cos(theta)*(z0-z1);
+              for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([17.5,h,z0],[17.5,h+hAdjEP,z1],'#777',1);f.depth-=0.8;faces.push(f);}
+            } else {
+              for(let v=0.2;v<width;v+=0.2){const f=line2([17.5,ya,z0+v],[17.5,divY,z0+v],'#777',1);f.depth-=0.8;faces.push(f);}
+            }
+            if(sfRedEP1.has(fl)){const rf=line2([17.5,ya,z0],[17.5,ya,z1],'#ED1C24',3);rf.depth-=0.8;faces.push(rf);}
+          }
+        }
         for(let i=0;i<EP3.length-1;i++)faces.push(jl([17.5,ya,EP3[i].z1],[17.5,yb,EP3[i].z1]));
       }
       // South ext wall: full floor height (outside segs — not split by R+02 white/panel logic)
