@@ -21072,7 +21072,7 @@ function renderAAABetaPage(){
           if(fl==='RDC'&&[85,86,87,88].includes(col)){
             // 50px panel at top of 200px floor (1wu out of 4wu); structural fill below
             const panYa=yb-1,panYb=yb;
-            faces.push(quad([[x0,ya,-1],[x0,panYa,-1],[x1,panYa,-1],[x1,ya,-1]],'#FFFFFF',null,0));
+            faces.push(quad([[x0,ya,-1],[x0,panYa,-1],[x1,panYa,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
             faces.push(quad([[x0,panYa,-1],[x0,panYb,-1],[x1,panYb,-1],[x1,panYa,-1]],getColor('SF',fi,col,true),null,0));
             faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],panYa,panYb));
             faces.push(jl([x0,panYa,-1],[x1,panYa,-1]));
