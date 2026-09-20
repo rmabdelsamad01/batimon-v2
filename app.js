@@ -21097,9 +21097,6 @@ function renderAAABetaPage(){
           }
         }
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
-      } else {
-        const ya=y0,yb=y1;
-        for(let i=0;i<14;i++){const x0=17.5+i,x1=x0+1;faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#cde8f8',null,0));}
       }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
       if(fi<=R25fi){
@@ -21128,9 +21125,6 @@ function renderAAABetaPage(){
           }
         }
         for(let i=1;i<17;i++)faces.push(jl([31.5,ya,-(1+i)],[31.5,yb,-(1+i)]));
-      } else {
-        const ya=y0,yb=y1;
-        for(let i=0;i<17;i++){const z0=-(1+i),z1=-(2+i);faces.push(quad([[31.5,ya,z0],[31.5,ya,z1],[31.5,yb,z1],[31.5,yb,z0]],'#cde8f8',null,0));}
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
