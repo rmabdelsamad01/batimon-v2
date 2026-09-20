@@ -21060,6 +21060,7 @@ function renderAAABetaPage(){
       if(fi<=R25fi){
         const ya=y0,yb=y1;
         const EXT_C=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+        const sf9493Act=new Set(['R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01']);
         for(let i=0;i<14;i++){
           const x0=17.5+i,x1=x0+1,col=EXT_C[i];
           if(fl==='RDC'&&[85,86,87,88].includes(col)){
@@ -21078,6 +21079,10 @@ function renderAAABetaPage(){
             faces.push(jl([x0,panYa,-1],[x1,panYa,-1]));
             if(col===90||col===92)faces.push(jl([x0,panYb-1,-1],[x1,panYb-1,-1]));
             else if(col===89)faces.push(jl([x0,panYb-0.9,-1],[x1,panYb-0.9,-1]));
+          } else if((col===94||col===93)&&sf9493Act.has(fl)){
+            // 2D: top 50px vlines | 2px black divider | bottom 98px hstripes; render status color + divider line
+            faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
+            faces.push(jl([x0,yb-1,-1],[x1,yb-1,-1]));
           } else if(fl==='R+25'){
             // R+25: trapezoid slope — panel bottom is flush, top is sloped (matches 2D clip-path)
             const sfTrapC=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
