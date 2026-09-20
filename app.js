@@ -21061,10 +21061,27 @@ function renderAAABetaPage(){
       }
       // SE extension: full floor height (outside segs — same reason as south ext wall)
       {const ya=y0,yb=y1;
-        const EP1=[{z0:0,z1:-0.5},{z0:-0.5,z1:-1.5},{z0:-1.5,z1:-2.5},{z0:-2.5,z1:-3.5},{z0:-3.5,z1:-4.5}];
-        for(const{z0,z1}of EP1)faces.push(quad([[14.5,ya,z0],[14.5,yb,z0],[14.5,yb,z1],[14.5,ya,z1]],SC.pending,null,0));
-        for(let i=0;i<EP1.length-1;i++)faces.push(jl([14.5,ya,EP1[i].z1],[14.5,yb,EP1[i].z1]));
         const sfCF3D=new Set(['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03']);
+        const sfRedEP1=new Set(['R+33','R+31','R+29','R+27','R+25','R+23','R+21','R+16','R+14','R+12','R+10','R+08','R+06','R+04']);
+        const EP1=[{z0:0,z1:-0.5,fmt:'col1'},{z0:-0.5,z1:-1.5,fmt:'col3'},{z0:-1.5,z1:-2.5,fmt:'col3'},{z0:-2.5,z1:-3.5,fmt:'col1'},{z0:-3.5,z1:-4.5,fmt:'col1'}];
+        for(const{z0,z1,fmt}of EP1){
+          faces.push(quad([[14.5,ya,z0],[14.5,yb,z0],[14.5,yb,z1],[14.5,ya,z1]],SC.pending,null,0));
+          if(sfCF3D.has(fl)){
+            const divY=yb-1;
+            const dz=z0-z1;
+            for(let v=0.2;v<dz;v+=0.2){const f=line2([14.5,divY,z0-v],[14.5,yb,z0-v],'#777',1);f.depth-=0.8;faces.push(f);}
+            faces.push(jl([14.5,divY,z0],[14.5,divY,z1]));
+            if(fmt==='col3'){
+              const hAdjEP=Math.tan(phi)*Math.cos(theta)*dz;
+              for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([14.5,h,z0],[14.5,h+hAdjEP,z1],'#777',1);f.depth-=0.8;faces.push(f);}
+            } else {
+              for(let v=0.2;v<dz;v+=0.2){const f=line2([14.5,ya,z0-v],[14.5,divY,z0-v],'#777',1);f.depth-=0.8;faces.push(f);}
+            }
+            if(sfRedEP1.has(fl)){const rf=line2([14.5,ya,z0],[14.5,ya,z1],'#ED1C24',3);rf.depth-=0.8;faces.push(rf);}
+          }
+        }
+        for(let i=0;i<EP1.length-1;i++)faces.push(jl([14.5,ya,EP1[i].z1],[14.5,yb,EP1[i].z1]));
+
         const EP2=[{x0:14.5,x1:15,half:true},{x0:15,x1:16,half:false},{x0:16,x1:17,half:false},{x0:17,x1:17.5,half:true}];
         for(const{x0,x1,half}of EP2){
           if(half){
