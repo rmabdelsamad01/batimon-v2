@@ -21423,8 +21423,8 @@ function renderAAABetaPage(){
       for(let i=0;i<pts.length;i++)
         faces.push(line2(pts[i],pts[(i+1)%pts.length],clr,2));
     }
-    drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')],'#F5F5DC');
-    drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')],'#FF8C00');
+    drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')],'#D3D3D3');
+    drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')],'#D3D3D3');
     return faces;
   }
 
