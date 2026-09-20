@@ -21086,6 +21086,16 @@ function renderAAABetaPage(){
             faces.push(jl([x0,panYa,-1],[x1,panYa,-1]));
             if(col===90||col===92)faces.push(jl([x0,panYb-1,-1],[x1,panYb-1,-1]));
             else if(col===89)faces.push(jl([x0,panYb-0.9,-1],[x1,panYb-0.9,-1]));
+          } else if(fl==='R+25'){
+            // R+25: trapezoid slope — panel bottom is flush, top is sloped (matches 2D clip-path)
+            const sfTrapC=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
+            const ci=sfTrapC.indexOf(col);
+            const rPx=Math.round((13-ci)*47/13);
+            const lPx=rPx+3;
+            const ptL=yb-lPx/50,ptR=yb-rPx/50;
+            faces.push(quad([[x0,ptL,-1],[x0,yb,-1],[x1,yb,-1],[x1,ptR,-1]],'#cde8f8',null,0));
+            faces.push(quad([[x0,ya,-1],[x0,ptL,-1],[x1,ptR,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
+            faces.push(jl([x0,ptL,-1],[x1,ptR,-1]));
           } else {
             faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
             faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],ya,yb));
@@ -21111,6 +21121,14 @@ function renderAAABetaPage(){
             faces.push(quad([[31.5,panYa,z0],[31.5,panYa,z1],[31.5,panYb,z1],[31.5,panYb,z0]],getColor('EF',fi,col,true),null,0));
             faces.push(...typeOverlays(getType('EF',fi,col),[31.5,z0],[31.5,z1],panYa,panYb));
             faces.push(jl([31.5,panYa,z0],[31.5,panYa,z1]));
+          } else if(fl==='R+25'){
+            // R+25: trapezoid — z0 side is "left" (col 81 side), z1 side is "right"
+            const lPx=i===16?47:i*3;
+            const rPx=i===16?50:i*3+3;
+            const ptL=yb-lPx/50,ptR=yb-rPx/50;
+            faces.push(quad([[31.5,ptL,z0],[31.5,yb,z0],[31.5,yb,z1],[31.5,ptR,z1]],'#cde8f8',null,0));
+            faces.push(quad([[31.5,ya,z0],[31.5,ptL,z0],[31.5,ptR,z1],[31.5,ya,z1]],getColor('EF',fi,col,true),null,0));
+            faces.push(jl([31.5,ptL,z0],[31.5,ptR,z1]));
           } else {
             faces.push(quad([[31.5,ya,z0],[31.5,yb,z0],[31.5,yb,z1],[31.5,ya,z1]],getColor('EF',fi,col,true),null,0));
             faces.push(...typeOverlays(getType('EF',fi,col),[31.5,z0],[31.5,z1],ya,yb));
