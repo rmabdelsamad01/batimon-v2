@@ -21105,7 +21105,6 @@ function renderAAABetaPage(){
             }
           }
         }
-        faces.push(jl([17.5,ya,-1],[31.5,ya,-1]));faces.push(jl([17.5,yb,-1],[31.5,yb,-1]));
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
       }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
@@ -21134,8 +21133,6 @@ function renderAAABetaPage(){
             faces.push(...typeOverlays(getType('EF',fi,col),[31.5,z0],[31.5,z1],ya,yb));
           }
         }
-        faces.push(jl([31.5,ya,-1],[31.5,ya,-18]));
-        faces.push(jl([31.5,yb,-1],[31.5,yb,-18]));
         for(let i=1;i<17;i++)faces.push(jl([31.5,ya,-(1+i)],[31.5,yb,-(1+i)]));
       }
     }
