@@ -20950,6 +20950,8 @@ function renderAAABetaPage(){
     // SF R+18MD rowspan=2 for cols 86-93: spans R+18MD+R+18B (110+40=150px)
     const fi18MD=FLOORS_BTT.indexOf('R+18MD');
     const sfMergedYa18MD=yPos[fi18B], sfMergedYb18MD=yPos[fi18MD]+flH('R+18MD');
+    // NF cols 43-45 R+18T rowspan=4: spans R+18T+R+18M+R+18MD+R+18B (25+50+110+40=225px)
+    const nfMergedYa18T=yPos[fi18B], nfMergedYb18T=yPos[fi18T]+flH('R+18T');
     // SE extension backgrounds (east stub x=14.5, SF ext z=-4.5, second stub x=17.5)
     faces.push(bg([[14.5,0,0],[14.5,totalH,0],[14.5,totalH,-4.5],[14.5,0,-4.5]]));
     faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
@@ -21025,6 +21027,41 @@ function renderAAABetaPage(){
         }
         for(let c=0;c<NW_SPAN;c++){
           const x0=c*PANEL+JG,x1=((c===NW_SPAN-1)?NW_END:c+1)*PANEL-JG,col=NF_C[c];
+          const isNFShift=[45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col);
+          if(!white&&isNFShift){
+            if(fl==='R+18T'){
+              if(col===45||col===44||col===43){
+                faces.push(quad([[x0,nfMergedYa18T,-W_SPAN],[x0,nfMergedYb18T,-W_SPAN],[x1,nfMergedYb18T,-W_SPAN],[x1,nfMergedYa18T,-W_SPAN]],getColor('NF',fi,col,true),null,0));
+                faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],nfMergedYa18T,nfMergedYb18T));
+              } else {
+                faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],getColor('NF',fi,col,true),null,0));
+                faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],ya,yb));
+              }
+              continue;
+            }
+            if(fl==='R+18M'){
+              if(col===45||col===44||col===43) continue;
+              faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],'#FF8C00',null,0));
+              continue;
+            }
+            if(fl==='R+18MD'){
+              if(col===45||col===44||col===43) continue;
+              faces.push(quad([[x0,sfMergedYa18MD,-W_SPAN],[x0,sfMergedYb18MD,-W_SPAN],[x1,sfMergedYb18MD,-W_SPAN],[x1,sfMergedYa18MD,-W_SPAN]],'#FF8C00',null,0));
+              continue;
+            }
+            if(fl==='R+18B') continue;
+            if(fl==='R+17T'){
+              faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],'#FF8C00',null,0));
+              continue;
+            }
+            if(fl==='R+17B'&&(col===45||col===44||col===43||col===42||col===41)){
+              faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],getColor('NF',fi,col,true),null,0));
+              faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],ya,yb));
+              const hAdj=Math.sin(theta)*Math.tan(phi);
+              for(let h=ya+0.2;h<yb;h+=0.2){const f=line2([x0,h,-W_SPAN],[x1,h+hAdj,-W_SPAN],'#777',1);f.depth-=0.8;faces.push(f);}
+              continue;
+            }
+          }
           faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],ya,yb));
           if(!white&&(col===45||col===44||col===43||col===42)&&nfSF3D.has(fl)){
