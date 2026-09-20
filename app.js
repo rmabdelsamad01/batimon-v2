@@ -20940,6 +20940,13 @@ function renderAAABetaPage(){
     faces.push(bg([[0,0,0],[0,totalH,0],[SW_END,totalH,0],[SW_END,0,0]]));
     const R25fi=FLOORS_BTT.indexOf('R+25');
     const R25top=yPos[R25fi]+flH('R+25'); // top of R+25 — south ext wall stops here
+    // EF merged cell y-ranges (matching 2D rowspans)
+    // R+18T rowspan=2: spans R+18T+R+18M (bottom of R+18M → top of R+18T)
+    const fi18M=FLOORS_BTT.indexOf('R+18M'),fi18T=FLOORS_BTT.indexOf('R+18T');
+    const efMergedYa18T=yPos[fi18M], efMergedYb18T=yPos[fi18T]+flH('R+18T');
+    // R+18B rowspan=3: spans R+18B+R+17T+R+17B (bottom of R+17B → top of R+18B)
+    const fi17B=FLOORS_BTT.indexOf('R+17B'),fi18B=FLOORS_BTT.indexOf('R+18B');
+    const efMergedYa18B=yPos[fi17B], efMergedYb18B=yPos[fi18B]+flH('R+18B');
     // SE extension backgrounds (east stub x=14.5, SF ext z=-4.5, second stub x=17.5)
     faces.push(bg([[14.5,0,0],[14.5,totalH,0],[14.5,totalH,-4.5],[14.5,0,-4.5]]));
     faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
@@ -21203,8 +21210,10 @@ function renderAAABetaPage(){
       }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
       // R+18M, R+18MD, R+17T, R+17B are phantom EF floors (no panels in 2D — show joint background)
+      // R+18T rowspan=2 (merged with R+18M below), R+18B rowspan=3 (merged with R+17T+R+17B below)
       if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
-        const ya=y0,yb=y1;
+        const ya=fl==='R+18T'?efMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
+        const yb=fl==='R+18T'?efMergedYb18T:fl==='R+18B'?efMergedYb18B:y1;
         const EF2_C=[81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65];
         for(let i=0;i<17;i++){
           const z0=-(1+i),z1=-(2+i),col=EF2_C[i];
