@@ -21412,10 +21412,14 @@ function renderAAABetaPage(){
     // roof 18 polyline — draws at given y level
     function drawRoof18(ry,clr){
       const v1=[-NW_EX,ry,-W_SPAN],v2=[0,ry,-W_SPAN],v3=[0,ry,0];
-      const v4=[SW_END,ry,0],v5=[SW_END,ry,PANEL],v6=[-SW_EX,ry,PANEL];
-      faces.push(quad([v1,v2,v3,v6],clr,null,0));
-      faces.push(quad([v3,v4,v5,v6],clr,null,0));
-      const pts=[v1,v2,v3,v4,v5,v6];
+      const v4=[SW_END,ry,0],v5=[SW_END,ry,-4.5],v6=[17.5,ry,-4.5];
+      const v7=[17.5,ry,-1],v8=[26.5,ry,-1],v9=[26.5,ry,PANEL],v10=[-SW_EX,ry,PANEL];
+      // split polygon into quads for painter's algo
+      faces.push(quad([v1,v2,v3,v10],clr,null,0));
+      faces.push(quad([v3,v4,v9,v10],clr,null,0));
+      faces.push(quad([v4,v5,v6,v9],clr,null,0));
+      faces.push(quad([v6,v7,v8,v9],clr,null,0));
+      const pts=[v1,v2,v3,v4,v5,v6,v7,v8,v9,v10];
       for(let i=0;i<pts.length;i++)
         faces.push(line2(pts[i],pts[(i+1)%pts.length],clr,2));
     }
