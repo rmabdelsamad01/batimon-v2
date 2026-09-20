@@ -21469,6 +21469,12 @@ function renderAAABetaPage(){
       let iy=sy-totalH/2;
       for(const ch of text){ctx.fillText(ch,sx,iy);iy+=lineH;}
     }
+    // Backface culling for labels only — dot(faceNormal, viewDir) > 0 means facing camera
+    const _cT=Math.cos(theta),_sT=Math.sin(theta),_cP=Math.cos(phi);
+    const sfLabVis= _cT*_cP>0;  // SF/south-ext normal (0,0,+1)
+    const nfLabVis=-_cT*_cP>0;  // NF normal (0,0,-1)
+    const wfLabVis=-_sT*_cP>0;  // WF normal (-1,0,0)
+    const efLabVis= _sT*_cP>0;  // EF normal (+1,0,0)
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
       if(fl==='R+18B')continue;
@@ -21477,21 +21483,21 @@ function renderAAABetaPage(){
       const cyBase=isMD?(sfMYa+sfMYb)/2:(ya+yb)/2;
       const sfZ=sfShiftFloors.has(fl)?PANEL:0;
       // SF cols 1-15
-      for(let c=0;c<SW_SPAN;c++){
+      if(sfLabVis) for(let c=0;c<SW_SPAN;c++){
         const x0=c*PANEL,x1=(c===SW_SPAN-1?SW_END:(c+1)*PANEL),col=SF_C[c];
         const t=getType('SF',fi,col);if(!t)continue;
         const p=proj((x0+x1)/2,cyBase,sfZ);
         drawVert(t,p.sx,p.sy,labelColor('SF',fi,col));
       }
       // NF cols 31-45
-      for(let c=0;c<NW_SPAN;c++){
+      if(nfLabVis) for(let c=0;c<NW_SPAN;c++){
         const x0=c*PANEL,x1=(c===NW_SPAN-1?NW_END:(c+1)*PANEL),col=NF_C[c];
         const t=getType('NF',fi,col);if(!t)continue;
         const p=proj((x0+x1)/2,(ya+yb)/2,-W_SPAN);
         drawVert(t,p.sx,p.sy,labelColor('NF',fi,col));
       }
       // WF cols 15-31
-      for(let c=0;c<W_SPAN;c++){
+      if(wfLabVis) for(let c=0;c<W_SPAN;c++){
         const col=WF_C[c];
         const z0=-c*PANEL,z1=-(c===W_SPAN-1?W_SPAN:(c+1)*PANEL);
         const t=getType('WF',fi,col);if(!t)continue;
@@ -21499,7 +21505,7 @@ function renderAAABetaPage(){
         drawVert(t,p.sx,p.sy,labelColor('WF',fi,col));
       }
       // South ext wall cols 81-94 (same normal as SF)
-      for(let i=0;i<EXT_C.length;i++){
+      if(sfLabVis) for(let i=0;i<EXT_C.length;i++){
         const col=EXT_C[i],x0=17.5+i;
         const t=getType('SF',fi,col);if(!t)continue;
         const cy=isMD&&col>=86?cyBase:(ya+yb)/2;
@@ -21507,7 +21513,7 @@ function renderAAABetaPage(){
         drawVert(t,p.sx,p.sy,labelColor('SF',fi,col));
       }
       // EF cols 65-81 at x=31.5
-      if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+      if(efLabVis&&fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const efYa=fl==='R+18T'?efMYa18T:fl==='R+18B'?efMYa18B:ya;
         const efYb=fl==='R+18T'?efMYb18T:fl==='R+18B'?efMYb18B:yb;
         const efCy=(efYa+efYb)/2;
