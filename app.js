@@ -21087,8 +21087,9 @@ function renderAAABetaPage(){
             for(let v=0.2;v<1;v+=0.2){const f=line2([x0+v,divY,-1],[x0+v,yb,-1],'#777',1);f.depth-=0.005;faces.push(f);}
             // black divider
             faces.push(jl([x0,divY,-1],[x1,divY,-1]));
-            // grey hstripes in bottom section (horizontal lines every 0.2wu in [ya,divY])
-            for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([x0,h,-1],[x1,h,-1],'#777',1);f.depth-=0.005;faces.push(f);}
+            // grey hstripes in bottom section — lines tilted to appear horizontal in screen space
+            const hAdj=Math.sin(theta)*Math.tan(phi); // y-offset per Δx to cancel perspective slope
+            for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([x0,h,-1],[x1,h+hAdj,-1],'#777',1);f.depth-=0.005;faces.push(f);}
             // red double border at bottom of even floors (matches 2D borderBottom)
             if(['R+02','R+04','R+06','R+08','R+10','R+12','R+14','R+16','R+21','R+23'].includes(fl)){
               const rf=line2([x0,ya,-1],[x1,ya,-1],'#ED1C24',3);rf.depth-=0.01;faces.push(rf);
