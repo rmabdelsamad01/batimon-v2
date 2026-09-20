@@ -21002,6 +21002,8 @@ function renderAAABetaPage(){
         :[{ya:y0,yb:y1,white:false}];
       const jc='#111111',jw=2;
       const jl=(a,b)=>{const f=line2(a,b,jc,jw);f.depth-=1;return f;};
+      const nfSF3D=new Set(['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03']);
+      const nfRedNF3D=new Set(['R+33','R+31','R+29','R+27','R+25','R+23','R+21']);
       for(const{ya,yb,white}of segs){
         if(yb<=ya)continue;
         if(!(wfShiftFloors.has(fl)&&!white)){
@@ -21015,6 +21017,19 @@ function renderAAABetaPage(){
           const x0=c*PANEL+JG,x1=((c===NW_SPAN-1)?NW_END:c+1)*PANEL-JG,col=NF_C[c];
           faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],ya,yb));
+          if(!white&&(col===45||col===44||col===43||col===42)&&nfSF3D.has(fl)){
+            const divY=yb-1;
+            const w=x1-x0;
+            for(let v=0.2;v<w;v+=0.2){const f=line2([x0+v,divY,-W_SPAN],[x0+v,yb,-W_SPAN],'#777',1);f.depth-=0.8;faces.push(f);}
+            faces.push(jl([x0,divY,-W_SPAN],[x1,divY,-W_SPAN]));
+            if(col===45){
+              for(let v=0.2;v<w;v+=0.2){const f=line2([x0+v,ya,-W_SPAN],[x0+v,divY,-W_SPAN],'#777',1);f.depth-=0.8;faces.push(f);}
+            } else {
+              const hAdj=Math.sin(theta)*Math.tan(phi);
+              for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([x0,h,-W_SPAN],[x1,h+hAdj,-W_SPAN],'#777',1);f.depth-=0.8;faces.push(f);}
+            }
+            if(nfRedNF3D.has(fl)){const rf=line2([x0,ya,-W_SPAN],[x1,ya,-W_SPAN],'#ED1C24',3);rf.depth-=0.8;faces.push(rf);}
+          }
         }
         const sfSF3D=new Set(['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03']);
         const sfRedSF3D=new Set(['R+33','R+31','R+29','R+27','R+25','R+23','R+21','R+16','R+14','R+12','R+10','R+08','R+06','R+04']);
