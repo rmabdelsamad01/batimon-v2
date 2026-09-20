@@ -21287,12 +21287,11 @@ function renderAAABetaPage(){
             faces.push(quad([[x0,yaMerge,-1],[x0,ybMerge,-1],[x1,ybMerge,-1],[x1,yaMerge,-1]],getColor('SF',fi,col,true),null,0));
             faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],yaMerge,ybMerge));
           } else if(fl==='R+18M'){
-            // col 94 = gap; cols 81-85 covered by R+18T rowspan=2
-            if(col===94||[81,82,83,84,85].includes(col)) continue;
+            // cols 81-85 covered by R+18T rowspan=2
+            if([81,82,83,84,85].includes(col)) continue;
             faces.push(quad([[x0,ya,PANEL],[x0,yb,PANEL],[x1,yb,PANEL],[x1,ya,PANEL]],'#FF8C00',null,0));
           } else if(fl==='R+18MD'){
-            // col 94 = gap; cols 81-85 = peach #FFD9A0 at z=-1; cols 86-93 = orange merged shifted to z=PANEL
-            if(col===94) continue;
+            // cols 81-85 = peach #FFD9A0 at z=-1; cols 86-94 = orange merged shifted to z=PANEL
             if([81,82,83,84,85].includes(col)){
               faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],'#FFD9A0',null,0));
             } else {
@@ -21307,8 +21306,8 @@ function renderAAABetaPage(){
               faces.push(...typeOverlays(getType('SF',r17bFi,col),[x0,-1],[x1,-1],efMergedYa18B,efMergedYb18B));
             }
           } else if(fl==='R+17T'){
-            // col 94 = gap; cols 81-85 covered by R+18B rowspan=3; col 93 = red; others = orange; all shifted to z=PANEL
-            if(col===94||[81,82,83,84,85].includes(col)) continue;
+            // cols 81-85 covered by R+18B rowspan=3; col 93 = red; others = orange; all shifted to z=PANEL
+            if([81,82,83,84,85].includes(col)) continue;
             if(col===93){
               faces.push(quad([[x0,ya,PANEL],[x0,yb,PANEL],[x1,yb,PANEL],[x1,ya,PANEL]],'#ED1C24',null,0));
             } else {
