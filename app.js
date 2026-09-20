@@ -21046,6 +21046,23 @@ function renderAAABetaPage(){
         for(let c=0;c<SW_SPAN;c++){
           const x0=c*PANEL+JG,x1=((c===SW_SPAN-1)?SW_END:c+1)*PANEL-JG,col=SF_C[c];
           const sfZ=(!white&&sfShiftFloors.has(fl))?PANEL:0;
+          // Shift zone floors: orange/skip/merge to match 2D rowspans
+          if(!white&&fl==='R+18M'){
+            faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],'#FF8C00',null,0));
+            continue;
+          }
+          if(!white&&fl==='R+18MD'){
+            // rowspan=2 merges R+18MD+R+18B (110+40=150px=3wu), orange
+            faces.push(quad([[x0,sfMergedYa18MD,sfZ],[x0,sfMergedYb18MD,sfZ],[x1,sfMergedYb18MD,sfZ],[x1,sfMergedYa18MD,sfZ]],'#FF8C00',null,0));
+            continue;
+          }
+          if(!white&&fl==='R+18B'){
+            continue; // all cols 1-15 covered by R+18MD rowspan=2
+          }
+          if(!white&&fl==='R+17T'){
+            faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],'#FF8C00',null,0));
+            continue;
+          }
           faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
           if(!white&&(col===1||col===2||col===3)&&sfSF3D.has(fl)){
@@ -21060,6 +21077,11 @@ function renderAAABetaPage(){
               for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([x0,h,sfZ],[x1,h+hAdj,sfZ],'#777',1);f.depth-=0.8;faces.push(f);}
             }
             if(sfRedSF3D.has(fl)){const rf=line2([x0,ya,sfZ],[x1,ya,sfZ],'#ED1C24',3);rf.depth-=0.8;faces.push(rf);}
+          }
+          // R+17B cols 1-3: hstripes (transparent bg in 2D)
+          if(!white&&fl==='R+17B'&&(col===1||col===2||col===3)){
+            const hAdj=Math.sin(theta)*Math.tan(phi);
+            for(let h=ya+0.2;h<yb;h+=0.2){const f=line2([x0,h,sfZ],[x1,h+hAdj,sfZ],'#777',1);f.depth-=0.8;faces.push(f);}
           }
         }
         if(!white&&shiftFloors.has(fl)&&fl!=='R+17B'){
