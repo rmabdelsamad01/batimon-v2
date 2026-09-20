@@ -20753,9 +20753,6 @@ function renderAAABetaPage(){
   const FLOORS_BTT=[...SF_FLOORS].reverse();
   const yPos=[];
   {let _y=0;for(const fl of FLOORS_BTT){yPos.push(_y);_y+=flH(fl);}}
-  // Populate floor dropdown (top-to-bottom order for the user)
-  {const sel=document.getElementById('aaab-floor-sel');
-   if(sel){const opts=[...SF_FLOORS];opts.forEach(fl=>{const o=document.createElement('option');o.value=fl;o.textContent=fl;sel.appendChild(o);});}}
 
   const SC={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const JOINT='#07111e';
@@ -20900,7 +20897,7 @@ function renderAAABetaPage(){
       <div style="flex:1;min-width:8px;"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">${legendHTML}</div>
       <button id="aaab-labels-btn" onclick="window._aaabToggleLabels()" title="Toggle panel labels" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">🏷 Labels</button>
-      <select id="aaab-floor-sel" title="Filter by floor" style="padding:4px 8px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onchange="window._aaabSetFloor(this.value)"><option value="">All Floors</option></select>
+      <select id="aaab-floor-sel" title="Filter by floor" style="padding:4px 8px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onchange="window._aaabSetFloor(this.value)"><option value="">All Floors</option>${SF_FLOORS.map(fl=>`<option value="${fl}">${fl}</option>`).join('')}</select>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
     <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);position:relative;cursor:grab;user-select:none;">
