@@ -21036,18 +21036,12 @@ function renderAAABetaPage(){
         // WF
         if(!(wfShiftFloors.has(fl)&&!white)){
           for(let c=1;c<W_SPAN;c++)faces.push(jl([0,ya,-c*PANEL],[0,yb,-c*PANEL]));
-          faces.push(jl([0,ya,0],[0,ya,-W_SPAN]));
-          faces.push(jl([0,yb,0],[0,yb,-W_SPAN]));
         }
         // NF
         for(let c=1;c<NW_SPAN;c++)faces.push(jl([c*PANEL,ya,-W_SPAN],[c*PANEL,yb,-W_SPAN]));
-        faces.push(jl([0,ya,-W_SPAN],[NW_END,ya,-W_SPAN]));
-        faces.push(jl([0,yb,-W_SPAN],[NW_END,yb,-W_SPAN]));
         // SF
         {const sfZ=(!white&&sfShiftFloors.has(fl))?PANEL:0;
-        for(let c=1;c<SW_SPAN;c++)faces.push(jl([c*PANEL,ya,sfZ],[c*PANEL,yb,sfZ]));
-        faces.push(jl([0,ya,sfZ],[SW_END,ya,sfZ]));
-        faces.push(jl([0,yb,sfZ],[SW_END,yb,sfZ]));}
+        for(let c=1;c<SW_SPAN;c++)faces.push(jl([c*PANEL,ya,sfZ],[c*PANEL,yb,sfZ]));}
       }
       // SE extension: full floor height (outside segs — same reason as south ext wall)
       {const ya=y0,yb=y1;
