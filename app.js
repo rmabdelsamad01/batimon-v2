@@ -21471,10 +21471,10 @@ function renderAAABetaPage(){
     }
     // Backface culling for labels only — dot(faceNormal, viewDir) > 0 means facing camera
     const _cT=Math.cos(theta),_sT=Math.sin(theta),_cP=Math.cos(phi);
-    const sfLabVis= _cT*_cP>0;  // SF/south-ext normal (0,0,+1)
-    const nfLabVis=-_cT*_cP>0;  // NF normal (0,0,-1)
-    const wfLabVis=-_sT*_cP>0;  // WF normal (-1,0,0)
-    const efLabVis= _sT*_cP>0;  // EF normal (+1,0,0)
+    const sfLabVis= _cT*_cP<0;  // SF/south-ext normal (0,0,+1)
+    const nfLabVis=-_cT*_cP<0;  // NF normal (0,0,-1)
+    const wfLabVis=-_sT*_cP<0;  // WF normal (-1,0,0)
+    const efLabVis= _sT*_cP<0;  // EF normal (+1,0,0)
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
       if(fl==='R+18B')continue;
