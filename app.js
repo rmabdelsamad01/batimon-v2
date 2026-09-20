@@ -21202,7 +21202,8 @@ function renderAAABetaPage(){
         for(let i=1;i<14;i++)faces.push(jl([17.5+i,ya,-1],[17.5+i,yb,-1]));
       }
       // East facade: x=31.5, z=-1..-18 (17 panels, cols 81-65), RDC to R+25
-      if(fi<=R25fi){
+      // R+18M, R+18MD, R+17T, R+17B are phantom EF floors (no panels in 2D — show joint background)
+      if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const ya=y0,yb=y1;
         const EF2_C=[81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65];
         for(let i=0;i<17;i++){
