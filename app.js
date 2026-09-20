@@ -21399,11 +21399,11 @@ function renderAAABetaPage(){
     function drawRoof18(ry){
       const v1=[-NW_EX,ry,-W_SPAN],v2=[0,ry,-W_SPAN],v3=[0,ry,0];
       const v4=[SW_END,ry,0],v5=[SW_END,ry,PANEL],v6=[-SW_EX,ry,PANEL];
-      faces.push(quad([v1,v2,v3,v6],'#FF8C00',null,0));
-      faces.push(quad([v3,v4,v5,v6],'#FF8C00',null,0));
+      faces.push(quad([v1,v2,v3,v6],'#F5F5DC',null,0));
+      faces.push(quad([v3,v4,v5,v6],'#F5F5DC',null,0));
       const pts=[v1,v2,v3,v4,v5,v6];
       for(let i=0;i<pts.length;i++)
-        faces.push(line2(pts[i],pts[(i+1)%pts.length],'#FF8C00',2));
+        faces.push(line2(pts[i],pts[(i+1)%pts.length],'#F5F5DC',2));
     }
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')]);
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')]);
