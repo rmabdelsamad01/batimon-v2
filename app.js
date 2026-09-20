@@ -21078,12 +21078,8 @@ function renderAAABetaPage(){
             faces.push(jl([x0,panYa,-1],[x1,panYa,-1]));
             if(col===90||col===92)faces.push(jl([x0,panYb-1,-1],[x1,panYb-1,-1]));
             else if(col===89)faces.push(jl([x0,panYb-0.9,-1],[x1,panYb-0.9,-1]));
-          } else if(fl==='R+25'&&(col===94||col===93)){
-            // 2D: cols 94 & 93 at R+25 are plain cells (sf9493Floors early-return, not trapezoid)
-            faces.push(quad([[x0,ya,-1],[x0,yb,-1],[x1,yb,-1],[x1,ya,-1]],getColor('SF',fi,col,true),null,0));
-            faces.push(...typeOverlays(getType('SF',fi,col),[x0,-1],[x1,-1],ya,yb));
           } else if(fl==='R+25'){
-            // R+25: trapezoid slope for cols 92-81 — panel bottom flush, top sloped (matches 2D clip-path)
+            // R+25: trapezoid slope — panel bottom is flush, top is sloped (matches 2D clip-path)
             const sfTrapC=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
             const ci=sfTrapC.indexOf(col);
             const rPx=Math.round((13-ci)*47/13);
