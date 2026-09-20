@@ -21016,11 +21016,26 @@ function renderAAABetaPage(){
           faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],white?SC.pending:getColor('NF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('NF',fi,col),[x0,-W_SPAN],[x1,-W_SPAN],ya,yb));
         }
+        const sfSF3D=new Set(['R+33','R+32','R+31','R+30','R+29','R+28','R+27','R+26','R+25','R+24','R+23','R+22','R+21','R+20','R+19','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03']);
+        const sfRedSF3D=new Set(['R+33','R+31','R+29','R+27','R+25','R+23','R+21','R+16','R+14','R+12','R+10','R+08','R+06','R+04']);
         for(let c=0;c<SW_SPAN;c++){
           const x0=c*PANEL+JG,x1=((c===SW_SPAN-1)?SW_END:c+1)*PANEL-JG,col=SF_C[c];
           const sfZ=(!white&&sfShiftFloors.has(fl))?PANEL:0;
           faces.push(quad([[x0,ya,sfZ],[x0,yb,sfZ],[x1,yb,sfZ],[x1,ya,sfZ]],white?SC.pending:getColor('SF',fi,col,true),null,0));
           if(!white)faces.push(...typeOverlays(getType('SF',fi,col),[x0,sfZ],[x1,sfZ],ya,yb));
+          if(!white&&(col===1||col===2||col===3)&&sfSF3D.has(fl)){
+            const divY=yb-1;
+            const w=x1-x0;
+            for(let v=0.2;v<w;v+=0.2){const f=line2([x0+v,divY,sfZ],[x0+v,yb,sfZ],'#777',1);f.depth-=0.8;faces.push(f);}
+            faces.push(jl([x0,divY,sfZ],[x1,divY,sfZ]));
+            if(col===1){
+              for(let v=0.2;v<w;v+=0.2){const f=line2([x0+v,ya,sfZ],[x0+v,divY,sfZ],'#777',1);f.depth-=0.8;faces.push(f);}
+            } else {
+              const hAdj=Math.sin(theta)*Math.tan(phi);
+              for(let h=ya+0.2;h<divY;h+=0.2){const f=line2([x0,h,sfZ],[x1,h+hAdj,sfZ],'#777',1);f.depth-=0.8;faces.push(f);}
+            }
+            if(sfRedSF3D.has(fl)){const rf=line2([x0,ya,sfZ],[x1,ya,sfZ],'#ED1C24',3);rf.depth-=0.8;faces.push(rf);}
+          }
         }
         if(!white&&shiftFloors.has(fl)&&fl!=='R+17B'){
           for(let c=0;c<NW_EX;c++){
