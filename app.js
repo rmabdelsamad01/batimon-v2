@@ -21396,17 +21396,17 @@ function renderAAABetaPage(){
       faces.push(line2([-SW_EX,y,PANEL],[SW_END,y,PANEL],'#338855',0.9));
     }
     // roof 18 polyline — draws at given y level
-    function drawRoof18(ry){
+    function drawRoof18(ry,clr){
       const v1=[-NW_EX,ry,-W_SPAN],v2=[0,ry,-W_SPAN],v3=[0,ry,0];
       const v4=[SW_END,ry,0],v5=[SW_END,ry,PANEL],v6=[-SW_EX,ry,PANEL];
-      faces.push(quad([v1,v2,v3,v6],'#F5F5DC',null,0));
-      faces.push(quad([v3,v4,v5,v6],'#F5F5DC',null,0));
+      faces.push(quad([v1,v2,v3,v6],clr,null,0));
+      faces.push(quad([v3,v4,v5,v6],clr,null,0));
       const pts=[v1,v2,v3,v4,v5,v6];
       for(let i=0;i<pts.length;i++)
-        faces.push(line2(pts[i],pts[(i+1)%pts.length],'#F5F5DC',2));
+        faces.push(line2(pts[i],pts[(i+1)%pts.length],clr,2));
     }
-    drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')]);
-    drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')]);
+    drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')],'#F5F5DC');
+    drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')],'#FF8C00');
     return faces;
   }
 
