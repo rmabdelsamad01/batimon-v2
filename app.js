@@ -21104,8 +21104,17 @@ function renderAAABetaPage(){
         const EF2_C=[81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65];
         for(let i=0;i<17;i++){
           const z0=-(1+i),z1=-(2+i),col=EF2_C[i];
-          faces.push(quad([[31.5,ya,z0],[31.5,yb,z0],[31.5,yb,z1],[31.5,ya,z1]],getColor('EF',fi,col,true),null,0));
-          faces.push(...typeOverlays(getType('EF',fi,col),[31.5,z0],[31.5,z1],ya,yb));
+          // R+01: cols 78-65 (i>=3) are 25px short panels at the top; sky below
+          if(fl==='R+01'&&i>=3){
+            const panYa=yb-0.5,panYb=yb;
+            faces.push(quad([[31.5,ya,z0],[31.5,ya,z1],[31.5,panYa,z1],[31.5,panYa,z0]],'#cde8f8',null,0));
+            faces.push(quad([[31.5,panYa,z0],[31.5,panYa,z1],[31.5,panYb,z1],[31.5,panYb,z0]],getColor('EF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('EF',fi,col),[31.5,z0],[31.5,z1],panYa,panYb));
+            faces.push(jl([31.5,panYa,z0],[31.5,panYa,z1]));
+          } else {
+            faces.push(quad([[31.5,ya,z0],[31.5,yb,z0],[31.5,yb,z1],[31.5,ya,z1]],getColor('EF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('EF',fi,col),[31.5,z0],[31.5,z1],ya,yb));
+          }
         }
         faces.push(jl([31.5,ya,-1],[31.5,ya,-18]));
         faces.push(jl([31.5,yb,-1],[31.5,yb,-18]));
