@@ -21453,14 +21453,20 @@ function renderAAABetaPage(){
     const EXT_C=[94,93,92,91,90,89,88,87,86,85,84,83,82,81];
     const EF_C=[81,80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65];
     const sc=Math.min(cW,cH)*0.028*zoom;
-    const fontSize=Math.max(5,Math.min(10,sc*0.52));
-    const lineH=fontSize*1.15;
+    const fontSize=Math.max(4,Math.min(14,sc*0.34));
+    const lineH=fontSize*1.7;
     const TC=typeof _custStText!=='undefined'?_custStText:{pending:'#224F93',installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cip:'#fff',cl_not_issued:'#8B0000',defect:'#fff',c_and_d:'#fff',bottom_bracket:'#fff'};
     function labelColor(zid,fi2,col2){
       const fl2=FLOORS_BTT[fi2];
       const st=(panels[`${zid}-${fl2}-C${col2}`]||{}).status||'pending';
       return TC[st]||'#224F93';
     }
+    // backface culling: face with world normal (nx,0,nz) is visible when projected depth < 0
+    function faceVis(nx,nz){
+      const rz1=nx*Math.sin(theta)+nz*Math.cos(theta);
+      return rz1*Math.cos(phi)<0;
+    }
+    const sfVis=faceVis(0,-1),nfVis=faceVis(0,1),wfVis=faceVis(-1,0),efVis=faceVis(1,0);
     function drawVert(text,sx,sy,clr){
       ctx.font=`700 ${fontSize}px 'Barlow',sans-serif`;
       ctx.textAlign='center';ctx.textBaseline='top';
@@ -21477,29 +21483,29 @@ function renderAAABetaPage(){
       const cyBase=isMD?(sfMYa+sfMYb)/2:(ya+yb)/2;
       const sfZ=sfShiftFloors.has(fl)?PANEL:0;
       // SF cols 1-15
-      for(let c=0;c<SW_SPAN;c++){
+      if(sfVis) for(let c=0;c<SW_SPAN;c++){
         const x0=c*PANEL,x1=(c===SW_SPAN-1?SW_END:(c+1)*PANEL),col=SF_C[c];
         const t=getType('SF',fi,col);if(!t)continue;
         const p=proj((x0+x1)/2,cyBase,sfZ);
         drawVert(t,p.sx,p.sy,labelColor('SF',fi,col));
       }
       // NF cols 31-45
-      for(let c=0;c<NW_SPAN;c++){
+      if(nfVis) for(let c=0;c<NW_SPAN;c++){
         const x0=c*PANEL,x1=(c===NW_SPAN-1?NW_END:(c+1)*PANEL),col=NF_C[c];
         const t=getType('NF',fi,col);if(!t)continue;
         const p=proj((x0+x1)/2,(ya+yb)/2,-W_SPAN);
         drawVert(t,p.sx,p.sy,labelColor('NF',fi,col));
       }
       // WF cols 15-31
-      for(let c=0;c<W_SPAN;c++){
+      if(wfVis) for(let c=0;c<W_SPAN;c++){
         const col=WF_C[c];
         const z0=-c*PANEL,z1=-(c===W_SPAN-1?W_SPAN:(c+1)*PANEL);
         const t=getType('WF',fi,col);if(!t)continue;
         const p=proj(0,(ya+yb)/2,(z0+z1)/2);
         drawVert(t,p.sx,p.sy,labelColor('WF',fi,col));
       }
-      // South ext wall cols 81-94
-      for(let i=0;i<EXT_C.length;i++){
+      // South ext wall cols 81-94 (same normal as SF)
+      if(sfVis) for(let i=0;i<EXT_C.length;i++){
         const col=EXT_C[i],x0=17.5+i;
         const t=getType('SF',fi,col);if(!t)continue;
         const cy=isMD&&col>=86?cyBase:(ya+yb)/2;
@@ -21507,7 +21513,7 @@ function renderAAABetaPage(){
         drawVert(t,p.sx,p.sy,labelColor('SF',fi,col));
       }
       // EF cols 65-81 at x=31.5
-      if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+      if(efVis&&fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const efYa=fl==='R+18T'?efMYa18T:fl==='R+18B'?efMYa18B:ya;
         const efYb=fl==='R+18T'?efMYb18T:fl==='R+18B'?efMYb18B:yb;
         const efCy=(efYa+efYb)/2;
