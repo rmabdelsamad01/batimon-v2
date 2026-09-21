@@ -21013,6 +21013,7 @@ function renderAAABetaPage(){
     faces.push(bg([[17.5,0,-18],[17.5,totalH,-18],[17.5,totalH,-16],[17.5,0,-16]])); // 52A/52B/52C bg
     faces.push(bg([[14.5,0,-16],[14.5,totalH,-16],[17.5,totalH,-16],[17.5,0,-16]])); // cols 99-96 north face bg
     faces.push(bg([[14.5,0,-16],[14.5,totalH,-16],[14.5,totalH,-17],[14.5,0,-17]])); // 45A east face bg
+    faces.push(bg([[14.5,0,-17],[14.5,totalH,-17],[17.5,totalH,-17],[17.5,0,-17]])); // NF cols 47-49 north face bg
     const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
     faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
@@ -21035,6 +21036,7 @@ function renderAAABetaPage(){
         faces.push(quad([[17.5,y0,-18],[17.5,y1,-18],[17.5,y1,-16],[17.5,y0,-16]],SKY,null,0));
         faces.push(quad([[14.5,y0,-16],[14.5,y1,-16],[17.5,y1,-16],[17.5,y0,-16]],SKY,null,0));
         faces.push(quad([[14.5,y0,-16],[14.5,y1,-16],[14.5,y1,-17],[14.5,y0,-17]],SKY,null,0));
+        faces.push(quad([[14.5,y0,-17],[14.5,y1,-17],[17.5,y1,-17],[17.5,y0,-17]],SKY,null,0));
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21503,10 +21505,22 @@ function renderAAABetaPage(){
         for(let i=0;i<16;i++){
           const col=NEF_C[i];
           const x0=31.5-i*nefPW,x1=31.5-(i+1)*nefPW;
-          faces.push(quad([[x0,nefYa,-18],[x0,nefYb,-18],[x1,nefYb,-18],[x1,nefYa,-18]],getColor('NEF',fi,col,true),null,0));
-          faces.push(...typeOverlays(getType('NEF',fi,col),[x0,-18],[x1,-18],nefYa,nefYb));
+          faces.push(quad([[x0,nefYa,-18],[x0,nefYb,-18],[x1,nefYb,-18],[x1,nefYa,-18]],getColor('NF',fi,col,true),null,0));
+          faces.push(...typeOverlays(getType('NF',fi,col),[x0,-18],[x1,-18],nefYa,nefYb));
         }
         for(let i=1;i<16;i++)faces.push(jl([31.5-i*nefPW,nefYa,-18],[31.5-i*nefPW,nefYb,-18]));
+      }
+      // NF cols 47-49: z=-17, x=14.5..17.5 (NF extension behind 99-96), RDC to R+34
+      if(fi<=R34fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+        const c4749Ya=fl==='R+18T'?nfMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
+        const c4749Yb=fl==='R+18T'?nfMergedYb18T:fl==='R+18B'?efMergedYb18B:y1;
+        const nfExt=[{col:49,x0:16.5,x1:17.5},{col:48,x0:15.5,x1:16.5},{col:47,x0:14.5,x1:15.5}];
+        for(const{col,x0,x1}of nfExt){
+          faces.push(quad([[x0,c4749Ya,-17],[x0,c4749Yb,-17],[x1,c4749Yb,-17],[x1,c4749Ya,-17]],getColor('NF',fi,col,true),null,0));
+          faces.push(...typeOverlays(getType('NF',fi,col),[x0,-17],[x1,-17],c4749Ya,c4749Yb));
+        }
+        faces.push(jl([16.5,c4749Ya,-17],[16.5,c4749Yb,-17]));
+        faces.push(jl([15.5,c4749Ya,-17],[15.5,c4749Yb,-17]));
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21665,7 +21679,7 @@ function renderAAABetaPage(){
           }
         }
       }
-      // NEF cols 65-50 at z=-18, and cols 99-96 at z=-16 (all north-facing)
+      // NF: NEF cols 65-50 (z=-18), cols 47-49 (z=-17), cols 99-96 (z=-16) — all north-facing
       if(nfLabVis&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const nefYa=fl==='R+18T'?efMYa18T:fl==='R+18B'?efMYa18B:ya;
         const nefYb=fl==='R+18T'?efMYb18T:fl==='R+18B'?efMYb18B:yb;
@@ -21675,10 +21689,18 @@ function renderAAABetaPage(){
           const nefPW=(31.5-17.5)/NEF_C.length;
           for(let i=0;i<16;i++){
             const col=NEF_C[i];
-            const t=getType('NEF',fi,col);if(!t)continue;
+            const t=getType('NF',fi,col);if(!t)continue;
             const xc=31.5-(i+0.5)*nefPW;
             const p=proj(xc,nefCy,-18);
-            drawVert(t,p.sx,p.sy,labelColor('NEF',fi,col));
+            drawVert(t,p.sx,p.sy,labelColor('NF',fi,col));
+          }
+        }
+        if(fi<=R34fi){
+          const nfExt=[{col:49,xc:17},{col:48,xc:16},{col:47,xc:15}];
+          for(const{col,xc}of nfExt){
+            const t=getType('NF',fi,col);if(!t)continue;
+            const p=proj(xc,nefCy,-17);
+            drawVert(t,p.sx,p.sy,labelColor('NF',fi,col));
           }
         }
         if(fi<=R33fi){
