@@ -20868,6 +20868,12 @@ function renderAAABetaPage(){
       }
     }else if(pat==='door'){
       add([pt(p0,ya),pt(p0,yb),pt(p1,yb),pt(p1,ya)],'rgba(0,0,0,0.35)');
+    }else if(pat==='vh'){
+      // vlines (top 1/3) + divider + hstripes (bottom 2/3) — structural core cols 53/52
+      const ym=ya+(yb-ya)*1/3;
+      const N=4;for(let s=0;s<N;s++){const t0=s/N,t1=t0+0.5/N;add([pt(lerp(p0,p1,t0),ya),pt(lerp(p0,p1,t0),ym),pt(lerp(p0,p1,t1),ym),pt(lerp(p0,p1,t1),ya)],'rgba(0,0,0,0.2)');}
+      addLine(pt(p0,ym),pt(p1,ym),'rgba(0,0,0,0.7)',1.5);
+      const Nh=5;for(let s=0;s<Nh;s++){const ys0=ym+(s/Nh)*(yb-ym),ys1=ym+((s+0.5)/Nh)*(yb-ym);add([pt(p0,ys0),pt(p0,ys1),pt(p1,ys1),pt(p1,ys0)],'rgba(0,0,0,0.22)');}
     }
     // Red left border line (matches 2D table's border-left:#ED1C24)
     if(redL)addLine(pt(p0,ya),pt(p0,yb),'#ED1C24',2);
@@ -20987,6 +20993,7 @@ function renderAAABetaPage(){
     faces.push(bg([[0,0,0],[0,totalH,0],[SW_END,totalH,0],[SW_END,0,0]]));
     const R25fi=FLOORS_BTT.indexOf('R+25');
     const R25top=yPos[R25fi]+flH('R+25'); // top of R+25 — south ext wall stops here
+    const R24fi=FLOORS_BTT.indexOf('R+24');
     const R33fi=FLOORS_BTT.indexOf('R+33');
     const R34fi=FLOORS_BTT.indexOf('R+34');
     // EF merged cell y-ranges (matching 2D rowspans)
@@ -21496,31 +21503,44 @@ function renderAAABetaPage(){
         }
         for(let i=1;i<17;i++)faces.push(jl([31.5,ya,-(1+i)],[31.5,yb,-(1+i)]));
       }
-      // NEF (North East Facade): z=-18, x=17.5..31.5, cols 65-50, RDC to R+25
+      // NEF (North East Facade): z=-18, x=17.5..31.5, cols 65-51, RDC to R+25
       if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const nefYa=fl==='R+18T'?efMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
         const nefYb=fl==='R+18T'?efMergedYb18T:fl==='R+18B'?efMergedYb18B:y1;
-        const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51,50];
+        const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51];
         const nefPW=(31.5-17.5)/NEF_C.length;
-        for(let i=0;i<16;i++){
+        for(let i=0;i<15;i++){
           const col=NEF_C[i];
           const x0=31.5-i*nefPW,x1=31.5-(i+1)*nefPW;
+          const rawT=getType('NF',fi,col);
+          const t=(rawT===''&&(col===53||col===52)&&fi<=R24fi)?'vh':rawT;
           faces.push(quad([[x0,nefYa,-18],[x0,nefYb,-18],[x1,nefYb,-18],[x1,nefYa,-18]],getColor('NF',fi,col,true),null,0));
-          faces.push(...typeOverlays(getType('NF',fi,col),[x0,-18],[x1,-18],nefYa,nefYb));
+          faces.push(...typeOverlays(t,[x0,-18],[x1,-18],nefYa,nefYb));
         }
-        for(let i=1;i<16;i++)faces.push(jl([31.5-i*nefPW,nefYa,-18],[31.5-i*nefPW,nefYb,-18]));
+        for(let i=1;i<15;i++)faces.push(jl([31.5-i*nefPW,nefYa,-18],[31.5-i*nefPW,nefYb,-18]));
       }
-      // NF cols 47-49: z=-17, x=14.5..17.5 (NF extension behind 99-96), RDC to R+34
+      // NF cols 47-50: z=-17, x=14.5..17.5 (NF extension behind 99-96), RDC to R+34
       if(fi<=R34fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const c4749Ya=fl==='R+18T'?nfMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
         const c4749Yb=fl==='R+18T'?nfMergedYb18T:fl==='R+18B'?efMergedYb18B:y1;
-        const nfExt=[{col:49,x0:16.5,x1:17.5},{col:48,x0:15.5,x1:16.5},{col:47,x0:14.5,x1:15.5}];
+        const CONCRETE='#595959',GLAZING='#A6C9EC';
+        const nfExt=[{col:50,x0:16.75,x1:17.5},{col:49,x0:16.0,x1:16.75},{col:48,x0:15.25,x1:16.0},{col:47,x0:14.5,x1:15.25}];
         for(const{col,x0,x1}of nfExt){
-          faces.push(quad([[x0,c4749Ya,-17],[x0,c4749Yb,-17],[x1,c4749Yb,-17],[x1,c4749Ya,-17]],getColor('NF',fi,col,true),null,0));
-          faces.push(...typeOverlays(getType('NF',fi,col),[x0,-17],[x1,-17],c4749Ya,c4749Yb));
+          const isHC=fi<=R33fi&&fl!=='R+18T'&&fl!=='R+18B';
+          if(isHC&&(col===50||col===47)){
+            faces.push(quad([[x0,c4749Ya,-17],[x0,c4749Yb,-17],[x1,c4749Yb,-17],[x1,c4749Ya,-17]],CONCRETE,null,0));
+          }else if(isHC&&(col===49||col===48)){
+            const ym=c4749Ya+(c4749Yb-c4749Ya)*1/3;
+            faces.push(quad([[x0,c4749Ya,-17],[x0,ym,-17],[x1,ym,-17],[x1,c4749Ya,-17]],CONCRETE,null,0));
+            faces.push(quad([[x0,ym,-17],[x0,c4749Yb,-17],[x1,c4749Yb,-17],[x1,ym,-17]],GLAZING,null,0));
+          }else{
+            faces.push(quad([[x0,c4749Ya,-17],[x0,c4749Yb,-17],[x1,c4749Yb,-17],[x1,c4749Ya,-17]],getColor('NF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('NF',fi,col),[x0,-17],[x1,-17],c4749Ya,c4749Yb));
+          }
         }
-        faces.push(jl([16.5,c4749Ya,-17],[16.5,c4749Yb,-17]));
-        faces.push(jl([15.5,c4749Ya,-17],[15.5,c4749Yb,-17]));
+        faces.push(jl([16.75,c4749Ya,-17],[16.75,c4749Yb,-17]));
+        faces.push(jl([16.0,c4749Ya,-17],[16.0,c4749Yb,-17]));
+        faces.push(jl([15.25,c4749Ya,-17],[15.25,c4749Yb,-17]));
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21679,15 +21699,15 @@ function renderAAABetaPage(){
           }
         }
       }
-      // NF: NEF cols 65-50 (z=-18), cols 47-49 (z=-17), cols 99-96 (z=-16) — all north-facing
+      // NF: NEF cols 65-51 (z=-18), cols 47-50 (z=-17), cols 99-96 (z=-16) — all north-facing
       if(nfLabVis&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const nefYa=fl==='R+18T'?efMYa18T:fl==='R+18B'?efMYa18B:ya;
         const nefYb=fl==='R+18T'?efMYb18T:fl==='R+18B'?efMYb18B:yb;
         const nefCy=(nefYa+nefYb)/2;
         if(fi<=R25fi){
-          const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51,50];
+          const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51];
           const nefPW=(31.5-17.5)/NEF_C.length;
-          for(let i=0;i<16;i++){
+          for(let i=0;i<15;i++){
             const col=NEF_C[i];
             const t=getType('NF',fi,col);if(!t)continue;
             const xc=31.5-(i+0.5)*nefPW;
@@ -21696,7 +21716,7 @@ function renderAAABetaPage(){
           }
         }
         if(fi<=R34fi){
-          const nfExt=[{col:49,xc:17},{col:48,xc:16},{col:47,xc:15}];
+          const nfExt=[{col:50,xc:17.125},{col:49,xc:16.375},{col:48,xc:15.625},{col:47,xc:14.875}];
           for(const{col,xc}of nfExt){
             const t=getType('NF',fi,col);if(!t)continue;
             const p=proj(xc,nefCy,-17);
