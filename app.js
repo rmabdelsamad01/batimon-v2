@@ -21010,7 +21010,7 @@ function renderAAABetaPage(){
     faces.push(bg([[17.5,0,-1],[17.5,R25top,-1],[31.5,R25top,-1],[31.5,0,-1]])); // south ext wall cols94-81, capped at R+25
     faces.push(bg([[17.5,0,-18],[17.5,totalH,-18],[31.5,totalH,-18],[31.5,0,-18]])); // NEF north face bg
     faces.push(bg([[17.5,0,-18],[17.5,totalH,-18],[17.5,totalH,-16],[17.5,0,-16]])); // 52A/52B/52C bg
-    faces.push(bg([[17.5,0,-16],[17.5,totalH,-16],[17.5,totalH,-13],[17.5,0,-13]])); // cols 99-96 bg
+    faces.push(bg([[14.5,0,-16],[14.5,totalH,-16],[17.5,totalH,-16],[17.5,0,-16]])); // cols 99-96 north face bg
     const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
     faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
@@ -21031,7 +21031,7 @@ function renderAAABetaPage(){
         faces.push(quad([[31.5,y0,-1],[31.5,y1,-1],[31.5,y1,-18],[31.5,y0,-18]],SKY,null,0));
         faces.push(quad([[17.5,y0,-18],[17.5,y1,-18],[31.5,y1,-18],[31.5,y0,-18]],SKY,null,0));
         faces.push(quad([[17.5,y0,-18],[17.5,y1,-18],[17.5,y1,-16],[17.5,y0,-16]],SKY,null,0));
-        faces.push(quad([[17.5,y0,-16],[17.5,y1,-16],[17.5,y1,-13],[17.5,y0,-13]],SKY,null,0));
+        faces.push(quad([[14.5,y0,-16],[14.5,y1,-16],[17.5,y1,-16],[17.5,y0,-16]],SKY,null,0));
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21324,20 +21324,20 @@ function renderAAABetaPage(){
           faces.push(jl([17.5,c52Ya,-17.7],[17.5,c52Yb,-17.7]));
           faces.push(jl([17.5,c52Ya,-16.7],[17.5,c52Yb,-16.7]));
         }
-        // cols 99-96 at x=17.5, z=-16..-13, RDC to R+33
-        // 99: 0.5 unit, 98: 1.0 unit, 97: 1.0 unit, 96: 0.5 unit
+        // cols 99-96 at z=-16, x=17.5..14.5 (north-facing), RDC to R+33
+        // 99: x=17.5..17 (0.5), 98: x=17..16 (1.0), 97: x=16..15 (1.0), 96: x=15..14.5 (0.5)
         if(fi<=R33fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
           const c99Ya=fl==='R+18T'?efMergedYa18T:fl==='R+18B'?efMergedYa18B:ya;
           const c99Yb=fl==='R+18T'?efMergedYb18T:fl==='R+18B'?efMergedYb18B:yb;
-          const col9699=[99,98,97,96],col9699Z=[-16,-15.5,-14.5,-13.5,-13];
+          const col9699=[99,98,97,96],col9699X=[17.5,17,16,15,14.5];
           for(let i=0;i<4;i++){
-            const col=col9699[i],z0=col9699Z[i],z1=col9699Z[i+1];
-            faces.push(quad([[17.5,c99Ya,z0],[17.5,c99Yb,z0],[17.5,c99Yb,z1],[17.5,c99Ya,z1]],getColor('NEF',fi,col,true),null,0));
-            faces.push(...typeOverlays(getType('NEF',fi,col),[17.5,z0],[17.5,z1],c99Ya,c99Yb));
+            const col=col9699[i],x0=col9699X[i],x1=col9699X[i+1];
+            faces.push(quad([[x0,c99Ya,-16],[x0,c99Yb,-16],[x1,c99Yb,-16],[x1,c99Ya,-16]],getColor('NEF',fi,col,true),null,0));
+            faces.push(...typeOverlays(getType('NEF',fi,col),[x0,-16],[x1,-16],c99Ya,c99Yb));
           }
-          faces.push(jl([17.5,c99Ya,-15.5],[17.5,c99Yb,-15.5]));
-          faces.push(jl([17.5,c99Ya,-14.5],[17.5,c99Yb,-14.5]));
-          faces.push(jl([17.5,c99Ya,-13.5],[17.5,c99Yb,-13.5]));
+          faces.push(jl([17,c99Ya,-16],[17,c99Yb,-16]));
+          faces.push(jl([16,c99Ya,-16],[16,c99Yb,-16]));
+          faces.push(jl([15,c99Ya,-16],[15,c99Yb,-16]));
         }
       }
       // South ext wall: full floor height (outside segs — not split by R+02 white/panel logic)
@@ -21633,41 +21633,43 @@ function renderAAABetaPage(){
           drawVert(t,p.sx,p.sy,labelColor('EF',fi,col));
         }
       }
-      // 52A/52B/52C and cols 99-96 at x=17.5
-      if(efLabVis&&fi<=R33fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+      // 52A/52B/52C at x=17.5 (east-facing)
+      if(efLabVis&&fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const cLabYa=fl==='R+18T'?efMYa18T:fl==='R+18B'?efMYa18B:ya;
         const cLabYb=fl==='R+18T'?efMYb18T:fl==='R+18B'?efMYb18B:yb;
         const cLabCy=(cLabYa+cLabYb)/2;
-        if(fi<=R25fi){
-          const col52=['52A','52B','52C'],col52Z=[-18,-17.7,-16.7,-16];
-          for(let i=0;i<3;i++){
-            const col=col52[i];
-            const t=getType('NEF',fi,col);if(!t)continue;
-            const p=proj(17.5,cLabCy,(col52Z[i]+col52Z[i+1])/2);
-            drawVert(t,p.sx,p.sy,labelColor('NEF',fi,col));
-          }
-        }
-        const col9699=[99,98,97,96],col9699Z=[-16,-15.5,-14.5,-13.5,-13];
-        for(let i=0;i<4;i++){
-          const col=col9699[i];
+        const col52=['52A','52B','52C'],col52Z=[-18,-17.7,-16.7,-16];
+        for(let i=0;i<3;i++){
+          const col=col52[i];
           const t=getType('NEF',fi,col);if(!t)continue;
-          const p=proj(17.5,cLabCy,(col9699Z[i]+col9699Z[i+1])/2);
+          const p=proj(17.5,cLabCy,(col52Z[i]+col52Z[i+1])/2);
           drawVert(t,p.sx,p.sy,labelColor('NEF',fi,col));
         }
       }
-      // NEF cols 65-50 at z=-18
-      if(nfLabVis&&fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+      // NEF cols 65-50 at z=-18, and cols 99-96 at z=-16 (all north-facing)
+      if(nfLabVis&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
         const nefYa=fl==='R+18T'?efMYa18T:fl==='R+18B'?efMYa18B:ya;
         const nefYb=fl==='R+18T'?efMYb18T:fl==='R+18B'?efMYb18B:yb;
         const nefCy=(nefYa+nefYb)/2;
-        const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51,50];
-        const nefPW=(31.5-17.5)/NEF_C.length;
-        for(let i=0;i<16;i++){
-          const col=NEF_C[i];
-          const t=getType('NEF',fi,col);if(!t)continue;
-          const xc=31.5-(i+0.5)*nefPW;
-          const p=proj(xc,nefCy,-18);
-          drawVert(t,p.sx,p.sy,labelColor('NEF',fi,col));
+        if(fi<=R25fi){
+          const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51,50];
+          const nefPW=(31.5-17.5)/NEF_C.length;
+          for(let i=0;i<16;i++){
+            const col=NEF_C[i];
+            const t=getType('NEF',fi,col);if(!t)continue;
+            const xc=31.5-(i+0.5)*nefPW;
+            const p=proj(xc,nefCy,-18);
+            drawVert(t,p.sx,p.sy,labelColor('NEF',fi,col));
+          }
+        }
+        if(fi<=R33fi){
+          const col9699=[99,98,97,96],col9699X=[17.5,17,16,15,14.5];
+          for(let i=0;i<4;i++){
+            const col=col9699[i];
+            const t=getType('NEF',fi,col);if(!t)continue;
+            const p=proj((col9699X[i]+col9699X[i+1])/2,nefCy,-16);
+            drawVert(t,p.sx,p.sy,labelColor('NEF',fi,col));
+          }
         }
       }
     }
