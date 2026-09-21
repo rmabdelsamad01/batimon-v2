@@ -21007,6 +21007,7 @@ function renderAAABetaPage(){
     faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
     faces.push(bg([[17.5,0,-4.5],[17.5,totalH,-4.5],[17.5,totalH,-1],[17.5,0,-1]]));
     faces.push(bg([[17.5,0,-1],[17.5,R25top,-1],[31.5,R25top,-1],[31.5,0,-1]])); // south ext wall cols94-81, capped at R+25
+    faces.push(bg([[17.5,0,-18],[17.5,totalH,-18],[31.5,totalH,-18],[31.5,0,-18]])); // NEF north face bg
     const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
     faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
     faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
@@ -21025,6 +21026,7 @@ function renderAAABetaPage(){
         faces.push(quad([[17.5,y0,-4.5],[17.5,y1,-4.5],[17.5,y1,-1],[17.5,y0,-1]],SKY,null,0));
         faces.push(quad([[17.5,y0,-1],[17.5,y1,-1],[31.5,y1,-1],[31.5,y0,-1]],SKY,null,0));
         faces.push(quad([[31.5,y0,-1],[31.5,y1,-1],[31.5,y1,-18],[31.5,y0,-18]],SKY,null,0));
+        faces.push(quad([[17.5,y0,-18],[17.5,y1,-18],[31.5,y1,-18],[31.5,y0,-18]],SKY,null,0));
       }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
@@ -21449,6 +21451,20 @@ function renderAAABetaPage(){
         }
         for(let i=1;i<17;i++)faces.push(jl([31.5,ya,-(1+i)],[31.5,yb,-(1+i)]));
       }
+      // NEF (North East Facade): z=-18, x=17.5..31.5, cols 65-50, RDC to R+25
+      if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+        const nefYa=fl==='R+18T'?efMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
+        const nefYb=fl==='R+18T'?efMergedYb18T:fl==='R+18B'?efMergedYb18B:y1;
+        const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51,50];
+        const nefPW=(31.5-17.5)/NEF_C.length;
+        for(let i=0;i<16;i++){
+          const col=NEF_C[i];
+          const x0=31.5-i*nefPW,x1=31.5-(i+1)*nefPW;
+          faces.push(quad([[x0,nefYa,-18],[x0,nefYb,-18],[x1,nefYb,-18],[x1,nefYa,-18]],getColor('NEF',fi,col,true),null,0));
+          faces.push(...typeOverlays(getType('NEF',fi,col),[x0,-18],[x1,-18],nefYa,nefYb));
+        }
+        for(let i=1;i<16;i++)faces.push(jl([31.5-i*nefPW,nefYa,-18],[31.5-i*nefPW,nefYb,-18]));
+      }
     }
     for(let fi=0;fi<FLOORS_BTT.length;fi++){
       const fl=FLOORS_BTT[fi];
@@ -21581,6 +21597,21 @@ function renderAAABetaPage(){
           const t=getType('EF',fi,col);if(!t)continue;
           const p=proj(31.5,efCy,-(1.5+i));
           drawVert(t,p.sx,p.sy,labelColor('EF',fi,col));
+        }
+      }
+      // NEF cols 65-50 at z=-18
+      if(nfLabVis&&fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+        const nefYa=fl==='R+18T'?efMYa18T:fl==='R+18B'?efMYa18B:ya;
+        const nefYb=fl==='R+18T'?efMYb18T:fl==='R+18B'?efMYb18B:yb;
+        const nefCy=(nefYa+nefYb)/2;
+        const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51,50];
+        const nefPW=(31.5-17.5)/NEF_C.length;
+        for(let i=0;i<16;i++){
+          const col=NEF_C[i];
+          const t=getType('NEF',fi,col);if(!t)continue;
+          const xc=31.5-(i+0.5)*nefPW;
+          const p=proj(xc,nefCy,-18);
+          drawVert(t,p.sx,p.sy,labelColor('NEF',fi,col));
         }
       }
     }
