@@ -21751,6 +21751,46 @@ function renderAAABetaPage(){
     hGlow.addColorStop(0,'rgba(210,235,248,0.55)');hGlow.addColorStop(1,'rgba(210,235,248,0)');
     ctx.fillStyle=hGlow;ctx.fillRect(0,0,cW,cH);
 
+    // Cityscape background: ground plane + distant buildings + palm trees
+    (function drawCityscape(){
+      const gndY=cH*0.785;
+      const hrzY=cH*0.64;
+      // Ground
+      const gG=ctx.createLinearGradient(0,hrzY,0,cH);
+      gG.addColorStop(0,'rgba(175,210,228,0.0)');
+      gG.addColorStop(0.28,'rgba(168,205,225,0.45)');
+      gG.addColorStop(1,'rgba(150,192,215,0.68)');
+      ctx.fillStyle=gG;ctx.fillRect(0,hrzY,cW,cH-hrzY);
+      // City buildings — left cluster
+      const L=[[0.01,0.044,0.090],[0.054,0.038,0.075],[0.092,0.058,0.130],[0.150,0.032,0.085],[0.182,0.052,0.105],[0.234,0.038,0.078],[0.272,0.028,0.065],[0.300,0.048,0.095]];
+      const R=[[0.565,0.034,0.078],[0.599,0.053,0.115],[0.652,0.038,0.088],[0.690,0.058,0.148],[0.748,0.034,0.078],[0.782,0.048,0.105],[0.830,0.038,0.088],[0.868,0.043,0.095],[0.911,0.028,0.065],[0.939,0.048,0.098]];
+      for(const[xr,wr,hr]of[...L,...R]){
+        const bx=xr*cW,bw=wr*cW,bh=hr*cH,by=gndY-bh;
+        ctx.fillStyle='rgba(118,158,183,0.38)';ctx.fillRect(bx,by,bw,bh);
+        ctx.fillStyle='rgba(148,185,208,0.20)';ctx.fillRect(bx,by,bw,bh*0.22);
+        // Window glints
+        ctx.fillStyle='rgba(200,230,248,0.18)';
+        const wCols=Math.max(2,Math.floor(bw/9));const wRows=Math.max(2,Math.floor(bh/12));
+        for(let wr2=0;wr2<wRows;wr2++)for(let wc=0;wc<wCols;wc++)
+          if((wr2+wc)%3!==0)ctx.fillRect(bx+wc*(bw/wCols)+1,by+bh*0.28+wr2*(bh*0.65/wRows)+1,(bw/wCols)-2,Math.max(2,(bh*0.65/wRows)-3));
+      }
+      // Atmospheric haze — washes out the distant buildings
+      const hzG=ctx.createLinearGradient(0,hrzY,0,gndY+cH*0.04);
+      hzG.addColorStop(0,'rgba(188,222,238,0.75)');hzG.addColorStop(0.55,'rgba(188,222,238,0.28)');hzG.addColorStop(1,'rgba(188,222,238,0.0)');
+      ctx.fillStyle=hzG;ctx.fillRect(0,hrzY,cW,gndY-hrzY+cH*0.04);
+      // Palm trees
+      const palms=[{x:0.025,h:0.092,ln:9},{x:0.072,h:0.073,ln:-6},{x:0.118,h:0.108,ln:11},{x:0.290,h:0.082,ln:-7},{x:0.345,h:0.065,ln:6},{x:0.635,h:0.098,ln:-9},{x:0.695,h:0.072,ln:7},{x:0.875,h:0.090,ln:-6},{x:0.930,h:0.082,ln:9},{x:0.975,h:0.062,ln:-5}];
+      for(const{x,h,ln}of palms){
+        const px=x*cW,py=gndY,ph=h*cH;
+        const tx=px+ln,ty=py-ph;
+        ctx.strokeStyle='rgba(72,52,28,0.46)';ctx.lineWidth=2.2;
+        ctx.beginPath();ctx.moveTo(px,py);ctx.bezierCurveTo(px+ln*0.28,py-ph*0.28,px+ln*0.65,py-ph*0.62,tx,ty);ctx.stroke();
+        const fronds=[[-22,-9],[-13,-17],[0,-20],[13,-17],[22,-9],[19,2],[7,6],[-7,6],[-19,2]];
+        ctx.strokeStyle='rgba(38,82,25,0.42)';ctx.lineWidth=1.6;
+        for(const[fd,fdy]of fronds){ctx.beginPath();ctx.moveTo(tx,ty);ctx.bezierCurveTo(tx+fd*.38,ty+fdy*.5,tx+fd*.72,ty+fdy*.8,tx+fd,ty+fdy);ctx.stroke();}
+      }
+    })();
+
     const faces=buildScene();
     faces.sort((a,b)=>b.depth-a.depth);
     // Structural/background fill colors — no glass sheen on these
