@@ -20915,7 +20915,7 @@ function renderAAABetaPage(){
       </div>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
-    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#cde8f8 0%,#a8d4ef 100%);position:relative;cursor:grab;user-select:none;">
+    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:linear-gradient(180deg,#6aaed4 0%,#96c8e8 35%,#c4dff0 70%,#bdd8e8 100%);position:relative;cursor:grab;user-select:none;">
       <canvas id="aaab-cvs" style="display:block;position:absolute;inset:0;"></canvas>
       <div style="position:absolute;top:10px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:5px 10px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;pointer-events:none;">⚡ Shift Zone · R+17 &amp; R+18</div>
       <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right drag: Orbit</div>
@@ -21739,11 +21739,22 @@ function renderAAABetaPage(){
   function render(){
     cW=cvs.width=vp.clientWidth;cH=cvs.height=vp.clientHeight;
     ctx.clearRect(0,0,cW,cH);
-    const grad=ctx.createRadialGradient(cW*.5,cH*.4,0,cW*.5,cH*.4,Math.max(cW,cH)*.7);
-    grad.addColorStop(0,'#cde8f8');grad.addColorStop(1,'#a8d4ef');
-    ctx.fillStyle=grad;ctx.fillRect(0,0,cW,cH);
+    // Rich sky gradient: deep azure at top → hazy horizon
+    const skyG=ctx.createLinearGradient(0,0,0,cH);
+    skyG.addColorStop(0,'#6aaed4');
+    skyG.addColorStop(0.35,'#96c8e8');
+    skyG.addColorStop(0.7,'#c4dff0');
+    skyG.addColorStop(1,'#bdd8e8');
+    ctx.fillStyle=skyG;ctx.fillRect(0,0,cW,cH);
+    // Subtle horizon glow
+    const hGlow=ctx.createRadialGradient(cW*.5,cH*.82,0,cW*.5,cH*.82,cW*.55);
+    hGlow.addColorStop(0,'rgba(210,235,248,0.55)');hGlow.addColorStop(1,'rgba(210,235,248,0)');
+    ctx.fillStyle=hGlow;ctx.fillRect(0,0,cW,cH);
+
     const faces=buildScene();
     faces.sort((a,b)=>b.depth-a.depth);
+    // Structural/background fill colors — no glass sheen on these
+    const _noSheen=new Set(['#07111e','#cde8f8','#595959']);
     for(const f of faces){
       if(f.isLine){
         ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);ctx.lineTo(f.pts[1][0],f.pts[1][1]);
@@ -21752,9 +21763,40 @@ function renderAAABetaPage(){
         ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);
         for(let i=1;i<f.pts.length;i++)ctx.lineTo(f.pts[i][0],f.pts[i][1]);
         ctx.closePath();ctx.fillStyle=f.fill;ctx.fill();
-        if(f.stroke){ctx.strokeStyle=f.stroke;ctx.lineWidth=f.lw;ctx.stroke();}
+        // Glass sheen: top-lit reflection on panel faces (status-color + glazing)
+        const isPanel=f.fill&&!f.fill.startsWith('rgba')&&!_noSheen.has(f.fill);
+        if(isPanel){
+          ctx.save();
+          ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);
+          for(let i=1;i<f.pts.length;i++)ctx.lineTo(f.pts[i][0],f.pts[i][1]);
+          ctx.closePath();ctx.clip();
+          const yMin=Math.min(...f.pts.map(p=>p[1]));
+          const xMin=Math.min(...f.pts.map(p=>p[0]));
+          const xMax=Math.max(...f.pts.map(p=>p[0]));
+          const yMax=Math.max(...f.pts.map(p=>p[1]));
+          const sh=ctx.createLinearGradient(xMin,yMin,xMax,yMin+(yMax-yMin)*0.6);
+          sh.addColorStop(0,'rgba(255,255,255,0.26)');
+          sh.addColorStop(0.45,'rgba(255,255,255,0.07)');
+          sh.addColorStop(1,'rgba(255,255,255,0)');
+          ctx.fillStyle=sh;ctx.fillRect(xMin-1,yMin-1,xMax-xMin+2,yMax-yMin+2);
+          ctx.restore();
+        }
+        if(f.stroke){ctx.beginPath();ctx.moveTo(f.pts[0][0],f.pts[0][1]);for(let i=1;i<f.pts.length;i++)ctx.lineTo(f.pts[i][0],f.pts[i][1]);ctx.closePath();ctx.strokeStyle=f.stroke;ctx.lineWidth=f.lw;ctx.stroke();}
       }
     }
+    // Directional light pass — sun from upper-left (NW)
+    const ltG=ctx.createLinearGradient(0,0,cW*.9,cH);
+    ltG.addColorStop(0,'rgba(255,250,240,0.13)');
+    ltG.addColorStop(0.42,'rgba(255,255,255,0.02)');
+    ltG.addColorStop(1,'rgba(5,18,38,0.11)');
+    ctx.fillStyle=ltG;ctx.fillRect(0,0,cW,cH);
+    // Vignette
+    const vigR=Math.max(cW,cH)*.72;
+    const vig=ctx.createRadialGradient(cW*.5,cH*.43,cH*.16,cW*.5,cH*.43,vigR);
+    vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(0.52,'rgba(0,0,0,0)');
+    vig.addColorStop(1,'rgba(0,10,24,0.45)');
+    ctx.fillStyle=vig;ctx.fillRect(0,0,cW,cH);
+
     drawLabels();
   }
 
