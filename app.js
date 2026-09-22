@@ -22271,10 +22271,8 @@ function renderAAABetaPage(){
 
   // ── Environment geometry ─────────────────────────────────────────────────
   function _3env(T,scene){
-    // Phong materials for environment — shininess gives surface depth
     const pm=(hex,sh=8)=>new T.MeshPhongMaterial({color:new T.Color(hex),shininess:sh});
 
-    // Flat ground slab (thin box)
     const slab=(x0,z0,x1,z1,y,h,hex,sh=4)=>{
       const dx=Math.abs(x1-x0),dz=Math.abs(z1-z0);
       if(dx<0.01||dz<0.01)return;
@@ -22282,8 +22280,6 @@ function renderAAABetaPage(){
       m.position.set((x0+x1)/2,y+h/2,(z0+z1)/2);
       m.receiveShadow=true;scene.add(m);
     };
-
-    // Building box (casts + receives shadow)
     const bldBox=(x0,z0,x1,z1,y0,y1,hex,sh=6)=>{
       const dx=Math.abs(x1-x0),dz=Math.abs(z1-z0),dy=y1-y0;
       if(dx<0.01||dz<0.01||dy<0.01)return;
@@ -22292,63 +22288,217 @@ function renderAAABetaPage(){
       m.castShadow=true;m.receiveShadow=true;scene.add(m);
     };
 
-    // ── Ground ───────────────────────────────────────────────────────────────
-    slab(-32,-115,85,35, -0.10,0.10,'#BDB488'); // sandy base
-    slab(-19,-115,  0,35, -0.04,0.07,'#AEAA78'); // Main St N-S
-    slab(-32,  -0.5,85,17.5, -0.04,0.07,'#AEAA78'); // Cross St E-W
-    slab(-19,-115,-14,35, 0.04,0.06,'#D2C89E'); // Main St west sidewalk
-    slab(-1.5,-115, 0,35, 0.04,0.06,'#D2C89E'); // Main St east sidewalk
-    slab(-12,-115, -9,35, 0.04,0.06,'#84824C'); // planted median
-    slab(-1.5,-0.5,34,0.3, 0.04,0.06,'#D2C89E'); // sidewalk in front of building
+    // ── Ground earth base ─────────────────────────────────────────────────────
+    slab(-35,-115,90,35,-0.12,0.12,'#C4BB94');
 
-    // Road lane dash lines
-    for(let j=0;j<16;j++)slab(-9.2,-115+j*8,-8.8,-115+j*8+4.5, 0.07,0.02,'#D8D4A8');
-    // Crosswalk stripes south of intersection
-    for(let i=0;i<5;i+=2)slab(-19,i*0.72,0,i*0.72+0.38, 0.08,0.02,'#D8D4A8');
+    // ════════════════════════════════════════════════════════════════════════
+    // ROADS — CFC-style boulevard (E-W) at z=0..20  +  side street (N-S) at x=-20..0
+    //   Building occupies x=0..14.5  z=-17..0  (south wall at z=0, west wall at x=0)
+    //   Boulevard runs E-W south of building (positive z = south of camera)
+    //   Side street runs N-S west of building (negative x = west)
+    // ════════════════════════════════════════════════════════════════════════
 
-    // ── West offices (Deloitte / Nexa block) ─────────────────────────────────
+    // ── Boulevard E-W  (z = 2.6 .. 17.8 = 15.2 m road + 3 m sidewalks each side) ──
+    const RD1='#1D1D20'; // dark asphalt
+    slab(-35, 2.6, 90, 17.8, -0.02, 0.09, RD1, 1); // main asphalt
+    // Intersection square fills road-street overlap
+    slab(-17.8, 2.6, -2.6, 17.8, -0.01, 0.10, RD1, 1);
+
+    // North sidewalk (beside building entrance)
+    slab(-35, 0, 90, 2.6, 0.00, 0.14, '#CAC5A2', 6);
+    // South sidewalk
+    slab(-35, 17.8, 90, 21.5, 0.00, 0.14, '#CAC5A2', 6);
+    // Kerbs (concrete raised strips)
+    slab(-35, 2.4, 90, 2.65, 0.09, 0.08, '#9A9A98', 3);
+    slab(-35, 17.75, 90, 18.0, 0.09, 0.08, '#9A9A98', 3);
+
+    // Painted median (planted strip at centre of boulevard)
+    slab(-35, 9.8, 90, 11.6, 0.08, 0.14, '#3C5A22', 3);
+
+    // Lane dividers (dashed white) — N half
+    for(let xi=-30;xi<85;xi+=8)slab(xi,6.15,xi+5,6.45,0.10,0.015,'#E0DEC0',1);
+    // Lane dividers — S half
+    for(let xi=-30;xi<85;xi+=8)slab(xi,14.1,xi+5,14.4,0.10,0.015,'#E0DEC0',1);
+    // Solid white edge lines
+    slab(-35,2.68,90,2.88,0.10,0.012,'#D0CEBC',1);
+    slab(-35,17.55,90,17.75,0.10,0.012,'#D0CEBC',1);
+
+    // ── Side street N-S  (x = -17.2 .. -2.6 = 14.6 m road + sidewalks) ──────────
+    const RD2='#202022';
+    slab(-17.2,-115,-2.6,35,-0.02,0.09,RD2,1);
+    // East sidewalk (between building and road)
+    slab(-2.6,-115,0.3,35,0.00,0.14,'#CAC5A2',6);
+    // West sidewalk
+    slab(-21,-115,-17.2,35,0.00,0.14,'#CAC5A2',6);
+    // Kerbs
+    slab(-17.4,-115,-17.15,35,0.09,0.08,'#9A9A98',3);
+    slab(-2.65,-115,-2.4,35,0.09,0.08,'#9A9A98',3);
+    // Centre dash N-S
+    for(let zi=-110;zi<30;zi+=8)slab(-10.2,zi,-9.9,zi+5,0.10,0.015,'#E0DEC0',1);
+
+    // ── Crosswalks at intersection ────────────────────────────────────────────
+    // Across side street (pedestrians walk E-W at z≈2.6)
+    for(let i=0;i<6;i++){const z=3.0+i*0.82;slab(-17.2,z,-2.6,z+0.48,0.12,0.015,'#D8D6C0',1);}
+    // Across boulevard (pedestrians walk N-S at x≈-2.6)
+    for(let i=0;i<8;i++){const x=-17.2+i*0.86;slab(x,2.6,x+0.52,17.8,0.12,0.015,'#D8D6C0',1);}
+    // Stop lines
+    slab(-17.2,2.2,-2.6,2.55,0.12,0.012,'#C8C6B0',1);
+    slab(-3.0,2.6,-2.6,17.8,0.12,0.012,'#C8C6B0',1);
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // CARS — sedan-style composite meshes
+    // angle=0 → facing east (+x); angle=π → west; angle=π/2 → south (+z); angle=-π/2 → north
+    // ═══════════════════════════════════════════════════════════════════════
+    const mkCar=(px,pz,angle,color)=>{
+      const grp=new T.Group();
+      const bM=new T.MeshPhongMaterial({color:new T.Color(color),shininess:75,specular:new T.Color(0x252525)});
+      const gM=new T.MeshPhongMaterial({color:new T.Color('#A8C8DC'),transparent:true,opacity:0.62,shininess:110,specular:new T.Color(0x557799)});
+      const wM=new T.MeshPhongMaterial({color:new T.Color('#181818'),shininess:12});
+      const rM=new T.MeshPhongMaterial({color:new T.Color('#8A8A8A'),shininess:70});
+      const hlM=new T.MeshPhongMaterial({color:new T.Color('#FFFFD0'),emissive:new T.Color(0x444410),shininess:90});
+      const tlM=new T.MeshPhongMaterial({color:new T.Color('#CC1818'),emissive:new T.Color(0x3A0000),shininess:60});
+
+      // Lower body
+      const body=new T.Mesh(new T.BoxGeometry(4.1,1.3,2.0),bM);
+      body.position.y=0.65;grp.add(body);
+      // Cabin (set back slightly from centre for sedan look)
+      const cab=new T.Mesh(new T.BoxGeometry(2.15,0.88,1.72),bM);
+      cab.position.set(-0.18,1.74,0);grp.add(cab);
+      // Windshields
+      const wf=new T.Mesh(new T.BoxGeometry(0.06,0.72,1.66),gM);
+      wf.position.set(0.88,1.72,0);grp.add(wf);
+      const wr=new T.Mesh(new T.BoxGeometry(0.06,0.72,1.66),gM);
+      wr.position.set(-1.24,1.72,0);grp.add(wr);
+      // Side windows
+      for(const xw of[0.38,-0.60]){
+        const sw=new T.Mesh(new T.BoxGeometry(0.82,0.60,0.05),gM);
+        sw.position.set(xw,1.74,0.875);grp.add(sw);
+        const sw2=sw.clone();sw2.position.z=-0.875;grp.add(sw2);
+      }
+      // 4 wheels
+      const wgeo=new T.CylinderGeometry(0.38,0.38,0.22,14);
+      const rgeo=new T.CylinderGeometry(0.21,0.21,0.25,10);
+      for(const wx of[1.25,-1.25])for(const wz of[0.95,-0.95]){
+        const w=new T.Mesh(wgeo,wM);w.rotation.x=Math.PI/2;
+        w.position.set(wx,0.38,wz);grp.add(w);
+        const r=new T.Mesh(rgeo,rM);r.rotation.x=Math.PI/2;
+        r.position.set(wx,0.38,wz);grp.add(r);
+      }
+      // Headlights + taillights
+      for(const zl of[-0.72,0.72]){
+        const hl=new T.Mesh(new T.BoxGeometry(0.08,0.22,0.36),hlM);
+        hl.position.set(2.06,0.70,zl);grp.add(hl);
+        const tl=new T.Mesh(new T.BoxGeometry(0.08,0.22,0.36),tlM);
+        tl.position.set(-2.06,0.70,zl);grp.add(tl);
+      }
+      // Bumpers
+      const bumperM=pm('#303030',4);
+      const fb=new T.Mesh(new T.BoxGeometry(0.12,0.28,1.96),bumperM);
+      fb.position.set(2.09,0.38,0);grp.add(fb);
+      const rb=fb.clone();rb.position.x=-2.09;grp.add(rb);
+
+      grp.position.set(px,0.04,pz);
+      grp.rotation.y=angle;
+      grp.traverse(c=>{if(c.isMesh){c.castShadow=true;}});
+      scene.add(grp);
+    };
+
+    // Boulevard cars — N inner lane (z≈5.2) going east (angle=0)
+    mkCar(-25,5.2, 0,          '#B8B8BC'); // silver
+    mkCar(  8,5.2, 0,          '#2060A0'); // blue
+    mkCar( 28,5.2, 0,          '#184818'); // dark green
+    mkCar( 52,5.2, 0,          '#A02020'); // red
+    // Boulevard — N outer lane (z≈7.8) going west (angle=π)
+    mkCar( 68,7.8, Math.PI,    '#D0A840'); // gold
+    mkCar( 42,7.8, Math.PI,    '#E8E8E8'); // white
+    mkCar( 15,7.8, Math.PI,    '#603890'); // purple
+    mkCar( -8,7.8, Math.PI,    '#3A3A3A'); // dark grey
+    // Boulevard — S inner lane (z≈12.5) going east (angle=0)
+    mkCar(-18,12.5,0,           '#C84820'); // orange
+    mkCar( 22,12.5,0,           '#DCDCDC'); // light grey
+    mkCar( 55,12.5,0,           '#205858'); // teal
+    // Boulevard — S outer lane (z≈15.5) going west (angle=π)
+    mkCar( 75,15.5,Math.PI,    '#A0A0A0'); // grey
+    mkCar( 38,15.5,Math.PI,    '#1E3C6A'); // navy
+    mkCar( -5,15.5,Math.PI,    '#783018'); // brown
+
+    // Side street cars — E lane (x≈-5.5) going south (+z, angle=π/2)
+    mkCar(-5.5,-55,  Math.PI/2,'#C0B878'); // beige
+    mkCar(-5.5,-30,  Math.PI/2,'#E84444'); // bright red
+    mkCar(-5.5, -5,  Math.PI/2,'#8888B8'); // blue-grey
+    // Side street — W lane (x≈-14) going north (-z, angle=-π/2)
+    mkCar(-14, 22, -Math.PI/2,'#D8D8D8'); // white
+    mkCar(-14,-12, -Math.PI/2,'#204020'); // dark green
+    mkCar(-14,-38, -Math.PI/2,'#B04040'); // dark red
+
+    // Parked cars on east sidewalk of side street (perpendicular to kerb, facing east)
+    mkCar(-1.8, 20,  Math.PI/2,'#A8A8A8');
+    mkCar(-1.8,  8,  Math.PI/2,'#3A6A9A');
+    mkCar(-1.8, -5,  Math.PI/2,'#C0C0B0');
+    mkCar(-1.8,-18,  Math.PI/2,'#7A4040');
+    mkCar(-1.8,-32,  Math.PI/2,'#E0CC80');
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STREET LAMPS — tall modern poles with outward-facing heads
+    // ═══════════════════════════════════════════════════════════════════════
+    const mkLamp=(px,pz,armDir)=>{
+      const pstM=pm('#28283A',3);
+      const post=new T.Mesh(new T.CylinderGeometry(0.065,0.10,7.5,8),pstM);
+      post.position.set(px,3.75,pz);scene.add(post);
+      // Slightly curved arm approximated by a tapered box
+      const arm=new T.Mesh(new T.BoxGeometry(2.4,0.09,0.09),pstM);
+      arm.position.set(px+Math.sin(armDir)*1.2,7.6,pz+Math.cos(armDir)*1.2);
+      arm.rotation.y=armDir;scene.add(arm);
+      // Lamp head
+      const hM=new T.MeshPhongMaterial({color:new T.Color('#D8D4A0'),emissive:new T.Color(0x444414),shininess:18});
+      const head=new T.Mesh(new T.BoxGeometry(0.75,0.24,0.38),hM);
+      head.position.set(px+Math.sin(armDir)*2.3,7.55,pz+Math.cos(armDir)*2.3);
+      scene.add(head);
+    };
+
+    // Lamps north side of boulevard (z≈1.4), arm pointing south toward road (armDir=π/2)
+    for(let xi=-22;xi<82;xi+=14)mkLamp(xi,1.4,Math.PI/2);
+    // Lamps south side of boulevard (z≈19), arm pointing north (-z): armDir = -π/2
+    for(let xi=-22;xi<82;xi+=14)mkLamp(xi,19.2,-Math.PI/2);
+    // Lamps east side of side street (x≈-1.2), arm pointing west (+x neg): armDir = π
+    for(let zi=-105;zi<30;zi+=14)mkLamp(-1.2,zi,Math.PI);
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ENVIRONMENT BUILDINGS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // ── West offices ─────────────────────────────────────────────────────────
     const WBO=[
-      {z0:6,z1:-6,h:5},{z0:-3,z1:-15,h:6},{z0:-12,z1:-24,h:4},
-      {z0:-21,z1:-33,h:7},{z0:-30,z1:-42,h:5},{z0:-38,z1:-50,h:4},
+      {z0:4,z1:-8,h:5},{z0:-5,z1:-17,h:6},{z0:-14,z1:-26,h:4},
+      {z0:-23,z1:-35,h:7},{z0:-32,z1:-44,h:5},{z0:-41,z1:-53,h:4},
     ];
-    const winPh=new T.MeshPhongMaterial({
-      color:new T.Color('#88C0D8'),transparent:true,opacity:0.72,shininess:60,
-      specular:new T.Color(0x88AACC)
-    });
+    const winPh=new T.MeshPhongMaterial({color:new T.Color('#88C0D8'),transparent:true,opacity:0.72,shininess:60,specular:new T.Color(0x88AACC)});
     for(const{z0,z1,h}of WBO){
-      bldBox(-21,z0,-13,z1,0,h,'#CEC4A2',10);
+      bldBox(-23,z0,-13,z1,0,h,'#CEC4A2',10);
       const nfl=Math.round(h/2.2);
       for(let fl=0;fl<nfl;fl++){
-        const wy=0.55+fl*2.12;
-        const wm=new T.Mesh(new T.BoxGeometry(7.2,0.72,0.06),winPh);
-        wm.position.set(-17,wy,z0+0.04);
-        scene.add(wm);
+        const wm=new T.Mesh(new T.BoxGeometry(9.2,0.72,0.06),winPh);
+        wm.position.set(-18,0.55+fl*2.12,z0+0.04);scene.add(wm);
       }
-      // Parapet cap
-      const cap=new T.Mesh(new T.BoxGeometry(8,0.30,Math.abs(z1-z0)+0.12),pm('#E0D4B2',5));
-      cap.position.set(-17,h+0.15,(z0+z1)/2);cap.castShadow=true;scene.add(cap);
+      const cap=new T.Mesh(new T.BoxGeometry(10,0.30,Math.abs(z1-z0)+0.12),pm('#E0D4B2',5));
+      cap.position.set(-18,h+0.15,(z0+z1)/2);cap.castShadow=true;scene.add(cap);
     }
 
-    // ── North background buildings ─────────────────────────────────────────────
+    // ── North background buildings ────────────────────────────────────────────
     bldBox(-8,-19,0,-33,0,8,'#C4BC9E');
     bldBox(2,-21,11,-35,0,10,'#BEB89C');
     bldBox(11,-19,20,-33,0,7,'#C8C09E');
     bldBox(20,-21,29,-35,0,9,'#C2BA9C');
     bldBox(29,-19,38,-33,0,6,'#CCBEA4');
 
-    // ── Sky Tower complex (east, dark curtain-wall glass) ─────────────────────
+    // ── Sky Tower complex (east) ───────────────────────────────────────────────
     bldBox(34,0,56,-28,0,30,'#38484E',4);
-    // Glass panels — Phong with specular reflection
-    const skyGlassMat=new T.MeshPhongMaterial({
-      color:new T.Color('#2E6890'),transparent:true,opacity:0.75,
-      shininess:90,specular:new T.Color(0x6699BB)
-    });
+    const skyGlassMat=new T.MeshPhongMaterial({color:new T.Color('#2E6890'),transparent:true,opacity:0.75,shininess:90,specular:new T.Color(0x6699BB)});
     for(let wc=0;wc<11;wc++){
       const wx=34+wc*2+0.22;
       for(let fl=0;fl<15;fl++){
         const m=new T.Mesh(new T.BoxGeometry(1.48,1.48,0.07),skyGlassMat);
-        m.position.set(wx+0.74,1.2+fl*2+0.74,0.05);
-        scene.add(m);
+        m.position.set(wx+0.74,1.2+fl*2+0.74,0.05);scene.add(m);
       }
     }
     for(let wc=1;wc<11;wc++){
@@ -22361,7 +22511,6 @@ function renderAAABetaPage(){
     }
     bldBox(34,1,60,-8,0,6,'#40505A',4);
     bldBox(56,-4,68,-24,0,22,'#3C4A4C',4);
-    // Sky Tower parapet crown
     const stCap=new T.Mesh(new T.BoxGeometry(22,0.55,28),pm('#2C3C42',3));
     stCap.position.set(45,30.27,-14);scene.add(stCap);
 
@@ -22373,48 +22522,41 @@ function renderAAABetaPage(){
     jib.position.set(59.68,34.12,-15);scene.add(jib);
     const cj=new T.Mesh(new T.BoxGeometry(5,0.24,0.24),crM);
     cj.position.set(50.68,33.88,-15);scene.add(cj);
-    // Hook cable
     const cbl=new T.Mesh(new T.BoxGeometry(0.06,14,0.06),pm('#707070',2));
     cbl.position.set(65.5,27,-15);scene.add(cbl);
 
-    // ── Street trees — Mediterranean multi-blob crowns ─────────────────────────
-    // Each tree: cylindrical trunk + 5 overlapping oblate blobs = organic rounded canopy
+    // ═══════════════════════════════════════════════════════════════════════
+    // STREET TREES — Mediterranean multi-blob crowns
+    // ═══════════════════════════════════════════════════════════════════════
     const trunkPh=new T.MeshPhongMaterial({color:new T.Color('#3A1C06'),shininess:6});
     const crownGeos=[
-      new T.SphereGeometry(1.05,9,7),
-      new T.SphereGeometry(0.88,8,6),
-      new T.SphereGeometry(0.80,8,6),
-      new T.SphereGeometry(0.72,7,5),
+      new T.SphereGeometry(1.05,9,7),new T.SphereGeometry(0.88,8,6),
+      new T.SphereGeometry(0.80,8,6),new T.SphereGeometry(0.72,7,5),
       new T.SphereGeometry(0.68,7,5),
     ];
-    // Blob offsets [dx,dy,dz,geoIdx] relative to canopy base
-    const blobOff=[
-      [0,   0,    0,   0],
-      [0.62,0.18, 0.30,1],
-      [-0.55,0.25,-0.28,2],
-      [0.22,0.55, -0.45,3],
-      [-0.28,0.48, 0.42,4],
-    ];
+    const blobOff=[[0,0,0,0],[0.62,0.18,0.30,1],[-0.55,0.25,-0.28,2],[0.22,0.55,-0.45,3],[-0.28,0.48,0.42,4]];
     const mkTree=(px,pz,h)=>{
       const trunk=new T.Mesh(new T.CylinderGeometry(0.08,0.12,h,7),trunkPh);
       trunk.position.set(px,h/2,pz);trunk.castShadow=true;scene.add(trunk);
       const seed=Math.abs(Math.round(px*7+pz*11));
       const greens=['#1A520A','#1C5C0C','#205E10','#226414','#1E5A0E'];
       for(const[dx,dy,dz,gi]of blobOff){
-        const bph=new T.MeshPhongMaterial({
-          color:new T.Color(greens[(seed+gi)%greens.length]),
-          shininess:10,specular:new T.Color(0x112200)
-        });
+        const bph=new T.MeshPhongMaterial({color:new T.Color(greens[(seed+gi)%greens.length]),shininess:10,specular:new T.Color(0x112200)});
         const blob=new T.Mesh(crownGeos[gi],bph);
-        blob.scale.set(1,0.72,1);  // oblate = Mediterranean umbrella shape
+        blob.scale.set(1,0.72,1);
         blob.position.set(px+dx,h+0.55+dy,pz+dz);
         blob.castShadow=true;scene.add(blob);
       }
     };
-    for(let ti=0;ti<10;ti++)mkTree(-10,12-ti*5.5,3.4+Math.sin(ti*1.2)*0.35);
-    for(let ti=0;ti<6;ti++)mkTree(-16.5,10-ti*6,2.9+Math.sin(ti)*0.2);
-    for(let ti=0;ti<6;ti++)mkTree(-1.5,11-ti*6,2.8);
-    mkTree(4,12,3.6);mkTree(12,13,3.4);mkTree(21,12,3.8);mkTree(29,13,3.5);
+
+    // Trees along N sidewalk of boulevard (z≈1.5) — gaps around building entrance (x=0..14.5)
+    for(const tx of[-28,-22,-16,-10,-5,16,22,28,35,42,50,60,72])mkTree(tx,1.5,3.2+Math.sin(tx)*0.25);
+    // Trees along S sidewalk of boulevard (z≈19.5)
+    for(const tx of[-25,-18,-10,-3,6,15,24,34,44,55,66,77])mkTree(tx,19.5,3.0+Math.sin(tx*1.3)*0.3);
+    // Trees along E sidewalk of side street (x≈-1.5) — north of intersection
+    for(const tz of[-8,-20,-32,-44,-56,-68])mkTree(-1.5,tz,2.9+Math.sin(tz)*0.2);
+    // Trees in boulevard median (z≈10.7)
+    for(const tx of[-20,-8,5,18,32,46,60,74])mkTree(tx,10.7,2.8+Math.sin(tx*0.5)*0.2);
   }
   // ══════════════════════════════════════════════════════════════════════════
 }
