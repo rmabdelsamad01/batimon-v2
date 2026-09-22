@@ -21587,6 +21587,71 @@ function renderAAABetaPage(){
     }
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')],'#D3D3D3');
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')],'#FF8C00');
+
+    // ── 3D Environment ──────────────────────────────────────────────────────
+    {
+      // Ground — Z-strips so each quad painter-sorts cleanly
+      const GND='#C8BC96',ROAD='#484248',SWLK='#D8CEB0';
+      const gQ=(x0,z0,x1,z1,c)=>quad([[x0,-0.03,z0],[x0,-0.03,z1],[x1,-0.03,z1],[x1,-0.03,z0]],c,null,0);
+      for(let i=0;i<22;i++){
+        const zs=22-i*5,ze=zs-5;
+        const c=(zs<=3&&ze>=-1)?ROAD:(zs<=6&&ze>=-2)?SWLK:GND;
+        faces.push(gQ(-18,zs,52,ze,c));
+      }
+      // Road markings (white dashes in front of SF)
+      for(let xi=0;xi<6;xi++){const xm=-3+xi*8;faces.push(gQ(xm,13,xm+4,10,'rgba(255,255,255,0.62)'));}
+
+      // 3-face box building: south face (camera-facing) + west/left side + flat roof
+      const bld=(x0,z0,x1,z1,h,cS,cW,cT)=>{
+        faces.push(quad([[x0,0,z0],[x0,h,z0],[x1,h,z0],[x1,0,z0]],cS,null,0));
+        faces.push(quad([[x0,0,z1],[x0,h,z1],[x0,h,z0],[x0,0,z0]],cW,null,0));
+        faces.push(quad([[x0,h,z0],[x0,h,z1],[x1,h,z1],[x1,h,z0]],cT,null,0));
+      };
+
+      // ─ North background (behind main building, z<-19) ─
+      bld(-7,-20,0,-33,8,'#A89880','#887060','#BCB09A');
+      bld(-5,-28,4,-42,13,'#9A8A78','#7A6A5C','#B0A490');
+      bld(3,-20,10,-30,7,'#B0A28A','#907870','#C4B8A4');
+      bld(9,-22,16,-36,11,'#A09078','#80705C','#B4A890');
+      bld(15,-20,23,-34,16,'#98887A','#786858','#AAAAAA');
+      bld(22,-22,29,-35,9,'#A89882','#887268','#BCB09C');
+      bld(28,-20,35,-32,12,'#9C8C7C','#7A6C62','#B0A892');
+      bld(34,-22,42,-38,7,'#A8967A','#887860','#BCB09A');
+      bld(41,-20,50,-34,10,'#98887A','#786858','#AAAAAA');
+
+      // ─ East side (right of NEF, x>33) ─
+      bld(34,-2,41,-14,9,'#B4A68E','#947A68','#C8BCA8');
+      bld(40,-5,48,-17,12,'#A89880','#887868','#BCAE9A');
+      bld(46,-1,55,-13,6,'#BEB096','#9E8C7A','#D0C4AC');
+
+      // ─ West side (left of building, x<-4) ─
+      bld(-15,-2,-7,-15,8,'#B0A28C','#907C6A','#C4B8A6');
+      bld(-13,-8,-5,-22,11,'#A4967C','#847264','#B8AC98');
+      bld(-11,4,-4,-8,5,'#BEB098','#9E8C7A','#D0C4B0');
+
+      // ─ South-side flanks ─
+      bld(-14,10,-6,2,6,'#BCAE96','#9C8C7A','#D0C4B0');
+      bld(41,8,50,1,5,'#C4B4A2','#A49282','#D8CAB8');
+
+      // Palm tree: trunk (2 crossing quads) + 8 fronds (tapering quads)
+      const palm=(px,pz,h)=>{
+        const tw=0.11,TC='#4C3418',GC='#246C1A';
+        faces.push(quad([[px-tw,0,pz],[px-tw,h,pz],[px+tw,h,pz],[px+tw,0,pz]],TC,null,0));
+        faces.push(quad([[px,0,pz-tw],[px,h,pz-tw],[px,h,pz+tw],[px,0,pz+tw]],TC,null,0));
+        const frs=[[1.8,0],[1.27,1.27],[0,1.8],[-1.27,1.27],[-1.8,0],[-1.27,-1.27],[0,-1.8],[1.27,-1.27]];
+        for(const[fx,fz]of frs){
+          const len=Math.sqrt(fx*fx+fz*fz),ppx=-fz/len,ppz=fx/len,w=0.22,wt=0.05;
+          faces.push(quad([[px+ppx*w,h+0.1,pz+ppz*w],[px-ppx*w,h+0.1,pz-ppz*w],[px+fx-ppx*wt,h-0.65,pz+fz-ppz*wt],[px+fx+ppx*wt,h-0.65,pz+fz+ppz*wt]],GC,null,0));
+        }
+      };
+
+      palm(-7,2,7);palm(-4,-4,8.5);palm(-9,-12,7.5);
+      palm(5,10,6.5);palm(15,13,8);palm(27,12,7);
+      palm(36,2,7.5);palm(39,-6,8);palm(42,-15,9);
+      palm(-5,16,6);palm(32,14,7);
+    }
+    // ── End 3D Environment ────────────────────────────────────────────────
+
     return faces;
   }
 
@@ -21750,46 +21815,6 @@ function renderAAABetaPage(){
     const hGlow=ctx.createRadialGradient(cW*.5,cH*.82,0,cW*.5,cH*.82,cW*.55);
     hGlow.addColorStop(0,'rgba(210,235,248,0.55)');hGlow.addColorStop(1,'rgba(210,235,248,0)');
     ctx.fillStyle=hGlow;ctx.fillRect(0,0,cW,cH);
-
-    // Cityscape background: ground plane + distant buildings + palm trees
-    (function drawCityscape(){
-      const gndY=cH*0.785;
-      const hrzY=cH*0.64;
-      // Ground
-      const gG=ctx.createLinearGradient(0,hrzY,0,cH);
-      gG.addColorStop(0,'rgba(175,210,228,0.0)');
-      gG.addColorStop(0.28,'rgba(168,205,225,0.45)');
-      gG.addColorStop(1,'rgba(150,192,215,0.68)');
-      ctx.fillStyle=gG;ctx.fillRect(0,hrzY,cW,cH-hrzY);
-      // City buildings — left cluster
-      const L=[[0.01,0.044,0.090],[0.054,0.038,0.075],[0.092,0.058,0.130],[0.150,0.032,0.085],[0.182,0.052,0.105],[0.234,0.038,0.078],[0.272,0.028,0.065],[0.300,0.048,0.095]];
-      const R=[[0.565,0.034,0.078],[0.599,0.053,0.115],[0.652,0.038,0.088],[0.690,0.058,0.148],[0.748,0.034,0.078],[0.782,0.048,0.105],[0.830,0.038,0.088],[0.868,0.043,0.095],[0.911,0.028,0.065],[0.939,0.048,0.098]];
-      for(const[xr,wr,hr]of[...L,...R]){
-        const bx=xr*cW,bw=wr*cW,bh=hr*cH,by=gndY-bh;
-        ctx.fillStyle='rgba(118,158,183,0.38)';ctx.fillRect(bx,by,bw,bh);
-        ctx.fillStyle='rgba(148,185,208,0.20)';ctx.fillRect(bx,by,bw,bh*0.22);
-        // Window glints
-        ctx.fillStyle='rgba(200,230,248,0.18)';
-        const wCols=Math.max(2,Math.floor(bw/9));const wRows=Math.max(2,Math.floor(bh/12));
-        for(let wr2=0;wr2<wRows;wr2++)for(let wc=0;wc<wCols;wc++)
-          if((wr2+wc)%3!==0)ctx.fillRect(bx+wc*(bw/wCols)+1,by+bh*0.28+wr2*(bh*0.65/wRows)+1,(bw/wCols)-2,Math.max(2,(bh*0.65/wRows)-3));
-      }
-      // Atmospheric haze — washes out the distant buildings
-      const hzG=ctx.createLinearGradient(0,hrzY,0,gndY+cH*0.04);
-      hzG.addColorStop(0,'rgba(188,222,238,0.75)');hzG.addColorStop(0.55,'rgba(188,222,238,0.28)');hzG.addColorStop(1,'rgba(188,222,238,0.0)');
-      ctx.fillStyle=hzG;ctx.fillRect(0,hrzY,cW,gndY-hrzY+cH*0.04);
-      // Palm trees
-      const palms=[{x:0.025,h:0.092,ln:9},{x:0.072,h:0.073,ln:-6},{x:0.118,h:0.108,ln:11},{x:0.290,h:0.082,ln:-7},{x:0.345,h:0.065,ln:6},{x:0.635,h:0.098,ln:-9},{x:0.695,h:0.072,ln:7},{x:0.875,h:0.090,ln:-6},{x:0.930,h:0.082,ln:9},{x:0.975,h:0.062,ln:-5}];
-      for(const{x,h,ln}of palms){
-        const px=x*cW,py=gndY,ph=h*cH;
-        const tx=px+ln,ty=py-ph;
-        ctx.strokeStyle='rgba(72,52,28,0.46)';ctx.lineWidth=2.2;
-        ctx.beginPath();ctx.moveTo(px,py);ctx.bezierCurveTo(px+ln*0.28,py-ph*0.28,px+ln*0.65,py-ph*0.62,tx,ty);ctx.stroke();
-        const fronds=[[-22,-9],[-13,-17],[0,-20],[13,-17],[22,-9],[19,2],[7,6],[-7,6],[-19,2]];
-        ctx.strokeStyle='rgba(38,82,25,0.42)';ctx.lineWidth=1.6;
-        for(const[fd,fdy]of fronds){ctx.beginPath();ctx.moveTo(tx,ty);ctx.bezierCurveTo(tx+fd*.38,ty+fdy*.5,tx+fd*.72,ty+fdy*.8,tx+fd,ty+fdy);ctx.stroke();}
-      }
-    })();
 
     const faces=buildScene();
     faces.sort((a,b)=>b.depth-a.depth);
