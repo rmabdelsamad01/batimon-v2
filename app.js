@@ -21124,6 +21124,10 @@ function renderAAABetaPage(){
         for(let c=0;c<NW_SPAN;c++){
           const x0=c*PANEL+JG,x1=((c===NW_SPAN-1)?NW_END:c+1)*PANEL-JG,col=NF_C[c];
           const isNFShift=[45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].includes(col);
+          if(!white&&col===41&&new Set(['R+17T','R+17B','R+16','R+15','R+14','R+13','R+12','R+11','R+10','R+09','R+08','R+07','R+06','R+05','R+04','R+03','R+02','R+01','RDC']).has(fl)){
+            faces.push(quad([[x0,ya,-W_SPAN],[x0,yb,-W_SPAN],[x1,yb,-W_SPAN],[x1,ya,-W_SPAN]],'#595959',null,0));
+            continue;
+          }
           if(!white&&isNFShift){
             if(fl==='R+18T'){
               if(col===45||col===44||col===43){
@@ -21505,7 +21509,7 @@ function renderAAABetaPage(){
         for(let i=1;i<17;i++)faces.push(jl([31.5,ya,-(1+i)],[31.5,yb,-(1+i)]));
       }
       // NEF (North East Facade): z=-18, x=17.5..31.5, cols 65-51, RDC to R+25
-      if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
+      if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+18B'&&fl!=='R+17T'&&fl!=='R+17B'){
         const nefYa=fl==='R+18T'?efMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
         const nefYb=fl==='R+18T'?efMergedYb18T:fl==='R+18B'?efMergedYb18B:y1;
         const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51];
