@@ -22047,35 +22047,38 @@ function renderAAABetaPage(){
     const T=window.THREE;
     const W=vp.clientWidth,H=vp.clientHeight;
 
-    // ── Renderer ────────────────────────────────────────────────────────────
-    const R=new T.WebGLRenderer({antialias:true,alpha:false});
+    // ── Renderer — alpha=true lets CSS sky gradient show through ───────────
+    const R=new T.WebGLRenderer({antialias:true,alpha:true});
     R.setSize(W,H);
     R.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    R.setClearColor(0x000000,0);         // transparent clear
     R.shadowMap.enabled=true;
     R.shadowMap.type=T.PCFSoftShadowMap;
     R.toneMapping=T.ACESFilmicToneMapping;
-    R.toneMappingExposure=1.25;
+    R.toneMappingExposure=1.1;
     const tc=R.domElement;
     tc.style.cssText='position:absolute;inset:0;display:block;';
     vp.appendChild(tc);
 
-    // ── Scene + sky ─────────────────────────────────────────────────────────
+    // ── Scene — no background (CSS gradient sky from viewport div) ──────────
     const scene=new T.Scene();
-    scene.background=new T.Color(0x84BBE0);
-    scene.fog=new T.FogExp2(0xAAD0E8,0.0013);
+    scene.fog=new T.Fog(0xC4DFF0,120,380);
 
     // ── Lights ──────────────────────────────────────────────────────────────
-    scene.add(new T.HemisphereLight(0xCCE8F4,0xBBA870,0.52));
-    const sun=new T.DirectionalLight(0xFFF8E4,2.0);
-    sun.position.set(-38,70,28);
+    scene.add(new T.HemisphereLight(0xD4ECF8,0xB8A870,0.65));
+    const sun=new T.DirectionalLight(0xFFFAE8,2.2);
+    sun.position.set(-42,75,30);
     sun.castShadow=true;
     sun.shadow.mapSize.set(2048,2048);
-    sun.shadow.bias=-0.0005;
+    sun.shadow.bias=-0.0004;
+    sun.shadow.radius=2;
     const sc2=sun.shadow.camera;
-    sc2.near=1;sc2.far=380;sc2.left=-120;sc2.right=120;sc2.top=160;sc2.bottom=-60;
+    sc2.near=1;sc2.far=400;sc2.left=-130;sc2.right=130;sc2.top=170;sc2.bottom=-65;
     scene.add(sun);
-    const fill2=new T.DirectionalLight(0xDCEEFF,0.42);
-    fill2.position.set(28,18,22);scene.add(fill2);
+    const fill2=new T.DirectionalLight(0xD8ECFF,0.5);
+    fill2.position.set(30,20,25);scene.add(fill2);
+    const back=new T.DirectionalLight(0xFFEED8,0.25);
+    back.position.set(0,30,-50);scene.add(back);
 
     // ── Camera — SW looking NE (matches theta=-0.85 isometric view) ─────────
     const cam=new T.PerspectiveCamera(33,W/H,0.5,700);
@@ -22229,13 +22232,19 @@ function renderAAABetaPage(){
       q(17.5,R25top,-1, 31.5,R25top,-1, 31.5,R25top,-18, 17.5,R25top,-18, JOINT);
     }
 
-    // ── Merged mesh ───────────────────────────────────────────────────────
+    // ── Merged mesh — Phong material for specular glass highlights ─────────
     const geo=new T.BufferGeometry();
     geo.setAttribute('position',new T.BufferAttribute(new Float32Array(V),3));
     geo.setAttribute('color',new T.BufferAttribute(new Float32Array(C),3));
     geo.setIndex(new T.BufferAttribute(new Uint32Array(I),1));
     geo.computeVertexNormals();
-    const mesh=new T.Mesh(geo,new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide}));
+    const bldgMat=new T.MeshPhongMaterial({
+      vertexColors:true,
+      side:T.DoubleSide,
+      shininess:42,
+      specular:new T.Color(0x334466)
+    });
+    const mesh=new T.Mesh(geo,bldgMat);
     mesh.castShadow=true;mesh.receiveShadow=true;
     scene.add(mesh);
 
@@ -22262,123 +22271,145 @@ function renderAAABetaPage(){
 
   // ── Environment geometry ─────────────────────────────────────────────────
   function _3env(T,scene){
-    const lm=(hex,opts={})=>new T.MeshLambertMaterial({color:new T.Color(hex),...opts});
+    // Phong materials for environment — shininess gives surface depth
+    const pm=(hex,sh=8)=>new T.MeshPhongMaterial({color:new T.Color(hex),shininess:sh});
 
-    // Thin slab on ground (y centred at h/2 above y=yBase)
-    const slab=(x0,z0,x1,z1,yBase,h,hex)=>{
+    // Flat ground slab (thin box)
+    const slab=(x0,z0,x1,z1,y,h,hex,sh=4)=>{
       const dx=Math.abs(x1-x0),dz=Math.abs(z1-z0);
       if(dx<0.01||dz<0.01)return;
-      const m=new T.Mesh(new T.BoxGeometry(dx,h,dz),lm(hex));
-      m.position.set((x0+x1)/2,yBase+h/2,(z0+z1)/2);
+      const m=new T.Mesh(new T.BoxGeometry(dx,h,dz),pm(hex,sh));
+      m.position.set((x0+x1)/2,y+h/2,(z0+z1)/2);
       m.receiveShadow=true;scene.add(m);
     };
 
-    // Building box
-    const bldBox=(x0,z0,x1,z1,y0,y1,hex)=>{
+    // Building box (casts + receives shadow)
+    const bldBox=(x0,z0,x1,z1,y0,y1,hex,sh=6)=>{
       const dx=Math.abs(x1-x0),dz=Math.abs(z1-z0),dy=y1-y0;
       if(dx<0.01||dz<0.01||dy<0.01)return;
-      const m=new T.Mesh(new T.BoxGeometry(dx,dy,dz),lm(hex));
+      const m=new T.Mesh(new T.BoxGeometry(dx,dy,dz),pm(hex,sh));
       m.position.set((x0+x1)/2,y0+dy/2,(z0+z1)/2);
       m.castShadow=true;m.receiveShadow=true;scene.add(m);
     };
 
-    // ── Ground ──────────────────────────────────────────────────────────────
-    slab(-30,-110,80,32, -0.08,0.08, '#BDB085'); // sandy base
-    slab(-19,-110, 0,32, -0.03,0.06, '#AEAA78'); // Main St N-S
-    slab(-30,  0,80,17, -0.03,0.06, '#AEAA78'); // Cross St E-W
-    slab(-19,-110,-14,32, 0.04,0.06, '#D0C49C'); // Main St west sidewalk
-    slab(-1, -110,  0,32, 0.04,0.06, '#D0C49C'); // Main St east sidewalk
-    slab(-12,-110, -9,32, 0.04,0.06, '#828050'); // planted median
-    slab(-1,   0,33,0.2,  0.04,0.06, '#D0C49C'); // sidewalk south of building
+    // ── Ground ───────────────────────────────────────────────────────────────
+    slab(-32,-115,85,35, -0.10,0.10,'#BDB488'); // sandy base
+    slab(-19,-115,  0,35, -0.04,0.07,'#AEAA78'); // Main St N-S
+    slab(-32,  -0.5,85,17.5, -0.04,0.07,'#AEAA78'); // Cross St E-W
+    slab(-19,-115,-14,35, 0.04,0.06,'#D2C89E'); // Main St west sidewalk
+    slab(-1.5,-115, 0,35, 0.04,0.06,'#D2C89E'); // Main St east sidewalk
+    slab(-12,-115, -9,35, 0.04,0.06,'#84824C'); // planted median
+    slab(-1.5,-0.5,34,0.3, 0.04,0.06,'#D2C89E'); // sidewalk in front of building
 
-    // Crosswalk stripes — south crossing of Main St
-    for(let i=0;i<5;i+=2){
-      slab(-19,i*0.7-0.2,0,i*0.7+0.4, 0.07,0.02,'rgba(255,255,255,0.8)');
-    }
-    // White centre-line dashes on Main St
-    for(let j=0;j<12;j++){
-      slab(-9.15,-110+j*9,-8.85,-110+j*9+5, 0.06,0.02,'#E0DCBA');
-    }
+    // Road lane dash lines
+    for(let j=0;j<16;j++)slab(-9.2,-115+j*8,-8.8,-115+j*8+4.5, 0.07,0.02,'#D8D4A8');
+    // Crosswalk stripes south of intersection
+    for(let i=0;i<5;i+=2)slab(-19,i*0.72,0,i*0.72+0.38, 0.08,0.02,'#D8D4A8');
 
-    // ── West offices ─────────────────────────────────────────────────────────
+    // ── West offices (Deloitte / Nexa block) ─────────────────────────────────
     const WBO=[
       {z0:6,z1:-6,h:5},{z0:-3,z1:-15,h:6},{z0:-12,z1:-24,h:4},
       {z0:-21,z1:-33,h:7},{z0:-30,z1:-42,h:5},{z0:-38,z1:-50,h:4},
     ];
-    const winMat=new T.MeshLambertMaterial({color:new T.Color('#8EC4D8'),transparent:true,opacity:0.68});
+    const winPh=new T.MeshPhongMaterial({
+      color:new T.Color('#88C0D8'),transparent:true,opacity:0.72,shininess:60,
+      specular:new T.Color(0x88AACC)
+    });
     for(const{z0,z1,h}of WBO){
-      bldBox(-21,z0,-13,z1,0,h,'#CEC4A2');
-      // Window strips on south face
+      bldBox(-21,z0,-13,z1,0,h,'#CEC4A2',10);
       const nfl=Math.round(h/2.2);
       for(let fl=0;fl<nfl;fl++){
-        const wy=0.6+fl*2.15;
-        const wm=new T.Mesh(new T.BoxGeometry(7.4,0.78,0.05),winMat);
-        wm.position.set(-17,wy,z0+0.03);
+        const wy=0.55+fl*2.12;
+        const wm=new T.Mesh(new T.BoxGeometry(7.2,0.72,0.06),winPh);
+        wm.position.set(-17,wy,z0+0.04);
         scene.add(wm);
       }
       // Parapet cap
-      const cap=new T.Mesh(new T.BoxGeometry(8,0.28,Math.abs(z1-z0)+0.1),lm('#DED4B4'));
-      cap.position.set(-17,h+0.14,(z0+z1)/2);
-      scene.add(cap);
+      const cap=new T.Mesh(new T.BoxGeometry(8,0.30,Math.abs(z1-z0)+0.12),pm('#E0D4B2',5));
+      cap.position.set(-17,h+0.15,(z0+z1)/2);cap.castShadow=true;scene.add(cap);
     }
 
-    // ── North background buildings ────────────────────────────────────────────
+    // ── North background buildings ─────────────────────────────────────────────
     bldBox(-8,-19,0,-33,0,8,'#C4BC9E');
     bldBox(2,-21,11,-35,0,10,'#BEB89C');
     bldBox(11,-19,20,-33,0,7,'#C8C09E');
     bldBox(20,-21,29,-35,0,9,'#C2BA9C');
     bldBox(29,-19,38,-33,0,6,'#CCBEA4');
 
-    // ── Sky Tower complex (east) ──────────────────────────────────────────────
-    // Main tower — dark glass
-    bldBox(34,0,56,-28,0,30,'#394C52');
-    // Glass curtain wall overlay on south face
-    const glassMat=new T.MeshLambertMaterial({color:new T.Color('#3870A0'),transparent:true,opacity:0.72});
+    // ── Sky Tower complex (east, dark curtain-wall glass) ─────────────────────
+    bldBox(34,0,56,-28,0,30,'#38484E',4);
+    // Glass panels — Phong with specular reflection
+    const skyGlassMat=new T.MeshPhongMaterial({
+      color:new T.Color('#2E6890'),transparent:true,opacity:0.75,
+      shininess:90,specular:new T.Color(0x6699BB)
+    });
     for(let wc=0;wc<11;wc++){
-      const wx=34+wc*2+0.2;
+      const wx=34+wc*2+0.22;
       for(let fl=0;fl<15;fl++){
-        const wy=1.2+fl*2;
-        const wm=new T.Mesh(new T.BoxGeometry(1.5,1.5,0.06),glassMat);
-        wm.position.set(wx+0.75,wy+0.75,0.04);
-        scene.add(wm);
+        const m=new T.Mesh(new T.BoxGeometry(1.48,1.48,0.07),skyGlassMat);
+        m.position.set(wx+0.74,1.2+fl*2+0.74,0.05);
+        scene.add(m);
       }
     }
-    // Mullion strips on Sky Tower
     for(let wc=1;wc<11;wc++){
-      const mx=34+wc*2;
-      const mull=new T.Mesh(new T.BoxGeometry(0.12,30,0.08),lm('#1E2C30'));
-      mull.position.set(mx,15,0.05);scene.add(mull);
+      const m=new T.Mesh(new T.BoxGeometry(0.13,30,0.09),pm('#1A2830',2));
+      m.position.set(34+wc*2,15,0.06);scene.add(m);
     }
-    // Horizontal spandrel lines
     for(let fl=1;fl<15;fl++){
-      const sp=new T.Mesh(new T.BoxGeometry(22,0.1,0.06),lm('#1A2628'));
-      sp.position.set(45,fl*2,0.04);scene.add(sp);
+      const m=new T.Mesh(new T.BoxGeometry(22,0.09,0.07),pm('#182428',2));
+      m.position.set(45,fl*2,0.05);scene.add(m);
     }
-    bldBox(34,1,60,-8,0,6,'#424E52'); // podium
-    bldBox(56,-4,68,-24,0,22,'#3C4A4A'); // east annex
+    bldBox(34,1,60,-8,0,6,'#40505A',4);
+    bldBox(56,-4,68,-24,0,22,'#3C4A4C',4);
+    // Sky Tower parapet crown
+    const stCap=new T.Mesh(new T.BoxGeometry(22,0.55,28),pm('#2C3C42',3));
+    stCap.position.set(45,30.27,-14);scene.add(stCap);
 
-    // ── Construction crane ────────────────────────────────────────────────────
-    const crM=lm('#D4B818');
-    // Mast
-    const mast=new T.Mesh(new T.BoxGeometry(0.35,34,0.35),crM);
-    mast.position.set(53.175,17,-15);scene.add(mast);
-    // Jib (long boom)
-    const jib=new T.Mesh(new T.BoxGeometry(13,0.22,0.22),crM);
-    jib.position.set(59.5,34.1,-15);scene.add(jib);
-    // Counter-jib
-    const cj=new T.Mesh(new T.BoxGeometry(5,0.22,0.22),crM);
-    cj.position.set(50.5,33.8,-15);scene.add(cj);
+    // ── Construction crane ─────────────────────────────────────────────────────
+    const crM=pm('#D4B818',20);
+    const mast=new T.Mesh(new T.BoxGeometry(0.36,34,0.36),crM);
+    mast.position.set(53.18,17,-15);scene.add(mast);
+    const jib=new T.Mesh(new T.BoxGeometry(13,0.24,0.24),crM);
+    jib.position.set(59.68,34.12,-15);scene.add(jib);
+    const cj=new T.Mesh(new T.BoxGeometry(5,0.24,0.24),crM);
+    cj.position.set(50.68,33.88,-15);scene.add(cj);
+    // Hook cable
+    const cbl=new T.Mesh(new T.BoxGeometry(0.06,14,0.06),pm('#707070',2));
+    cbl.position.set(65.5,27,-15);scene.add(cbl);
 
-    // ── Street trees ─────────────────────────────────────────────────────────
-    const treeColors=['#1A5209','#1E5A0C','#226010','#1C5A10','#245E12'];
+    // ── Street trees — Mediterranean multi-blob crowns ─────────────────────────
+    // Each tree: cylindrical trunk + 5 overlapping oblate blobs = organic rounded canopy
+    const trunkPh=new T.MeshPhongMaterial({color:new T.Color('#3A1C06'),shininess:6});
+    const crownGeos=[
+      new T.SphereGeometry(1.05,9,7),
+      new T.SphereGeometry(0.88,8,6),
+      new T.SphereGeometry(0.80,8,6),
+      new T.SphereGeometry(0.72,7,5),
+      new T.SphereGeometry(0.68,7,5),
+    ];
+    // Blob offsets [dx,dy,dz,geoIdx] relative to canopy base
+    const blobOff=[
+      [0,   0,    0,   0],
+      [0.62,0.18, 0.30,1],
+      [-0.55,0.25,-0.28,2],
+      [0.22,0.55, -0.45,3],
+      [-0.28,0.48, 0.42,4],
+    ];
     const mkTree=(px,pz,h)=>{
-      const trunkM=new T.MeshLambertMaterial({color:new T.Color('#3C2008')});
-      const trunk=new T.Mesh(new T.CylinderGeometry(0.075,0.10,h,7),trunkM);
+      const trunk=new T.Mesh(new T.CylinderGeometry(0.08,0.12,h,7),trunkPh);
       trunk.position.set(px,h/2,pz);trunk.castShadow=true;scene.add(trunk);
-      const cIdx=Math.abs(Math.round(px*7+pz*3))%treeColors.length;
-      const crownM=new T.MeshLambertMaterial({color:new T.Color(treeColors[cIdx])});
-      const crown=new T.Mesh(new T.SphereGeometry(1.15,9,7),crownM);
-      crown.position.set(px,h+0.75,pz);crown.castShadow=true;scene.add(crown);
+      const seed=Math.abs(Math.round(px*7+pz*11));
+      const greens=['#1A520A','#1C5C0C','#205E10','#226414','#1E5A0E'];
+      for(const[dx,dy,dz,gi]of blobOff){
+        const bph=new T.MeshPhongMaterial({
+          color:new T.Color(greens[(seed+gi)%greens.length]),
+          shininess:10,specular:new T.Color(0x112200)
+        });
+        const blob=new T.Mesh(crownGeos[gi],bph);
+        blob.scale.set(1,0.72,1);  // oblate = Mediterranean umbrella shape
+        blob.position.set(px+dx,h+0.55+dy,pz+dz);
+        blob.castShadow=true;scene.add(blob);
+      }
     };
     for(let ti=0;ti<10;ti++)mkTree(-10,12-ti*5.5,3.4+Math.sin(ti*1.2)*0.35);
     for(let ti=0;ti<6;ti++)mkTree(-16.5,10-ti*6,2.9+Math.sin(ti)*0.2);
