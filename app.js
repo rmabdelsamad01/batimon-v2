@@ -21588,83 +21588,163 @@ function renderAAABetaPage(){
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')],'#D3D3D3');
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')],'#FF8C00');
 
-    // ── 3D Environment — Casablanca site context ────────────────────────────
+    // ── 3D Environment — Bd de l'Aéropostale, Casablanca ───────────────────
     {
-      // Ground — single large quads with depth bias (no staircase)
-      const bigQ=(x0,z0,x1,z1,c,db)=>{const f=quad([[x0,-0.03,z0],[x0,-0.03,z1],[x1,-0.03,z1],[x1,-0.03,z0]],c,null,0);f.depth+=db;return f;};
-      const GND='#C8BC98',BLVD='#BABA84',SWLK='#D4C8A8',MEDIAN='#A8A270';
-      faces.push(bigQ(-22,-92,62,26,GND,3000));
-      faces.push(bigQ(-16,-92,-3,26,BLVD,2800));
-      faces.push(bigQ(-16,-92,-14,26,SWLK,2600));
-      faces.push(bigQ(-3,-92,-1,26,SWLK,2600));
-      faces.push(bigQ(-11,-92,-9,26,MEDIAN,2700));
-      faces.push(bigQ(-2,1,33,17,BLVD,2700));  // east-west road in front of SF
-      for(let zi=0;zi<22;zi++){faces.push(bigQ(-10.25,24-zi*5.5,-9.75,21-zi*5.5,'rgba(255,255,255,0.68)',2400));}
+      // Depth-biased flat ground quad helper
+      const dQ=(x0,z0,x1,z1,c,db=0)=>{const f=quad([[x0,-0.03,z0],[x0,-0.03,z1],[x1,-0.03,z1],[x1,-0.03,z0]],c,null,0);f.depth+=db;return f;};
+      // Slightly raised surface (sidewalk/median, y=0.10)
+      const rQ=(x0,z0,x1,z1,c,db=0)=>{const f=quad([[x0,0.10,z0],[x0,0.10,z1],[x1,0.10,z1],[x1,0.10,z0]],c,null,0);f.depth+=db;return f;};
 
-      // bld: north/east buildings — south face + WEST side + roof
-      const bld=(x0,z0,x1,z1,h,cS,cSd,cT)=>{
+      const DIRT='#C0B48A', ROAD='#AEAA78', SWLK='#D0C49C', MED='#888250', WM='rgba(255,255,255,0.68)';
+
+      // ── Ground ──────────────────────────────────────────────────────────
+      faces.push(dQ(-26,-100,70,28,DIRT,3000));   // full sandy base
+      faces.push(dQ(-18,-100,-0,28,ROAD,2900));   // Main St N-S (Bd Aéropostale)
+      faces.push(dQ(-26,1,70,16,ROAD,2900));      // Cross St E-W (in front of SF)
+      faces.push(rQ(-18,-100,-14,28,SWLK,2800));  // Main St west sidewalk
+      faces.push(rQ(-0.5,-100,0,28,SWLK,2800));   // Main St east sidewalk
+      faces.push(rQ(-11,-100,-9,28,MED,2850));    // planted median
+      faces.push(rQ(-0.5,1,33,0.15,SWLK,2800));  // sidewalk in front of building
+
+      // Curb edges (thin darker strips at road/sidewalk boundary)
+      const curb=(x0,z0,x1,z1)=>faces.push(dQ(x0,z0,x1,z1,'rgba(80,75,50,0.55)',2880));
+      curb(-18,-100,-17.5,28); curb(-0.5,-100,-0,28); // Main St curbs
+      curb(-14,-100,-13.5,28); curb(-9.5,-100,-9,28); // median curbs
+      curb(-26,0.8,70,1.1); curb(-26,15.9,70,16.2);   // Cross St curbs
+      // Divider line in middle of Main St
+      for(let zi=0;zi<20;zi++){const zm=20-zi*6.5;faces.push(dQ(-9.15,zm,-8.85,zm-4,WM,2750));}
+      // Lane lines in Cross St
+      for(let xi=0;xi<10;xi++){const xm=-22+xi*9;faces.push(dQ(xm,8.2,xm+5.5,8.55,WM,2750));}
+
+      // Crosswalk stripes — 4 corners of the intersection
+      const cwH=(x0,z0,x1,z1)=>{const n=5,sw=(z1-z0)/n;for(let i=0;i<n;i+=2)faces.push(dQ(x0,z0+i*sw,x1,z0+(i+1)*sw,WM,2780));};
+      const cwV=(x0,z0,x1,z1)=>{const n=5,sw=(x1-x0)/n;for(let i=0;i<n;i+=2)faces.push(dQ(x0+i*sw,z0,x0+(i+1)*sw,z1,WM,2780));};
+      cwV(-18,15.2,-0,16.8);  // north crossing (Main St)
+      cwV(-18,-0.8,-0,0.8);   // south crossing (Main St)
+      cwH(-20,1,-18.2,15);    // west crossing (Cross St)
+      cwH(-0.2,1,1.4,15);     // east crossing (Cross St)
+
+      // ── Building helpers ─────────────────────────────────────────────────
+      // north/east buildings: south face + WEST side + roof
+      const bld=(x0,z0,x1,z1,h,cS,cW,cT)=>{
         faces.push(quad([[x0,0,z0],[x0,h,z0],[x1,h,z0],[x1,0,z0]],cS,null,0));
-        faces.push(quad([[x0,0,z1],[x0,h,z1],[x0,h,z0],[x0,0,z0]],cSd,null,0));
+        faces.push(quad([[x0,0,z1],[x0,h,z1],[x0,h,z0],[x0,0,z0]],cW,null,0));
         faces.push(quad([[x0,h,z0],[x0,h,z1],[x1,h,z1],[x1,h,z0]],cT,null,0));
       };
-      // bldW: west buildings — south face + EAST side (visible from SE camera) + roof
+      // west buildings: south face + EAST side + roof
       const bldW=(x0,z0,x1,z1,h,cS,cE,cT)=>{
         faces.push(quad([[x0,0,z0],[x0,h,z0],[x1,h,z0],[x1,0,z0]],cS,null,0));
         faces.push(quad([[x1,0,z0],[x1,h,z0],[x1,h,z1],[x1,0,z1]],cE,null,0));
         faces.push(quad([[x0,h,z0],[x0,h,z1],[x1,h,z1],[x1,h,z0]],cT,null,0));
       };
-      // Window grid on south face
-      const wins=(x0,z0,x1,h,wc)=>{
+      // Parapet wall (south face + top slab)
+      const para=(x0,z0,x1,h,th,c)=>{
+        const pw=quad([[x0,h,z0],[x0,h+th,z0],[x1,h+th,z0],[x1,h,z0]],c,null,0);pw.depth-=2;faces.push(pw);
+      };
+      // Window grid on south face (depth-offset to sort in front)
+      const wins=(x0,z0,x1,h,wclr)=>{
         const fw=x1-x0,nfl=Math.round(h/2.2),nc=Math.max(2,Math.floor(fw/2));
-        const ww=(fw/nc)*0.52,wh=0.82;
-        for(let fl=0;fl<nfl;fl++){const wy=0.5+(fl/nfl)*h;
-          for(let c=0;c<nc;c++){const wx0=x0+(c/nc)*fw+(fw/nc)*0.24;
-            const wf=quad([[wx0,wy,z0],[wx0,wy+wh,z0],[wx0+ww,wy+wh,z0],[wx0+ww,wy,z0]],wc,null,0);
+        const ww=(fw/nc)*0.50,wh=0.76;
+        for(let fl=0;fl<nfl;fl++){const wy=0.55+(fl/nfl)*h;
+          for(let c=0;c<nc;c++){const wx0=x0+(c/nc)*fw+(fw/nc)*0.25;
+            const wf=quad([[wx0,wy,z0],[wx0,wy+wh,z0],[wx0+ww,wy+wh,z0],[wx0+ww,wy,z0]],wclr,null,0);
             wf.depth-=8;faces.push(wf);}}
       };
-
-      // West offices (Deloitte Maroc/Nexa block) — east face visible from camera
-      bldW(-19, 6,-11,-6, 4,'#D2CAB0','#C0B89A','#DECEBA'); wins(-19,6,-11,4,'rgba(155,195,218,0.55)');
-      bldW(-19,-2,-11,-14,5,'#CAC2A6','#B8B090','#D8CEAE'); wins(-19,-2,-11,5,'rgba(150,190,215,0.50)');
-      bldW(-19,-10,-11,-22,4,'#D0CCA8','#BEAA8E','#DED0B2'); wins(-19,-10,-11,4,'rgba(158,195,220,0.52)');
-      bldW(-19,-18,-11,-30,6,'#C8C09A','#B6A882','#D4CAA4'); wins(-19,-18,-11,6,'rgba(152,188,212,0.55)');
-      bldW(-19,-26,-11,-38,4,'#CECAA4','#BCA888','#DACAAE'); wins(-19,-26,-11,4,'rgba(156,192,216,0.50)');
-
-      // North background buildings
-      bld(-8,-20, 0,-34,7,'#C2BA9C','#A09A7A','#CECAA8');
-      bld( 2,-22,10,-36,9,'#BCBA9E','#9C9A80','#CACACC');
-      bld(10,-20,18,-32,6,'#C6BE9E','#A6A07E','#D2CAA8');
-      bld(18,-22,26,-36,8,'#C0BA9C','#A09C7E','#CCCEAA');
-      bld(26,-20,34,-34,5,'#CABEA4','#AAA284','#D6CEB0');
-
-      // East: Sky Tower — large dark glass tower
-      bld(34,-1,52,-26,28,'#3A4A4C','#283438','#425254');
-      for(let wc=0;wc<9;wc++){const wx=34+wc*2+0.25;
-        for(let fl=0;fl<14;fl++){const wy=1+fl*2;
-          const wf=quad([[wx,wy,-1],[wx,wy+1.5,-1],[wx+1.4,wy+1.5,-1],[wx+1.4,wy,-1]],'rgba(58,115,138,0.72)',null,0);
-          wf.depth-=10;faces.push(wf);}}
-      bld(52,-4,60,-20,18,'#3C4C4A','#2C3838','#485252');
-      bld(34,-26,50,-40,12,'#3E4848','#2E3838','#4C5050');
-
-      // Street tree: trunk + crossing vertical quads + stacked horizontal discs
-      const tree=(px,pz,h)=>{
-        const TC='#2C1A08',G1='#1A4C10',G2='#236018',G3='#2C6C1E';
-        const tw=0.09;
-        faces.push(quad([[px-tw,0,pz],[px-tw,h,pz],[px+tw,h,pz],[px+tw,0,pz]],TC,null,0));
-        faces.push(quad([[px,0,pz-tw],[px,h,pz-tw],[px,h,pz+tw],[px,0,pz+tw]],TC,null,0));
-        const cr=1.2,cht=2.0;
-        // Crossing vertical quads — give the crown side volume
-        faces.push(quad([[px-cr,h+0.1,pz],[px+cr,h+0.1,pz],[px+cr,h+cht,pz],[px-cr,h+cht,pz]],G2,null,0));
-        faces.push(quad([[px,h+0.1,pz-cr],[px,h+0.1,pz+cr],[px,h+cht,pz+cr],[px,h+cht,pz-cr]],G1,null,0));
-        // Horizontal discs — give the crown top volume
-        faces.push(quad([[px-cr,h+0.7,pz],[px,h+0.7,pz-cr],[px+cr,h+0.7,pz],[px,h+0.7,pz+cr]],G3,null,0));
-        faces.push(quad([[px-cr*.72,h+1.3,pz],[px,h+1.3,pz-cr*.72],[px+cr*.72,h+1.3,pz],[px,h+1.3,pz+cr*.72]],G2,null,0));
-        faces.push(quad([[px-cr*.42,h+1.8,pz],[px,h+1.8,pz-cr*.42],[px+cr*.42,h+1.8,pz],[px,h+1.8,pz+cr*.42]],G1,null,0));
+      // Horizontal floor shadow lines on south face
+      const flines=(x0,z0,x1,h,nfl)=>{
+        for(let fl=1;fl<nfl;fl++){const fy=(fl/nfl)*h;
+          const lf=quad([[x0,fy,z0],[x1,fy,z0],[x1,fy+0.09,z0],[x0,fy+0.09,z0]],'rgba(0,0,0,0.20)',null,0);
+          lf.depth-=5;faces.push(lf);}
       };
 
-      for(let ti=0;ti<8;ti++) tree(-10, 13-ti*5, 3.5+Math.sin(ti*1.3)*0.4);
-      for(let ti=0;ti<5;ti++) tree(-4, 11-ti*6, 3.2);
-      tree(5,10,3.8); tree(14,11,3.5); tree(24,10,4.0);
+      // ── West offices — Bd Aéropostale west side ──────────────────────────
+      // Low 3-6 floor beige flat-roof offices matching satellite layout
+      const WB=[
+        {z0:6,z1:-6,h:5,nfl:4,cS:'#D4CCB2',cE:'#C0B89C',cT:'#E0D4BC'},
+        {z0:-3,z1:-15,h:6,nfl:5,cS:'#CCC4A8',cE:'#B8B090',cT:'#D8CEB0'},
+        {z0:-12,z1:-24,h:4,nfl:3,cS:'#D2CAAC',cE:'#BEAA8E',cT:'#DED2B4'},
+        {z0:-21,z1:-33,h:7,nfl:5,cS:'#CAC29E',cE:'#B4AC86',cT:'#D6CCA6'},
+        {z0:-30,z1:-42,h:5,nfl:4,cS:'#D0C8A4',cE:'#BCAA8A',cT:'#DCCEAE'},
+        {z0:-38,z1:-50,h:4,nfl:3,cS:'#CAC4A0',cE:'#B8A88A',cT:'#D6CEAC'},
+      ];
+      for(const{z0,z1,h,nfl,cS,cE,cT}of WB){
+        bldW(-21,z0,-13,z1,h,cS,cE,cT);
+        wins(-21,z0,-13,h,'rgba(150,192,218,0.52)');
+        flines(-21,z0,-13,h,nfl);
+        para(-21,z0,-13,h,0.30,cT);
+      }
+
+      // ── North background buildings ────────────────────────────────────────
+      bld(-8,-19, 0,-33, 8,'#C4BC9E','#A49C7C','#D0C8A8');
+      bld( 2,-21,11,-35,10,'#BEB89C','#9E9880','#CACACC');flines(2,-21,11,10,5);
+      bld(11,-19,20,-33, 7,'#C8C09E','#A8A07E','#D4CCA8');
+      bld(20,-21,29,-35, 9,'#C2BA9C','#A29C7A','#CECAA8');flines(20,-21,29,9,5);
+      bld(29,-19,38,-33, 6,'#CCBEA4','#ACA282','#D8CEB0');
+
+      // ── East: Sky Tower (massive dark glass tower, H8SQ+75 area) ─────────
+      // Main tower body
+      bld(34, 0,56,-28,30,'#364448','#243034','#404E52');
+      // South facade glazing: 11 vertical glass strips across 22 units
+      for(let wc=0;wc<11;wc++){const wx=34+wc*2+0.18;
+        for(let fl=0;fl<15;fl++){const wy=1.2+fl*2;
+          const wf=quad([[wx,wy,0],[wx,wy+1.55,0],[wx+1.58,wy+1.55,0],[wx+1.58,wy,0]],'rgba(48,102,128,0.76)',null,0);
+          wf.depth-=10;faces.push(wf);}}
+      // Vertical structural mullions between glass strips
+      for(let wc=1;wc<11;wc++){const wx=34+wc*2;
+        const mf=quad([[wx,0,0],[wx,30,0],[wx+0.14,30,0],[wx+0.14,0,0]],'rgba(18,26,30,0.82)',null,0);
+        mf.depth-=12;faces.push(mf);}
+      // Horizontal spandrel lines at every 2 floors
+      for(let fl=1;fl<15;fl++){const fy=fl*2;
+        const sf=quad([[34,fy,0],[56,fy,0],[56,fy+0.12,0],[34,fy+0.12,0]],'rgba(18,26,30,0.60)',null,0);
+        sf.depth-=9;faces.push(sf);}
+      // Podium (lower 3 floors, wider footprint)
+      bld(34,1,60,-8,6,'#424C4C','#303A3A','#4E5858');
+      // East annex (Sky Garden block)
+      bld(56,-4,68,-24,22,'#3A4848','#283434','#464E50');
+      // South face glazing on east annex
+      for(let wc=0;wc<6;wc++){const wx=56+wc*2+0.2;
+        for(let fl=0;fl<11;fl++){const wy=1.2+fl*2;
+          const wf=quad([[wx,wy,-4],[wx,wy+1.55,-4],[wx+1.58,wy+1.55,-4],[wx+1.58,wy,-4]],'rgba(44,96,118,0.72)',null,0);
+          wf.depth-=10;faces.push(wf);}}
+      // Parapet crown on Sky Tower
+      para(34,0,56,30,0.5,'#2A3A3C');
+
+      // ── Construction crane (Sky Tower site) ──────────────────────────────
+      const CR='#D4B818';
+      // Mast (2 crossing vertical quads)
+      faces.push(quad([[53,0,-15],[53,34,-15],[53.35,34,-15],[53.35,0,-15]],CR,null,0));
+      faces.push(quad([[53.175,0,-15.175],[53.175,34,-15.175],[53.175,34,-14.825],[53.175,0,-14.825]],CR,null,0));
+      // Jib (horizontal boom, N direction from mast top)
+      faces.push(quad([[53,34,-15],[66,34,-15],[66,34.22,-15],[53,34.22,-15]],CR,null,0));
+      // Counter-jib (S direction)
+      faces.push(quad([[48,33.7,-15],[53,33.7,-15],[53,33.92,-15],[48,33.92,-15]],CR,null,0));
+      // Hook cable
+      faces.push(quad([[64,34,-15],[64.08,20,-15],[64.22,20,-15],[64.15,34,-15]],'#808080',null,0));
+
+      // ── Street trees — Bd Aéropostale ─────────────────────────────────────
+      const tree=(px,pz,h)=>{
+        const TC='#2A1806',G1='#164408',G2='#1E5410',G3='#266018';
+        const tw=0.09;
+        // Trunk
+        faces.push(quad([[px-tw,0,pz],[px-tw,h,pz],[px+tw,h,pz],[px+tw,0,pz]],TC,null,0));
+        faces.push(quad([[px,0,pz-tw],[px,h,pz-tw],[px,h,pz+tw],[px,0,pz+tw]],TC,null,0));
+        // Crown: 2 crossing vertical slabs (side volume)
+        const cr=1.15,cht=1.95;
+        faces.push(quad([[px-cr,h+0.1,pz],[px+cr,h+0.1,pz],[px+cr,h+cht,pz],[px-cr,h+cht,pz]],G2,null,0));
+        faces.push(quad([[px,h+0.1,pz-cr],[px,h+0.1,pz+cr],[px,h+cht,pz+cr],[px,h+cht,pz-cr]],G1,null,0));
+        // 3 stacked horizontal diamonds (top volume, each slightly smaller)
+        faces.push(quad([[px-cr,h+0.6,pz],[px,h+0.6,pz-cr],[px+cr,h+0.6,pz],[px,h+0.6,pz+cr]],G3,null,0));
+        faces.push(quad([[px-cr*.70,h+1.15,pz],[px,h+1.15,pz-cr*.70],[px+cr*.70,h+1.15,pz],[px,h+1.15,pz+cr*.70]],G2,null,0));
+        faces.push(quad([[px-cr*.40,h+1.65,pz],[px,h+1.65,pz-cr*.40],[px+cr*.40,h+1.65,pz],[px,h+1.65,pz+cr*.40]],G1,null,0));
+      };
+      // Median trees (evenly spaced N-S along x≈-10)
+      for(let ti=0;ti<10;ti++) tree(-10, 12-ti*5.5, 3.4+Math.sin(ti*1.2)*0.35);
+      // West sidewalk trees (inside Bd, west side)
+      for(let ti=0;ti<6;ti++) tree(-16.5, 10-ti*6, 2.9+Math.sin(ti)*0.2);
+      // East sidewalk of Main St (against building zone)
+      for(let ti=0;ti<6;ti++) tree(-1.5, 11-ti*6, 2.8);
+      // South of Shift Tower (along cross street)
+      tree(4,12,3.6); tree(12,13,3.4); tree(21,12,3.8); tree(29,13,3.5);
     }
     // ── End 3D Environment ────────────────────────────────────────────────
 
