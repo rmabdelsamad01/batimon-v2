@@ -21588,67 +21588,82 @@ function renderAAABetaPage(){
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')],'#D3D3D3');
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')],'#FF8C00');
 
-    // ── 3D Environment ──────────────────────────────────────────────────────
+    // ── 3D Environment — Casablanca site context ────────────────────────────
     {
-      // Ground — Z-strips so each quad painter-sorts cleanly
-      const GND='#C8BC96',ROAD='#484248',SWLK='#D8CEB0';
+      // Sandy/arid Moroccan ground — tile in Z-strips for correct depth sorting
+      const GND='#C8BC98',BLVD='#C0B890',SWLK='#D8CEB2',MEDIAN='#B8B284';
       const gQ=(x0,z0,x1,z1,c)=>quad([[x0,-0.03,z0],[x0,-0.03,z1],[x1,-0.03,z1],[x1,-0.03,z0]],c,null,0);
-      for(let i=0;i<22;i++){
-        const zs=22-i*5,ze=zs-5;
-        const c=(zs<=3&&ze>=-1)?ROAD:(zs<=6&&ze>=-2)?SWLK:GND;
-        faces.push(gQ(-18,zs,52,ze,c));
+      for(let i=0;i<24;i++){
+        const zs=24-i*5,ze=zs-5;
+        // Boulevard (Main St) runs along x=-14 to x=-3 (west of building)
+        for(let xs=0;xs<8;xs++){
+          const xl=-18+xs*9,xr=xl+9;
+          const onBlvd=(xr<=-3&&xl>=-14);
+          const onSwlk=(xr<=-2&&xl>=-16&&!onBlvd);
+          const c=onBlvd?BLVD:onSwlk?SWLK:GND;
+          faces.push(gQ(xl,zs,xr,ze,c));
+        }
+        // East side ground (x>32)
+        for(let xs=0;xs<3;xs++){const xl=32+xs*9;faces.push(gQ(xl,zs,xl+9,ze,GND));}
       }
-      // Road markings (white dashes in front of SF)
-      for(let xi=0;xi<6;xi++){const xm=-3+xi*8;faces.push(gQ(xm,13,xm+4,10,'rgba(255,255,255,0.62)'));}
+      // Boulevard south section (in front of SF, z=0..18, x=-14..-3)
+      for(let i=0;i<5;i++){const zs=20-i*5,ze=zs-5;faces.push(gQ(-14,zs,-3,ze,BLVD));}
+      // Boulevard lane markings — white dashes running N-S
+      for(let zi=0;zi<8;zi++){const zm=18-zi*5;faces.push(gQ(-8.7,zm,-8.3,zm-3,'rgba(255,255,255,0.70)'));}
+      // Sidewalk median strip (tree planting strip)
+      for(let i=0;i<6;i++){const zs=16-i*5,ze=zs-5;faces.push(gQ(-10.8,zs,-9.2,ze,MEDIAN));}
 
-      // 3-face box building: south face (camera-facing) + west/left side + flat roof
+      // 3-face box: south face + west side + flat roof
       const bld=(x0,z0,x1,z1,h,cS,cW,cT)=>{
         faces.push(quad([[x0,0,z0],[x0,h,z0],[x1,h,z0],[x1,0,z0]],cS,null,0));
         faces.push(quad([[x0,0,z1],[x0,h,z1],[x0,h,z0],[x0,0,z0]],cW,null,0));
         faces.push(quad([[x0,h,z0],[x0,h,z1],[x1,h,z1],[x1,h,z0]],cT,null,0));
       };
 
-      // ─ North background (behind main building, z<-19) ─
-      bld(-7,-20,0,-33,8,'#A89880','#887060','#BCB09A');
-      bld(-5,-28,4,-42,13,'#9A8A78','#7A6A5C','#B0A490');
-      bld(3,-20,10,-30,7,'#B0A28A','#907870','#C4B8A4');
-      bld(9,-22,16,-36,11,'#A09078','#80705C','#B4A890');
-      bld(15,-20,23,-34,16,'#98887A','#786858','#AAAAAA');
-      bld(22,-22,29,-35,9,'#A89882','#887268','#BCB09C');
-      bld(28,-20,35,-32,12,'#9C8C7C','#7A6C62','#B0A892');
-      bld(34,-22,42,-38,7,'#A8967A','#887860','#BCB09A');
-      bld(41,-20,50,-34,10,'#98887A','#786858','#AAAAAA');
+      // ─ West side: low 3-5 floor beige office buildings (Deloitte Maroc, Nexa etc.) ─
+      bld(-18, 6,-11,-6, 4,'#D0C8AC','#B0A88C','#E0D8BC');  // Deloitte Maroc block
+      bld(-18,-2,-11,-14,5,'#C8C0A2','#A8A082','#D8D0B0');
+      bld(-18,-10,-11,-22,4,'#CECAA8','#AEA888','#DED8B4');
+      bld(-18,-18,-11,-30,6,'#C4BC98','#A4A078','#D4CCA4');
+      bld(-18,-26,-11,-38,4,'#CCC4A4','#ACA484','#DCD4B0');
 
-      // ─ East side (right of NEF, x>33) ─
-      bld(34,-2,41,-14,9,'#B4A68E','#947A68','#C8BCA8');
-      bld(40,-5,48,-17,12,'#A89880','#887868','#BCAE9A');
-      bld(46,-1,55,-13,6,'#BEB096','#9E8C7A','#D0C4AC');
+      // ─ North background: mixed buildings behind main building (z<-19) ─
+      bld(-8,-20, 0,-34,7,'#C0B89A','#A09A7A','#D4CCA8');
+      bld(-2,-22, 6,-36,9,'#B8B09A','#98907C','#CCC4AA');
+      bld( 6,-20,14,-32,6,'#C4BC9C','#A4A07C','#D8D0AA');
+      bld(14,-22,22,-36,8,'#BEB89A','#9E9A7C','#D2CAA8');
+      bld(22,-20,30,-34,5,'#C8C0A2','#A8A080','#DCD4AE');
+      bld(30,-22,38,-38,7,'#C0B89A','#A09A78','#D4CCA6');
 
-      // ─ West side (left of building, x<-4) ─
-      bld(-15,-2,-7,-15,8,'#B0A28C','#907C6A','#C4B8A6');
-      bld(-13,-8,-5,-22,11,'#A4967C','#847264','#B8AC98');
-      bld(-11,4,-4,-8,5,'#BEB098','#9E8C7A','#D0C4B0');
+      // ─ East: Sky Tower — large dark imposing building under construction ─
+      bld(34,-1,52,-26,28,'#3C4C4C','#2A3838','#4A5858');  // main tower
+      bld(52,-4,60,-20,18,'#424C4A','#303A38','#505A58');  // adjacent block
+      bld(34,-26,50,-40,12,'#484C48','#383C38','#545854');  // Sky Garden podium
 
-      // ─ South-side flanks ─
-      bld(-14,10,-6,2,6,'#BCAE96','#9C8C7A','#D0C4B0');
-      bld(41,8,50,1,5,'#C4B4A2','#A49282','#D8CAB8');
+      // ─ South-east flank ─
+      bld(34, 4,48,-2,6,'#C0B89A','#A09A78','#D4CCA6');
 
-      // Palm tree: trunk (2 crossing quads) + 8 fronds (tapering quads)
-      const palm=(px,pz,h)=>{
-        const tw=0.11,TC='#4C3418',GC='#246C1A';
+      // Street tree helper: trunk + 3-layer round crown (Moroccan boulevard style)
+      const tree=(px,pz,h)=>{
+        const tw=0.09,TC='#362410',GC='#2A5818';
         faces.push(quad([[px-tw,0,pz],[px-tw,h,pz],[px+tw,h,pz],[px+tw,0,pz]],TC,null,0));
         faces.push(quad([[px,0,pz-tw],[px,h,pz-tw],[px,h,pz+tw],[px,0,pz+tw]],TC,null,0));
-        const frs=[[1.8,0],[1.27,1.27],[0,1.8],[-1.27,1.27],[-1.8,0],[-1.27,-1.27],[0,-1.8],[1.27,-1.27]];
-        for(const[fx,fz]of frs){
-          const len=Math.sqrt(fx*fx+fz*fz),ppx=-fz/len,ppz=fx/len,w=0.22,wt=0.05;
-          faces.push(quad([[px+ppx*w,h+0.1,pz+ppz*w],[px-ppx*w,h+0.1,pz-ppz*w],[px+fx-ppx*wt,h-0.65,pz+fz-ppz*wt],[px+fx+ppx*wt,h-0.65,pz+fz+ppz*wt]],GC,null,0));
+        // Crown: 3 horizontal flat discs at slightly different radii/heights
+        const layers=[[1.3,h+0.8,GC],[1.0,h+1.2,'#346A20'],[0.7,h+1.6,'#3A7222']];
+        for(const[r,ly,lc]of layers){
+          faces.push(quad([[px-r,ly,pz],[px,ly,pz-r],[px+r,ly,pz],[px,ly,pz+r]],lc,null,0));
+          // Second rotated disc per layer for fuller look
+          const r2=r*0.85;
+          faces.push(quad([[px-r2,ly+0.15,pz-r2*0.4],[px-r2,ly+0.15,pz+r2*0.4],[px+r2,ly+0.15,pz+r2*0.4],[px+r2,ly+0.15,pz-r2*0.4]],lc,null,0));
         }
       };
 
-      palm(-7,2,7);palm(-4,-4,8.5);palm(-9,-12,7.5);
-      palm(5,10,6.5);palm(15,13,8);palm(27,12,7);
-      palm(36,2,7.5);palm(39,-6,8);palm(42,-15,9);
-      palm(-5,16,6);palm(32,14,7);
+      // Boulevard trees — evenly spaced in median strip (x≈-10, running N-S)
+      for(let ti=0;ti<8;ti++){tree(-10, 14-ti*5, 4+Math.sin(ti)*0.5);}
+      // A few trees on the east sidewalk of boulevard
+      for(let ti=0;ti<5;ti++){tree(-4, 12-ti*6, 3.5);}
+      // Trees in front of building on south side
+      tree(5,10,4);tree(14,11,3.8);tree(24,10,4.2);
     }
     // ── End 3D Environment ────────────────────────────────────────────────
 
