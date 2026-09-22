@@ -22328,8 +22328,8 @@ function renderAAABetaPage(){
     slab(-17.2,-115,-2.6,35,-0.02,0.09,RD2,1);
     // East sidewalk (between building and road)
     slab(-2.6,-115,0.3,35,0.00,0.14,'#CAC5A2',6);
-    // West sidewalk
-    slab(-21,-115,-17.2,35,0.00,0.14,'#CAC5A2',6);
+    // West sidewalk (extended to building faces at x=−23)
+    slab(-23,-115,-17.2,35,0.00,0.14,'#CAC5A2',6);
     // Kerbs
     slab(-17.4,-115,-17.15,35,0.09,0.08,'#9A9A98',3);
     slab(-2.65,-115,-2.4,35,0.09,0.08,'#9A9A98',3);
@@ -22431,12 +22431,12 @@ function renderAAABetaPage(){
     mkCar(-14,-12, -Math.PI/2,'#204020'); // dark green
     mkCar(-14,-38, -Math.PI/2,'#B04040'); // dark red
 
-    // Parked cars on east sidewalk of side street (perpendicular to kerb, facing east)
-    mkCar(-1.8, 20,  Math.PI/2,'#A8A8A8');
-    mkCar(-1.8,  8,  Math.PI/2,'#3A6A9A');
-    mkCar(-1.8, -5,  Math.PI/2,'#C0C0B0');
-    mkCar(-1.8,-18,  Math.PI/2,'#7A4040');
-    mkCar(-1.8,-32,  Math.PI/2,'#E0CC80');
+    // Parked cars in east lane of side street (kerbside parking, facing north)
+    mkCar(-3.8, 22, -Math.PI/2,'#A8A8A8');
+    mkCar(-3.8,  9, -Math.PI/2,'#3A6A9A');
+    mkCar(-3.8, -4, -Math.PI/2,'#C0C0B0');
+    mkCar(-3.8,-17, -Math.PI/2,'#7A4040');
+    mkCar(-3.8,-30, -Math.PI/2,'#E0CC80');
 
     // ═══════════════════════════════════════════════════════════════════════
     // STREET LAMPS — tall modern poles with outward-facing heads
@@ -22467,21 +22467,23 @@ function renderAAABetaPage(){
     // ENVIRONMENT BUILDINGS
     // ═══════════════════════════════════════════════════════════════════════
 
-    // ── West offices ─────────────────────────────────────────────────────────
+    // ── West offices — set back west of side street (x < −22, behind west sidewalk) ──
+    // Side street runs x=−17.2..−2.6; west sidewalk at x=−21..−17.2
+    // Buildings at x=−36..−23 → clear of road + sidewalk with ~2 m setback at x=−23..−21
     const WBO=[
-      {z0:4,z1:-8,h:5},{z0:-5,z1:-17,h:6},{z0:-14,z1:-26,h:4},
-      {z0:-23,z1:-35,h:7},{z0:-32,z1:-44,h:5},{z0:-41,z1:-53,h:4},
+      {z0: 1,z1:-12,h:5},{z0:-9,z1:-21,h:6},{z0:-18,z1:-30,h:4},
+      {z0:-27,z1:-39,h:7},{z0:-36,z1:-48,h:5},{z0:-45,z1:-57,h:4},
     ];
     const winPh=new T.MeshPhongMaterial({color:new T.Color('#88C0D8'),transparent:true,opacity:0.72,shininess:60,specular:new T.Color(0x88AACC)});
     for(const{z0,z1,h}of WBO){
-      bldBox(-23,z0,-13,z1,0,h,'#CEC4A2',10);
+      bldBox(-36,z0,-23,z1,0,h,'#CEC4A2',10);
       const nfl=Math.round(h/2.2);
       for(let fl=0;fl<nfl;fl++){
-        const wm=new T.Mesh(new T.BoxGeometry(9.2,0.72,0.06),winPh);
-        wm.position.set(-18,0.55+fl*2.12,z0+0.04);scene.add(wm);
+        const wm=new T.Mesh(new T.BoxGeometry(12.2,0.72,0.06),winPh);
+        wm.position.set(-29.5,0.55+fl*2.12,z0+0.04);scene.add(wm);
       }
-      const cap=new T.Mesh(new T.BoxGeometry(10,0.30,Math.abs(z1-z0)+0.12),pm('#E0D4B2',5));
-      cap.position.set(-18,h+0.15,(z0+z1)/2);cap.castShadow=true;scene.add(cap);
+      const cap=new T.Mesh(new T.BoxGeometry(13,0.30,Math.abs(z1-z0)+0.12),pm('#E0D4B2',5));
+      cap.position.set(-29.5,h+0.15,(z0+z1)/2);cap.castShadow=true;scene.add(cap);
     }
 
     // ── North background buildings ────────────────────────────────────────────
