@@ -22038,7 +22038,6 @@ function renderAAABetaPage(){
       document.head.appendChild(s);
     });
     ld('https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js')
-      .then(()=>ld('https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js'))
       .then(_3start)
       .catch(e=>{console.error('Three.js load failed',e);});
   }
@@ -22084,12 +22083,49 @@ function renderAAABetaPage(){
     cam.position.set(bx-100,by+60,bz+80);
     cam.lookAt(bx,by*0.6,bz);
 
-    // ── OrbitControls ───────────────────────────────────────────────────────
-    const oc=new T.OrbitControls(cam,tc);
-    oc.target.set(bx,by*0.48,bz);
-    oc.enableDamping=true;oc.dampingFactor=0.06;
-    oc.minDistance=12;oc.maxDistance=600;
-    oc.update();
+    // ── Inline orbit / pan / zoom controls ─────────────────────────────────
+    const tgt=new T.Vector3(bx,by*0.48,bz);
+    let camR=cam.position.distanceTo(tgt);
+    let camTh=Math.atan2(cam.position.x-tgt.x,cam.position.z-tgt.z);
+    let camPh=Math.asin((cam.position.y-tgt.y)/camR);
+    const snapCam=()=>{
+      cam.position.set(
+        tgt.x+camR*Math.sin(camTh)*Math.cos(camPh),
+        tgt.y+camR*Math.sin(camPh),
+        tgt.z+camR*Math.cos(camTh)*Math.cos(camPh));
+      cam.lookAt(tgt);
+    };
+    snapCam();
+    let drg=false,rDrg=false,mDrg=false,lx=0,ly=0;
+    const onMd=e=>{
+      drg=true;rDrg=e.button===2;mDrg=e.button===1;
+      lx=e.clientX;ly=e.clientY;e.preventDefault();
+    };
+    const onMu=()=>{drg=false;};
+    const onMm=e=>{
+      if(!drg)return;
+      const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;
+      if(rDrg||mDrg){
+        const right=new T.Vector3();
+        right.crossVectors(cam.getWorldDirection(new T.Vector3()),cam.up).normalize();
+        const pan=camR*0.001;
+        tgt.addScaledVector(right,-dx*pan);
+        tgt.y+=dy*pan*camR*0.012;
+      }else{
+        camTh-=dx*0.007;
+        camPh=Math.max(-1.35,Math.min(1.35,camPh-dy*0.007));
+      }
+      snapCam();
+    };
+    const onWh=e=>{
+      camR=Math.max(12,Math.min(600,camR*(e.deltaY>0?1.09:0.92)));
+      snapCam();e.preventDefault();
+    };
+    tc.addEventListener('mousedown',onMd);
+    tc.addEventListener('contextmenu',e=>e.preventDefault());
+    window.addEventListener('mouseup',onMu);
+    window.addEventListener('mousemove',onMm);
+    tc.addEventListener('wheel',onWh,{passive:false});
 
     // ── Build scene geometry ────────────────────────────────────────────────
     _3bldg(T,scene);
@@ -22097,7 +22133,7 @@ function renderAAABetaPage(){
 
     // ── Render loop ─────────────────────────────────────────────────────────
     let aid;
-    (function loop(){aid=requestAnimationFrame(loop);oc.update();R.render(scene,cam);})();
+    (function loop(){aid=requestAnimationFrame(loop);R.render(scene,cam);})();
 
     // ── Resize handler ──────────────────────────────────────────────────────
     const onRz=()=>{
@@ -22109,7 +22145,12 @@ function renderAAABetaPage(){
     window.addEventListener('resize',onRz);
 
     _3cleanup=()=>{
-      cancelAnimationFrame(aid);oc.dispose();R.dispose();
+      cancelAnimationFrame(aid);R.dispose();
+      tc.removeEventListener('mousedown',onMd);
+      tc.removeEventListener('contextmenu',e=>e.preventDefault());
+      window.removeEventListener('mouseup',onMu);
+      window.removeEventListener('mousemove',onMm);
+      tc.removeEventListener('wheel',onWh);
       window.removeEventListener('resize',onRz);
       if(tc.parentNode)tc.parentNode.removeChild(tc);
       _3cleanup=null;
