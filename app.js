@@ -20913,12 +20913,13 @@ function renderAAABetaPage(){
           ${SF_FLOORS.map(fl=>`<label style="display:flex;align-items:center;gap:7px;padding:3px 10px;cursor:pointer;font-size:11px;color:var(--text2);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><input type="checkbox" data-floor="${fl}" checked onchange="window._aaabFloorChange()" style="cursor:pointer;"> ${fl}</label>`).join('')}
         </div>
       </div>
+      <button id="aaab-three-btn" onclick="window._aaabToggleThree()" title="Switch to Three.js WebGL renderer" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">⬡ 3D View</button>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
     <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:linear-gradient(180deg,#6aaed4 0%,#96c8e8 35%,#c4dff0 70%,#bdd8e8 100%);position:relative;cursor:grab;user-select:none;">
       <canvas id="aaab-cvs" style="display:block;position:absolute;inset:0;"></canvas>
       <div style="position:absolute;top:10px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:5px 10px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;pointer-events:none;">⚡ Shift Zone · R+17 &amp; R+18</div>
-      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right drag: Orbit</div>
+      <div id="aaab-hint" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right drag: Orbit</div>
     </div>
   </div>`;
 
@@ -22005,5 +22006,344 @@ function renderAAABetaPage(){
       lastPinch=d;
     }
   },{passive:false});
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  THREE.JS PREMIUM 3D MODE  — WebGL renderer with real lighting & shadows
+  // ══════════════════════════════════════════════════════════════════════════
+  let _3active=false,_3cleanup=null;
+
+  window._aaabToggleThree=function(){
+    const btn=document.getElementById('aaab-three-btn');
+    const hint=document.getElementById('aaab-hint');
+    if(_3active){
+      if(_3cleanup)_3cleanup();
+      _3active=false;
+      cvs.style.display='';
+      if(btn){btn.style.background='var(--surface2)';btn.style.color='var(--text2)';}
+      if(hint)hint.innerHTML='🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right drag: Orbit';
+      render();
+    }else{
+      _3active=true;
+      cvs.style.display='none';
+      if(btn){btn.style.background='#1a4a8c';btn.style.color='#fff';}
+      if(hint)hint.textContent='🖱 Orbit · Right/Middle drag: Pan · Scroll: Zoom';
+      _3load();
+    }
+  };
+
+  function _3load(){
+    const ld=u=>new Promise((ok,no)=>{
+      if(document.querySelector(`script[src="${u}"]`)){ok();return;}
+      const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=no;
+      document.head.appendChild(s);
+    });
+    ld('https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js')
+      .then(()=>ld('https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js'))
+      .then(_3start)
+      .catch(e=>{console.error('Three.js load failed',e);});
+  }
+
+  function _3start(){
+    if(!_3active)return;
+    const T=window.THREE;
+    const W=vp.clientWidth,H=vp.clientHeight;
+
+    // ── Renderer ────────────────────────────────────────────────────────────
+    const R=new T.WebGLRenderer({antialias:true,alpha:false});
+    R.setSize(W,H);
+    R.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    R.shadowMap.enabled=true;
+    R.shadowMap.type=T.PCFSoftShadowMap;
+    R.toneMapping=T.ACESFilmicToneMapping;
+    R.toneMappingExposure=1.25;
+    const tc=R.domElement;
+    tc.style.cssText='position:absolute;inset:0;display:block;';
+    vp.appendChild(tc);
+
+    // ── Scene + sky ─────────────────────────────────────────────────────────
+    const scene=new T.Scene();
+    scene.background=new T.Color(0x84BBE0);
+    scene.fog=new T.FogExp2(0xAAD0E8,0.0013);
+
+    // ── Lights ──────────────────────────────────────────────────────────────
+    scene.add(new T.HemisphereLight(0xCCE8F4,0xBBA870,0.52));
+    const sun=new T.DirectionalLight(0xFFF8E4,2.0);
+    sun.position.set(-38,70,28);
+    sun.castShadow=true;
+    sun.shadow.mapSize.set(2048,2048);
+    sun.shadow.bias=-0.0005;
+    const sc2=sun.shadow.camera;
+    sc2.near=1;sc2.far=380;sc2.left=-120;sc2.right=120;sc2.top=160;sc2.bottom=-60;
+    scene.add(sun);
+    const fill2=new T.DirectionalLight(0xDCEEFF,0.42);
+    fill2.position.set(28,18,22);scene.add(fill2);
+
+    // ── Camera — SW looking NE (matches theta=-0.85 isometric view) ─────────
+    const cam=new T.PerspectiveCamera(33,W/H,0.5,700);
+    const bx=7,by=totalH*0.35,bz=-8.5;
+    cam.position.set(bx-100,by+60,bz+80);
+    cam.lookAt(bx,by*0.6,bz);
+
+    // ── OrbitControls ───────────────────────────────────────────────────────
+    const oc=new T.OrbitControls(cam,tc);
+    oc.target.set(bx,by*0.48,bz);
+    oc.enableDamping=true;oc.dampingFactor=0.06;
+    oc.minDistance=12;oc.maxDistance=600;
+    oc.update();
+
+    // ── Build scene geometry ────────────────────────────────────────────────
+    _3bldg(T,scene);
+    _3env(T,scene);
+
+    // ── Render loop ─────────────────────────────────────────────────────────
+    let aid;
+    (function loop(){aid=requestAnimationFrame(loop);oc.update();R.render(scene,cam);})();
+
+    // ── Resize handler ──────────────────────────────────────────────────────
+    const onRz=()=>{
+      if(!vp.isConnected)return;
+      cam.aspect=vp.clientWidth/vp.clientHeight;
+      cam.updateProjectionMatrix();
+      R.setSize(vp.clientWidth,vp.clientHeight);
+    };
+    window.addEventListener('resize',onRz);
+
+    _3cleanup=()=>{
+      cancelAnimationFrame(aid);oc.dispose();R.dispose();
+      window.removeEventListener('resize',onRz);
+      if(tc.parentNode)tc.parentNode.removeChild(tc);
+      _3cleanup=null;
+    };
+  }
+
+  // ── Building geometry ────────────────────────────────────────────────────
+  function _3bldg(T,scene){
+    const V=[],C=[],I=[];let vi=0;
+    const tc3=(hex)=>{const c=new T.Color();c.set(hex||'#888888');return[c.r,c.g,c.b];};
+    const q=(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3,hex)=>{
+      const[r,g,b]=tc3(hex);
+      V.push(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3);
+      for(let k=0;k<4;k++)C.push(r,g,b);
+      I.push(vi,vi+1,vi+2,vi,vi+2,vi+3);vi+=4;
+    };
+
+    // ── West Face (x=0) — camera from -x sees this face ──────────────────
+    for(let fi=0;fi<FLOORS_BTT.length;fi++){
+      const y0=yPos[fi],y1=y0+flH(FLOORS_BTT[fi]);
+      for(let c=0;c<W_SPAN;c++){
+        const z0=-c,z1=-(c+1),col=WF_C[c];
+        // Winding for -X normal (CCW from -x side): flip z order
+        q(0,y0,z1, 0,y0,z0, 0,y1,z0, 0,y1,z1, getColor('WF',fi,col,true));
+      }
+    }
+
+    // ── South Face (z=0) — camera from +z sees this face ─────────────────
+    for(let fi=0;fi<FLOORS_BTT.length;fi++){
+      const y0=yPos[fi],y1=y0+flH(FLOORS_BTT[fi]);
+      for(let c=0;c<SW_SPAN;c++){
+        const col=SF_C[c];
+        const eR=(c===SW_SPAN-1)?SW_END:c+1;
+        const x0=c,x1=eR;
+        // +Z normal (CCW from +z): (x0,y0,0)→(x1,y0,0)→(x1,y1,0)→(x0,y1,0)
+        q(x0,y0,0, x1,y0,0, x1,y1,0, x0,y1,0, getColor('SF',fi,col,true));
+      }
+    }
+
+    // ── North Face (z=-W_SPAN) — back face visible for completeness ───────
+    for(let fi=0;fi<FLOORS_BTT.length;fi++){
+      const y0=yPos[fi],y1=y0+flH(FLOORS_BTT[fi]);
+      for(let c=0;c<NW_SPAN;c++){
+        const col=NF_C[c];
+        const eR=(c===NW_SPAN-1)?NW_END:c+1;
+        const x0=c,x1=eR;
+        // -Z normal (CCW from -z): (x0,y0,-W_SPAN)→(x0,y1,-W_SPAN)→(x1,y1,-W_SPAN)→(x1,y0,-W_SPAN)
+        q(x0,y0,-W_SPAN, x0,y1,-W_SPAN, x1,y1,-W_SPAN, x1,y0,-W_SPAN, getColor('NF',fi,col,true));
+      }
+    }
+
+    // ── East extension face at x=14.5 (z=0 to -4.5) ─────────────────────
+    for(let fi=0;fi<FLOORS_BTT.length;fi++){
+      const y0=yPos[fi],y1=y0+flH(FLOORS_BTT[fi]);
+      // +X normal: (14.5,y0,0)→(14.5,y1,0)→(14.5,y1,-4.5)→(14.5,y0,-4.5)
+      q(14.5,y0,0, 14.5,y1,0, 14.5,y1,-4.5, 14.5,y0,-4.5, JOINT);
+    }
+
+    // ── Wider south extension at z=-1 (x=17.5 to 31.5, up to R+25) ───────
+    const R25fi=FLOORS_BTT.indexOf('R+25');
+    const R25top=R25fi>=0?yPos[R25fi]+flH('R+25'):totalH;
+    for(let fi=0;fi<FLOORS_BTT.length&&yPos[fi]<R25top;fi++){
+      const y0=yPos[fi],y1=Math.min(y0+flH(FLOORS_BTT[fi]),R25top);
+      // +Z normal (south face of extension): (17.5,y0,-1)→(31.5,y0,-1)→(31.5,y1,-1)→(17.5,y1,-1)
+      q(17.5,y0,-1, 31.5,y0,-1, 31.5,y1,-1, 17.5,y1,-1, JOINT);
+      // +X east face of extension: (31.5,y0,-1)→(31.5,y1,-1)→(31.5,y1,-18)→(31.5,y0,-18)
+      q(31.5,y0,-1, 31.5,y1,-1, 31.5,y1,-18, 31.5,y0,-18, JOINT);
+    }
+
+    // ── Roof slabs ────────────────────────────────────────────────────────
+    const tH=totalH;
+    // Main roof (over WF+NF footprint)
+    q(0,tH,-W_SPAN, NW_END,tH,-W_SPAN, NW_END,tH,0, 0,tH,0, JOINT);
+    // Extended roof
+    if(R25fi>=0){
+      q(17.5,R25top,-1, 31.5,R25top,-1, 31.5,R25top,-18, 17.5,R25top,-18, JOINT);
+    }
+
+    // ── Merged mesh ───────────────────────────────────────────────────────
+    const geo=new T.BufferGeometry();
+    geo.setAttribute('position',new T.BufferAttribute(new Float32Array(V),3));
+    geo.setAttribute('color',new T.BufferAttribute(new Float32Array(C),3));
+    geo.setIndex(new T.BufferAttribute(new Uint32Array(I),1));
+    geo.computeVertexNormals();
+    const mesh=new T.Mesh(geo,new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide}));
+    mesh.castShadow=true;mesh.receiveShadow=true;
+    scene.add(mesh);
+
+    // ── Joint lines ───────────────────────────────────────────────────────
+    const lV=[],lC=[];
+    const jColor=[0.04,0.067,0.12];
+    const addSeg=(x0,y0,z0,x1,y1,z1)=>{
+      lV.push(x0,y0,z0,x1,y1,z1);lC.push(...jColor,...jColor);
+    };
+    for(let fi=1;fi<FLOORS_BTT.length;fi++){
+      const y=yPos[fi];
+      addSeg(0,y,0,0,y,-W_SPAN);       // WF floor lines
+      addSeg(0,y,0,SW_END,y,0);        // SF floor lines
+      addSeg(0,y,-W_SPAN,NW_END,y,-W_SPAN); // NF floor lines
+    }
+    for(let c=1;c<W_SPAN;c++)addSeg(0,0,-c,0,totalH,-c);   // WF column lines
+    for(let c=1;c<SW_SPAN;c++)addSeg(c,0,0,c,totalH,0);    // SF column lines
+    for(let c=1;c<NW_SPAN;c++)addSeg(c,0,-W_SPAN,c,totalH,-W_SPAN); // NF column lines
+    const lGeo=new T.BufferGeometry();
+    lGeo.setAttribute('position',new T.BufferAttribute(new Float32Array(lV),3));
+    lGeo.setAttribute('color',new T.BufferAttribute(new Float32Array(lC),3));
+    scene.add(new T.LineSegments(lGeo,new T.LineBasicMaterial({vertexColors:true})));
+  }
+
+  // ── Environment geometry ─────────────────────────────────────────────────
+  function _3env(T,scene){
+    const lm=(hex,opts={})=>new T.MeshLambertMaterial({color:new T.Color(hex),...opts});
+
+    // Thin slab on ground (y centred at h/2 above y=yBase)
+    const slab=(x0,z0,x1,z1,yBase,h,hex)=>{
+      const dx=Math.abs(x1-x0),dz=Math.abs(z1-z0);
+      if(dx<0.01||dz<0.01)return;
+      const m=new T.Mesh(new T.BoxGeometry(dx,h,dz),lm(hex));
+      m.position.set((x0+x1)/2,yBase+h/2,(z0+z1)/2);
+      m.receiveShadow=true;scene.add(m);
+    };
+
+    // Building box
+    const bldBox=(x0,z0,x1,z1,y0,y1,hex)=>{
+      const dx=Math.abs(x1-x0),dz=Math.abs(z1-z0),dy=y1-y0;
+      if(dx<0.01||dz<0.01||dy<0.01)return;
+      const m=new T.Mesh(new T.BoxGeometry(dx,dy,dz),lm(hex));
+      m.position.set((x0+x1)/2,y0+dy/2,(z0+z1)/2);
+      m.castShadow=true;m.receiveShadow=true;scene.add(m);
+    };
+
+    // ── Ground ──────────────────────────────────────────────────────────────
+    slab(-30,-110,80,32, -0.08,0.08, '#BDB085'); // sandy base
+    slab(-19,-110, 0,32, -0.03,0.06, '#AEAA78'); // Main St N-S
+    slab(-30,  0,80,17, -0.03,0.06, '#AEAA78'); // Cross St E-W
+    slab(-19,-110,-14,32, 0.04,0.06, '#D0C49C'); // Main St west sidewalk
+    slab(-1, -110,  0,32, 0.04,0.06, '#D0C49C'); // Main St east sidewalk
+    slab(-12,-110, -9,32, 0.04,0.06, '#828050'); // planted median
+    slab(-1,   0,33,0.2,  0.04,0.06, '#D0C49C'); // sidewalk south of building
+
+    // Crosswalk stripes — south crossing of Main St
+    for(let i=0;i<5;i+=2){
+      slab(-19,i*0.7-0.2,0,i*0.7+0.4, 0.07,0.02,'rgba(255,255,255,0.8)');
+    }
+    // White centre-line dashes on Main St
+    for(let j=0;j<12;j++){
+      slab(-9.15,-110+j*9,-8.85,-110+j*9+5, 0.06,0.02,'#E0DCBA');
+    }
+
+    // ── West offices ─────────────────────────────────────────────────────────
+    const WBO=[
+      {z0:6,z1:-6,h:5},{z0:-3,z1:-15,h:6},{z0:-12,z1:-24,h:4},
+      {z0:-21,z1:-33,h:7},{z0:-30,z1:-42,h:5},{z0:-38,z1:-50,h:4},
+    ];
+    const winMat=new T.MeshLambertMaterial({color:new T.Color('#8EC4D8'),transparent:true,opacity:0.68});
+    for(const{z0,z1,h}of WBO){
+      bldBox(-21,z0,-13,z1,0,h,'#CEC4A2');
+      // Window strips on south face
+      const nfl=Math.round(h/2.2);
+      for(let fl=0;fl<nfl;fl++){
+        const wy=0.6+fl*2.15;
+        const wm=new T.Mesh(new T.BoxGeometry(7.4,0.78,0.05),winMat);
+        wm.position.set(-17,wy,z0+0.03);
+        scene.add(wm);
+      }
+      // Parapet cap
+      const cap=new T.Mesh(new T.BoxGeometry(8,0.28,Math.abs(z1-z0)+0.1),lm('#DED4B4'));
+      cap.position.set(-17,h+0.14,(z0+z1)/2);
+      scene.add(cap);
+    }
+
+    // ── North background buildings ────────────────────────────────────────────
+    bldBox(-8,-19,0,-33,0,8,'#C4BC9E');
+    bldBox(2,-21,11,-35,0,10,'#BEB89C');
+    bldBox(11,-19,20,-33,0,7,'#C8C09E');
+    bldBox(20,-21,29,-35,0,9,'#C2BA9C');
+    bldBox(29,-19,38,-33,0,6,'#CCBEA4');
+
+    // ── Sky Tower complex (east) ──────────────────────────────────────────────
+    // Main tower — dark glass
+    bldBox(34,0,56,-28,0,30,'#394C52');
+    // Glass curtain wall overlay on south face
+    const glassMat=new T.MeshLambertMaterial({color:new T.Color('#3870A0'),transparent:true,opacity:0.72});
+    for(let wc=0;wc<11;wc++){
+      const wx=34+wc*2+0.2;
+      for(let fl=0;fl<15;fl++){
+        const wy=1.2+fl*2;
+        const wm=new T.Mesh(new T.BoxGeometry(1.5,1.5,0.06),glassMat);
+        wm.position.set(wx+0.75,wy+0.75,0.04);
+        scene.add(wm);
+      }
+    }
+    // Mullion strips on Sky Tower
+    for(let wc=1;wc<11;wc++){
+      const mx=34+wc*2;
+      const mull=new T.Mesh(new T.BoxGeometry(0.12,30,0.08),lm('#1E2C30'));
+      mull.position.set(mx,15,0.05);scene.add(mull);
+    }
+    // Horizontal spandrel lines
+    for(let fl=1;fl<15;fl++){
+      const sp=new T.Mesh(new T.BoxGeometry(22,0.1,0.06),lm('#1A2628'));
+      sp.position.set(45,fl*2,0.04);scene.add(sp);
+    }
+    bldBox(34,1,60,-8,0,6,'#424E52'); // podium
+    bldBox(56,-4,68,-24,0,22,'#3C4A4A'); // east annex
+
+    // ── Construction crane ────────────────────────────────────────────────────
+    const crM=lm('#D4B818');
+    // Mast
+    const mast=new T.Mesh(new T.BoxGeometry(0.35,34,0.35),crM);
+    mast.position.set(53.175,17,-15);scene.add(mast);
+    // Jib (long boom)
+    const jib=new T.Mesh(new T.BoxGeometry(13,0.22,0.22),crM);
+    jib.position.set(59.5,34.1,-15);scene.add(jib);
+    // Counter-jib
+    const cj=new T.Mesh(new T.BoxGeometry(5,0.22,0.22),crM);
+    cj.position.set(50.5,33.8,-15);scene.add(cj);
+
+    // ── Street trees ─────────────────────────────────────────────────────────
+    const treeColors=['#1A5209','#1E5A0C','#226010','#1C5A10','#245E12'];
+    const mkTree=(px,pz,h)=>{
+      const trunkM=new T.MeshLambertMaterial({color:new T.Color('#3C2008')});
+      const trunk=new T.Mesh(new T.CylinderGeometry(0.075,0.10,h,7),trunkM);
+      trunk.position.set(px,h/2,pz);trunk.castShadow=true;scene.add(trunk);
+      const cIdx=Math.abs(Math.round(px*7+pz*3))%treeColors.length;
+      const crownM=new T.MeshLambertMaterial({color:new T.Color(treeColors[cIdx])});
+      const crown=new T.Mesh(new T.SphereGeometry(1.15,9,7),crownM);
+      crown.position.set(px,h+0.75,pz);crown.castShadow=true;scene.add(crown);
+    };
+    for(let ti=0;ti<10;ti++)mkTree(-10,12-ti*5.5,3.4+Math.sin(ti*1.2)*0.35);
+    for(let ti=0;ti<6;ti++)mkTree(-16.5,10-ti*6,2.9+Math.sin(ti)*0.2);
+    for(let ti=0;ti<6;ti++)mkTree(-1.5,11-ti*6,2.8);
+    mkTree(4,12,3.6);mkTree(12,13,3.4);mkTree(21,12,3.8);mkTree(29,13,3.5);
+  }
+  // ══════════════════════════════════════════════════════════════════════════
 }
 
