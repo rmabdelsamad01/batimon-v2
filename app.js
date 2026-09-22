@@ -22470,9 +22470,11 @@ function renderAAABetaPage(){
     // ── West offices — set back west of side street (x < −22, behind west sidewalk) ──
     // Side street runs x=−17.2..−2.6; west sidewalk at x=−21..−17.2
     // Buildings at x=−36..−23 → clear of road + sidewalk with ~2 m setback at x=−23..−21
+    // WBO south faces start at z=−4 (behind main building south wall at z=0)
+    // so no block appears at the boulevard/side-street intersection corner
     const WBO=[
-      {z0: 1,z1:-12,h:5},{z0:-9,z1:-21,h:6},{z0:-18,z1:-30,h:4},
-      {z0:-27,z1:-39,h:7},{z0:-36,z1:-48,h:5},{z0:-45,z1:-57,h:4},
+      {z0: -4,z1:-17,h:5},{z0:-14,z1:-26,h:6},{z0:-23,z1:-35,h:4},
+      {z0:-32,z1:-44,h:7},{z0:-41,z1:-53,h:5},{z0:-50,z1:-62,h:4},
     ];
     const winPh=new T.MeshPhongMaterial({color:new T.Color('#88C0D8'),transparent:true,opacity:0.72,shininess:60,specular:new T.Color(0x88AACC)});
     for(const{z0,z1,h}of WBO){
@@ -22555,8 +22557,8 @@ function renderAAABetaPage(){
     for(const tx of[-28,-22,-16,-10,-5,16,22,28,35,42,50,60,72])mkTree(tx,1.5,3.2+Math.sin(tx)*0.25);
     // Trees along S sidewalk of boulevard (z≈19.5)
     for(const tx of[-25,-18,-10,-3,6,15,24,34,44,55,66,77])mkTree(tx,19.5,3.0+Math.sin(tx*1.3)*0.3);
-    // Trees along E sidewalk of side street (x≈-1.5) — north of intersection
-    for(const tz of[-8,-20,-32,-44,-56,-68])mkTree(-1.5,tz,2.9+Math.sin(tz)*0.2);
+    // Trees along E sidewalk of side street (x≈-1.5) — start north of boulevard (z<0)
+    for(const tz of[-3,-14,-26,-38,-50,-62])mkTree(-1.5,tz,2.9+Math.sin(tz)*0.2);
     // Trees in boulevard median (z≈10.7)
     for(const tx of[-20,-8,5,18,32,46,60,74])mkTree(tx,10.7,2.8+Math.sin(tx*0.5)*0.2);
   }
