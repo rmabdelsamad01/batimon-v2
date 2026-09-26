@@ -19600,13 +19600,13 @@ function _renderMobileBMGrid(){
   if(!cont) return;
   const {cols,rows,zid}=_getMobileBMData(window._mobFacade);
   const filter=window._mobFilter;
-  const stBg={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
-  const stBd={installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
-  const stTx={installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
+  const stBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBd={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
+  const stTx={c_and_d:'#fff',bottom_bracket:'#fff',installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
   const cw=36,ch=20,lw=36;
 
   // Count totals for legend
-  const cnt={installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
+  const cnt={c_and_d:0,bottom_bracket:0,installed:0,delivered:0,fabricated:0,cutting:0,cl_not_issued:0,cip:0,defect:0,pending:0,total:0};
   rows.forEach(r=>r.d.forEach((bt,ci)=>{
     if(!bt||bt==='|'||bt==='x') return;
     const id=`BM-${zid}-${r.l.replace('+','')}-${cols[ci]}`;
@@ -19637,7 +19637,7 @@ function _renderMobileBMGrid(){
   const legend=`<div style="margin:16px 12px 24px;background:#fff;border:1px solid #e0e8f0;border-radius:10px;padding:14px;">
     <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#8099b0;margin-bottom:10px;">Legend · ${cnt.total} brackets</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      ${[['installed','Installed'],['delivered','Delivered'],['fabricated','Fabricated'],['cutting','CL issued'],['cip','CL in Progress'],['cl_not_issued','CL not issued'],['defect','Defect']].map(([k,l])=>`
+      ${[['c_and_d','C+D'],['bottom_bracket','Bot. Bracket'],['installed','Top Bracket'],['delivered','Delivered'],['fabricated','Fabricated'],['cutting','CL issued'],['cip','CL in Progress'],['cl_not_issued','CL not issued'],['defect','Defect']].map(([k,l])=>`
       <div style="display:flex;align-items:center;gap:7px;">
         <div style="width:13px;height:13px;border-radius:2px;flex-shrink:0;background:${stBg[k]};border:1.5px solid ${stBd[k]};"></div>
         <span style="font-size:11px;color:#4a6080;flex:1;">${l}</span>
