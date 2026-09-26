@@ -10374,16 +10374,28 @@ function buildComplexTable(zone){
 
 function _applyPendingClasses(tbl){
   if(!tbl) return;
-  const _allSt=Object.values(SM).map(v=>v.cls).concat(['st-pre-i','st-pre-d']);
+  const _allSt=Object.values(SM).map(v=>v.cls).concat(['st-pre-i','st-pre-d','st-pre-bb','st-pre-cd']);
   tbl.querySelectorAll('[data-pid]').forEach(cell=>{
     const p=panels[cell.dataset.pid]||{};
     if(!p.pending_status) return;
-    const isInst=p.pending_status==='installed';
     cell.classList.remove(..._allSt);
-    cell.classList.add(isInst?'st-pre-i':'st-pre-d');
-    cell.style.setProperty('background',isInst?'#ccffdd':'#fffccc','important');
-    cell.style.setProperty('border-color',isInst?'#66dd99':'#ddcc00','important');
-    cell.style.setProperty('color',isInst?'#006612':'#665e00','important');
+    const _isBMCell=cell.dataset.pid&&cell.dataset.pid.startsWith('BM-');
+    if(_isBMCell){
+      const _bmCls=p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='bottom_bracket'?'st-pre-bb':'st-pre-i';
+      const _bmBg=p.pending_status==='c_and_d'?'#d8f0d8':p.pending_status==='bottom_bracket'?'#c8f5cc':'#ccffdd';
+      const _bmBd=p.pending_status==='c_and_d'?'#99cc99':p.pending_status==='bottom_bracket'?'#66cc88':'#66dd99';
+      const _bmTx=p.pending_status==='c_and_d'?'#336633':p.pending_status==='bottom_bracket'?'#226633':'#006612';
+      cell.classList.add(_bmCls);
+      cell.style.setProperty('background',_bmBg,'important');
+      cell.style.setProperty('border-color',_bmBd,'important');
+      cell.style.setProperty('color',_bmTx,'important');
+    } else {
+      const isInst=p.pending_status==='installed';
+      cell.classList.add(isInst?'st-pre-i':'st-pre-d');
+      cell.style.setProperty('background',isInst?'#ccffdd':'#fffccc','important');
+      cell.style.setProperty('border-color',isInst?'#66dd99':'#ddcc00','important');
+      cell.style.setProperty('color',isInst?'#006612':'#665e00','important');
+    }
   });
 }
 
@@ -10729,8 +10741,13 @@ function openComplexModal(id,fl,col,ref,type,zone){
   const _pendingBanner=document.getElementById('pm-pending-banner');
   if(_pendingBanner){
     if(p.pending_status && !window._mobPanelMode){
-      const _pLabel=p.pending_status==='installed'?'Pre-installed':'Pre-delivered';
-      const _pCls=p.pending_status==='installed'?'st-pre-i':'st-pre-d';
+      const _isBMPend=id&&id.startsWith('BM-');
+      const _pLabel=_isBMPend
+        ?(p.pending_status==='c_and_d'?'Pre-C+D':p.pending_status==='bottom_bracket'?'Pre-Bottom Bracket':'Pre-Top Bracket')
+        :(p.pending_status==='installed'?'Pre-installed':'Pre-delivered');
+      const _pCls=_isBMPend
+        ?(p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='bottom_bracket'?'st-pre-bb':'st-pre-i')
+        :(p.pending_status==='installed'?'st-pre-i':'st-pre-d');
       _pendingBanner.style.display='flex';
       _pendingBanner.innerHTML=`<div class="wfc ${_pCls}" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-right:8px;"></div><span style="flex:1;font-size:12px;font-weight:700;color:#1a2a3a;">⏳ ${_pLabel} — pending approval</span><button onclick="_approvePending('${id}')" style="padding:4px 12px;background:#00b33c;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px;">Approve</button><button onclick="_rejectPending('${id}')" style="padding:4px 12px;background:#e53935;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Reject</button>`;
     } else {
@@ -10754,7 +10771,8 @@ function _pmSetMode(){
   if(bbEl)bbEl.style.display=isBM?'':'none';
   if(soiEl)soiEl.innerHTML=`<span class="si">✓</span>${isBM?'Top Bracket':'Installed'}`;
   if(window._mobPanelMode){
-    ['sof','soc','socip','socni','sox','sop'].forEach(cls=>{
+    const _mobHide=isBM?['sod','sof','soc','socip','socni','sox','sop']:['sof','soc','socip','socni','sox','sop'];
+    _mobHide.forEach(cls=>{
       const el=document.querySelector(`.so.${cls}`);
       if(el)el.style.display='none';
     });
@@ -10875,8 +10893,9 @@ async function savePanel(){
   const installRef = ['installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-install-ref').value : (panels[selPanel]||{}).installRef||'';
   const fabDate = ['fabricated','delivered','installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
   const deliveryDate = ['delivered','installed','bottom_bracket','c_and_d'].includes(selStat) ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
-  // Mobile users setting installed/delivered → save as pending_status, not real status
-  const _isMobChange=window._mobPanelMode&&['installed','delivered'].includes(selStat);
+  // Mobile users setting installed/delivered (UCW) or bracket statuses (BM) → save as pending_status
+  const _isBMPanel=selPanel&&selPanel.startsWith('BM-');
+  const _isMobChange=window._mobPanelMode&&(_isBMPanel?['installed','bottom_bracket','c_and_d'].includes(selStat):['installed','delivered'].includes(selStat));
   if(_isMobChange){
     panels[selPanel]={...panels[selPanel],pending_status:selStat};
   } else {
@@ -19625,9 +19644,17 @@ function _renderMobileBMGrid(){
       if(bt==='|') return`<div style="width:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:${ch}px;background:#cdd6e0;"></div></div>`;
       if(!bt||bt==='x') return`<div style="width:${cw}px;height:${ch}px;flex-shrink:0;background:#f0f4f9;border:1px solid #e8eef5;"></div>`;
       const id=`BM-${zid}-${r.l.replace('+','')}-${cols[ci]}`;
-      const s=(panels[id]||{}).status||'pending';
-      const dim=filter!=='all'&&s!==filter;
-      return`<div style="width:${cw}px;height:${ch}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;background:${stBg[s]};color:${stTx[s]};border:1px solid ${stBd[s]};opacity:${dim?0.12:1};" title="${bt} · ${s}">${bt}</div>`;
+      const _bp=panels[id]||{};
+      const s=_bp.status||'pending';
+      const ps=_bp.pending_status;
+      const _pendBg={c_and_d:'#d8f0d8',bottom_bracket:'#c8f5cc',installed:'#ccffdd'};
+      const _pendBd={c_and_d:'#99cc99',bottom_bracket:'#66cc88',installed:'#66dd99'};
+      const _pendTx={c_and_d:'#336633',bottom_bracket:'#226633',installed:'#006612'};
+      const bg=ps?(_pendBg[ps]||stBg[s]):stBg[s];
+      const bd=ps?(_pendBd[ps]||stBd[s]):stBd[s];
+      const tx=ps?(_pendTx[ps]||stTx[s]):stTx[s];
+      const dim=filter!=='all'&&(ps?ps!==filter:s!==filter);
+      return`<div style="width:${cw}px;height:${ch}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;background:${bg};color:${tx};border:1px solid ${bd};opacity:${dim?0.12:1};${ps?'outline:1.5px dashed '+bd+';outline-offset:-2px;':''}" title="${bt} · ${ps?'pending:'+ps:s}">${bt}</div>`;
     }).join('');
     return`<div style="display:flex;align-items:center;margin-bottom:1px;">
       <div style="width:${lw}px;flex-shrink:0;font-size:8px;font-weight:700;color:${isEmpty?'#cdd6e0':'#4a6080'};text-align:right;padding-right:4px;">${r.l}</div>${cells}
