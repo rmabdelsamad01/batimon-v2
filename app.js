@@ -19654,7 +19654,7 @@ function _renderMobileBMGrid(){
       const bd=ps?(_pendBd[ps]||stBd[s]):stBd[s];
       const tx=ps?(_pendTx[ps]||stTx[s]):stTx[s];
       const dim=filter!=='all'&&(ps?ps!==filter:s!==filter);
-      return`<div style="width:${cw}px;height:${ch}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;background:${bg};color:${tx};border:1px solid ${bd};opacity:${dim?0.12:1};${ps?'outline:1.5px dashed '+bd+';outline-offset:-2px;':''}" title="${bt} · ${ps?'pending:'+ps:s}">${bt}</div>`;
+      return`<div data-pid="${id}" onclick="openPanel('${id}')" style="width:${cw}px;height:${ch}px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;background:${bg};color:${tx};border:1px solid ${bd};opacity:${dim?0.12:1};${ps?'outline:1.5px dashed '+bd+';outline-offset:-2px;':''}" title="${bt} · ${ps?'pending:'+ps:s}">${bt}</div>`;
     }).join('');
     return`<div style="display:flex;align-items:center;margin-bottom:1px;">
       <div style="width:${lw}px;flex-shrink:0;font-size:8px;font-weight:700;color:${isEmpty?'#cdd6e0':'#4a6080'};text-align:right;padding-right:4px;">${r.l}</div>${cells}
