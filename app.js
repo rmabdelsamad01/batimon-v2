@@ -10795,14 +10795,16 @@ function setSt(s,el){
     iw.style.display='block';
     if(!id.value)id.value=new Date().toISOString().split('T')[0];
     rw.style.display='block';
-    if(selPanel && selPanel.startsWith('BM-')) _openBracketInstalledChecklist(selPanel);
-    else if(selPanel) _openInstalledChecklist(selPanel);
+    if(!window._mobPanelMode){
+      if(selPanel && selPanel.startsWith('BM-')) _openBracketInstalledChecklist(selPanel);
+      else if(selPanel) _openInstalledChecklist(selPanel);
+    }
   } else {iw.style.display='none';rw.style.display='none';}
   if(s==='fabricated'){
     fw.style.display='block';
     if(!fd.value)fd.value=new Date().toISOString().split('T')[0];
     // Open Panel Assembly checklist — create new or review/edit existing
-    if(selPanel) _openFabricatedChecklist(selPanel);
+    if(!window._mobPanelMode && selPanel) _openFabricatedChecklist(selPanel);
   } else {
     fw.style.display='none';
   }
