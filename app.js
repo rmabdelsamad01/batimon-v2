@@ -15687,11 +15687,12 @@ function _demoPaymentGridHtml(){
     <td style="${tdf}color:#00663a;">${instTotalDisp}</td>
     <td style="${tdf}color:#224F93;">${totalDeliv}</td>${totalExtraCells}</tr>`;
   const discInstVal=totalInstVal*_PAY_DISC;
-  const discInstDisp=mad?_fmtMAD(discInstVal):Math.round(discInstVal);
-  let discExtraCells=totalExtraVals.map(v=>{const dv=v*_PAY_DISC;return `<td style="${tdf}color:#7c3aed;">${mad?_fmtMAD(dv):Math.round(dv)}</td>`;}).join('');
-  rows+=`<tr style="background:#fdf6e3;"><td style="${tdf}color:#92400e;text-align:left;">TOTAL DISCOUNTED</td>
-    <td style="${tdf}color:#92400e;">${discInstDisp}</td>
-    <td style="${tdf}color:#c0cdd8;">—</td>${discExtraCells}</tr>`;
+  if(mad){
+    let discExtraCells=totalExtraVals.map(v=>{const dv=v*_PAY_DISC;return `<td style="${tdf}color:#7c3aed;">${_fmtMAD(dv)}</td>`;}).join('');
+    rows+=`<tr style="background:#fdf6e3;"><td style="${tdf}color:#92400e;text-align:left;">TOTAL DISCOUNTED</td>
+      <td style="${tdf}color:#92400e;">${_fmtMAD(discInstVal)}</td>
+      <td style="${tdf}color:#c0cdd8;">—</td>${discExtraCells}</tr>`;
+  }
   const madBtnStyle=`font-size:10px;font-weight:700;padding:4px 10px;border:1.5px solid #d97706;border-radius:5px;background:${mad?'#fef3c7':'transparent'};color:#d97706;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:var(--font);`;
   return `<div style="padding:4px 32px 32px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:18px;border-top:1.5px solid #e0e8f0;">
     <div style="font-size:11px;font-weight:700;color:#1e3a5f;letter-spacing:0.06em;text-transform:uppercase;">Payment Grid</div>
@@ -15762,7 +15763,7 @@ function _demoExportPaymentXlsx(){
     tsv+=`${floor}\t${mad?instVal.toFixed(2):instCnt}\t${delivCnt}\t${extraVals.join('\t')}\n`;
   });
   tsv+=`TOTAL\t${mad?totalInstVal.toFixed(2):totalInstVal}\t${totalDeliv}\t${totalExtraVals.map(v=>mad?v.toFixed(2):v).join('\t')}\n`;
-  tsv+=`TOTAL DISCOUNTED\t${(totalInstVal*_PAY_DISC).toFixed(mad?2:0)}\t—\t${totalExtraVals.map(v=>(v*_PAY_DISC).toFixed(mad?2:0)).join('\t')}\n`;
+  if(mad) tsv+=`TOTAL DISCOUNTED\t${(totalInstVal*_PAY_DISC).toFixed(2)}\t—\t${totalExtraVals.map(v=>(v*_PAY_DISC).toFixed(2)).join('\t')}\n`;
   navigator.clipboard.writeText(tsv).then(()=>{
     const btn=event.currentTarget;
     const orig=btn.innerHTML;
