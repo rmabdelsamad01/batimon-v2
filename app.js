@@ -15759,7 +15759,7 @@ function _demoExportPaymentXlsx(){
       totalExtraVals[li]+=val;
       extraVals.push(mad?val.toFixed(2):val);
     });
-    tsv+=`${floor}\t${mad?totalInstVal.toFixed(2):instCnt}\t${delivCnt}\t${extraVals.join('\t')}\n`;
+    tsv+=`${floor}\t${mad?instVal.toFixed(2):instCnt}\t${delivCnt}\t${extraVals.join('\t')}\n`;
   });
   tsv+=`TOTAL\t${mad?totalInstVal.toFixed(2):totalInstVal}\t${totalDeliv}\t${totalExtraVals.map(v=>mad?v.toFixed(2):v).join('\t')}\n`;
   tsv+=`TOTAL DISCOUNTED\t${(totalInstVal*_PAY_DISC).toFixed(mad?2:0)}\t—\t${totalExtraVals.map(v=>(v*_PAY_DISC).toFixed(mad?2:0)).join('\t')}\n`;
