@@ -15669,7 +15669,7 @@ function _demoPaymentGridHtml(){
     extraLegs.forEach((leg,li)=>{
       const cnt=src.reduce((s,f)=>s+((legCounts[leg.id]||{})[f]||0),0);
       cumulativeCnt+=cnt;
-      const val=mad?cumulativeCnt*_PAY_VAR:cumulativeCnt;
+      const val=mad?((_PAY_Y[floor]||0)*_PAY_FIXED+cumulativeCnt*_PAY_VAR):cumulativeCnt;
       totalExtraVals[li]+=val;
       const disp=val?(mad?_fmtMAD(val):val):'—';
       extraCells+=`<td style="${td}color:${val?'#7c3aed':'#c0cdd8'};">${disp}</td>`;
@@ -15756,7 +15756,7 @@ function _demoExportPaymentXlsx(){
     extraLegs.forEach((leg,li)=>{
       const cnt=src.reduce((s,f)=>s+((legCounts[leg.id]||{})[f]||0),0);
       cumulativeCnt+=cnt;
-      const val=mad?cumulativeCnt*_PAY_VAR:cumulativeCnt;
+      const val=mad?((_PAY_Y[floor]||0)*_PAY_FIXED+cumulativeCnt*_PAY_VAR):cumulativeCnt;
       totalExtraVals[li]+=val;
       extraVals.push(mad?val.toFixed(2):val);
     });
