@@ -15645,7 +15645,13 @@ function _demoPaymentGridHtml(){
   rows+=`<tr style="background:#f0f4ff;"><td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;color:#1e3a5f;">TOTAL</td>
     <td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:#00663a;">${totalInst}</td>
     <td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:#224F93;">${totalDeliv}</td></tr>`;
-  return `<div style="padding:4px 32px 32px;"><div style="font-size:11px;font-weight:700;color:#1e3a5f;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;padding-top:18px;border-top:1.5px solid #e0e8f0;">Payment Grid</div>
+  return `<div style="padding:4px 32px 32px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:18px;border-top:1.5px solid #e0e8f0;">
+    <div style="font-size:11px;font-weight:700;color:#1e3a5f;letter-spacing:0.06em;text-transform:uppercase;">Payment Grid</div>
+    <button onclick="_demoExportPaymentXlsx()" style="font-size:10px;font-weight:700;padding:4px 10px;border:1.5px solid #224F93;border-radius:5px;background:transparent;color:#224F93;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:var(--font);">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+      Copy to Excel
+    </button>
+  </div>
     <table style="border-collapse:collapse;font-family:var(--font);"><thead><tr>
       <th style="${th}text-align:left;">Floor</th>
       <th style="${th}">Installed</th>
@@ -15658,6 +15664,36 @@ function _demoGeneratePayment(){
   const btn=document.getElementById('demo-pay-btn');
   if(btn){btn.style.background=_demoPaymentVisible?'#e8f0fb':'transparent';}
   if(_demoActiveZone==='overview') _demoRenderGrid();
+}
+
+function _demoExportPaymentXlsx(){
+  const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
+  const installCount={},delivCount={};
+  Object.keys(panels).forEach(pid=>{
+    if(_isMirror.test(pid)) return;
+    const m=pid.match(/^(NF|SF|EF|WF)-(.+)-C/);
+    if(!m) return;
+    const floor=m[2];
+    const s=(panels[pid]?.status)||'pending';
+    if(s==='installed'){installCount[floor]=(installCount[floor]||0)+1;delivCount[floor]=(delivCount[floor]||0)+1;}
+    else if(s==='delivered'){delivCount[floor]=(delivCount[floor]||0)+1;}
+  });
+  const floors=[...NF_FLOORS].reverse();
+  let tsv='Floor\tInstalled\tTotal Delivered\n';
+  let totalInst=0,totalDeliv=0;
+  floors.forEach(floor=>{
+    const inst=installCount[floor]||0,deliv=delivCount[floor]||0;
+    totalInst+=inst;totalDeliv+=deliv;
+    tsv+=`${floor}\t${inst}\t${deliv}\n`;
+  });
+  tsv+=`TOTAL\t${totalInst}\t${totalDeliv}\n`;
+  navigator.clipboard.writeText(tsv).then(()=>{
+    const btn=event.currentTarget;
+    const orig=btn.innerHTML;
+    btn.innerHTML='✓ Copied!';
+    btn.style.background='#e8f0fb';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.background='transparent';},2000);
+  });
 }
 
 function _demoToggleLegendBreakdown(lid){
