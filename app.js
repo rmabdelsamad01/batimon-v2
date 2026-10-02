@@ -10969,11 +10969,28 @@ async function savePanel(){
   if(_wasMobile){_refreshMobileContent();toast('Panel updated');return;}
   if(curPage==='dashboard')renderDash();
   else if(curPage==='BM-dashboard')renderBMDashboard();
-  else if(curPage==='BM-WF')renderBMWF();
-  else if(curPage==='BM-EF')renderBMEF();
-  else if(curPage==='BM-SF')renderBMSF();
-  else if(curPage==='BM-NF')renderBMNF();
-  else{const z=ZONES.find(z=>z.id===curPage);if(z&&z.simple)renderSimpleGrid(z);else{const t=document.getElementById('tbl-'+curPage);if(t){t.innerHTML='';buildComplexTable(z);}}}
+  else if(['BM-WF','BM-EF','BM-SF','BM-NF'].includes(curPage)){
+    const _zid=curPage.split('-')[1];
+    const _bms=document.getElementById('bm-scroll-'+_zid);
+    const _bsx=_bms?_bms.scrollLeft:0,_bsy=_bms?_bms.scrollTop:0;
+    if(curPage==='BM-WF')renderBMWF();
+    else if(curPage==='BM-EF')renderBMEF();
+    else if(curPage==='BM-SF')renderBMSF();
+    else renderBMNF();
+    const _bms2=document.getElementById('bm-scroll-'+_zid);
+    if(_bms2){_bms2.scrollLeft=_bsx;_bms2.scrollTop=_bsy;}
+  }
+  else{
+    const z=ZONES.find(z=>z.id===curPage);
+    if(z&&z.simple) renderSimpleGrid(z);
+    else{
+      const _gw=document.getElementById('gw-'+curPage);
+      const _sx=_gw?_gw.scrollLeft:0,_sy=_gw?_gw.scrollTop:0;
+      const t=document.getElementById('tbl-'+curPage);
+      if(t){t.innerHTML='';buildComplexTable(z);}
+      if(_gw){_gw.scrollLeft=_sx;_gw.scrollTop=_sy;}
+    }
+  }
   toast('Panel updated');
 }
 function openIssueModal(zid){
