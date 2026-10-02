@@ -15617,6 +15617,17 @@ function _demoCountPanels(lid){
 let _demoDragId=null;
 let _demoExpandedLegId=null;
 let _demoPaymentVisible=false;
+const _PAYMENT_FLOOR_MERGE={'R+17':['R+17T','R+17B'],'R+18':['R+18T','R+18M','R+18MD','R+18B']};
+const _PAYMENT_FLOORS=(()=>{
+  const skip=new Set(['R+17T','R+17B','R+18T','R+18M','R+18MD','R+18B']);
+  const out=[];
+  NF_FLOORS.forEach(f=>{
+    if(f==='R+17T') out.push('R+17');
+    else if(f==='R+18T') out.push('R+18');
+    else if(!skip.has(f)) out.push(f);
+  });
+  return out;
+})();
 
 function _demoPaymentGridHtml(){
   if(!_demoPaymentVisible) return '';
@@ -15633,8 +15644,10 @@ function _demoPaymentGridHtml(){
   });
   const th='padding:5px 10px;border:1px solid #c8d8ee;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:#e8f0fb;color:#224F93;text-align:center;white-space:nowrap;';
   let rows='',totalInst=0,totalDeliv=0;
-  [...NF_FLOORS].reverse().forEach((floor,i)=>{
-    const inst=installCount[floor]||0,deliv=delivCount[floor]||0;
+  [..._PAYMENT_FLOORS].reverse().forEach((floor,i)=>{
+    const srcFloors=_PAYMENT_FLOOR_MERGE[floor]||[floor];
+    const inst=srcFloors.reduce((s,f)=>s+(installCount[f]||0),0);
+    const deliv=srcFloors.reduce((s,f)=>s+(delivCount[f]||0),0);
     totalInst+=inst;totalDeliv+=deliv;
     const bg=i%2?'#f8fafd':'#ffffff';
     rows+=`<tr style="background:${bg};"><td style="padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:600;color:#1e3a5f;">${floor}</td>
@@ -15678,11 +15691,13 @@ function _demoExportPaymentXlsx(){
     if(s==='installed'){installCount[floor]=(installCount[floor]||0)+1;delivCount[floor]=(delivCount[floor]||0)+1;}
     else if(s==='delivered'){delivCount[floor]=(delivCount[floor]||0)+1;}
   });
-  const floors=[...NF_FLOORS].reverse();
+  const floors=[..._PAYMENT_FLOORS].reverse();
   let tsv='Floor\tInstalled\tTotal Delivered\n';
   let totalInst=0,totalDeliv=0;
   floors.forEach(floor=>{
-    const inst=installCount[floor]||0,deliv=delivCount[floor]||0;
+    const srcFloors=_PAYMENT_FLOOR_MERGE[floor]||[floor];
+    const inst=srcFloors.reduce((s,f)=>s+(installCount[f]||0),0);
+    const deliv=srcFloors.reduce((s,f)=>s+(delivCount[f]||0),0);
     totalInst+=inst;totalDeliv+=deliv;
     tsv+=`${floor}\t${inst}\t${deliv}\n`;
   });
