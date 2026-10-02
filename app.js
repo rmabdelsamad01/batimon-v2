@@ -15632,32 +15632,47 @@ const _PAYMENT_FLOORS=(()=>{
 function _demoPaymentGridHtml(){
   if(!_demoPaymentVisible) return '';
   const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
-  const installCount={},delivCount={};
-  Object.keys(panels).forEach(pid=>{
+  // Build per-legend per-floor counts from demo data
+  const legCounts={};
+  Object.keys(_demoData.panels).forEach(pid=>{
     if(_isMirror.test(pid)) return;
     const m=pid.match(/^(NF|SF|EF|WF)-(.+)-C/);
     if(!m) return;
-    const floor=m[2];
-    const s=(panels[pid]?.status)||'pending';
-    if(s==='installed'){installCount[floor]=(installCount[floor]||0)+1;delivCount[floor]=(delivCount[floor]||0)+1;}
-    else if(s==='delivered'){delivCount[floor]=(delivCount[floor]||0)+1;}
+    const floor=m[2],lid=_demoData.panels[pid];
+    if(!legCounts[lid]) legCounts[lid]={};
+    legCounts[lid][floor]=(legCounts[lid][floor]||0)+1;
   });
+  const instItem=_demoData.legend.find(l=>l.label==='Installed');
+  const delivItem=_demoData.legend.find(l=>l.label==='Delivered');
+  const extraLegs=_demoData.legend.filter(l=>l.label!=='Installed'&&l.label!=='Delivered');
+  const td='padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;';
+  const tdl='padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:600;color:#1e3a5f;';
   const th='padding:5px 10px;border:1px solid #c8d8ee;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:#e8f0fb;color:#224F93;text-align:center;white-space:nowrap;';
-  let rows='',totalInst=0,totalDeliv=0;
+  let extraHeaders=extraLegs.map(l=>`<th style="${th}">${l.label}</th>`).join('');
+  let rows='',totalInst=0,totalDeliv=0,totalExtra=extraLegs.map(()=>0);
   [..._PAYMENT_FLOORS].reverse().forEach((floor,i)=>{
-    const srcFloors=_PAYMENT_FLOOR_MERGE[floor]||[floor];
-    const inst=srcFloors.reduce((s,f)=>s+(installCount[f]||0),0);
-    const deliv=srcFloors.reduce((s,f)=>s+(delivCount[f]||0),0);
+    const src=_PAYMENT_FLOOR_MERGE[floor]||[floor];
+    const inst=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
+    const deliv=inst+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
     totalInst+=inst;totalDeliv+=deliv;
     const bg=i%2?'#f8fafd':'#ffffff';
-    rows+=`<tr style="background:${bg};"><td style="padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:600;color:#1e3a5f;">${floor}</td>
-      <td style="padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:${inst?'#00663a':'#c0cdd8'};">${inst||'—'}</td>
-      <td style="padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:${deliv?'#224F93':'#c0cdd8'};">${deliv||'—'}</td>
-    </tr>`;
+    let cumulative=inst,extraCells='';
+    extraLegs.forEach((leg,li)=>{
+      const cnt=src.reduce((s,f)=>s+((legCounts[leg.id]||{})[f]||0),0);
+      cumulative+=cnt;
+      totalExtra[li]+=cumulative;
+      extraCells+=`<td style="${td}color:${cumulative?'#7c3aed':'#c0cdd8'};">${cumulative||'—'}</td>`;
+    });
+    rows+=`<tr style="background:${bg};"><td style="${tdl}">${floor}</td>
+      <td style="${td}color:${inst?'#00663a':'#c0cdd8'};">${inst||'—'}</td>
+      <td style="${td}color:${deliv?'#224F93':'#c0cdd8'};">${deliv||'—'}</td>
+      ${extraCells}</tr>`;
   });
-  rows+=`<tr style="background:#f0f4ff;"><td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;color:#1e3a5f;">TOTAL</td>
-    <td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:#00663a;">${totalInst}</td>
-    <td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:#224F93;">${totalDeliv}</td></tr>`;
+  const tdf='padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;';
+  let totalExtraCells=totalExtra.map(v=>`<td style="${tdf}color:#7c3aed;">${v}</td>`).join('');
+  rows+=`<tr style="background:#f0f4ff;"><td style="${tdf}color:#1e3a5f;text-align:left;">TOTAL</td>
+    <td style="${tdf}color:#00663a;">${totalInst}</td>
+    <td style="${tdf}color:#224F93;">${totalDeliv}</td>${totalExtraCells}</tr>`;
   return `<div style="padding:4px 32px 32px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:18px;border-top:1.5px solid #e0e8f0;">
     <div style="font-size:11px;font-weight:700;color:#1e3a5f;letter-spacing:0.06em;text-transform:uppercase;">Payment Grid</div>
     <button onclick="_demoExportPaymentXlsx()" style="font-size:10px;font-weight:700;padding:4px 10px;border:1.5px solid #224F93;border-radius:5px;background:transparent;color:#224F93;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:var(--font);">
@@ -15669,6 +15684,7 @@ function _demoPaymentGridHtml(){
       <th style="${th}text-align:left;">Floor</th>
       <th style="${th}">Installed</th>
       <th style="${th}">Total Delivered</th>
+      ${extraHeaders}
     </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -15681,27 +15697,36 @@ function _demoGeneratePayment(){
 
 function _demoExportPaymentXlsx(){
   const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
-  const installCount={},delivCount={};
-  Object.keys(panels).forEach(pid=>{
+  const legCounts={};
+  Object.keys(_demoData.panels).forEach(pid=>{
     if(_isMirror.test(pid)) return;
     const m=pid.match(/^(NF|SF|EF|WF)-(.+)-C/);
     if(!m) return;
-    const floor=m[2];
-    const s=(panels[pid]?.status)||'pending';
-    if(s==='installed'){installCount[floor]=(installCount[floor]||0)+1;delivCount[floor]=(delivCount[floor]||0)+1;}
-    else if(s==='delivered'){delivCount[floor]=(delivCount[floor]||0)+1;}
+    const floor=m[2],lid=_demoData.panels[pid];
+    if(!legCounts[lid]) legCounts[lid]={};
+    legCounts[lid][floor]=(legCounts[lid][floor]||0)+1;
   });
+  const instItem=_demoData.legend.find(l=>l.label==='Installed');
+  const delivItem=_demoData.legend.find(l=>l.label==='Delivered');
+  const extraLegs=_demoData.legend.filter(l=>l.label!=='Installed'&&l.label!=='Delivered');
   const floors=[..._PAYMENT_FLOORS].reverse();
-  let tsv='Floor\tInstalled\tTotal Delivered\n';
-  let totalInst=0,totalDeliv=0;
+  let tsv='Floor\tInstalled\tTotal Delivered\t'+extraLegs.map(l=>l.label).join('\t')+'\n';
+  let totalInst=0,totalDeliv=0,totalExtra=extraLegs.map(()=>0);
   floors.forEach(floor=>{
-    const srcFloors=_PAYMENT_FLOOR_MERGE[floor]||[floor];
-    const inst=srcFloors.reduce((s,f)=>s+(installCount[f]||0),0);
-    const deliv=srcFloors.reduce((s,f)=>s+(delivCount[f]||0),0);
+    const src=_PAYMENT_FLOOR_MERGE[floor]||[floor];
+    const inst=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
+    const deliv=inst+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
     totalInst+=inst;totalDeliv+=deliv;
-    tsv+=`${floor}\t${inst}\t${deliv}\n`;
+    let cumulative=inst,extraVals=[];
+    extraLegs.forEach((leg,li)=>{
+      const cnt=src.reduce((s,f)=>s+((legCounts[leg.id]||{})[f]||0),0);
+      cumulative+=cnt;
+      totalExtra[li]+=cumulative;
+      extraVals.push(cumulative);
+    });
+    tsv+=`${floor}\t${inst}\t${deliv}\t${extraVals.join('\t')}\n`;
   });
-  tsv+=`TOTAL\t${totalInst}\t${totalDeliv}\n`;
+  tsv+=`TOTAL\t${totalInst}\t${totalDeliv}\t${totalExtra.join('\t')}\n`;
   navigator.clipboard.writeText(tsv).then(()=>{
     const btn=event.currentTarget;
     const orig=btn.innerHTML;
