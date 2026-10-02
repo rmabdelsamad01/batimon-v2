@@ -15616,6 +15616,49 @@ function _demoCountPanels(lid){
 
 let _demoDragId=null;
 let _demoExpandedLegId=null;
+let _demoPaymentVisible=false;
+
+function _demoPaymentGridHtml(){
+  if(!_demoPaymentVisible) return '';
+  const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
+  const installCount={},delivCount={};
+  Object.keys(panels).forEach(pid=>{
+    if(_isMirror.test(pid)) return;
+    const m=pid.match(/^(NF|SF|EF|WF)-(.+)-C/);
+    if(!m) return;
+    const floor=m[2];
+    const s=(panels[pid]?.status)||'pending';
+    if(s==='installed'){installCount[floor]=(installCount[floor]||0)+1;delivCount[floor]=(delivCount[floor]||0)+1;}
+    else if(s==='delivered'){delivCount[floor]=(delivCount[floor]||0)+1;}
+  });
+  const th='padding:5px 10px;border:1px solid #c8d8ee;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:#e8f0fb;color:#224F93;text-align:center;white-space:nowrap;';
+  let rows='',totalInst=0,totalDeliv=0;
+  NF_FLOORS.forEach((floor,i)=>{
+    const inst=installCount[floor]||0,deliv=delivCount[floor]||0;
+    totalInst+=inst;totalDeliv+=deliv;
+    const bg=i%2?'#f8fafd':'#ffffff';
+    rows+=`<tr style="background:${bg};"><td style="padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:600;color:#1e3a5f;">${floor}</td>
+      <td style="padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:${inst?'#00663a':'#c0cdd8'};">${inst||'—'}</td>
+      <td style="padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:${deliv?'#224F93':'#c0cdd8'};">${deliv||'—'}</td>
+    </tr>`;
+  });
+  rows+=`<tr style="background:#f0f4ff;"><td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;color:#1e3a5f;">TOTAL</td>
+    <td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:#00663a;">${totalInst}</td>
+    <td style="padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;color:#224F93;">${totalDeliv}</td></tr>`;
+  return `<div style="padding:4px 32px 32px;"><div style="font-size:11px;font-weight:700;color:#1e3a5f;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px;padding-top:18px;border-top:1.5px solid #e0e8f0;">Payment Grid</div>
+    <table style="border-collapse:collapse;font-family:var(--font);"><thead><tr>
+      <th style="${th}text-align:left;">Floor</th>
+      <th style="${th}">Installed</th>
+      <th style="${th}">Total Delivered</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function _demoGeneratePayment(){
+  _demoPaymentVisible=!_demoPaymentVisible;
+  const btn=document.getElementById('demo-pay-btn');
+  if(btn){btn.style.background=_demoPaymentVisible?'#e8f0fb':'transparent';}
+  if(_demoActiveZone==='overview') _demoRenderGrid();
+}
 
 function _demoToggleLegendBreakdown(lid){
   _demoExpandedLegId=(_demoExpandedLegId===lid)?null:lid;
@@ -16024,7 +16067,7 @@ function _demoRenderOverview(area){
             </div>`;
           }).join('')
       }
-    </div>`;
+    </div>${_demoPaymentGridHtml()}`;
 }
 
 function _demoShowMultiPicker(pos){
