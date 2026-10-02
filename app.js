@@ -15633,7 +15633,7 @@ function _demoPaymentGridHtml(){
   });
   const th='padding:5px 10px;border:1px solid #c8d8ee;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:#e8f0fb;color:#224F93;text-align:center;white-space:nowrap;';
   let rows='',totalInst=0,totalDeliv=0;
-  NF_FLOORS.forEach((floor,i)=>{
+  [...NF_FLOORS].reverse().forEach((floor,i)=>{
     const inst=installCount[floor]||0,deliv=delivCount[floor]||0;
     totalInst+=inst;totalDeliv+=deliv;
     const bg=i%2?'#f8fafd':'#ffffff';
