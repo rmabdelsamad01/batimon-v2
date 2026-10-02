@@ -15617,6 +15617,12 @@ function _demoCountPanels(lid){
 let _demoDragId=null;
 let _demoExpandedLegId=null;
 let _demoPaymentVisible=false;
+let _demoPaymentMAD=false;
+const _PAY_UNIT=16537.87;
+const _PAY_FIXED=0.05*_PAY_UNIT;
+const _PAY_VAR=0.88*_PAY_UNIT;
+const _PAY_DISC=0.85104;
+function _fmtMAD(n){return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' MAD';}
 const _PAYMENT_FLOOR_MERGE={'R+17':['R+17T','R+17B'],'R+18':['R+18T','R+18M','R+18MD','R+18B']};
 const _PAYMENT_FLOORS=(()=>{
   const skip=new Set(['R+17T','R+17B','R+18T','R+18M','R+18MD','R+18B']);
@@ -15632,7 +15638,6 @@ const _PAYMENT_FLOORS=(()=>{
 function _demoPaymentGridHtml(){
   if(!_demoPaymentVisible) return '';
   const _isMirror=/^(WF-.+-C15|WF-.+-C31|EF-.+-C65|EF-.+-C81)$/;
-  // Build per-legend per-floor counts from demo data
   const legCounts={};
   Object.keys(_demoData.panels).forEach(pid=>{
     if(_isMirror.test(pid)) return;
@@ -15645,40 +15650,60 @@ function _demoPaymentGridHtml(){
   const instItem=_demoData.legend.find(l=>l.label==='Installed');
   const delivItem=_demoData.legend.find(l=>l.label==='Delivered');
   const extraLegs=_demoData.legend.filter(l=>l.label!=='Installed'&&l.label!=='Delivered');
+  const mad=_demoPaymentMAD;
   const td='padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;';
   const tdl='padding:4px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:600;color:#1e3a5f;';
+  const tdf='padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;';
   const th='padding:5px 10px;border:1px solid #c8d8ee;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:#e8f0fb;color:#224F93;text-align:center;white-space:nowrap;';
   let extraHeaders=extraLegs.map(l=>`<th style="${th}">${l.label}</th>`).join('');
-  let rows='',totalInst=0,totalDeliv=0,totalExtra=extraLegs.map(()=>0);
+  let rows='',totalInstVal=0,totalDeliv=0,totalExtraVals=extraLegs.map(()=>0);
   [..._PAYMENT_FLOORS].reverse().forEach((floor,i)=>{
     const src=_PAYMENT_FLOOR_MERGE[floor]||[floor];
-    const inst=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
-    const deliv=inst+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
-    totalInst+=inst;totalDeliv+=deliv;
+    const instCnt=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
+    const delivCnt=instCnt+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
+    const instVal=mad?(_PAY_FIXED+instCnt*_PAY_VAR):instCnt;
+    totalInstVal+=instVal;totalDeliv+=delivCnt;
     const bg=i%2?'#f8fafd':'#ffffff';
-    let cumulative=inst,extraCells='';
+    let cumulativeCnt=instCnt,extraCells='';
     extraLegs.forEach((leg,li)=>{
       const cnt=src.reduce((s,f)=>s+((legCounts[leg.id]||{})[f]||0),0);
-      cumulative+=cnt;
-      totalExtra[li]+=cumulative;
-      extraCells+=`<td style="${td}color:${cumulative?'#7c3aed':'#c0cdd8'};">${cumulative||'—'}</td>`;
+      cumulativeCnt+=cnt;
+      const val=mad?cumulativeCnt*_PAY_VAR:cumulativeCnt;
+      totalExtraVals[li]+=val;
+      const disp=val?(mad?_fmtMAD(val):val):'—';
+      extraCells+=`<td style="${td}color:${val?'#7c3aed':'#c0cdd8'};">${disp}</td>`;
     });
+    const instDisp=instVal?(mad?_fmtMAD(instVal):instVal):'—';
+    const delivDisp=delivCnt||'—';
     rows+=`<tr style="background:${bg};"><td style="${tdl}">${floor}</td>
-      <td style="${td}color:${inst?'#00663a':'#c0cdd8'};">${inst||'—'}</td>
-      <td style="${td}color:${deliv?'#224F93':'#c0cdd8'};">${deliv||'—'}</td>
+      <td style="${td}color:${instVal?'#00663a':'#c0cdd8'};">${instDisp}</td>
+      <td style="${td}color:${delivCnt?'#224F93':'#c0cdd8'};">${delivDisp}</td>
       ${extraCells}</tr>`;
   });
-  const tdf='padding:5px 10px;border:1px solid #dde3ee;font-size:11px;font-weight:700;text-align:center;';
-  let totalExtraCells=totalExtra.map(v=>`<td style="${tdf}color:#7c3aed;">${v}</td>`).join('');
+  const instTotalDisp=mad?_fmtMAD(totalInstVal):totalInstVal;
+  let totalExtraCells=totalExtraVals.map(v=>`<td style="${tdf}color:#7c3aed;">${mad?_fmtMAD(v):v}</td>`).join('');
   rows+=`<tr style="background:#f0f4ff;"><td style="${tdf}color:#1e3a5f;text-align:left;">TOTAL</td>
-    <td style="${tdf}color:#00663a;">${totalInst}</td>
+    <td style="${tdf}color:#00663a;">${instTotalDisp}</td>
     <td style="${tdf}color:#224F93;">${totalDeliv}</td>${totalExtraCells}</tr>`;
+  const discInstVal=totalInstVal*_PAY_DISC;
+  const discInstDisp=mad?_fmtMAD(discInstVal):Math.round(discInstVal);
+  let discExtraCells=totalExtraVals.map(v=>{const dv=v*_PAY_DISC;return `<td style="${tdf}color:#7c3aed;">${mad?_fmtMAD(dv):Math.round(dv)}</td>`;}).join('');
+  rows+=`<tr style="background:#fdf6e3;"><td style="${tdf}color:#92400e;text-align:left;">TOTAL DISCOUNTED</td>
+    <td style="${tdf}color:#92400e;">${discInstDisp}</td>
+    <td style="${tdf}color:#c0cdd8;">—</td>${discExtraCells}</tr>`;
+  const madBtnStyle=`font-size:10px;font-weight:700;padding:4px 10px;border:1.5px solid #d97706;border-radius:5px;background:${mad?'#fef3c7':'transparent'};color:#d97706;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:var(--font);`;
   return `<div style="padding:4px 32px 32px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:18px;border-top:1.5px solid #e0e8f0;">
     <div style="font-size:11px;font-weight:700;color:#1e3a5f;letter-spacing:0.06em;text-transform:uppercase;">Payment Grid</div>
-    <button onclick="_demoExportPaymentXlsx()" style="font-size:10px;font-weight:700;padding:4px 10px;border:1.5px solid #224F93;border-radius:5px;background:transparent;color:#224F93;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:var(--font);">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-      Copy to Excel
-    </button>
+    <div style="display:flex;gap:8px;">
+      <button onclick="_demoTogglePaymentMAD()" style="${madBtnStyle}">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>
+        Amount in MAD
+      </button>
+      <button onclick="_demoExportPaymentXlsx()" style="font-size:10px;font-weight:700;padding:4px 10px;border:1.5px solid #224F93;border-radius:5px;background:transparent;color:#224F93;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:var(--font);">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        Copy to Excel
+      </button>
+    </div>
   </div>
     <table style="border-collapse:collapse;font-family:var(--font);"><thead><tr>
       <th style="${th}text-align:left;">Floor</th>
@@ -15686,6 +15711,11 @@ function _demoPaymentGridHtml(){
       <th style="${th}">Total Delivered</th>
       ${extraHeaders}
     </tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function _demoTogglePaymentMAD(){
+  _demoPaymentMAD=!_demoPaymentMAD;
+  if(_demoActiveZone==='overview') _demoRenderGrid();
 }
 
 function _demoGeneratePayment(){
@@ -15710,24 +15740,28 @@ function _demoExportPaymentXlsx(){
   const instItem=_demoData.legend.find(l=>l.label==='Installed');
   const delivItem=_demoData.legend.find(l=>l.label==='Delivered');
   const extraLegs=_demoData.legend.filter(l=>l.label!=='Installed'&&l.label!=='Delivered');
+  const mad=_demoPaymentMAD;
   const floors=[..._PAYMENT_FLOORS].reverse();
   let tsv='Floor\tInstalled\tTotal Delivered\t'+extraLegs.map(l=>l.label).join('\t')+'\n';
-  let totalInst=0,totalDeliv=0,totalExtra=extraLegs.map(()=>0);
+  let totalInstVal=0,totalDeliv=0,totalExtraVals=extraLegs.map(()=>0);
   floors.forEach(floor=>{
     const src=_PAYMENT_FLOOR_MERGE[floor]||[floor];
-    const inst=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
-    const deliv=inst+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
-    totalInst+=inst;totalDeliv+=deliv;
-    let cumulative=inst,extraVals=[];
+    const instCnt=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
+    const delivCnt=instCnt+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
+    const instVal=mad?(_PAY_FIXED+instCnt*_PAY_VAR):instCnt;
+    totalInstVal+=instVal;totalDeliv+=delivCnt;
+    let cumulativeCnt=instCnt,extraVals=[];
     extraLegs.forEach((leg,li)=>{
       const cnt=src.reduce((s,f)=>s+((legCounts[leg.id]||{})[f]||0),0);
-      cumulative+=cnt;
-      totalExtra[li]+=cumulative;
-      extraVals.push(cumulative);
+      cumulativeCnt+=cnt;
+      const val=mad?cumulativeCnt*_PAY_VAR:cumulativeCnt;
+      totalExtraVals[li]+=val;
+      extraVals.push(mad?val.toFixed(2):val);
     });
-    tsv+=`${floor}\t${inst}\t${deliv}\t${extraVals.join('\t')}\n`;
+    tsv+=`${floor}\t${mad?totalInstVal.toFixed(2):instCnt}\t${delivCnt}\t${extraVals.join('\t')}\n`;
   });
-  tsv+=`TOTAL\t${totalInst}\t${totalDeliv}\t${totalExtra.join('\t')}\n`;
+  tsv+=`TOTAL\t${mad?totalInstVal.toFixed(2):totalInstVal}\t${totalDeliv}\t${totalExtraVals.map(v=>mad?v.toFixed(2):v).join('\t')}\n`;
+  tsv+=`TOTAL DISCOUNTED\t${(totalInstVal*_PAY_DISC).toFixed(mad?2:0)}\t—\t${totalExtraVals.map(v=>(v*_PAY_DISC).toFixed(mad?2:0)).join('\t')}\n`;
   navigator.clipboard.writeText(tsv).then(()=>{
     const btn=event.currentTarget;
     const orig=btn.innerHTML;
