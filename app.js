@@ -15692,7 +15692,8 @@ function _demoGeneratePayment(){
   _demoPaymentVisible=!_demoPaymentVisible;
   const btn=document.getElementById('demo-pay-btn');
   if(btn){btn.style.background=_demoPaymentVisible?'#e8f0fb':'transparent';}
-  if(_demoActiveZone==='overview') _demoRenderGrid();
+  if(_demoActiveZone!=='overview') _demoSwitchZone('overview');
+  else _demoRenderGrid();
 }
 
 function _demoExportPaymentXlsx(){
