@@ -15622,6 +15622,7 @@ const _PAY_UNIT=16537.87;
 const _PAY_FIXED=0.05*_PAY_UNIT;
 const _PAY_VAR=0.88*_PAY_UNIT;
 const _PAY_DISC=0.85104;
+const _PAY_Y={'RDC':14,'R+01':36,'R+02':76,'R+03':76,'R+04':76,'R+05':76,'R+06':76,'R+07':76,'R+08':76,'R+09':76,'R+10':76,'R+11':76,'R+12':76,'R+13':76,'R+14':76,'R+15':76,'R+16':76,'R+17':76,'R+18':74,'R+19':77,'R+20':77,'R+21':77,'R+22':77,'R+23':77,'R+24':77,'R+25':41,'R+26':38,'R+27':38,'R+28':38,'R+29':38,'R+30':38,'R+31':38,'R+32':38,'R+33':38,'R+34':0};
 function _fmtMAD(n){return n.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' MAD';}
 const _PAYMENT_FLOOR_MERGE={'R+17':['R+17T','R+17B'],'R+18':['R+18T','R+18M','R+18MD','R+18B']};
 const _PAYMENT_FLOORS=(()=>{
@@ -15661,7 +15662,7 @@ function _demoPaymentGridHtml(){
     const src=_PAYMENT_FLOOR_MERGE[floor]||[floor];
     const instCnt=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
     const delivCnt=instCnt+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
-    const instVal=mad?(_PAY_FIXED+instCnt*_PAY_VAR):instCnt;
+    const instVal=mad?((_PAY_Y[floor]||0)*_PAY_FIXED+instCnt*_PAY_VAR):instCnt;
     totalInstVal+=instVal;totalDeliv+=delivCnt;
     const bg=i%2?'#f8fafd':'#ffffff';
     let cumulativeCnt=instCnt,extraCells='';
@@ -15748,7 +15749,7 @@ function _demoExportPaymentXlsx(){
     const src=_PAYMENT_FLOOR_MERGE[floor]||[floor];
     const instCnt=instItem?src.reduce((s,f)=>s+((legCounts[instItem.id]||{})[f]||0),0):0;
     const delivCnt=instCnt+(delivItem?src.reduce((s,f)=>s+((legCounts[delivItem.id]||{})[f]||0),0):0);
-    const instVal=mad?(_PAY_FIXED+instCnt*_PAY_VAR):instCnt;
+    const instVal=mad?((_PAY_Y[floor]||0)*_PAY_FIXED+instCnt*_PAY_VAR):instCnt;
     totalInstVal+=instVal;totalDeliv+=delivCnt;
     let cumulativeCnt=instCnt,extraVals=[];
     extraLegs.forEach((leg,li)=>{
