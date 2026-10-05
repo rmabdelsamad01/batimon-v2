@@ -873,12 +873,21 @@ body.mobile-section-view .dash {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border2);flex-shrink:0;background:var(--surface);">
       <div>
         <div style="font-size:15px;font-weight:700;color:var(--text);">Snag Closing Rate</div>
-        <div style="font-size:10px;color:var(--text3);margin-top:2px;">All Facades · Resolved snags by date</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">Resolved snags by date</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div id="scr-summary" style="font-size:11px;color:var(--text2);font-family:var(--mono);"></div>
         <button class="xb" onclick="cm('scrm')" style="width:28px;height:28px;">✕</button>
       </div>
+    </div>
+    <!-- Filter bar -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 20px;border-bottom:1px solid var(--border2);flex-shrink:0;background:var(--surface2);">
+      <select id="scr-f-wing" data-ph="All Wings" onchange="_applyScrFilter('wing',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:var(--font);font-size:11px;cursor:pointer;"><option value="">All Wings</option></select>
+      <select id="scr-f-facade" data-ph="All Facades" onchange="_applyScrFilter('facade',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:var(--font);font-size:11px;cursor:pointer;"><option value="">All Facades</option></select>
+      <select id="scr-f-fl" data-ph="All Floors" onchange="_applyScrFilter('fl',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:var(--font);font-size:11px;cursor:pointer;"><option value="">All Floors</option></select>
+      <select id="scr-f-nature" data-ph="All Natures" onchange="_applyScrFilter('nature',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:var(--font);font-size:11px;cursor:pointer;"><option value="">All Natures</option></select>
+      <select id="scr-f-position" data-ph="All Positions" onchange="_applyScrFilter('position',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:var(--font);font-size:11px;cursor:pointer;"><option value="">All Positions</option></select>
+      <select id="scr-f-type" data-ph="All Types" onchange="_applyScrFilter('type',this.value)" style="padding:4px 8px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text);font-family:var(--font);font-size:11px;cursor:pointer;"><option value="">All Types</option></select>
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px 20px;">
       <table style="width:100%;border-collapse:collapse;">

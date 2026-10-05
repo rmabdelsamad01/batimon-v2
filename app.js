@@ -11522,26 +11522,67 @@ function openFabCountingModal(){
   document.getElementById('fcm').classList.add('open');
 }
 
-async function openSnagClosingRateModal(){
-  const pid=window._activeProjectId;
-  if(!pid) return;
-  await _loadSnags(pid);
-  const snags=_snagCache[pid]||[];
-  const total=snags.length;
-  const closed=snags.filter(s=>s.status!=='open'&&s.closed_at);
-  const totalClosed=closed.length;
+let _scrFilters={wing:'',facade:'',fl:'',nature:'',position:'',type:''};
+
+function _getSnagWing(s){
+  const parts=_snagParts(s);
+  const z=s.facade||'';
+  let fl=parts.fl||'';
+  let col=parseInt(parts.col)||0;
+  if(!fl&&parts.id){const m=parts.id.match(/^[A-Z]+-([^-]+)-C(\d+)/);if(m){fl=m[1];col=parseInt(m[2])||0;}}
+  if(!z||!fl||!col) return '';
+  const n=fl==='RDC'?0:parseInt((fl||'').replace('R+',''))||0;
+  if((z==='NF'&&n>=1&&n<=16&&col>=54&&col<=65)||(z==='EF'&&n>=1&&n<=16&&col>=66&&col<=80)||(z==='EF'&&n===0&&(col===79||col===80))||(z==='SF'&&n>=0&&n<=16&&col>=81&&col<=92)||(z==='NF'&&n>=18&&n<=24&&fl!=='R+18B'&&col>=54&&col<=65)||(z==='EF'&&n>=18&&n<=24&&fl!=='R+18B'&&col>=66&&col<=80)||(z==='SF'&&n>=18&&n<=24&&fl!=='R+18B'&&col>=81&&col<=92)||(z==='NF'&&n===25&&col>=52&&col<=65)||(z==='NF'&&n===26&&col>=53&&col<=55)||(z==='EF'&&n===25&&col>=66&&col<=80)||(z==='SF'&&n===25&&col>=81&&col<=94)) return 'East Wing';
+  if((z==='SF'&&n>=2&&n<=16&&col>=4&&col<=15)||(z==='WF'&&n>=2&&n<=16&&col>=16&&col<=30)||(z==='NF'&&n>=2&&n<=16&&col>=31&&col<=41)||(z==='SF'&&n>=18&&n<=33&&col>=4&&col<=15)||(z==='WF'&&n>=18&&n<=33&&col>=16&&col<=30)||(z==='NF'&&n>=20&&n<=33&&col>=31&&col<=41)||(z==='SF'&&n===34&&col>=1&&col<=15)||(z==='WF'&&n===34&&col>=16&&col<=30)||(z==='NF'&&n===34&&col>=31&&col<=41)) return 'West Wing';
+  if((z==='NF'&&(n===17||n===18)&&col>=31&&col<=50)||(z==='NF'&&fl==='R+18B'&&col>=54&&col<=65)||(z==='NF'&&n===19&&col>=31&&col<=50)||(z==='EF'&&fl==='R+18B'&&col>=66&&col<=80)||(z==='SF'&&fl==='R+18B'&&col>=81&&col<=85)||(z==='SF'&&n===17&&((col>=86&&col<=92)||(col>=4&&col<=15)))||(z==='WF'&&n===17&&col>=16&&col<=30)) return 'Shift';
+  if((z==='SF'&&n===34&&col>=88&&col<=92)) return 'Coiffe';
+  return '';
+}
+
+function _scrPopulateSelect(id,options,current){
+  const sel=document.getElementById(id);if(!sel)return;
+  const ph=sel.getAttribute('data-ph')||'All';
+  sel.innerHTML=`<option value="">${ph}</option>`+options.map(v=>`<option value="${v.replace(/"/g,'&quot;')}"${v===current?' selected':''}>${v}</option>`).join('');
+}
+
+function _applyScrFilter(key,val){
+  _scrFilters[key]=val;
+  const pid=window._activeProjectId;if(pid)_renderScrTable(pid);
+}
+
+function _renderScrTable(pid){
+  const allSnags=_snagCache[pid]||[];
+  const allClosed=allSnags.filter(s=>s.status!=='open'&&s.closed_at);
+  const total=allSnags.length;
+  // Populate filter options from full closed set
+  const _uniq=(arr)=>[...new Set(arr.filter(Boolean))].sort((a,b)=>{const n=s=>s.replace(/(\d+)/g,m=>m.padStart(8,'0'));return n(a)<n(b)?-1:n(a)>n(b)?1:0;});
+  _scrPopulateSelect('scr-f-wing',_uniq(allClosed.map(s=>_getSnagWing(s))),_scrFilters.wing);
+  _scrPopulateSelect('scr-f-facade',_uniq(allClosed.map(s=>s.facade||'')),_scrFilters.facade);
+  _scrPopulateSelect('scr-f-fl',_uniq(allClosed.map(s=>_snagParts(s).fl||'')),_scrFilters.fl);
+  _scrPopulateSelect('scr-f-nature',_uniq(allClosed.map(s=>s.nature||'')),_scrFilters.nature);
+  _scrPopulateSelect('scr-f-position',_uniq(allClosed.map(s=>s.position||'')),_scrFilters.position);
+  _scrPopulateSelect('scr-f-type',_uniq(allClosed.map(s=>s.snag_type||'')),_scrFilters.type);
+  // Apply filters
+  const f=_scrFilters;
+  const filtered=allClosed.filter(s=>{
+    if(f.wing&&_getSnagWing(s)!==f.wing)return false;
+    if(f.facade&&(s.facade||'')!==f.facade)return false;
+    if(f.fl&&(_snagParts(s).fl||'')!==f.fl)return false;
+    if(f.nature&&(s.nature||'')!==f.nature)return false;
+    if(f.position&&(s.position||'')!==f.position)return false;
+    if(f.type&&(s.snag_type||'')!==f.type)return false;
+    return true;
+  });
   // Build date → count maps
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
-  const FACADE_NORM={'NF':'NF','SF':'SF','EF':'EF','WF':'WF',
-    'North Facade':'NF','South Facade':'SF','East Facade':'EF','West Facade':'WF'};
-  closed.forEach(s=>{
+  const FNORM={'NF':'NF','SF':'SF','EF':'EF','WF':'WF','North Facade':'NF','South Facade':'SF','East Facade':'EF','West Facade':'WF'};
+  filtered.forEach(s=>{
     const day=s.closed_at.slice(0,10);
     dateMap[day]=(dateMap[day]||0)+1;
-    const fk=FACADE_NORM[s.facade]||s.facade;
-    if(facadeMap[fk]) facadeMap[fk][day]=(facadeMap[fk][day]||0)+1;
+    const fk=FNORM[s.facade]||s.facade;
+    if(facadeMap[fk])facadeMap[fk][day]=(facadeMap[fk][day]||0)+1;
   });
-  // Render table — only days with activity
   const tbody=document.getElementById('scr-tbody');
   tbody.innerHTML='';
   const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -11582,8 +11623,17 @@ async function openSnagClosingRateModal(){
       </td>`;
     tbody.appendChild(tr);
   });
-  document.getElementById('scr-summary').textContent=`${totalClosed} / ${total} resolved`;
+  const hasFilter=Object.values(f).some(Boolean);
+  document.getElementById('scr-summary').textContent=hasFilter?`${filtered.length} filtered · ${allClosed.length} / ${total} resolved`:`${allClosed.length} / ${total} resolved`;
   _updateRateHeaders('scr');
+}
+
+async function openSnagClosingRateModal(){
+  const pid=window._activeProjectId;
+  if(!pid) return;
+  await _loadSnags(pid);
+  _scrFilters={wing:'',facade:'',fl:'',nature:'',position:'',type:''};
+  _renderScrTable(pid);
   document.getElementById('scrm').classList.add('open');
 }
 
