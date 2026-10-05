@@ -867,6 +867,41 @@ body.mobile-section-view .dash {
 <!-- IR category filter dropdown -->
 <div id="ir-cat-dropdown" style="display:none;position:fixed;min-width:180px;background:#fff;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.14);border:1px solid rgba(34,79,147,0.12);z-index:10020;padding:4px 0;"></div>
 
+<!-- SNAG CLOSING RATE MODAL -->
+<div class="mbk" id="scrm" style="align-items:stretch;justify-content:stretch;padding:0;">
+  <div style="background:var(--surface);width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border2);flex-shrink:0;background:var(--surface);">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);">Snag Closing Rate</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">All Facades · Resolved snags by date</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="scr-summary" style="font-size:11px;color:var(--text2);font-family:var(--mono);"></div>
+        <button class="xb" onclick="cm('scrm')" style="width:28px;height:28px;">✕</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 20px;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="position:sticky;top:0;z-index:10;background:var(--surface);">
+            <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border2);width:140px;">Date</th>
+            <th style="text-align:center;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border2);">Day</th>
+            <th id="scr-th-NF" style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#2d65bd;border-bottom:2px solid var(--border2);">NF</th>
+            <th id="scr-th-SF" style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1a9458;border-bottom:2px solid var(--border2);">SF</th>
+            <th id="scr-th-EF" style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#a07800;border-bottom:2px solid var(--border2);">EF</th>
+            <th id="scr-th-WF" style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6d35d9;border-bottom:2px solid var(--border2);">WF</th>
+            <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border2);">Resolved</th>
+            <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border2);">Cumulative</th>
+            <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);border-bottom:2px solid var(--border2);">Rate</th>
+            <th style="padding:8px 12px;border-bottom:2px solid var(--border2);width:200px;"></th>
+          </tr>
+        </thead>
+        <tbody id="scr-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- FABRICATION RATE MODAL -->
 <div class="mbk" id="frm" style="align-items:stretch;justify-content:stretch;padding:0;">
   <div style="background:var(--surface);width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;">

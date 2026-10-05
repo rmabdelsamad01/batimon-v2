@@ -6832,7 +6832,7 @@ function efSidebarHTML(){
        'UCW Monitoring':['Overview',_sbn.NF,_sbn.SF,_sbn.EF,_sbn.WF]
      },
      customSubHTML:_customMonHTML},
-    {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['Fabrication Rate','Delivery Rate','Installation Rate','Fabrication Counting']},
+    {id:'cadence', label:'Cadence', icon:'📈', color:'#1a9458', subs:['Fabrication Rate','Delivery Rate','Installation Rate','Fabrication Counting','Snag Closing Rate']},
     {id:'of-log', label:'OF Logs', icon:'🏭', color:'#e65100', subs:[]},
     {id:'eng',  label:'List of Deliverables', icon:'📋', color:'#1a5fa8', subs:[]},
     {id:'pay',  label:'Payments',     icon:'💳', color:'#1a7a3a', subs:[]},
@@ -7016,6 +7016,16 @@ function efSidebarHTML(){
                    onmouseover="this.style.background='${s.color}12'"
                    onmouseout="this.style.background='transparent'"
                    onclick="openFabCountingModal()">
+                <span style="flex:1;">${sub}</span>
+              </div>
+            </div>`;
+            }
+            if(sub==='Snag Closing Rate'){
+              return `<div style="margin-bottom:2px;">
+              <div style="display:flex;align-items:center;padding:5px 8px;font-size:11px;color:var(--text2);cursor:pointer;border-radius:5px;transition:background 0.12s;"
+                   onmouseover="this.style.background='${s.color}12'"
+                   onmouseout="this.style.background='transparent'"
+                   onclick="openSnagClosingRateModal()">
                 <span style="flex:1;">${sub}</span>
               </div>
             </div>`;
@@ -11510,6 +11520,71 @@ function openFabCountingModal(){
   document.getElementById('fcm-summary').innerHTML=`${grandDone} / ${grandTotal.total} done &nbsp;·&nbsp; <b>${grandPct}%</b>`;
   document.getElementById('fcm-body').innerHTML=html;
   document.getElementById('fcm').classList.add('open');
+}
+
+async function openSnagClosingRateModal(){
+  const pid=window._activeProjectId;
+  if(!pid) return;
+  await _loadSnags(pid);
+  const snags=_snagCache[pid]||[];
+  const total=snags.length;
+  const closed=snags.filter(s=>s.status!=='open'&&s.closed_at);
+  const totalClosed=closed.length;
+  // Build date → count maps
+  const dateMap={};
+  const facadeMap={NF:{},SF:{},EF:{},WF:{}};
+  const FACADE_NORM={'NF':'NF','SF':'SF','EF':'EF','WF':'WF',
+    'North Facade':'NF','South Facade':'SF','East Facade':'EF','West Facade':'WF'};
+  closed.forEach(s=>{
+    const day=s.closed_at.slice(0,10);
+    dateMap[day]=(dateMap[day]||0)+1;
+    const fk=FACADE_NORM[s.facade]||s.facade;
+    if(facadeMap[fk]) facadeMap[fk][day]=(facadeMap[fk][day]||0)+1;
+  });
+  // Render table — only days with activity
+  const tbody=document.getElementById('scr-tbody');
+  tbody.innerHTML='';
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const sortedDates=Object.keys(dateMap).sort();
+  let cumulative=0,lastMonth='';
+  sortedDates.forEach(key=>{
+    const count=dateMap[key]||0;
+    cumulative+=count;
+    const d=new Date(key+'T12:00:00');
+    const display=d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+    const month=key.slice(0,7);
+    if(month!==lastMonth){
+      lastMonth=month;
+      const mtr=document.createElement('tr');
+      mtr.innerHTML=`<td colspan="10" style="padding:10px 12px 4px;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);background:var(--surface2);border-top:2px solid var(--border2);">${display.slice(display.indexOf(' ')+1)}</td>`;
+      tbody.appendChild(mtr);
+    }
+    const pct=total?Math.round(cumulative/total*100):0;
+    const barW=Math.min(pct,100);
+    const fmtZ=(n,c)=>n>0?`<span style="font-weight:700;color:${c};">+${n}</span>`:'<span style="color:var(--text3);">—</span>';
+    const tr=document.createElement('tr');
+    tr.style.background='rgba(192,32,32,0.05)';
+    tr.innerHTML=`
+      <td style="padding:5px 12px;font-size:11px;color:var(--text);font-family:var(--mono);border-bottom:1px solid var(--border);">${display}</td>
+      <td style="padding:5px 12px;text-align:center;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);">${days[d.getDay()]}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.NF[key]||0,'#2d65bd')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.SF[key]||0,'#1a9458')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.EF[key]||0,'#a07800')}</td>
+      <td style="padding:5px 12px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);">${fmtZ(facadeMap.WF[key]||0,'#6d35d9')}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:#c02020;border-bottom:1px solid var(--border);">+${count}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--text);border-bottom:1px solid var(--border);">${cumulative}</td>
+      <td style="padding:5px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">${pct}%</td>
+      <td style="padding:5px 12px;border-bottom:1px solid var(--border);">
+        <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${barW}%;background:#c02020;border-radius:3px;transition:width 0.3s;"></div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('scr-summary').textContent=`${totalClosed} / ${total} resolved`;
+  _updateRateHeaders('scr');
+  document.getElementById('scrm').classList.add('open');
 }
 
 function openBracketInstallRateModal(){
