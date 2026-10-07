@@ -2923,8 +2923,7 @@ function _custTotalsFromCells(cells){
 }
 function _custStatCardsHTML(totals){
   const ss=[
-    {key:'c_and_d',      label:'C+D',          color:'#0a3d1f',cumulLabel:''},
-    {key:'bottom_bracket',label:'Bot. Bracket', color:'#155c2e',cumulLabel:'T. Bot. Bracket'},
+    {key:'bottom_bracket',label:'Bot. Bracket', color:'#155c2e',cumulLabel:''},
     {key:'installed',    label:'Top Bracket',  color:'#1a9458',cumulLabel:'T. Top Bracket'},
     {key:'delivered',    label:'Delivered',    color:'#a07800',cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',   color:'#1a5fa8',cumulLabel:'T. fabricated'},
@@ -2933,7 +2932,7 @@ function _custStatCardsHTML(totals){
     {key:'cl_not_issued',label:'CL not issued',color:'#FF6666',cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',       color:'#c02020',cumulLabel:''},
   ];
-  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const pipeline=['bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const activeTotal=ss.reduce((s,d)=>s+(totals[d.key]||0),0);
   return ss.map(s=>{
     const n=totals[s.key]||0;
@@ -2962,8 +2961,7 @@ function _custStatCardsHTML(totals){
 }
 function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
   const statDefs=[
-    {key:'c_and_d',      label:'C+D',          color:'#0a3d1f',cumulLabel:''},
-    {key:'bottom_bracket',label:'Bot. Bracket', color:'#155c2e',cumulLabel:'T. Bot. Bracket'},
+    {key:'bottom_bracket',label:'Bot. Bracket', color:'#155c2e',cumulLabel:''},
     {key:'installed',    label:'Top Bracket',  color:'#1a9458',cumulLabel:'T. Top Bracket'},
     {key:'delivered',    label:'Delivered',    color:'#a07800',cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',   color:'#1a5fa8',cumulLabel:'T. fabricated'},
@@ -2972,9 +2970,9 @@ function _custFacadeCardHTML(name,color,totals,navTarget,subtitle){
     {key:'cl_not_issued',label:'CL not issued',color:'#FF6666',cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',       color:'#c02020',cumulLabel:''},
   ];
-  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const pipeline=['bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const activeTotal=statDefs.reduce((s,d)=>s+(totals[d.key]||0),0);
-  const pct=activeTotal?Math.round(((totals.c_and_d||0)+(totals.bottom_bracket||0)+(totals.installed||0))/activeTotal*100):0;
+  const pct=activeTotal?Math.round(((totals.bottom_bracket||0)+(totals.installed||0))/activeTotal*100):0;
   const _showPct=(_custFacadeValMode==='percentages');
   const breakdown=statDefs.map(s=>{
     const n=totals[s.key]||0;
@@ -5940,8 +5938,7 @@ function renderBMDashboard(){
   const cont=document.getElementById('page-BM-dashboard');
   const gc=bmGC();
   const ss=[
-    {key:'c_and_d',       label:'C+D',                      color:'#0a3d1f', cumulLabel:''},
-    {key:'bottom_bracket',label:'Bot. Bracket',             color:'#155c2e', cumulLabel:'T. Bot. Bracket'},
+    {key:'bottom_bracket',label:'Bot. Bracket',             color:'#155c2e', cumulLabel:''},
     {key:'installed',     label:'Top Bracket',              color:'#1a9458', cumulLabel:'T. Top Bracket'},
     {key:'delivered',     label:'Delivered',                color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',    label:'Fabricated',               color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -5950,8 +5947,8 @@ function renderBMDashboard(){
     {key:'cl_not_issued', label:'CL not issued',            color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',        label:'Defect',                   color:'#c02020', cumulLabel:''},
   ];
-  const pipeline=['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
-  const gcActiveTotal=(gc.c_and_d||0)+(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
+  const pipeline=['bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const gcActiveTotal=(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
   const cardsHTML=ss.map(s=>{
     const n=gc[s.key]||0;
     const idx=pipeline.indexOf(s.key);
@@ -5974,8 +5971,8 @@ function renderBMDashboard(){
 
   const facadesHTML=BM_ZONES.map(z=>{
     const c=bmZC(z.id);
-    const activeTotal=(c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
-    const pct=activeTotal?Math.round(((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0))/activeTotal*100):0;
+    const activeTotal=(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal?Math.round(((c.bottom_bracket||0)+(c.installed||0))/activeTotal*100):0;
     const breakdown=ss.map(s=>{
       const n=c[s.key]||0;
       const idx=pipeline.indexOf(s.key);
@@ -6064,8 +6061,8 @@ function renderBMNF(){
   const cellW=44, cellH=26, labelW=44;
 
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setNFBMFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setNFBMFilter('${f}',this)">${f==='all'?'All':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="nfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="nf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(NF_ZOOM_LEVELS[nfZoomIdx]*100)}%</span><button onclick="nfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="nfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printNF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   const headerCells=cols.map(c=>{
@@ -6238,8 +6235,8 @@ function renderBMSF(){
   const cellW=44, cellH=26, labelW=44;
 
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setSFBMFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setSFBMFilter('${f}',this)">${f==='all'?'All':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="sfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="sf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">${Math.round(SF_ZOOM_LEVELS[sfZoomIdx]*100)}%</span><button onclick="sfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="sfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printSF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   // Column headers
@@ -6403,8 +6400,8 @@ function renderBMEF(){
   const cellW=46, cellH=26, labelW=44;
 
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setEFBMFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setEFBMFilter('${f}',this)">${f==='all'?'All':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="efZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="ef-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">100%</span><button onclick="efZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="efZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printEF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   const headerCells=cols.map(c=>`<div style="width:${cellW}px;height:22px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#8099b0;flex-shrink:0;">${c}</div>`).join('');
@@ -6571,8 +6568,8 @@ function renderBMWF(){
 
   // Filter bar
   const filterBar=`<div class="tb"><span class="tbl">Filter:</span>${
-    ['all','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
-    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setWFFilter('${f}',this)">${f==='all'?'All':f==='c_and_d'?'C+D':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
+    ['all','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect']
+    .map(f=>`<button class="fb${activeF===f?' af':''}" onclick="setWFFilter('${f}',this)">${f==='all'?'All':f==='bottom_bracket'?'Bot. Bracket':f==='installed'?'Top Bracket':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f[0].toUpperCase()+f.slice(1)}</button>`).join('')
   }<div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><span style="font-size:10px;font-weight:600;color:var(--text3);">Zoom:</span><button onclick="wfZoomOut()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom out">−</button><span id="wf-zoom-label" style="font-family:var(--mono);font-size:10px;color:var(--text);min-width:34px;text-align:center;font-weight:600;">100%</span><button onclick="wfZoomIn()" style="width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text2);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;" title="Zoom in">+</button><button onclick="wfZoomReset()" style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--text3);font-size:10px;font-weight:600;cursor:pointer;" title="Reset zoom">↺</button></div><div style="display:flex;align-items:center;gap:4px;margin-left:8px;border-left:1px solid var(--border);padding-left:8px;"><button onclick="printWF()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--surface);color:var(--text2);font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;" title="Print / Save as PDF"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / PDF</button></div></div>`;
 
   // Column headers
@@ -19563,8 +19560,7 @@ function _renderMobileOverview(){
   cont.scrollTop=0;
   const isB=window._mobTab==='brackets';
   const ss=isB?[
-    {key:'c_and_d',      label:'C+D',            color:'#005c1e', cumulLabel:'T. C+D'},
-    {key:'bottom_bracket',label:'Bot. Bracket',  color:'#00b33c', cumulLabel:'T. Bot. Bracket'},
+    {key:'bottom_bracket',label:'Bot. Bracket',  color:'#00b33c', cumulLabel:''},
     {key:'installed',    label:'Top Bracket',    color:'#1a9458', cumulLabel:'T. Top Bracket'},
     {key:'delivered',    label:'Delivered',      color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',     color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -19582,13 +19578,13 @@ function _renderMobileOverview(){
     {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
   ];
-  const pipeline=isB?['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued']:['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const pipeline=isB?['bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued']:['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const zones=isB
     ?[{id:'BM-NF',name:'North Facade',color:'#2d65bd'},{id:'BM-SF',name:'South Facade',color:'#1a9458'},{id:'BM-EF',name:'East Facade',color:'#a07800'},{id:'BM-WF',name:'West Facade',color:'#6d35d9'}]
     :[{id:'NF',name:'North Facade',color:'#2d65bd'},{id:'SF',name:'South Facade',color:'#1a9458'},{id:'EF',name:'East Facade',color:'#a07800'},{id:'WF',name:'West Facade',color:'#6d35d9'}];
   // Global counts
   const gc=isB?bmGC():gC();
-  const gcActiveTotal=isB?((gc.c_and_d||0)+(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0)):((gc.c_and_d||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0));
+  const gcActiveTotal=isB?((gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0)):((gc.c_and_d||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0));
   // Global status cards (2-col grid)
   const globalCards=ss.map(s=>{
     const n=gc[s.key]||0;
@@ -19616,8 +19612,8 @@ function _renderMobileOverview(){
   // Per-facade cards
   const facadeCards=zones.map(z=>{
     const c=isB?bmZC(z.id):zC(z.id);
-    const activeTotal=isB?((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0)):((c.c_and_d||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0));
-    const pct=activeTotal>0?Math.round((isB?((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)):((c.c_and_d||0)+(c.installed||0)))/activeTotal*100):0;
+    const activeTotal=isB?((c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0)):((c.c_and_d||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0));
+    const pct=activeTotal>0?Math.round((isB?((c.bottom_bracket||0)+(c.installed||0)):((c.c_and_d||0)+(c.installed||0)))/activeTotal*100):0;
     const breakdown=ss.map(s=>{
       const n=c[s.key]||0;
       const idx=pipeline.indexOf(s.key);
@@ -19697,7 +19693,7 @@ function _renderMobileFilterBar(){
   const stBg={c_and_d:'#005c1e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const stTxt={c_and_d:'#fff',bottom_bracket:'#fff',installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
   const items=isB
-    ?[{k:'all',l:'All'},{k:'c_and_d',l:'C+D'},{k:'bottom_bracket',l:'Bot. Bracket'},{k:'installed',l:'Top Bracket'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}]
+    ?[{k:'all',l:'All'},{k:'bottom_bracket',l:'Bot. Bracket'},{k:'installed',l:'Top Bracket'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}]
     :[{k:'all',l:'All'},{k:'c_and_d',l:'C+D'},{k:'installed',l:'Installed'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}];
   bar.innerHTML=`<div style="display:flex;gap:6px;">`+items.map(f=>{
     const active=window._mobFilter===f.k;
