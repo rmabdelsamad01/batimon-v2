@@ -2764,15 +2764,10 @@ function _snagSumApply(pid){
 function _applySnagIndicators(pid,facade){
   const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>_snagParts(s).id));
   document.querySelectorAll('td[data-pid]').forEach(td=>{
-    const sc=_custStBg[td.dataset.status]||'#E8F0FB';
-    if(open.has(td.dataset.pid)){
-      td.dataset.snag='1';
-      td.style.background=`linear-gradient(to bottom, #1565c0 15px, ${sc} 15px)`;
-    } else {
-      delete td.dataset.snag;
-      if(td.dataset.status) td.style.background=sc;
-    }
+    if(open.has(td.dataset.pid)){td.dataset.snag='1';}
+    else{delete td.dataset.snag;}
   });
+  if(_cgFilterStatus==='defect') _cgSetFilter('defect');
 }
 // Extra facades (X→Y→Z→AA→AB…) per project, stored in project_info key 'extra_facades'
 const _custExtraFacadesCache = {};
@@ -3490,7 +3485,8 @@ function _cgSetFilter(status,btn){
   document.querySelectorAll('.cg-fb').forEach(b=>{b.classList.remove('af');b.style.background='';b.style.color='';b.style.borderColor='';});
   if(btn){btn.classList.add('af');btn.style.background='#224F93';btn.style.color='#fff';btn.style.borderColor='#224F93';}
   document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
-    if(status==='all'||td.dataset.status===status){td.style.opacity='';td.style.outline='';}
+    const match=status==='all'||td.dataset.status===status||(status==='defect'&&td.dataset.snag==='1');
+    if(match){td.style.opacity='';td.style.outline='';}
     else{td.style.opacity='0.15';td.style.outline='';}
   });
   if(typeof pvApplyFilter==='function') pvApplyFilter(status);
@@ -4532,23 +4528,20 @@ async function renderCustomMonitoring(pageId){
     </div>`;
 
   // Apply current zoom immediately
-  setTimeout(()=>{
+  setTimeout(async()=>{
     const wrap=document.getElementById('cg-grid-wrap');
     if(wrap) wrap.style.zoom=_CG_ZOOM_LEVELS[_cgZoomIdx];
     const sw=document.getElementById('cg-scroll-wrap');
     if(sw&&(_savedSX||_savedSY)){sw.scrollLeft=_savedSX;sw.scrollTop=_savedSY;}
-    // Re-apply active filter if any
-    if(_cgFilterStatus!=='all'){
-      document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
-        td.style.opacity=td.dataset.status===_cgFilterStatus?'':'0.15';
-      });
-    }
     // Restore plan view if it was active before re-render (works across facade navigation too)
     if(typeof _pvActiveView!=='undefined'&&_pvActiveView==='plan'&&typeof pvSwitchView==='function'){
       if(typeof _pvState!=='undefined'){_pvState.pid=pid;_pvState.facade=facadeDir;_pvState.dataFacade=facade;}
       pvSwitchView('plan');
     }
-    _loadSnags(pid).then(()=>_applySnagIndicators(pid,facade));
+    // Load snags then apply indicators and re-apply filter (order matters for defect filter)
+    await _loadSnags(pid);
+    _applySnagIndicators(pid,facade);
+    if(_cgFilterStatus!=='all') _cgSetFilter(_cgFilterStatus);
   },0);
   // Escape cancels merge/unmerge mode
   document.onkeydown=e=>{ if(e.key==='Escape') custGridCancelMode(); };
