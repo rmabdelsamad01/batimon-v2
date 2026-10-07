@@ -19573,6 +19573,7 @@ function _renderMobileOverview(){
     {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
   ]:[
+    {key:'c_and_d',      label:'C+D',            color:'#005c1e', cumulLabel:''},
     {key:'installed',    label:'Installed',      color:'#1a9458', cumulLabel:'T. installed'},
     {key:'delivered',    label:'Delivered',      color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',     color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -19581,13 +19582,13 @@ function _renderMobileOverview(){
     {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
   ];
-  const pipeline=isB?['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued']:['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const pipeline=isB?['c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued']:['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const zones=isB
     ?[{id:'BM-NF',name:'North Facade',color:'#2d65bd'},{id:'BM-SF',name:'South Facade',color:'#1a9458'},{id:'BM-EF',name:'East Facade',color:'#a07800'},{id:'BM-WF',name:'West Facade',color:'#6d35d9'}]
     :[{id:'NF',name:'North Facade',color:'#2d65bd'},{id:'SF',name:'South Facade',color:'#1a9458'},{id:'EF',name:'East Facade',color:'#a07800'},{id:'WF',name:'West Facade',color:'#6d35d9'}];
   // Global counts
   const gc=isB?bmGC():gC();
-  const gcActiveTotal=isB?((gc.c_and_d||0)+(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0)):((gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0));
+  const gcActiveTotal=isB?((gc.c_and_d||0)+(gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0)):((gc.c_and_d||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0));
   // Global status cards (2-col grid)
   const globalCards=ss.map(s=>{
     const n=gc[s.key]||0;
@@ -19615,8 +19616,8 @@ function _renderMobileOverview(){
   // Per-facade cards
   const facadeCards=zones.map(z=>{
     const c=isB?bmZC(z.id):zC(z.id);
-    const activeTotal=isB?((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0)):((c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0));
-    const pct=activeTotal>0?Math.round((isB?((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)):(c.installed||0))/activeTotal*100):0;
+    const activeTotal=isB?((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0)):((c.c_and_d||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0));
+    const pct=activeTotal>0?Math.round((isB?((c.c_and_d||0)+(c.bottom_bracket||0)+(c.installed||0)):((c.c_and_d||0)+(c.installed||0)))/activeTotal*100):0;
     const breakdown=ss.map(s=>{
       const n=c[s.key]||0;
       const idx=pipeline.indexOf(s.key);
