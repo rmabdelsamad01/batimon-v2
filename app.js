@@ -6182,6 +6182,8 @@ function openBmNFModal(id,label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
   if(btn)btn.classList.add('ss');
+  const _pb=document.getElementById('pm-pending-banner');
+  if(_pb){if(p.pending_status&&!window._mobPanelMode){const _pL=p.pending_status==='c_and_d'?'Pre-C+D':p.pending_status==='bottom_bracket'?'Pre-Bottom Bracket':'Pre-Top Bracket';const _pC=p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='bottom_bracket'?'st-pre-bb':'st-pre-i';_pb.style.display='flex';_pb.innerHTML=`<div class="wfc ${_pC}" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-right:8px;"></div><span style="flex:1;font-size:12px;font-weight:700;color:#1a2a3a;">⏳ ${_pL} — pending approval</span><button onclick="_approvePending('${id}')" style="padding:4px 12px;background:#00b33c;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px;">Approve</button><button onclick="_rejectPending('${id}')" style="padding:4px 12px;background:#e53935;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Reject</button>`;}else{_pb.style.display='none';}}
   _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
@@ -6359,6 +6361,8 @@ function openBmSFModal(id,label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
   if(btn)btn.classList.add('ss');
+  const _pb=document.getElementById('pm-pending-banner');
+  if(_pb){if(p.pending_status&&!window._mobPanelMode){const _pL=p.pending_status==='c_and_d'?'Pre-C+D':p.pending_status==='bottom_bracket'?'Pre-Bottom Bracket':'Pre-Top Bracket';const _pC=p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='bottom_bracket'?'st-pre-bb':'st-pre-i';_pb.style.display='flex';_pb.innerHTML=`<div class="wfc ${_pC}" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-right:8px;"></div><span style="flex:1;font-size:12px;font-weight:700;color:#1a2a3a;">⏳ ${_pL} — pending approval</span><button onclick="_approvePending('${id}')" style="padding:4px 12px;background:#00b33c;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px;">Approve</button><button onclick="_rejectPending('${id}')" style="padding:4px 12px;background:#e53935;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Reject</button>`;}else{_pb.style.display='none';}}
   _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
@@ -6526,6 +6530,8 @@ function openBmEFModal(id, label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
   if(activeBtn)activeBtn.classList.add('ss');
+  const _pb=document.getElementById('pm-pending-banner');
+  if(_pb){if(p.pending_status&&!window._mobPanelMode){const _pL=p.pending_status==='c_and_d'?'Pre-C+D':p.pending_status==='bottom_bracket'?'Pre-Bottom Bracket':'Pre-Top Bracket';const _pC=p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='bottom_bracket'?'st-pre-bb':'st-pre-i';_pb.style.display='flex';_pb.innerHTML=`<div class="wfc ${_pC}" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-right:8px;"></div><span style="flex:1;font-size:12px;font-weight:700;color:#1a2a3a;">⏳ ${_pL} — pending approval</span><button onclick="_approvePending('${id}')" style="padding:4px 12px;background:#00b33c;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px;">Approve</button><button onclick="_rejectPending('${id}')" style="padding:4px 12px;background:#e53935;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Reject</button>`;}else{_pb.style.display='none';}}
   _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
@@ -6697,6 +6703,8 @@ function openBmWFModal(id,label){
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
   if(activeBtn)activeBtn.classList.add('ss');
+  const _pb=document.getElementById('pm-pending-banner');
+  if(_pb){if(p.pending_status&&!window._mobPanelMode){const _pL=p.pending_status==='c_and_d'?'Pre-C+D':p.pending_status==='bottom_bracket'?'Pre-Bottom Bracket':'Pre-Top Bracket';const _pC=p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='bottom_bracket'?'st-pre-bb':'st-pre-i';_pb.style.display='flex';_pb.innerHTML=`<div class="wfc ${_pC}" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-right:8px;"></div><span style="flex:1;font-size:12px;font-weight:700;color:#1a2a3a;">⏳ ${_pL} — pending approval</span><button onclick="_approvePending('${id}')" style="padding:4px 12px;background:#00b33c;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px;">Approve</button><button onclick="_rejectPending('${id}')" style="padding:4px 12px;background:#e53935;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Reject</button>`;}else{_pb.style.display='none';}}
   _pmSetMode();document.getElementById('pm').classList.add('open');
 }
 
@@ -10423,6 +10431,8 @@ async function _approvePending(id){
   cm('pm');
   const z=ZONES.find(z=>z.id===curPage);
   if(z&&!z.simple){const t=document.getElementById('tbl-'+curPage);if(t){t.innerHTML='';buildComplexTable(z);}}
+  const bmR={'BM-NF':renderBMNF,'BM-SF':renderBMSF,'BM-EF':renderBMEF,'BM-WF':renderBMWF};
+  if(bmR[curPage])bmR[curPage]();
   toast('Status approved');
 }
 
@@ -10434,6 +10444,8 @@ async function _rejectPending(id){
   cm('pm');
   const z=ZONES.find(z=>z.id===curPage);
   if(z&&!z.simple){const t=document.getElementById('tbl-'+curPage);if(t){t.innerHTML='';buildComplexTable(z);}}
+  const bmR={'BM-NF':renderBMNF,'BM-SF':renderBMSF,'BM-EF':renderBMEF,'BM-WF':renderBMWF};
+  if(bmR[curPage])bmR[curPage]();
   toast('Pending status rejected');
 }
 
