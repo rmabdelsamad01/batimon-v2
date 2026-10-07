@@ -6077,10 +6077,11 @@ function renderBMNF(){
       if(bracketType==='') return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
       const col=cols[ci];
       const id=`BM-NF-${r.label.replace('+','')}-${col}`;
-      const status=(panels[id]||{}).status||'pending';
-      const bg=stBg[status],border=stBorder[status],color=stText[status];
-      const dim=activeF!=='all'&&status!==activeF;
-      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmNFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+      const _bmC=panels[id]||{};const status=_bmC.status||'pending';const ps=_bmC.pending_status;
+      const _pBg={c_and_d:'#d8f0d8',bottom_bracket:'#c8f5cc',installed:'#ccffdd'};const _pBd={c_and_d:'#99cc99',bottom_bracket:'#66cc88',installed:'#66dd99'};const _pTx={c_and_d:'#336633',bottom_bracket:'#226633',installed:'#006612'};
+      const bg=ps?(_pBg[ps]||stBg[status]):stBg[status],border=ps?(_pBd[ps]||stBorder[status]):stBorder[status],color=ps?(_pTx[ps]||stText[status]):stText[status];
+      const dim=activeF!=='all'&&(ps?ps!==activeF:status!==activeF);
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;${ps?'outline:1.5px dashed '+border+';outline-offset:-2px;':''}" title="${bracketType} · ${ps?'pending:'+ps:status}" onclick="handleBmNFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
     }).join('');
     return`<div style="display:flex;align-items:center;">
       <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isFullEmp?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
@@ -6255,10 +6256,11 @@ function renderBMSF(){
       if(bracketType==='') return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
       const col=cols[ci];
       const id=`BM-SF-${r.label.replace('+','')}-${col}`;
-      const status=(panels[id]||{}).status||'pending';
-      const bg=stBg[status],border=stBorder[status],color=stText[status];
-      const dim=activeF!=='all'&&status!==activeF;
-      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmSFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+      const _bmC=panels[id]||{};const status=_bmC.status||'pending';const ps=_bmC.pending_status;
+      const _pBg={c_and_d:'#d8f0d8',bottom_bracket:'#c8f5cc',installed:'#ccffdd'};const _pBd={c_and_d:'#99cc99',bottom_bracket:'#66cc88',installed:'#66dd99'};const _pTx={c_and_d:'#336633',bottom_bracket:'#226633',installed:'#006612'};
+      const bg=ps?(_pBg[ps]||stBg[status]):stBg[status],border=ps?(_pBd[ps]||stBorder[status]):stBorder[status],color=ps?(_pTx[ps]||stText[status]):stText[status];
+      const dim=activeF!=='all'&&(ps?ps!==activeF:status!==activeF);
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;${ps?'outline:1.5px dashed '+border+';outline-offset:-2px;':''}" title="${bracketType} · ${ps?'pending:'+ps:status}" onclick="handleBmSFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
     }).join('');
     return`<div style="display:flex;align-items:center;">
       <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isFullEmp?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
@@ -6418,10 +6420,11 @@ function renderBMEF(){
       if(bracketType==='') return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
       const col=cols[ci];
       const id=`BM-EF-${r.label.replace('+','')}-${col}`;
-      const status=(panels[id]||{}).status||'pending';
-      const bg=stBg[status]; const border=stBorder[status]; const color=stText[status];
-      const dim=activeF!=='all'&&status!==activeF;
-      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmEFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+      const _bmC=panels[id]||{};const status=_bmC.status||'pending';const ps=_bmC.pending_status;
+      const _pBg={c_and_d:'#d8f0d8',bottom_bracket:'#c8f5cc',installed:'#ccffdd'};const _pBd={c_and_d:'#99cc99',bottom_bracket:'#66cc88',installed:'#66dd99'};const _pTx={c_and_d:'#336633',bottom_bracket:'#226633',installed:'#006612'};
+      const bg=ps?(_pBg[ps]||stBg[status]):stBg[status],border=ps?(_pBd[ps]||stBorder[status]):stBorder[status],color=ps?(_pTx[ps]||stText[status]):stText[status];
+      const dim=activeF!=='all'&&(ps?ps!==activeF:status!==activeF);
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;${ps?'outline:1.5px dashed '+border+';outline-offset:-2px;':''}" title="${bracketType} · ${ps?'pending:'+ps:status}" onclick="handleBmEFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
     }).join('');
     return`<div style="display:flex;align-items:center;">
       <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isX||isFullEmpty?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
@@ -6590,10 +6593,11 @@ function renderBMWF(){
       if(isEmpty) return`<div style="width:${cellW}px;height:${cellH}px;background:#f8f9fb;flex-shrink:0;border:1px solid #eee;"></div>`;
       const col=cols[ci];
       const id=`BM-WF-${r.label.replace('+','')}-${col.replace('-','_')}`;
-      const status=(panels[id]||{}).status||'pending';
-      const bg=stBg[status]; const border=stBorder[status]; const color=stText[status];
-      const dim=activeF!=='all'&&status!==activeF;
-      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;" title="${bracketType} · ${status}" onclick="handleBmWFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
+      const _bmC=panels[id]||{};const status=_bmC.status||'pending';const ps=_bmC.pending_status;
+      const _pBg={c_and_d:'#d8f0d8',bottom_bracket:'#c8f5cc',installed:'#ccffdd'};const _pBd={c_and_d:'#99cc99',bottom_bracket:'#66cc88',installed:'#66dd99'};const _pTx={c_and_d:'#336633',bottom_bracket:'#226633',installed:'#006612'};
+      const bg=ps?(_pBg[ps]||stBg[status]):stBg[status],border=ps?(_pBd[ps]||stBorder[status]):stBorder[status],color=ps?(_pTx[ps]||stText[status]):stText[status];
+      const dim=activeF!=='all'&&(ps?ps!==activeF:status!==activeF);
+      return`<div class="wfc" style="width:${cellW}px;height:${cellH}px;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;background:${bg};color:${color};border:1.5px solid ${border};flex-shrink:0;cursor:pointer;opacity:${dim?0.2:1};transition:opacity 0.15s;position:relative;${ps?'outline:1.5px dashed '+border+';outline-offset:-2px;':''}" title="${bracketType} · ${ps?'pending:'+ps:status}" onclick="handleBmWFClick(event,'${id}','${bracketType} — ${col} / ${r.label}')">${bracketType}</div>`;
     }).join('');
     return`<div style="display:flex;align-items:center;">
       <div style="width:${labelW}px;flex-shrink:0;font-size:9px;font-weight:700;color:${isX||isEmpty?'#bbb':'#4a6080'};text-align:right;padding-right:8px;position:sticky;left:0;z-index:25;background:var(--surface);border-right:2px solid var(--border2);">${r.label}</div>
