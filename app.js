@@ -9411,7 +9411,7 @@ function buildComplexTable(zone){
       if(!pType&&!pRef){const e=document.createElement('div');e.className='wfc-empty'+(zone.id==='EF'?(isRDC?' ef-rdc':isR01Short?' ef-r01-short':' ef-tall'):(zone.id==='WF'||zone.id==='SF')?(fl==='R+02'?' ef-tall wf-r02':fl==='R+34'?' ef-tall wf-r34':' ef-tall'):'');if(fl==='R+18')e.style.background='rgba(255,248,225,0.5)';if(zone.id==='NF'&&fl==='R+02'&&col===31)e.style.borderLeft='5px double #ED1C24';td.appendChild(e);tr.appendChild(td);return;}
       const meta=SM[p.status]||SM.pending;
       const cell=document.createElement('div');cell.className=`wfc ${meta.cls}`;
-      if(_custStBg[p.status])cell.style.background=_custStBg[p.status];
+      if(p.status==='c_and_d')cell.style.background='#00902e';
       const refOnlyFloors=zone.id==='WF'?['R+34','R+02','R+19']:zone.id==='SF'?['R+34','R+02','R+25','R+19','R+18T','R+17B','RDC']:zone.id==='NF'?['R+34','R+25','R+18T','R+18B','R+17B','R+02','R+01']:['R+19','R+25','R+01','RDC'];
       if(!refOnlyFloors.includes(fl)) cell.classList.add('big-type');
       if(selPanel===id)cell.classList.add('sel');
@@ -10406,10 +10406,11 @@ function _applyPendingClasses(tbl){
       cell.style.setProperty('color',_bmTx,'important');
     } else {
       const isInst=p.pending_status==='installed';
-      cell.classList.add(isInst?'st-pre-i':'st-pre-d');
-      cell.style.setProperty('background',isInst?'#ccffdd':'#fffccc','important');
-      cell.style.setProperty('border-color',isInst?'#66dd99':'#ddcc00','important');
-      cell.style.setProperty('color',isInst?'#006612':'#665e00','important');
+      const isCD=p.pending_status==='c_and_d';
+      cell.classList.add(isCD?'st-pre-cd':isInst?'st-pre-i':'st-pre-d');
+      cell.style.setProperty('background',isCD?'#b3e6cc':isInst?'#ccffdd':'#fffccc','important');
+      cell.style.setProperty('border-color',isCD?'#66b899':isInst?'#66dd99':'#ddcc00','important');
+      cell.style.setProperty('color',isCD?'#1a5e33':isInst?'#006612':'#665e00','important');
     }
   });
 }
@@ -10761,10 +10762,10 @@ function openComplexModal(id,fl,col,ref,type,zone){
       const _isBMPend=id&&id.startsWith('BM-');
       const _pLabel=_isBMPend
         ?(p.pending_status==='c_and_d'?'Pre-C+D':p.pending_status==='bottom_bracket'?'Pre-Bottom Bracket':'Pre-Top Bracket')
-        :(p.pending_status==='installed'?'Pre-installed':'Pre-delivered');
+        :(p.pending_status==='c_and_d'?'Pre-C+D':p.pending_status==='installed'?'Pre-installed':'Pre-delivered');
       const _pCls=_isBMPend
         ?(p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='bottom_bracket'?'st-pre-bb':'st-pre-i')
-        :(p.pending_status==='installed'?'st-pre-i':'st-pre-d');
+        :(p.pending_status==='c_and_d'?'st-pre-cd':p.pending_status==='installed'?'st-pre-i':'st-pre-d');
       _pendingBanner.style.display='flex';
       _pendingBanner.innerHTML=`<div class="wfc ${_pCls}" style="width:12px;height:12px;border-radius:3px;flex-shrink:0;margin-right:8px;"></div><span style="flex:1;font-size:12px;font-weight:700;color:#1a2a3a;">⏳ ${_pLabel} — pending approval</span><button onclick="_approvePending('${id}')" style="padding:4px 12px;background:#00b33c;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:6px;">Approve</button><button onclick="_rejectPending('${id}')" style="padding:4px 12px;background:#e53935;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Reject</button>`;
     } else {
