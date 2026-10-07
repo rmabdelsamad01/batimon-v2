@@ -2056,6 +2056,7 @@ async function load(){
             fabDate:row.fab_date||'',
             deliveryDate:row.delivery_date||'',
             cdDate:row.cd_date||'',
+            bbDate:row.bb_date||'',
             installDate:row.install_date||'',
             installRef:row.install_ref||'',
             ...(row.pending_status?{pending_status:row.pending_status}:{})
@@ -6174,11 +6175,13 @@ function openBmNFModal(id,label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(['installed','bottom_bracket'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else if(selStat==='bottom_bracket'){_iw.style.display='none';_id.value='';_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
   if(['fabricated','delivered','installed','bottom_bracket'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
   if(['delivered','installed','bottom_bracket'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.getElementById('m-cd-date-wrap').style.display='none';
+  const _bbw=document.getElementById('m-bb-date-wrap'),_bbd=document.getElementById('m-bb-date');
+  if(_bbw&&_bbd){if(selStat==='bottom_bracket'){_bbw.style.display='block';_bbd.value=p.bbDate||p.installDate||new Date().toISOString().split('T')[0];}else{_bbw.style.display='none';_bbd.value='';}}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
@@ -6354,11 +6357,13 @@ function openBmSFModal(id,label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(['installed','bottom_bracket'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else if(selStat==='bottom_bracket'){_iw.style.display='none';_id.value='';_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
   if(['fabricated','delivered','installed','bottom_bracket'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
   if(['delivered','installed','bottom_bracket'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.getElementById('m-cd-date-wrap').style.display='none';
+  const _bbw=document.getElementById('m-bb-date-wrap'),_bbd=document.getElementById('m-bb-date');
+  if(_bbw&&_bbd){if(selStat==='bottom_bracket'){_bbw.style.display='block';_bbd.value=p.bbDate||p.installDate||new Date().toISOString().split('T')[0];}else{_bbw.style.display='none';_bbd.value='';}}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const btn=document.querySelector('.so.'+map[selStat]);
@@ -6524,11 +6529,13 @@ function openBmEFModal(id, label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(['installed','bottom_bracket'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else if(selStat==='bottom_bracket'){_iw.style.display='none';_id.value='';_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
   if(['fabricated','delivered','installed','bottom_bracket'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
   if(['delivered','installed','bottom_bracket'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.getElementById('m-cd-date-wrap').style.display='none';
+  const _bbw=document.getElementById('m-bb-date-wrap'),_bbd=document.getElementById('m-bb-date');
+  if(_bbw&&_bbd){if(selStat==='bottom_bracket'){_bbw.style.display='block';_bbd.value=p.bbDate||p.installDate||new Date().toISOString().split('T')[0];}else{_bbw.style.display='none';_bbd.value='';}}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
@@ -6698,11 +6705,13 @@ function openBmWFModal(id,label){
   const _iw=document.getElementById('m-install-date-wrap'),_id=document.getElementById('m-install-date');
   const _fw=document.getElementById('m-fab-date-wrap'),_fd=document.getElementById('m-fab-date');
   const _rw=document.getElementById('m-install-ref-wrap'),_ir=document.getElementById('m-install-ref');
-  if(['installed','bottom_bracket'].includes(selStat)){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
+  if(selStat==='installed'){_iw.style.display='block';_id.value=p.installDate||new Date().toISOString().split('T')[0];_rw.style.display='block';_ir.value=p.installRef||'';}else if(selStat==='bottom_bracket'){_iw.style.display='none';_id.value='';_rw.style.display='block';_ir.value=p.installRef||'';}else{_iw.style.display='none';_id.value='';_rw.style.display='none';_ir.value='';}
   if(['fabricated','delivered','installed','bottom_bracket'].includes(selStat)){_fw.style.display='block';_fd.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw.style.display='none';_fd.value='';}
   const _dw=document.getElementById('m-del-date-wrap'),_dd=document.getElementById('m-del-date');
   if(['delivered','installed','bottom_bracket'].includes(selStat)){_dw.style.display='block';_dd.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw.style.display='none';_dd.value='';}
   document.getElementById('m-cd-date-wrap').style.display='none';
+  const _bbw=document.getElementById('m-bb-date-wrap'),_bbd=document.getElementById('m-bb-date');
+  if(_bbw&&_bbd){if(selStat==='bottom_bracket'){_bbw.style.display='block';_bbd.value=p.bbDate||p.installDate||new Date().toISOString().split('T')[0];}else{_bbw.style.display='none';_bbd.value='';}}
   document.querySelectorAll('.so').forEach(b=>b.classList.remove('ss'));
   const map={c_and_d:'socd',bottom_bracket:'sobb',installed:'soi',delivered:'sod',fabricated:'sof',cutting:'soc',cip:'socip',cl_not_issued:'socni',defect:'sox',pending:'sop'};
   const activeBtn=document.querySelector('.so.'+map[selStat]);
@@ -10760,16 +10769,18 @@ function openComplexModal(id,fl,col,ref,type,zone){
   const flClean = fl.replace('R+18T','R+18').replace('R+18M','R+18').replace('R+18MD','R+18').replace('R+18B','R+17').replace('R+17T','R+17').replace('R+17B','R+17');
   document.getElementById('m-ttl').textContent=type||displayRef||`${col}`;
   document.getElementById('m-sub').textContent=zone.id==='EF'?`East Facade · Floor ${flClean} · Col ${col}`:zone.id==='WF'?`West Facade · Floor ${flClean} · Col ${col}`:zone.id==='SF'?`South Facade · Floor ${flClean} · Col ${col}`:`${zone.name} · Floor ${flClean} · Col C${col}`;
-  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Panel Ref</span><span class="pv">${displayRef}</span></div><div class="pr"><span class="pk">Panel Type</span><span class="pv">${displayType}</span></div><div class="pr"><span class="pk">Floor</span><span class="pv">${flClean}</span></div><div class="pr"><span class="pk">Column</span><span class="pv">${(zone.id==='EF'||zone.id==='WF'||zone.id==='SF')?col:'C'+col}</span></div>${p.fabDate?`<div class="pr"><span class="pk">Fabricated On</span><span class="pv" style="color:#1a5fa8;font-weight:600;">${p.fabDate}</span></div>`:''}${p.deliveryDate?`<div class="pr"><span class="pk">Delivered On</span><span class="pv" style="color:#a07800;font-weight:600;">${p.deliveryDate}</span></div>`:''}${p.cdDate?`<div class="pr"><span class="pk">C+D On</span><span class="pv" style="color:#007a32;font-weight:600;">${p.cdDate}</span></div>`:''}${p.installDate?`<div class="pr"><span class="pk">Installed On</span><span class="pv" style="color:#1a9458;font-weight:600;">${p.installDate}</span></div>`:''}${p.installRef?`<div class="pr"><span class="pk">Install Ref</span><span class="pv" style="color:#1a9458;font-weight:600;">${p.installRef}</span></div>`:''}`;
+  document.getElementById('m-info').innerHTML=`<div class="pr"><span class="pk">Panel Ref</span><span class="pv">${displayRef}</span></div><div class="pr"><span class="pk">Panel Type</span><span class="pv">${displayType}</span></div><div class="pr"><span class="pk">Floor</span><span class="pv">${flClean}</span></div><div class="pr"><span class="pk">Column</span><span class="pv">${(zone.id==='EF'||zone.id==='WF'||zone.id==='SF')?col:'C'+col}</span></div>${p.fabDate?`<div class="pr"><span class="pk">Fabricated On</span><span class="pv" style="color:#1a5fa8;font-weight:600;">${p.fabDate}</span></div>`:''}${p.deliveryDate?`<div class="pr"><span class="pk">Delivered On</span><span class="pv" style="color:#a07800;font-weight:600;">${p.deliveryDate}</span></div>`:''}${p.cdDate?`<div class="pr"><span class="pk">C+D On</span><span class="pv" style="color:#007a32;font-weight:600;">${p.cdDate}</span></div>`:''}${p.bbDate?`<div class="pr"><span class="pk">Bot. Bracket On</span><span class="pv" style="color:#1a9458;font-weight:600;">${p.bbDate}</span></div>`:''}${p.installDate?`<div class="pr"><span class="pk">Installed On</span><span class="pv" style="color:#1a9458;font-weight:600;">${p.installDate}</span></div>`:''}${p.installRef?`<div class="pr"><span class="pk">Install Ref</span><span class="pv" style="color:#1a9458;font-weight:600;">${p.installRef}</span></div>`:''}`;
   const _iw2=document.getElementById('m-install-date-wrap'),_id2=document.getElementById('m-install-date');
   const _fw2=document.getElementById('m-fab-date-wrap'),_fd2=document.getElementById('m-fab-date');
   const _rw2=document.getElementById('m-install-ref-wrap'),_ir2=document.getElementById('m-install-ref');
-  if((p.status||'pending')==='installed'){_iw2.style.display='block';_id2.value=p.installDate||new Date().toISOString().split('T')[0];_rw2.style.display='block';_ir2.value=p.installRef||'';}else{_iw2.style.display='none';_id2.value='';_rw2.style.display='none';_ir2.value='';}
+  if((p.status||'pending')==='installed'){_iw2.style.display='block';_id2.value=p.installDate||new Date().toISOString().split('T')[0];_rw2.style.display='block';_ir2.value=p.installRef||'';}else if((p.status||'pending')==='bottom_bracket'){_iw2.style.display='none';_id2.value='';_rw2.style.display='block';_ir2.value=p.installRef||'';}else{_iw2.style.display='none';_id2.value='';_rw2.style.display='none';_ir2.value='';}
   if((p.status||'pending')==='fabricated'){_fw2.style.display='block';_fd2.value=p.fabDate||new Date().toISOString().split('T')[0];}else{_fw2.style.display='none';_fd2.value='';}
   const _dw2=document.getElementById('m-del-date-wrap'),_dd2=document.getElementById('m-del-date');
   if((p.status||'pending')==='delivered'){_dw2.style.display='block';_dd2.value=p.deliveryDate||new Date().toISOString().split('T')[0];}else{_dw2.style.display='none';_dd2.value='';}
   const _cdw2=document.getElementById('m-cd-date-wrap'),_cdd2=document.getElementById('m-cd-date');
   if((p.status||'pending')==='c_and_d'){_cdw2.style.display='block';_cdd2.value=p.cdDate||new Date().toISOString().split('T')[0];}else{_cdw2.style.display='none';_cdd2.value='';}
+  const _bbw2=document.getElementById('m-bb-date-wrap'),_bbd2=document.getElementById('m-bb-date');
+  if(_bbw2&&_bbd2){if((p.status||'pending')==='bottom_bracket'){_bbw2.style.display='block';_bbd2.value=p.bbDate||p.installDate||new Date().toISOString().split('T')[0];}else{_bbw2.style.display='none';_bbd2.value='';}}
   selStat=p.status||'pending';document.querySelectorAll('.so').forEach(el=>{el.classList.remove('ss');if(el.classList.contains(SMAP[selStat]))el.classList.add('ss');});
   // Pending approval banner
   const _pendingBanner=document.getElementById('pm-pending-banner');
@@ -10825,15 +10836,20 @@ function setSt(s,el){
   const dw=document.getElementById('m-del-date-wrap');
   const dd=document.getElementById('m-del-date');
   const rw=document.getElementById('m-install-ref-wrap');
+  const bbw=document.getElementById('m-bb-date-wrap'),bbd=document.getElementById('m-bb-date');
   if(s==='installed'){
     iw.style.display='block';
     if(!id.value)id.value=new Date().toISOString().split('T')[0];
     rw.style.display='block';
+    if(bbw)bbw.style.display='none';
     if(!window._mobPanelMode){
       if(selPanel && selPanel.startsWith('BM-')) _openBracketInstalledChecklist(selPanel);
       else if(selPanel) _openInstalledChecklist(selPanel);
     }
-  } else {iw.style.display='none';rw.style.display='none';}
+  } else if(s==='bottom_bracket'){
+    iw.style.display='none';rw.style.display='block';
+    if(bbw&&bbd){bbw.style.display='block';if(!bbd.value)bbd.value=new Date().toISOString().split('T')[0];}
+  } else {iw.style.display='none';rw.style.display='none';if(bbw)bbw.style.display='none';}
   if(s==='fabricated'){
     fw.style.display='block';
     if(!fd.value)fd.value=new Date().toISOString().split('T')[0];
@@ -10931,18 +10947,19 @@ async function _openInstalledChecklist(panelId){
 async function savePanel(){
   if(!selPanel)return;
   if(sbProfile?.role==='viewer'){toast('Viewers cannot edit panels.');return;}
-  const installDate = ['installed','bottom_bracket'].includes(selStat) ? document.getElementById('m-install-date').value : (panels[selPanel]||{}).installDate||'';
+  const installDate = selStat==='installed' ? document.getElementById('m-install-date').value : (panels[selPanel]||{}).installDate||'';
   const installRef = ['installed','bottom_bracket'].includes(selStat) ? document.getElementById('m-install-ref').value : (panels[selPanel]||{}).installRef||'';
   const fabDate = ['fabricated','delivered','installed','bottom_bracket'].includes(selStat) ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
   const deliveryDate = ['delivered','installed','bottom_bracket'].includes(selStat) ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
   const cdDate = selStat==='c_and_d' ? (document.getElementById('m-cd-date')?.value||new Date().toISOString().split('T')[0]) : (panels[selPanel]||{}).cdDate||'';
+  const bbDate = selStat==='bottom_bracket' ? (document.getElementById('m-bb-date')?.value||new Date().toISOString().split('T')[0]) : (panels[selPanel]||{}).bbDate||'';
   // Mobile users setting installed/delivered/c_and_d (UCW) or bracket statuses (BM) → save as pending_status
   const _isBMPanel=selPanel&&selPanel.startsWith('BM-');
   const _isMobChange=window._mobPanelMode&&(_isBMPanel?['installed','bottom_bracket'].includes(selStat):['installed','delivered','c_and_d'].includes(selStat));
   if(_isMobChange){
     panels[selPanel]={...panels[selPanel],pending_status:selStat};
   } else {
-    panels[selPanel]={...panels[selPanel],status:selStat,installDate,installRef,fabDate,deliveryDate,cdDate,pending_status:null};
+    panels[selPanel]={...panels[selPanel],status:selStat,installDate,installRef,fabDate,deliveryDate,cdDate,bbDate,pending_status:null};
   }
   _dirtyPanels.add(selPanel);
   // Mirror SF-{floor}-C15 → WF-{floor}-C15 (one-way, read-only mirror)
@@ -10995,14 +11012,15 @@ async function savePanel(){
       cd_date:p.cdDate||null,
       install_date:p.installDate||null,
       install_ref:p.installRef||null,
+      bb_date:p.bbDate||null,
       pending_status:p.pending_status||null,
       updated_by:sbUser?.id||null,
       updated_at:new Date().toISOString()
     };
     let{error:_e}=await sb.from('panels').upsert(_row,{onConflict:'id'});
     // If new columns missing in DB, retry without them
-    if(_e&&_e.message&&(_e.message.includes('delivery_date')||_e.message.includes('install_ref')||_e.message.includes('pending_status')||_e.message.includes('cd_date'))){
-      const safe={..._row};delete safe.delivery_date;delete safe.install_ref;delete safe.pending_status;delete safe.cd_date;
+    if(_e&&_e.message&&(_e.message.includes('delivery_date')||_e.message.includes('install_ref')||_e.message.includes('pending_status')||_e.message.includes('cd_date')||_e.message.includes('bb_date'))){
+      const safe={..._row};delete safe.delivery_date;delete safe.install_ref;delete safe.pending_status;delete safe.cd_date;delete safe.bb_date;
       ({error:_e}=await sb.from('panels').upsert(safe,{onConflict:'id'}));
     }
     if(_e) console.warn('Direct panel save error:',_e.message);
