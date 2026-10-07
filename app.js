@@ -19698,7 +19698,7 @@ function _renderMobileFilterBar(){
   const stTxt={c_and_d:'#fff',bottom_bracket:'#fff',installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
   const items=isB
     ?[{k:'all',l:'All'},{k:'c_and_d',l:'C+D'},{k:'bottom_bracket',l:'Bot. Bracket'},{k:'installed',l:'Top Bracket'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}]
-    :[{k:'all',l:'All'},{k:'installed',l:'Installed'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}];
+    :[{k:'all',l:'All'},{k:'c_and_d',l:'C+D'},{k:'installed',l:'Installed'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}];
   bar.innerHTML=`<div style="display:flex;gap:6px;">`+items.map(f=>{
     const active=window._mobFilter===f.k;
     const bg=active?(f.k==='all'?'#224F93':stBg[f.k]):'#fff';
