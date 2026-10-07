@@ -9411,6 +9411,7 @@ function buildComplexTable(zone){
       if(!pType&&!pRef){const e=document.createElement('div');e.className='wfc-empty'+(zone.id==='EF'?(isRDC?' ef-rdc':isR01Short?' ef-r01-short':' ef-tall'):(zone.id==='WF'||zone.id==='SF')?(fl==='R+02'?' ef-tall wf-r02':fl==='R+34'?' ef-tall wf-r34':' ef-tall'):'');if(fl==='R+18')e.style.background='rgba(255,248,225,0.5)';if(zone.id==='NF'&&fl==='R+02'&&col===31)e.style.borderLeft='5px double #ED1C24';td.appendChild(e);tr.appendChild(td);return;}
       const meta=SM[p.status]||SM.pending;
       const cell=document.createElement('div');cell.className=`wfc ${meta.cls}`;
+      if(_custStBg[p.status])cell.style.background=_custStBg[p.status];
       const refOnlyFloors=zone.id==='WF'?['R+34','R+02','R+19']:zone.id==='SF'?['R+34','R+02','R+25','R+19','R+18T','R+17B','RDC']:zone.id==='NF'?['R+34','R+25','R+18T','R+18B','R+17B','R+02','R+01']:['R+19','R+25','R+01','RDC'];
       if(!refOnlyFloors.includes(fl)) cell.classList.add('big-type');
       if(selPanel===id)cell.classList.add('sel');
