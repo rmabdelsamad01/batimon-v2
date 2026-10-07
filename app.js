@@ -5262,7 +5262,7 @@ function filterBarHTML(zid,extraBtn=''){
       </button>
     </div>
     <div style="margin-left:10px;font-size:13px;font-weight:700;color:var(--text2);letter-spacing:0.03em;white-space:nowrap;">${facadeName}</div>` : '';
-  return`<div id="tb-wrap-${zid}" style="display:block"><div class="tb"><span class="tbl">Filter:</span>${['all','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'].map(f=>`<button class="fb${fFilters[zid]===f?' af':''}" onclick="setFF('${zid}','${f}',this)">${f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')}${zoomControls}<div class="spacer"></div>${extraBtn}<button class="btn btn-d" style="font-size:10px;padding:4px 9px" onclick="openIssueModal('${zid}')">+ Log Issue</button></div></div>`;
+  return`<div id="tb-wrap-${zid}" style="display:block"><div class="tb"><span class="tbl">Filter:</span>${['all','c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'].map(f=>`<button class="fb${fFilters[zid]===f?' af':''}" onclick="setFF('${zid}','${f}',this)">${f==='c_and_d'?'C+D':f==='cutting'?'CL issued':f==='cl_not_issued'?'CL not issued':f==='cip'?'CL in Progress':f==='pending'?'Pending':f[0].toUpperCase()+f.slice(1)}</button>`).join('')}${zoomControls}<div class="spacer"></div>${extraBtn}<button class="btn btn-d" style="font-size:10px;padding:4px 9px" onclick="openIssueModal('${zid}')">+ Log Issue</button></div></div>`;
 }
 
 async function renderProjFinancial(){
