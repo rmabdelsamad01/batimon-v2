@@ -2455,7 +2455,7 @@ function _renderPage(id){
 }
 
 // ── Custom project monitoring grid (blank A–Z / 1–10 table) ───────────────
-const _custStBg    = {c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+const _custStBg    = {c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
 const _custStText  = {c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 const _custStLabel = {c_and_d:'C+D',bottom_bracket:'Bot. Bracket',installed:'Top Bracket',delivered:'Delivered',fabricated:'Fabricated',cutting:'CL Issued',cip:'CL In Prog',cl_not_issued:'CL Not Issued',defect:'Defect',pending:'Pending'};
 const _custStatuses = ['pending','c_and_d','bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued','defect'];
@@ -4713,7 +4713,7 @@ function _renderProjOverviewReport(){
 function renderDash(){
   const gc=gC();
   const ss=[
-    {key:'c_and_d',     label:'C+D',                color:'#00c853', cumulLabel:''},
+    {key:'c_and_d',     label:'C+D',                color:'#00902e', cumulLabel:''},
     {key:'installed',   label:'Installed',          color:'#1a9458', cumulLabel:'T. installed'},
     {key:'delivered',   label:'Delivered',          color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',  label:'Fabricated',         color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -4755,7 +4755,7 @@ function renderDash(){
     <div style="font-size:10px;color:#1a2a3a;font-family:var(--mono);text-align:right;margin-top:3px;">100%</div>
   </div>`;
   const statDefs=[
-    {key:'c_and_d',      label:'C+D',           color:'#00c853', cumulLabel:''},
+    {key:'c_and_d',      label:'C+D',           color:'#00902e', cumulLabel:''},
     {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
     {key:'delivered',    label:'Delivered',     color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',    color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -6054,7 +6054,7 @@ function renderBMNF(){
     {label:'R+1', data:mk(L_R1, R_EMP)},{label:'RDC', data:mk(L_EMP,R_EMP)},
   ];
 
-  const stBg={c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBg={c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
   const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
@@ -6228,7 +6228,7 @@ function renderBMSF(){
     {label:'R+1', data:mk(L_EMP,R_STD)},{label:'RDC', data:mk(L_EMP,R_RDC)},
   ];
 
-  const stBg={c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBg={c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
   const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
@@ -6393,7 +6393,7 @@ function renderBMEF(){
     {label:'RDC', data:RDC_ROW},
   ];
 
-  const stBg={c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBg={c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
   const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
@@ -6560,7 +6560,7 @@ function renderBMWF(){
   ];
 
   // Status colors — same as facade panels
-  const stBg={c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBg={c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const stBorder={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
   const stText={c_and_d:'#ffffff',bottom_bracket:'#ffffff',installed:'#006612',delivered:'#665e00',fabricated:'#ffffff',cutting:'#ffffff',cip:'#ffffff',cl_not_issued:'#8B0000',defect:'#ffffff',pending:'#224F93'};
 
@@ -8035,7 +8035,7 @@ function applyNFDesignOverrides(tbl){
   const r17bRow=tbl.querySelector('tr.tr-r17b');
   if(r17tRow){
     const r17tLabels={41:'S06',42:'S06',43:'S06',44:'S06',45:'S07'};
-    const _r17StBg={c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#FF8C00',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+    const _r17StBg={c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#FF8C00',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
     [50,49,48,47,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31].forEach(function(col){
       if([50,49,48,47].includes(col))return; // merged colspan=4 in buildComplexTable
       const td=r17tRow.querySelector('td[data-col="'+col+'"]');
@@ -10158,7 +10158,7 @@ function buildComplexTable(zone){
           td.setAttribute('rowspan','2');
           td.style.padding='0';td.style.verticalAlign='top';
           const doorStatus=(panels[id]||{}).status||'pending';
-          const doorBg=({'c_and_d':'#00c853','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBg=({'c_and_d':'#00902e','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
           const doorBorder=({'c_and_d':'rgba(0,61,20,0.6)','bottom_bracket':'rgba(0,143,48,0.6)','installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH=150+25; // R+19 (150px) + R+18T (25px)
           td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('SF-R+19-C90','R+19',90,'','Door',ZONES.find(z=>z.id==='SF'))">
@@ -10221,7 +10221,7 @@ function buildComplexTable(zone){
           td.setAttribute('rowspan','2');
           td.style.padding='0';td.style.verticalAlign='top';
           const doorStatus=(panels[id]||{}).status||'pending';
-          const doorBg=({'c_and_d':'#00c853','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBg=({'c_and_d':'#00902e','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
           const doorBorder=({'c_and_d':'rgba(0,61,20,0.6)','bottom_bracket':'rgba(0,143,48,0.6)','installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH = 150 + 25; // R+02 (150px) + R+01 (25px)
           td.innerHTML=`<div style="width:50px;height:${mergedH}px;display:flex;flex-direction:column;overflow:hidden;border-radius:4px;border:1.5px solid ${doorBorder};border-left:5px double #ED1C24;background:${doorBg};cursor:pointer;" data-door-id="${id}" onclick="openComplexModal('NF-R+02-C59','R+02',59,'','DOOR',ZONES.find(z=>z.id==='NF'))">
@@ -10289,7 +10289,7 @@ function buildComplexTable(zone){
           td.style.verticalAlign='middle';
           const doorName = col===28 ? 'Door 6' : 'Door 5';
           const doorStatus=(panels[id]||{}).status||'pending';
-          const doorBg=({'c_and_d':'#00c853','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
+          const doorBg=({'c_and_d':'#00902e','bottom_bracket':'#00b33c','installed':'#00FF32','delivered':'#FFF000','fabricated':'#002DFF','cutting':'#C98BCA','cl_not_issued':'#FFB3B3','cip':'#A349A4','defect':'#ED1C24','pending':'#E8F0FB'})[doorStatus]||'#E8F0FB';
           const doorBorder=({'c_and_d':'rgba(0,61,20,0.6)','bottom_bracket':'rgba(0,143,48,0.6)','installed':'rgba(0,204,40,0.6)','delivered':'rgba(204,187,0,0.6)','fabricated':'rgba(0,37,204,0.6)','cutting':'rgba(201,139,202,0.6)','cl_not_issued':'rgba(255,102,102,0.6)','cip':'rgba(122,54,121,0.6)','defect':'rgba(184,18,25,0.6)','pending':'rgba(34,79,147,0.2)'})[doorStatus]||'rgba(34,79,147,0.2)';
           const mergedH = 150+25; // R+19 (150px) + R+18T (25px)
           td.style.padding='0';
@@ -19569,7 +19569,7 @@ function _renderMobileOverview(){
     {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
   ]:[
-    {key:'c_and_d',      label:'C+D',            color:'#00c853', cumulLabel:''},
+    {key:'c_and_d',      label:'C+D',            color:'#00902e', cumulLabel:''},
     {key:'installed',    label:'Installed',      color:'#1a9458', cumulLabel:'T. installed'},
     {key:'delivered',    label:'Delivered',      color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',     color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -19690,7 +19690,7 @@ function _renderMobileFilterBar(){
   const bar=document.getElementById('mob-filter-bar');
   if(!bar) return;
   const isB=window._mobTab==='brackets';
-  const stBg={c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBg={c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const stTxt={c_and_d:'#fff',bottom_bracket:'#fff',installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
   const items=isB
     ?[{k:'all',l:'All'},{k:'bottom_bracket',l:'Bot. Bracket'},{k:'installed',l:'Top Bracket'},{k:'delivered',l:'Delivered'},{k:'fabricated',l:'Fabricated'},{k:'cutting',l:'CL issued'},{k:'cip',l:'CL Progress'},{k:'cl_not_issued',l:'CL not issued'},{k:'defect',l:'Defect'},{k:'pending',l:'Pending'}]
@@ -19933,7 +19933,7 @@ function _renderMobileBMGrid(){
   if(!cont) return;
   const {cols,rows,zid}=_getMobileBMData(window._mobFacade);
   const filter=window._mobFilter;
-  const stBg={c_and_d:'#00c853',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const stBg={c_and_d:'#00902e',bottom_bracket:'#00b33c',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const stBd={c_and_d:'#003d14',bottom_bracket:'#008f30',installed:'#00cc28',delivered:'#ccbb00',fabricated:'#0025cc',cutting:'#a066a1',cip:'#7a3679',cl_not_issued:'#FF6666',defect:'#b81219',pending:'#b8cef5'};
   const stTx={c_and_d:'#fff',bottom_bracket:'#fff',installed:'#006612',delivered:'#665e00',fabricated:'#fff',cutting:'#fff',cl_not_issued:'#8B0000',cip:'#fff',defect:'#fff',pending:'#224F93'};
   const cw=36,ch=20,lw=36;
@@ -20725,7 +20725,7 @@ function renderAAAPage(){
   }
 
   const SC={
-    c_and_d:'#00c853',
+    c_and_d:'#00902e',
     installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',
     cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',
     defect:'#ED1C24',pending:'#E8F0FB'
@@ -21096,7 +21096,7 @@ function renderAAABetaPage(){
   const yPos=[];
   {let _y=0;for(const fl of FLOORS_BTT){yPos.push(_y);_y+=flH(fl);}}
 
-  const SC={c_and_d:'#00c853',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const SC={c_and_d:'#00902e',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const JOINT='#07111e';
 
   // Derived geometry
@@ -22910,4 +22910,5 @@ function renderAAABetaPage(){
   }
   // ══════════════════════════════════════════════════════════════════════════
 }
+
 
