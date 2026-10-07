@@ -4715,6 +4715,7 @@ function _renderProjOverviewReport(){
 function renderDash(){
   const gc=gC();
   const ss=[
+    {key:'c_and_d',     label:'C+D',                color:'#005c1e', cumulLabel:''},
     {key:'installed',   label:'Installed',          color:'#1a9458', cumulLabel:'T. installed'},
     {key:'delivered',   label:'Delivered',          color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',  label:'Fabricated',         color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -4723,8 +4724,8 @@ function renderDash(){
     {key:'cl_not_issued',label:'CL not issued',     color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',      label:'Defect',             color:'#c02020', cumulLabel:''},
   ];
-  const pipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
-  const gcActiveTotal=(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
+  const pipeline=['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const gcActiveTotal=(gc.c_and_d||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
   document.getElementById('dash-cards').innerHTML=ss.map(s=>{
     const n=gc[s.key]||0;
     const idx=pipeline.indexOf(s.key);
@@ -4756,6 +4757,7 @@ function renderDash(){
     <div style="font-size:10px;color:#1a2a3a;font-family:var(--mono);text-align:right;margin-top:3px;">100%</div>
   </div>`;
   const statDefs=[
+    {key:'c_and_d',      label:'C+D',           color:'#005c1e', cumulLabel:''},
     {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
     {key:'delivered',    label:'Delivered',     color:'#a07800', cumulLabel:'T. delivered'},
     {key:'fabricated',   label:'Fabricated',    color:'#1a5fa8', cumulLabel:'T. fabricated'},
@@ -4764,11 +4766,11 @@ function renderDash(){
     {key:'cl_not_issued',label:'CL not issued', color:'#FF6666', cumulLabel:'T. CL not issued'},
     {key:'defect',       label:'Defect',        color:'#c02020', cumulLabel:''},
   ];
-  const facadePipeline=['installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+  const facadePipeline=['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   document.getElementById('facades-grid').innerHTML=ZONES.map(z=>{
     const c=zC(z.id);
-    const activeTotal=(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
-    const pct=activeTotal?Math.round((c.installed||0)/activeTotal*100):0;
+    const activeTotal=(c.c_and_d||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+    const pct=activeTotal?Math.round(((c.c_and_d||0)+(c.installed||0))/activeTotal*100):0;
     const breakdown=statDefs.map(s=>{
       const n=c[s.key]||0;
       const idx=facadePipeline.indexOf(s.key);
