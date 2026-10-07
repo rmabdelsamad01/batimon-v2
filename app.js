@@ -20725,6 +20725,7 @@ function renderAAAPage(){
   }
 
   const SC={
+    c_and_d:'#00c853',
     installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',
     cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',
     defect:'#ED1C24',pending:'#E8F0FB'
@@ -21095,7 +21096,7 @@ function renderAAABetaPage(){
   const yPos=[];
   {let _y=0;for(const fl of FLOORS_BTT){yPos.push(_y);_y+=flH(fl);}}
 
-  const SC={installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
+  const SC={c_and_d:'#00c853',installed:'#00FF32',delivered:'#FFF000',fabricated:'#002DFF',cutting:'#C98BCA',cip:'#A349A4',cl_not_issued:'#FFB3B3',defect:'#ED1C24',pending:'#E8F0FB'};
   const JOINT='#07111e';
 
   // Derived geometry
