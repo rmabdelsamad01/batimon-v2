@@ -3486,19 +3486,30 @@ function _cgSetFilter(status,btn){
   if(btn){btn.classList.add('af');btn.style.background='#224F93';btn.style.color='#fff';btn.style.borderColor='#224F93';}
   // BM / custom grid cells (td[data-status])
   document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
-    const match=status==='all'||td.dataset.status===status||(status==='defect'&&td.dataset.snag==='1');
-    if(match){td.style.opacity='';td.style.outline='';}
-    else{td.style.opacity='0.15';td.style.outline='';}
+    const origBg=_custStBg[td.dataset.status]||'';const origCl=_custStText[td.dataset.status]||'';
+    if(status==='all'){
+      td.style.opacity='';td.style.outline='';td.style.background=origBg;td.style.color=origCl;
+    } else if(status==='defect'){
+      if(td.dataset.snag==='1'){td.style.opacity='';td.style.outline='';td.style.background='#c02020';td.style.color='#fff';}
+      else{td.style.opacity='0.15';td.style.outline='';td.style.background=origBg;td.style.color=origCl;}
+    } else {
+      const match=td.dataset.status===status;
+      td.style.opacity=match?'':'0.15';td.style.outline='';td.style.background=origBg;td.style.color=origCl;
+    }
   });
   // UCW cells (div.wfc[data-pid] inside td) — status encoded in CSS class
   const _ucwCls={c_and_d:'st-cd',installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x',bottom_bracket:'st-bb'};
   document.querySelectorAll('#cg-grid-wrap .wfc[data-pid]').forEach(cell=>{
     const td=cell.parentElement;if(!td)return;
-    let match;
-    if(status==='all') match=true;
-    else if(status==='defect') match=cell.dataset.snag==='1';
-    else match=!!((_ucwCls[status])&&cell.classList.contains(_ucwCls[status]));
-    td.style.opacity=match?'':'0.15';
+    if(status==='all'){
+      td.style.opacity='';cell.style.background='';cell.style.color='';
+    } else if(status==='defect'){
+      if(cell.dataset.snag==='1'){td.style.opacity='';cell.style.background='#c02020';cell.style.color='#fff';}
+      else{td.style.opacity='0.15';cell.style.background='';cell.style.color='';}
+    } else {
+      const match=!!(_ucwCls[status]&&cell.classList.contains(_ucwCls[status]));
+      td.style.opacity=match?'':'0.15';cell.style.background='';cell.style.color='';
+    }
   });
   if(typeof pvApplyFilter==='function') pvApplyFilter(status);
 }
