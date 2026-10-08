@@ -8588,7 +8588,11 @@ function buildComplexTable(zone){
           '<div style="position:absolute;top:0;bottom:0;left:25px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:75px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>'+
           '<div style="position:absolute;top:0;bottom:0;left:125px;width:1px;background:rgba(255,255,255,0.8);z-index:2;"></div>';
-        td.dataset.pid=id;
+        const _wfc19=document.createElement('div');
+        _wfc19.className='wfc';
+        _wfc19.style.cssText='position:absolute;inset:0;z-index:5;pointer-events:none;';
+        _wfc19.dataset.pid=id;
+        td.appendChild(_wfc19);
         td.onclick=(e)=>{e.currentTarget=td;handlePanelClick(e,id,fl,col,pRef,pType,zone);};
         tr.appendChild(td);return;
       }
@@ -8764,6 +8768,7 @@ function buildComplexTable(zone){
           const _st50=(panels[id]||{}).status||'pending';
           const _bg50=_custStBg[_st50]||'#E8F0FB';
           const c=document.createElement('div');
+          c.className='wfc';
           c.style.cssText=`width:150px;height:50px;background-image:radial-gradient(circle,#FF8C00 1px,transparent 1px);background-size:5px 5px;background-color:${_bg50};border:1px solid rgba(34,79,147,0.2);border-bottom:2px solid #FF8C00;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;`;
           c.innerHTML='<span style="font-family:var(--mono);font-size:18px;font-weight:700;color:#224F93;pointer-events:none;z-index:1;">S08</span>';
           c.dataset.pid=id;
