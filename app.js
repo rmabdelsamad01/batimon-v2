@@ -3497,9 +3497,9 @@ function _cgSetFilter(status,btn){
       td.style.opacity=match?'':'0.15';td.style.outline='';td.style.background=origBg;td.style.color=origCl;
     }
   });
-  // UCW cells (div.wfc[data-pid] inside td) — status encoded in CSS class
+  // UCW cells (div.wfc[data-pid] inside td, in gw-NF/gw-EF/etc.) — status encoded in CSS class
   const _ucwCls={c_and_d:'st-cd',installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x',bottom_bracket:'st-bb'};
-  document.querySelectorAll('#cg-grid-wrap .wfc[data-pid]').forEach(cell=>{
+  document.querySelectorAll('.wfc[data-pid]').forEach(cell=>{
     const td=cell.parentElement;if(!td)return;
     if(status==='all'){
       td.style.opacity='';cell.style.background='';cell.style.color='';
