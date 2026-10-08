@@ -2763,9 +2763,9 @@ function _snagSumApply(pid){
 
 function _applySnagIndicators(pid,facade){
   const open=new Set((_snagCache[pid]||[]).filter(s=>s.status==='open'&&s.facade===facade).map(s=>_snagParts(s).id));
-  document.querySelectorAll('td[data-pid]').forEach(td=>{
-    if(open.has(td.dataset.pid)){td.dataset.snag='1';}
-    else{delete td.dataset.snag;}
+  document.querySelectorAll('[data-pid]').forEach(el=>{
+    if(open.has(el.dataset.pid)){el.dataset.snag='1';}
+    else{delete el.dataset.snag;}
   });
   if(_cgFilterStatus==='defect') _cgSetFilter('defect');
 }
@@ -3484,10 +3484,21 @@ function _cgSetFilter(status,btn){
   _cgFilterStatus=status;
   document.querySelectorAll('.cg-fb').forEach(b=>{b.classList.remove('af');b.style.background='';b.style.color='';b.style.borderColor='';});
   if(btn){btn.classList.add('af');btn.style.background='#224F93';btn.style.color='#fff';btn.style.borderColor='#224F93';}
+  // BM / custom grid cells (td[data-status])
   document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
     const match=status==='all'||td.dataset.status===status||(status==='defect'&&td.dataset.snag==='1');
     if(match){td.style.opacity='';td.style.outline='';}
     else{td.style.opacity='0.15';td.style.outline='';}
+  });
+  // UCW cells (div.wfc[data-pid] inside td) — status encoded in CSS class
+  const _ucwCls={c_and_d:'st-cd',installed:'st-i',delivered:'st-d',fabricated:'st-f',cutting:'st-c',cip:'st-cip',cl_not_issued:'st-cn',defect:'st-x',bottom_bracket:'st-bb'};
+  document.querySelectorAll('#cg-grid-wrap .wfc[data-pid]').forEach(cell=>{
+    const td=cell.parentElement;if(!td)return;
+    let match;
+    if(status==='all') match=true;
+    else if(status==='defect') match=cell.dataset.snag==='1';
+    else match=!!((_ucwCls[status])&&cell.classList.contains(_ucwCls[status]));
+    td.style.opacity=match?'':'0.15';
   });
   if(typeof pvApplyFilter==='function') pvApplyFilter(status);
 }
@@ -3978,7 +3989,7 @@ function saveCustPanel(){
         const td=document.getElementById(`cpcell-${m[1]}_${m[2]}`);
         if(td){
           td.style.outline='';td.dataset.status=status;td.style.color=_custStText[status];
-          td.style.background=td.dataset.snag?`linear-gradient(to bottom, #1565c0 15px, ${_custStBg[status]} 15px)`:_custStBg[status];
+          td.style.background=_custStBg[status];
           const existRef=td.dataset.cellref||td.querySelector('div')?.textContent||'';
           const existPRef=(_custFacadeCache[_custMultiPid+'|'+_custMultiFacade]||{})[key]?.panelRef||'';
           td.innerHTML=_custCellInnerHTML(existRef,status,existPRef);
@@ -4006,7 +4017,7 @@ function saveCustPanel(){
       if(td){
         const _savedPRef=(_custFacadeCache[_custCurPid+'|'+_custCurFacade]||{})[_custCurCellKey]?.panelRef||'';
         td.dataset.status=status;td.style.color=_custStText[status];
-        td.style.background=td.dataset.snag?`linear-gradient(to bottom, #1565c0 15px, ${_custStBg[status]} 15px)`:_custStBg[status];
+        td.style.background=_custStBg[status];
         td.innerHTML=_custCellInnerHTML(_custCurCellRef,status,_savedPRef);
         td.title=`${_custCurCellRef} — ${_custStLabel[status]}`;
       }
@@ -8041,6 +8052,12 @@ function renderComplexFP(zone){
   if(zone.id==='NF'){
     const nfTbl=document.getElementById('tbl-NF');
     if(nfTbl)applyNFDesignOverrides(nfTbl);
+  }
+  // Load snags so defect filter works immediately on page open
+  const _rcfPid=window._activeProjectId;
+  if(_rcfPid){
+    const _facadeKey={NF:'NF',SF:'SF',EF:'EF',WF:'WF'};
+    _loadSnags(_rcfPid).then(()=>_applySnagIndicators(_rcfPid,_facadeKey[zone.id]||zone.id));
   }
 }
 function applyNFDesignOverrides(tbl){
