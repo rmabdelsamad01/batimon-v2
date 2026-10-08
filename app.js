@@ -3482,8 +3482,10 @@ function _cgApplyZoom(){
 }
 function _cgSetFilter(status,btn){
   _cgFilterStatus=status;
-  document.querySelectorAll('.cg-fb').forEach(b=>{b.classList.remove('af');b.style.background='';b.style.color='';b.style.borderColor='';});
-  if(btn){btn.classList.add('af');btn.style.background='#224F93';btn.style.color='#fff';btn.style.borderColor='#224F93';}
+  if(btn){
+    document.querySelectorAll('.cg-fb').forEach(b=>{b.classList.remove('af');b.style.background='';b.style.color='';b.style.borderColor='';});
+    btn.classList.add('af');btn.style.background='#224F93';btn.style.color='#fff';btn.style.borderColor='#224F93';
+  }
   // BM / custom grid cells (td[data-status])
   document.querySelectorAll('#cg-grid-wrap td[data-status]').forEach(td=>{
     const origBg=_custStBg[td.dataset.status]||'';const origCl=_custStText[td.dataset.status]||'';
