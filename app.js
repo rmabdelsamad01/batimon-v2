@@ -2768,6 +2768,13 @@ function _applySnagIndicators(pid,facade){
     else{delete el.dataset.snag;}
   });
   if(_cgFilterStatus==='defect') _cgSetFilter('defect');
+  if(fFilters[facade]==='defect'){
+    document.querySelectorAll('#tbl-'+facade+' .wfc[data-pid]').forEach(cell=>{
+      const td=cell.parentElement;if(!td)return;
+      if(cell.dataset.snag==='1'){td.style.opacity='';td.style.pointerEvents='';cell.style.setProperty('background','#c02020','important');cell.style.setProperty('color','#fff','important');}
+      else{td.style.opacity='0.1';td.style.pointerEvents='none';cell.style.background='';cell.style.color='';}
+    });
+  }
 }
 // Extra facades (X→Y→Z→AA→AB…) per project, stored in project_info key 'extra_facades'
 const _custExtraFacadesCache = {};
@@ -10512,6 +10519,12 @@ async function setFF(zid,f,el){
   const z=ZONES.find(z=>z.id===zid);
   if(z&&z.simple)renderSimpleGrid(z);
   else{const t=document.getElementById('tbl-'+zid);if(t){t.innerHTML='';buildComplexTable(z);}}
+  if(f==='defect'){
+    const _pid=window._activeProjectId||'shift-tower';
+    const _fk={NF:'NF',SF:'SF',EF:'EF',WF:'WF'};
+    await _loadSnags(_pid);
+    _applySnagIndicators(_pid,_fk[zid]||zid);
+  }
 }
 
 function openSimpleModal(id,zone){
