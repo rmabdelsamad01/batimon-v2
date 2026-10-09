@@ -21397,7 +21397,6 @@ function renderAAABetaPage(){
           ${SF_FLOORS.map(fl=>`<label style="display:flex;align-items:center;gap:7px;padding:3px 10px;cursor:pointer;font-size:11px;color:var(--text2);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"><input type="checkbox" data-floor="${fl}" checked onchange="window._aaabFloorChange()" style="cursor:pointer;"> ${fl}</label>`).join('')}
         </div>
       </div>
-      <button id="aaab-three-btn" onclick="window._aaabToggleThree()" title="Switch to Three.js WebGL renderer" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">⬡ 3D View</button>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
     <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:linear-gradient(180deg,#6aaed4 0%,#96c8e8 35%,#c4dff0 70%,#bdd8e8 100%);position:relative;cursor:grab;user-select:none;">
