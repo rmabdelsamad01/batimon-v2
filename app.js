@@ -22761,6 +22761,18 @@ function renderAAABetaPage(){
   function _3env(T,scene){
     const pm=(hex,sh=8)=>new T.MeshPhongMaterial({color:new T.Color(hex),shininess:sh});
 
+    // Ground plane only
+    const gGeo=new T.PlaneGeometry(400,400);
+    const gMat=new T.MeshPhongMaterial({color:new T.Color('#C4BB94'),shininess:4});
+    const ground=new T.Mesh(gGeo,gMat);
+    ground.rotation.x=-Math.PI/2;
+    ground.receiveShadow=true;
+    scene.add(ground);
+  }
+
+  function _3env_unused(T,scene){
+    const pm=(hex,sh=8)=>new T.MeshPhongMaterial({color:new T.Color(hex),shininess:sh});
+
     const slab=(x0,z0,x1,z1,y,h,hex,sh=4)=>{
       const dx=Math.abs(x1-x0),dz=Math.abs(z1-z0);
       if(dx<0.01||dz<0.01)return;
