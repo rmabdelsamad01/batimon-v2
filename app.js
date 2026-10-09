@@ -21405,9 +21405,9 @@ function renderAAABetaPage(){
       <div id="aaab-hint" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right drag: Orbit</div>
       <div id="aaab-cam-info" style="position:absolute;bottom:44px;right:12px;background:rgba(0,0,0,0.55);backdrop-filter:blur(6px);border-radius:7px;padding:6px 10px;pointer-events:none;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;color:#c8dff0;min-width:150px;">
         <div style="color:#7ab8d4;font-size:10px;font-weight:700;margin-bottom:2px;letter-spacing:0.05em;">CAMERA</div>
-        <div>theta <span id="aaab-cam-theta" style="color:#fff;">-0.65</span></div>
-        <div>phi &nbsp;&nbsp;<span id="aaab-cam-phi" style="color:#fff;">0.40</span></div>
-        <div>zoom &nbsp;<span id="aaab-cam-zoom" style="color:#fff;">0.82</span></div>
+        <div>theta <span id="aaab-cam-theta" style="color:#fff;">-3.76</span></div>
+        <div>phi &nbsp;&nbsp;<span id="aaab-cam-phi" style="color:#fff;">-0.45</span></div>
+        <div>zoom &nbsp;<span id="aaab-cam-zoom" style="color:#fff;">0.32</span></div>
       </div>
     </div>
   </div>`;
@@ -21416,7 +21416,7 @@ function renderAAABetaPage(){
   const cvs=document.getElementById('aaab-cvs');
   const ctx=cvs.getContext('2d');
   let cW,cH;
-  let theta=-0.65,phi=0.40,zoom=0.82,panX=0,panY=0;
+  let theta=-3.76,phi=-0.45,zoom=0.32,panX=0,panY=0;
   let showLabels=false;
   let floorFilter=new Set(); // empty = show all
   function _aaabUpdateFloorLabel(){
