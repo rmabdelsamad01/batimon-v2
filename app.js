@@ -15067,7 +15067,7 @@ async function _demoImportFromMonitoring(){
   if(btn) btn.innerHTML=origText;
 
   const validIds=allPanelIds();
-  const installedIds=validIds.filter(id=>(panels[id]||{}).status==='installed');
+  const installedIds=validIds.filter(id=>['installed','c_and_d'].includes((panels[id]||{}).status));
   const deliveredIds=validIds.filter(id=>(panels[id]||{}).status==='delivered');
 
   if(!installedIds.length&&!deliveredIds.length){
