@@ -4763,7 +4763,7 @@ function renderDash(){
     return`<div class="sc">
       <div class="scl" style="margin-bottom:4px;font-size:8px;letter-spacing:0.05em;white-space:nowrap;">${s.label}</div>
       <div class="scn" style="color:${s.color};">${s.total}</div>
-      <div style="font-size:8px;color:#8099b0;margin-top:2px;white-space:nowrap;">${s.subN} ${s.subLabel}</div>
+      <div style="font-size:16px;color:#8099b0;margin-top:2px;white-space:nowrap;">${s.subN} ${s.subLabel}</div>
       <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:${pct.toFixed(1)}%;background:${s.color}"></div></div>
       <div style="font-size:10px;color:${s.color};font-family:var(--mono);text-align:right;margin-top:3px;">${pct.toFixed(1)}%</div>
     </div>`;
@@ -4806,7 +4806,7 @@ function renderDash(){
           <span style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};white-space:nowrap;">${s.label}</span>
           <span style="font-size:13px;font-weight:700;font-family:var(--mono);color:${s.color};">${dispVal}</span>
         </div>
-        <div style="font-size:7px;color:#8099b0;margin-bottom:2px;">${s.subN} ${s.subLabel}</div>
+        <div style="font-size:14px;color:#8099b0;margin-bottom:2px;">${s.subN} ${s.subLabel}</div>
         <div style="height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;">
           <div style="height:100%;width:${barPct.toFixed(1)}%;background:${s.color};border-radius:2px;"></div>
         </div>
