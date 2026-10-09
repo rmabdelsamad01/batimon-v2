@@ -21471,10 +21471,7 @@ function renderAAABetaPage(){
 
   function buildScene(){
     const faces=[];
-    const bg=(p3)=>{const f=quad(p3,JOINT,null,0);f.depth+=1000;return f;};
-    faces.push(bg([[0,0,0],[0,totalH,0],[0,totalH,-W_SPAN],[0,0,-W_SPAN]]));
-    faces.push(bg([[0,0,-W_SPAN],[0,totalH,-W_SPAN],[NW_END,totalH,-W_SPAN],[NW_END,0,-W_SPAN]]));
-    faces.push(bg([[0,0,0],[0,totalH,0],[SW_END,totalH,0],[SW_END,0,0]]));
+    const bg=()=>null; // backdrop planes removed — panels render against sky
     const R25fi=FLOORS_BTT.indexOf('R+25');
     const R25top=yPos[R25fi]+flH('R+25'); // top of R+25 — south ext wall stops here
     const R24fi=FLOORS_BTT.indexOf('R+24');
@@ -21495,19 +21492,7 @@ function renderAAABetaPage(){
     // WF R+19 rowspan=2 for cols 21-23/27-29: spans R+19+R+18T (25+25=50px)
     const fi_R19=FLOORS_BTT.indexOf('R+19');
     const wfMergedYa19=yPos[fi18T], wfMergedYb19=yPos[fi_R19]+flH('R+19');
-    // SE extension backgrounds (east stub x=14.5, SF ext z=-4.5, second stub x=17.5)
-    faces.push(bg([[14.5,0,0],[14.5,totalH,0],[14.5,totalH,-4.5],[14.5,0,-4.5]]));
-    faces.push(bg([[14.5,0,-4.5],[14.5,totalH,-4.5],[17.5,totalH,-4.5],[17.5,0,-4.5]]));
-    faces.push(bg([[17.5,0,-4.5],[17.5,totalH,-4.5],[17.5,totalH,-1],[17.5,0,-1]]));
-    faces.push(bg([[17.5,0,-1],[17.5,R25top,-1],[31.5,R25top,-1],[31.5,0,-1]])); // south ext wall cols94-81, capped at R+25
-    faces.push(bg([[17.5,0,-18],[17.5,totalH,-18],[31.5,totalH,-18],[31.5,0,-18]])); // NEF north face bg
-    faces.push(bg([[17.5,0,-18],[17.5,totalH,-18],[17.5,totalH,-16],[17.5,0,-16]])); // 52A/52B/52C bg
-    faces.push(bg([[14.5,0,-16],[14.5,totalH,-16],[17.5,totalH,-16],[17.5,0,-16]])); // cols 99-96 north face bg
-    faces.push(bg([[14.5,0,-16],[14.5,totalH,-16],[14.5,totalH,-17],[14.5,0,-17]])); // 45A east face bg
-    faces.push(bg([[14.5,0,-17],[14.5,totalH,-17],[17.5,totalH,-17],[17.5,0,-17]])); // NF cols 47-49 north face bg
-    const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')]; // bottom of R+17T (top of R+17B) — extensions start here
-    faces.push(bg([[-NW_EX,shExtY0,-W_SPAN],[-NW_EX,shY1,-W_SPAN],[0,shY1,-W_SPAN],[0,shExtY0,-W_SPAN]]));
-    faces.push(bg([[-SW_EX,shExtY0,PANEL],[-SW_EX,shY1,PANEL],[0,shY1,PANEL],[0,shExtY0,PANEL]]));
+    const shExtY0=yPos[FLOORS_BTT.indexOf('R+17T')];
     // Sky-colored masks for hidden floors so black structural bg doesn't show through
     if(floorFilter.size){
       const SKY='#cde8f8';
@@ -22076,8 +22061,8 @@ function renderAAABetaPage(){
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+18T')],'#D3D3D3');
     drawRoof18(yPos[FLOORS_BTT.indexOf('R+17T')],'#FF8C00');
 
-    // ── 3D Environment — Bd de l'Aéropostale, Casablanca ───────────────────
-    {
+    // ── 3D Environment removed — only tower renders ───────────────────────
+    if(false){
       // Depth-biased flat ground quad helper
       const dQ=(x0,z0,x1,z1,c,db=0)=>{const f=quad([[x0,-0.03,z0],[x0,-0.03,z1],[x1,-0.03,z1],[x1,-0.03,z0]],c,null,0);f.depth+=db;return f;};
       // Slightly raised surface (sidewalk/median, y=0.10)
