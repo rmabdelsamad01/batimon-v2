@@ -19630,48 +19630,170 @@ function _renderMobileOverview(){
   cont.style.position='';
   cont.scrollTop=0;
   const isB=window._mobTab==='brackets';
-  const ss=isB?[
-    {key:'bottom_bracket',label:'Bot. Bracket',  color:'#00b33c', cumulLabel:''},
-    {key:'installed',    label:'Top Bracket',    color:'#1a9458', cumulLabel:'T. Top Bracket'},
-    {key:'delivered',    label:'Delivered',      color:'#a07800', cumulLabel:'T. delivered'},
-    {key:'fabricated',   label:'Fabricated',     color:'#1a5fa8', cumulLabel:'T. fabricated'},
-    {key:'cutting',      label:'CL issued',      color:'#C98BCA', cumulLabel:'T. CL issued'},
-    {key:'cip',          label:'CL in Prog',     color:'#A349A4', cumulLabel:'T. CL in Prog'},
-    {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
-    {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
-  ]:[
-    {key:'c_and_d',      label:'C+D',            color:'#00902e', cumulLabel:''},
-    {key:'installed',    label:'Installed',      color:'#1a9458', cumulLabel:'T. installed'},
-    {key:'delivered',    label:'Delivered',      color:'#a07800', cumulLabel:'T. delivered'},
-    {key:'fabricated',   label:'Fabricated',     color:'#1a5fa8', cumulLabel:'T. fabricated'},
-    {key:'cutting',      label:'CL issued',      color:'#C98BCA', cumulLabel:'T. CL issued'},
-    {key:'cip',          label:'CL in Prog',     color:'#A349A4', cumulLabel:'T. CL in Prog'},
-    {key:'cl_not_issued',label:'CL not issued',  color:'#FF6666', cumulLabel:'T. CL not issued'},
-    {key:'defect',       label:'Defect',         color:'#c02020', cumulLabel:''},
-  ];
-  const pipeline=isB?['bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued']:['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const zones=isB
     ?[{id:'BM-NF',name:'North Facade',color:'#2d65bd'},{id:'BM-SF',name:'South Facade',color:'#1a9458'},{id:'BM-EF',name:'East Facade',color:'#a07800'},{id:'BM-WF',name:'West Facade',color:'#6d35d9'}]
     :[{id:'NF',name:'North Facade',color:'#2d65bd'},{id:'SF',name:'South Facade',color:'#1a9458'},{id:'EF',name:'East Facade',color:'#a07800'},{id:'WF',name:'West Facade',color:'#6d35d9'}];
-  // Global counts
   const gc=isB?bmGC():gC();
   const gcActiveTotal=isB?((gc.bottom_bracket||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0)):((gc.c_and_d||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0));
-  // Global status cards (2-col grid)
-  const globalCards=ss.map(s=>{
-    const n=gc[s.key]||0;
-    const idx=pipeline.indexOf(s.key);
-    const cumul=idx>0?pipeline.slice(0,idx+1).reduce((a,k)=>a+(gc[k]||0),0):n;
-    const pct=gcActiveTotal?(cumul/gcActiveTotal*100):0;
-    const hasCumul=s.cumulLabel&&idx>0;
-    return`<div style="background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 1px 4px rgba(34,79,147,0.07);border:1px solid #e0e8f4;">
-      <div style="font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${s.color};margin-bottom:4px;">${s.label}</div>
-      <div style="display:flex;align-items:baseline;gap:5px;">
-        <span style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${n}</span>
-        ${hasCumul?`<span style="font-size:14px;font-weight:700;font-family:monospace;color:#8099b0;">(${cumul})</span>`:''}
-      </div>
-      ${hasCumul?`<div style="font-size:8px;color:#8099b0;margin-top:2px;white-space:nowrap;">${s.cumulLabel} · ${pct.toFixed(1)}%</div>`:''}
-    </div>`;
-  }).join('');
+  let globalCards,facadeCards;
+  if(isB){
+    const ss=[
+      {key:'bottom_bracket',label:'Bot. Bracket',color:'#00b33c',cumulLabel:''},
+      {key:'installed',    label:'Top Bracket',  color:'#1a9458',cumulLabel:'T. Top Bracket'},
+      {key:'delivered',    label:'Delivered',    color:'#a07800',cumulLabel:'T. delivered'},
+      {key:'fabricated',   label:'Fabricated',   color:'#1a5fa8',cumulLabel:'T. fabricated'},
+      {key:'cutting',      label:'CL issued',    color:'#C98BCA',cumulLabel:'T. CL issued'},
+      {key:'cip',          label:'CL in Prog',   color:'#A349A4',cumulLabel:'T. CL in Prog'},
+      {key:'cl_not_issued',label:'CL not issued',color:'#FF6666',cumulLabel:'T. CL not issued'},
+      {key:'defect',       label:'Defect',       color:'#c02020',cumulLabel:''},
+    ];
+    const pipeline=['bottom_bracket','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
+    globalCards=ss.map(s=>{
+      const n=gc[s.key]||0;const idx=pipeline.indexOf(s.key);
+      const cumul=idx>0?pipeline.slice(0,idx+1).reduce((a,k)=>a+(gc[k]||0),0):n;
+      const pct=gcActiveTotal?(cumul/gcActiveTotal*100):0;const hasCumul=s.cumulLabel&&idx>0;
+      return`<div style="background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 1px 4px rgba(34,79,147,0.07);border:1px solid #e0e8f4;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${s.color};margin-bottom:4px;">${s.label}</div>
+        <div style="display:flex;align-items:baseline;gap:5px;">
+          <span style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${n}</span>
+          ${hasCumul?`<span style="font-size:14px;font-weight:700;font-family:monospace;color:#8099b0;">(${cumul})</span>`:''}
+        </div>
+        ${hasCumul?`<div style="font-size:8px;color:#8099b0;margin-top:2px;white-space:nowrap;">${s.cumulLabel} · ${pct.toFixed(1)}%</div>`:''}
+      </div>`;
+    }).join('');
+    facadeCards=zones.map(z=>{
+      const c=bmZC(z.id);
+      const activeTotal=(c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+      const pct=activeTotal>0?Math.round(((c.bottom_bracket||0)+(c.installed||0))/activeTotal*100):0;
+      const breakdown=ss.map(s=>{
+        const n=c[s.key]||0;const idx=pipeline.indexOf(s.key);
+        const cumul=idx>0?pipeline.slice(0,idx+1).reduce((a,k)=>a+(c[k]||0),0):n;
+        const hasCumul=s.cumulLabel&&idx>0;const barPct=activeTotal?(n/activeTotal*100):0;const cumulPct=activeTotal?(cumul/activeTotal*100):0;
+        return`<div style="padding:5px 0;border-bottom:1px solid #f0f4f8;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};">${s.label}</span>
+            ${hasCumul?`<span style="font-size:8px;font-weight:600;color:#8099b0;">${s.cumulLabel}</span>`:''}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+            <div style="display:flex;align-items:baseline;gap:5px;">
+              <span style="font-size:18px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${n}</span>
+              ${hasCumul?`<span style="font-size:12px;font-weight:700;font-family:monospace;color:#8099b0;">(${cumul})</span>`:''}
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:10px;font-family:monospace;color:#8099b0;">${barPct.toFixed(1)}%</span>
+              ${hasCumul?`<span style="font-size:10px;font-family:monospace;color:#b0bcc8;margin-left:4px;">(${cumulPct.toFixed(1)}%)</span>`:''}
+            </div>
+          </div>
+          <div style="height:4px;background:#f0f4f8;border-radius:2px;overflow:hidden;">
+            <div style="width:${barPct}%;height:100%;background:${s.color};border-radius:2px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+      return`<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(34,79,147,0.08);border:1px solid #e0e8f4;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:3px;background:${z.color};flex-shrink:0;"></div>
+            <span style="font-size:14px;font-weight:700;color:#1a2a3a;">${z.name}</span>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${z.color};background:${z.color}18;padding:2px 10px;border-radius:20px;">${activeTotal} panels</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-size:9px;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;">Installation</span>
+          <span style="font-size:11px;font-weight:700;font-family:monospace;color:${z.color};">${pct}%</span>
+        </div>
+        <div style="height:6px;background:#e8f0fa;border-radius:4px;overflow:hidden;margin-bottom:10px;">
+          <div style="width:${pct}%;height:100%;background:${z.color};border-radius:4px;transition:width 0.4s;"></div>
+        </div>
+        <div style="border-top:2px solid ${z.color}30;padding-top:4px;">
+          ${activeTotal===0?`<span style="font-size:11px;color:#b0bcc8;font-style:italic;">No data yet</span>`:breakdown}
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    // UCW: cumulative totals + stuck sub-line (matches desktop renderDash)
+    const allIds_=allPanelIds();
+    const totalInstalled=allIds_.filter(id=>!!(panels[id]||{}).installDate).length;
+    const totalDelivered=allIds_.filter(id=>!!(panels[id]||{}).deliveryDate).length;
+    const subInstalled=gc.c_and_d||0;
+    const subDelivered=allIds_.filter(id=>{const p=panels[id]||{};return !!p.deliveryDate&&!p.installDate;}).length;
+    const cumulFab=(gc.fabricated||0)+(gc.delivered||0)+(gc.installed||0)+(gc.c_and_d||0);
+    const cumulCut=(gc.cutting||0)+cumulFab;
+    const cumulCip=(gc.cip||0)+cumulCut;
+    const cumulClNI=(gc.cl_not_issued||0)+cumulCip;
+    const cardData=[
+      {label:'Installed',     color:'#1a9458', total:totalInstalled,  subN:subInstalled,       subLabel:'with C+D'},
+      {label:'Delivered',     color:'#a07800', total:totalDelivered,  subN:subDelivered,        subLabel:'still not installed'},
+      {label:'Fabricated',    color:'#1a5fa8', total:cumulFab,        subN:gc.fabricated||0,    subLabel:'still not delivered'},
+      {label:'CL issued',     color:'#C98BCA', total:cumulCut,        subN:gc.cutting||0,       subLabel:'still not fabricated'},
+      {label:'CL in Prog',    color:'#A349A4', total:cumulCip,        subN:gc.cip||0,           subLabel:'still not CL issued'},
+      {label:'CL not issued', color:'#FF6666', total:cumulClNI,       subN:gc.cl_not_issued||0, subLabel:'still not in progress'},
+    ];
+    globalCards=cardData.map(s=>{
+      const pct=gcActiveTotal?(s.total/gcActiveTotal*100):0;
+      return`<div style="background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 1px 4px rgba(34,79,147,0.07);border:1px solid #e0e8f4;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${s.color};margin-bottom:4px;">${s.label}</div>
+        <span style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${s.total}</span>
+        <div style="font-size:12px;color:#8099b0;margin-top:2px;white-space:nowrap;">${s.subN} ${s.subLabel}</div>
+        <div style="height:4px;background:#f0f4f8;border-radius:2px;margin-top:6px;overflow:hidden;">
+          <div style="width:${pct.toFixed(1)}%;height:100%;background:${s.color};border-radius:2px;"></div>
+        </div>
+        <div style="font-size:8px;color:${s.color};font-family:monospace;text-align:right;margin-top:2px;">${pct.toFixed(1)}%</div>
+      </div>`;
+    }).join('');
+    facadeCards=zones.map(z=>{
+      const c=zC(z.id);
+      const fids=allIds(z.id);
+      const activeTotal=(c.c_and_d||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
+      const pct=activeTotal>0?Math.round(((c.c_and_d||0)+(c.installed||0))/activeTotal*100):0;
+      const fTotalInst=fids.filter(id=>!!(panels[id]||{}).installDate).length;
+      const fTotalDel=fids.filter(id=>!!(panels[id]||{}).deliveryDate).length;
+      const fSubDel=fids.filter(id=>{const p=panels[id]||{};return !!p.deliveryDate&&!p.installDate;}).length;
+      const fCumulFab=(c.fabricated||0)+(c.delivered||0)+(c.installed||0)+(c.c_and_d||0);
+      const fCumulCut=(c.cutting||0)+fCumulFab;
+      const fCumulCip=(c.cip||0)+fCumulCut;
+      const fCumulClNI=(c.cl_not_issued||0)+fCumulCip;
+      const fCardData=[
+        {label:'Installed',     color:'#1a9458', total:fTotalInst,  subN:c.c_and_d||0,         subLabel:'w/ C+D'},
+        {label:'Delivered',     color:'#a07800', total:fTotalDel,   subN:fSubDel,               subLabel:'not installed'},
+        {label:'Fabricated',    color:'#1a5fa8', total:fCumulFab,   subN:c.fabricated||0,       subLabel:'not delivered'},
+        {label:'CL issued',     color:'#C98BCA', total:fCumulCut,   subN:c.cutting||0,          subLabel:'not fabricated'},
+        {label:'CL in Prog',    color:'#A349A4', total:fCumulCip,   subN:c.cip||0,              subLabel:'not CL issued'},
+        {label:'CL not issued', color:'#FF6666', total:fCumulClNI,  subN:c.cl_not_issued||0,    subLabel:'not in progress'},
+      ];
+      const breakdown=fCardData.map(s=>{
+        const barPct=activeTotal?(s.total/activeTotal*100):0;
+        return`<div style="padding:5px 0;border-bottom:1px solid #f0f4f8;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};">${s.label}</span>
+            <span style="font-size:14px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${s.total}</span>
+          </div>
+          <div style="font-size:10px;color:#8099b0;margin-bottom:3px;">${s.subN} ${s.subLabel}</div>
+          <div style="height:4px;background:#f0f4f8;border-radius:2px;overflow:hidden;">
+            <div style="width:${barPct.toFixed(1)}%;height:100%;background:${s.color};border-radius:2px;"></div>
+          </div>
+        </div>`;
+      }).join('');
+      return`<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(34,79,147,0.08);border:1px solid #e0e8f4;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:3px;background:${z.color};flex-shrink:0;"></div>
+            <span style="font-size:14px;font-weight:700;color:#1a2a3a;">${z.name}</span>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:${z.color};background:${z.color}18;padding:2px 10px;border-radius:20px;">${activeTotal} panels</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-size:9px;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;">Installation</span>
+          <span style="font-size:11px;font-weight:700;font-family:monospace;color:${z.color};">${pct}%</span>
+        </div>
+        <div style="height:6px;background:#e8f0fa;border-radius:4px;overflow:hidden;margin-bottom:10px;">
+          <div style="width:${pct}%;height:100%;background:${z.color};border-radius:4px;transition:width 0.4s;"></div>
+        </div>
+        <div style="border-top:2px solid ${z.color}30;padding-top:4px;">
+          ${activeTotal===0?`<span style="font-size:11px;color:#b0bcc8;font-style:italic;">No data yet</span>`:breakdown}
+        </div>
+      </div>`;
+    }).join('');
+  }
   const totalCard=`<div style="background:linear-gradient(135deg,#1a3a6e 0%,#224F93 100%);border-radius:10px;padding:10px 12px;box-shadow:0 1px 6px rgba(34,79,147,0.14);">
     <div style="font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:4px;">Total</div>
     <span style="font-size:22px;font-weight:700;font-family:'Barlow Condensed',monospace;color:#fff;line-height:1;">${gcActiveTotal}</span>
@@ -19680,58 +19802,6 @@ function _renderMobileOverview(){
     </div>
     <div style="font-size:8px;color:rgba(255,255,255,0.6);margin-top:3px;text-align:right;">100%</div>
   </div>`;
-  // Per-facade cards
-  const facadeCards=zones.map(z=>{
-    const c=isB?bmZC(z.id):zC(z.id);
-    const activeTotal=isB?((c.bottom_bracket||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0)):((c.c_and_d||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0));
-    const pct=activeTotal>0?Math.round((isB?((c.bottom_bracket||0)+(c.installed||0)):((c.c_and_d||0)+(c.installed||0)))/activeTotal*100):0;
-    const breakdown=ss.map(s=>{
-      const n=c[s.key]||0;
-      const idx=pipeline.indexOf(s.key);
-      const cumul=idx>0?pipeline.slice(0,idx+1).reduce((a,k)=>a+(c[k]||0),0):n;
-      const hasCumul=s.cumulLabel&&idx>0;
-      const barPct=activeTotal?(n/activeTotal*100):0;
-      const cumulPct=activeTotal?(cumul/activeTotal*100):0;
-      return`<div style="padding:5px 0;border-bottom:1px solid #f0f4f8;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-          <span style="font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};">${s.label}</span>
-          ${hasCumul?`<span style="font-size:8px;font-weight:600;color:#8099b0;">${s.cumulLabel}</span>`:''}
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
-          <div style="display:flex;align-items:baseline;gap:5px;">
-            <span style="font-size:18px;font-weight:700;font-family:'Barlow Condensed',monospace;color:${s.color};line-height:1;">${n}</span>
-            ${hasCumul?`<span style="font-size:12px;font-weight:700;font-family:monospace;color:#8099b0;">(${cumul})</span>`:''}
-          </div>
-          <div style="text-align:right;">
-            <span style="font-size:10px;font-family:monospace;color:#8099b0;">${barPct.toFixed(1)}%</span>
-            ${hasCumul?`<span style="font-size:10px;font-family:monospace;color:#b0bcc8;margin-left:4px;">(${cumulPct.toFixed(1)}%)</span>`:''}
-          </div>
-        </div>
-        <div style="height:4px;background:#f0f4f8;border-radius:2px;overflow:hidden;">
-          <div style="width:${barPct}%;height:100%;background:${s.color};border-radius:2px;"></div>
-        </div>
-      </div>`;
-    }).join('');
-    return`<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(34,79,147,0.08);border:1px solid #e0e8f4;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:10px;height:10px;border-radius:3px;background:${z.color};flex-shrink:0;"></div>
-          <span style="font-size:14px;font-weight:700;color:#1a2a3a;">${z.name}</span>
-        </div>
-        <span style="font-size:11px;font-weight:700;color:${z.color};background:${z.color}18;padding:2px 10px;border-radius:20px;">${activeTotal} panels</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-        <span style="font-size:9px;color:#8099b0;text-transform:uppercase;letter-spacing:0.05em;">Installation</span>
-        <span style="font-size:11px;font-weight:700;font-family:monospace;color:${z.color};">${pct}%</span>
-      </div>
-      <div style="height:6px;background:#e8f0fa;border-radius:4px;overflow:hidden;margin-bottom:10px;">
-        <div style="width:${pct}%;height:100%;background:${z.color};border-radius:4px;transition:width 0.4s;"></div>
-      </div>
-      <div style="border-top:2px solid ${z.color}30;padding-top:4px;">
-        ${activeTotal===0?`<span style="font-size:11px;color:#b0bcc8;font-style:italic;">No data yet</span>`:breakdown}
-      </div>
-    </div>`;
-  }).join('');
   cont.innerHTML=`<div style="padding:14px 14px 24px;touch-action:pan-y;">
     <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#8099b0;margin-bottom:8px;">Project Summary</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;">${globalCards}${totalCard}</div>
