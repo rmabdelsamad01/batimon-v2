@@ -22461,7 +22461,8 @@ function renderAAABetaPage(){
   vp.addEventListener('contextmenu',e=>e.preventDefault());
   const _onMUp=()=>{drag=false;if(vp.isConnected)vp.style.cursor='grab';};
   const _onMMove=e=>{
-    if(!drag||!vp.isConnected){window.removeEventListener('mouseup',_onMUp);window.removeEventListener('mousemove',_onMMove);return;}
+    if(!vp.isConnected){window.removeEventListener('mouseup',_onMUp);window.removeEventListener('mousemove',_onMMove);return;}
+    if(!drag)return;
     const dx=e.clientX-lX,dy=e.clientY-lY;
     if(dragBtn===2||(e.shiftKey&&e.buttons===1)){
       theta-=dx*0.007;
