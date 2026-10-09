@@ -4737,37 +4737,35 @@ function _renderProjOverviewReport(){
 }
 function renderDash(){
   const gc=gC();
-  const ss=[
-    {key:'c_and_d',     label:'C+D',                color:'#00902e', cumulLabel:''},
-    {key:'installed',   label:'Installed',          color:'#1a9458', cumulLabel:'T. installed'},
-    {key:'delivered',   label:'Delivered',          color:'#a07800', cumulLabel:'T. delivered'},
-    {key:'fabricated',  label:'Fabricated',         color:'#1a5fa8', cumulLabel:'T. fabricated'},
-    {key:'cutting',     label:'CL issued',          color:'#C98BCA', cumulLabel:'T. CL issued'},
-    {key:'cip',         label:'CL in Prog',         color:'#A349A4', cumulLabel:'T. CL in Prog'},
-    {key:'cl_not_issued',label:'CL not issued',     color:'#FF6666', cumulLabel:'T. CL not issued'},
-    {key:'defect',      label:'Defect',             color:'#c02020', cumulLabel:''},
-  ];
-  const pipeline=['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   const gcActiveTotal=(gc.c_and_d||0)+(gc.installed||0)+(gc.delivered||0)+(gc.fabricated||0)+(gc.cutting||0)+(gc.cip||0)+(gc.cl_not_issued||0)+(gc.defect||0);
-  document.getElementById('dash-cards').innerHTML=ss.map(s=>{
-    const n=gc[s.key]||0;
-    const idx=pipeline.indexOf(s.key);
-    const cumul=idx>0?pipeline.slice(0,idx+1).reduce((sum,k)=>sum+(gc[k]||0),0):n;
-    // percentage = cumulative / gcActiveTotal
-    const pct=gcActiveTotal?(cumul/gcActiveTotal*100):0;
-    const pctStr=pct.toFixed(1)+'%';
-    const hasCumul=s.cumulLabel&&idx>0;
+  // Date-based cumulative counts
+  const allIds_=allPanelIds();
+  const totalInstalled=allIds_.filter(id=>!!(panels[id]||{}).installDate).length;
+  const totalDelivered=allIds_.filter(id=>!!(panels[id]||{}).deliveryDate).length;
+  const totalFabricated=allIds_.filter(id=>!!(panels[id]||{}).fabDate).length;
+  const subInstalled=gc.c_and_d||0;
+  const subDelivered=allIds_.filter(id=>{const p=panels[id]||{};return !!p.deliveryDate&&!p.installDate;}).length;
+  const subFabricated=allIds_.filter(id=>{const p=panels[id]||{};return !!p.fabDate&&!p.deliveryDate;}).length;
+  // Status-based cumulative counts
+  const cumulCutting=(gc.cutting||0)+(gc.fabricated||0)+(gc.delivered||0)+(gc.installed||0)+(gc.c_and_d||0);
+  const cumulCip=(gc.cip||0)+cumulCutting;
+  const cumulClNI=(gc.cl_not_issued||0)+cumulCip;
+  const cardData=[
+    {label:'Installed',     color:'#1a9458', total:totalInstalled,  subN:subInstalled,          subLabel:'with C+D'},
+    {label:'Delivered',     color:'#a07800', total:totalDelivered,  subN:subDelivered,           subLabel:'still not installed'},
+    {label:'Fabricated',    color:'#1a5fa8', total:totalFabricated, subN:subFabricated,          subLabel:'still not delivered'},
+    {label:'CL issued',     color:'#C98BCA', total:cumulCutting,    subN:gc.cutting||0,          subLabel:'still not fabricated'},
+    {label:'CL in Prog',    color:'#A349A4', total:cumulCip,        subN:gc.cip||0,              subLabel:'still not CL issued'},
+    {label:'CL not issued', color:'#FF6666', total:cumulClNI,       subN:gc.cl_not_issued||0,    subLabel:'still not in progress'},
+  ];
+  document.getElementById('dash-cards').innerHTML=cardData.map(s=>{
+    const pct=gcActiveTotal?(s.total/gcActiveTotal*100):0;
     return`<div class="sc">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:4px;margin-bottom:4px;min-width:0;">
-        <div class="scl" style="margin-bottom:0;font-size:8px;letter-spacing:0.05em;white-space:nowrap;">${s.label}</div>
-        ${hasCumul?`<div style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</div>`:''}
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <div class="scn" style="color:${s.color};">${n}</div>
-        ${hasCumul?`<div style="font-size:18px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</div>`:''}
-      </div>
+      <div class="scl" style="margin-bottom:4px;font-size:8px;letter-spacing:0.05em;white-space:nowrap;">${s.label}</div>
+      <div class="scn" style="color:${s.color};">${s.total}</div>
+      <div style="font-size:8px;color:#8099b0;margin-top:2px;white-space:nowrap;">${s.subN} ${s.subLabel}</div>
       <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:${pct.toFixed(1)}%;background:${s.color}"></div></div>
-      <div style="font-size:10px;color:${s.color};font-family:var(--mono);text-align:right;margin-top:3px;">${pctStr}</div>
+      <div style="font-size:10px;color:${s.color};font-family:var(--mono);text-align:right;margin-top:3px;">${pct.toFixed(1)}%</div>
     </div>`;
   }).join('')+`<div class="sc">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;">
@@ -4779,38 +4777,38 @@ function renderDash(){
     <div class="scb" style="margin-top:6px;"><div class="scbf" style="width:100%;background:#1a2a3a"></div></div>
     <div style="font-size:10px;color:#1a2a3a;font-family:var(--mono);text-align:right;margin-top:3px;">100%</div>
   </div>`;
-  const statDefs=[
-    {key:'c_and_d',      label:'C+D',           color:'#00902e', cumulLabel:''},
-    {key:'installed',    label:'Installed',     color:'#1a9458', cumulLabel:'T. installed'},
-    {key:'delivered',    label:'Delivered',     color:'#a07800', cumulLabel:'T. delivered'},
-    {key:'fabricated',   label:'Fabricated',    color:'#1a5fa8', cumulLabel:'T. fabricated'},
-    {key:'cutting',      label:'CL issued',     color:'#C98BCA', cumulLabel:'T. CL issued'},
-    {key:'cip',          label:'CL in Prog',    color:'#A349A4', cumulLabel:'T. CL in Prog'},
-    {key:'cl_not_issued',label:'CL not issued', color:'#FF6666', cumulLabel:'T. CL not issued'},
-    {key:'defect',       label:'Defect',        color:'#c02020', cumulLabel:''},
-  ];
-  const facadePipeline=['c_and_d','installed','delivered','fabricated','cutting','cip','cl_not_issued'];
   document.getElementById('facades-grid').innerHTML=ZONES.map(z=>{
     const c=zC(z.id);
+    const fids=allIds(z.id);
     const activeTotal=(c.c_and_d||0)+(c.installed||0)+(c.delivered||0)+(c.fabricated||0)+(c.cutting||0)+(c.cip||0)+(c.cl_not_issued||0)+(c.defect||0);
     const pct=activeTotal?Math.round(((c.c_and_d||0)+(c.installed||0))/activeTotal*100):0;
-    const breakdown=statDefs.map(s=>{
-      const n=c[s.key]||0;
-      const idx=facadePipeline.indexOf(s.key);
-      const cumul=idx>0?facadePipeline.slice(0,idx+1).reduce((sum,k)=>sum+(c[k]||0),0):n;
-      const hasCumul=s.cumulLabel&&idx>0;
-      const barPct=activeTotal?(n/activeTotal*100):0;
-      const cumulPct=activeTotal?(cumul/activeTotal*100):0;
+    const fTotalInst=fids.filter(id=>!!(panels[id]||{}).installDate).length;
+    const fTotalDel=fids.filter(id=>!!(panels[id]||{}).deliveryDate).length;
+    const fTotalFab=fids.filter(id=>!!(panels[id]||{}).fabDate).length;
+    const fSubDel=fids.filter(id=>{const p=panels[id]||{};return !!p.deliveryDate&&!p.installDate;}).length;
+    const fSubFab=fids.filter(id=>{const p=panels[id]||{};return !!p.fabDate&&!p.deliveryDate;}).length;
+    const fCumulCut=(c.cutting||0)+(c.fabricated||0)+(c.delivered||0)+(c.installed||0)+(c.c_and_d||0);
+    const fCumulCip=(c.cip||0)+fCumulCut;
+    const fCumulClNI=(c.cl_not_issued||0)+fCumulCip;
+    const fCardData=[
+      {label:'Installed',     color:'#1a9458', total:fTotalInst,  subN:c.c_and_d||0,         subLabel:'w/ C+D'},
+      {label:'Delivered',     color:'#a07800', total:fTotalDel,   subN:fSubDel,               subLabel:'not installed'},
+      {label:'Fabricated',    color:'#1a5fa8', total:fTotalFab,   subN:fSubFab,               subLabel:'not delivered'},
+      {label:'CL issued',     color:'#C98BCA', total:fCumulCut,   subN:c.cutting||0,          subLabel:'not fabricated'},
+      {label:'CL in Prog',    color:'#A349A4', total:fCumulCip,   subN:c.cip||0,              subLabel:'not CL issued'},
+      {label:'CL not issued', color:'#FF6666', total:fCumulClNI,  subN:c.cl_not_issued||0,    subLabel:'not in progress'},
+    ];
+    const breakdown=fCardData.map(s=>{
+      const barPct=activeTotal?(s.total/activeTotal*100):0;
+      const dispVal=facadeValMode==='numbers'?s.total:barPct.toFixed(1)+'%';
       return`<div style="padding:4px 0 2px;border-bottom:1px solid var(--border);">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2px;gap:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1px;">
           <span style="font-size:8px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:${s.color};white-space:nowrap;">${s.label}</span>
-          ${hasCumul?`<span style="font-size:7px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#8099b0;white-space:nowrap;">${s.cumulLabel}:</span>`:''}
+          <span style="font-size:13px;font-weight:700;font-family:var(--mono);color:${s.color};">${dispVal}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;">
-          ${facadeValMode==='numbers'
-            ?`<span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${n}</span>${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumul})</span>`:''}`
-            :`<span style="font-size:14px;font-weight:700;font-family:var(--mono);color:${s.color};line-height:1;">${barPct.toFixed(1)}%</span>${hasCumul?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:#8099b0;">(${cumulPct.toFixed(1)}%)</span>`:''}`
-          }
+        <div style="font-size:7px;color:#8099b0;margin-bottom:2px;">${s.subN} ${s.subLabel}</div>
+        <div style="height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${barPct.toFixed(1)}%;background:${s.color};border-radius:2px;"></div>
         </div>
       </div>`;
     }).join('');
