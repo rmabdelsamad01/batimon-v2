@@ -11401,14 +11401,14 @@ async function openInstallRateModal(){
   ['NF','SF','EF','WF'].forEach(zid=>{
     allIds(zid).forEach(id=>{
       const p=panels[id]||{};
-      if(p.status==='installed' && p.installDate){
+      if(p.installDate){
         dateMap[p.installDate]=(dateMap[p.installDate]||0)+1;
         facadeMap[zid][p.installDate]=(facadeMap[zid][p.installDate]||0)+1;
       }
     });
   });
   const _gc=gC();const total=(_gc.installed||0)+(_gc.delivered||0)+(_gc.fabricated||0)+(_gc.cutting||0)+(_gc.cip||0)+(_gc.cl_not_issued||0)+(_gc.defect||0);
-  const totalInstalled=allPanelIds().filter(id=>(panels[id]||{}).status==='installed').length;
+  const totalInstalled=allPanelIds().filter(id=>!!(panels[id]||{}).installDate).length;
 
   // Generate all dates Jan 1 2026 → Dec 31 2027
   const rows=[];
