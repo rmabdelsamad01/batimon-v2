@@ -11310,19 +11310,17 @@ async function openDeliveryRateModal(){
   if(_drBar) _drBar.style.display='none';
   const dateMap={};
   const facadeMap={NF:{},SF:{},EF:{},WF:{}};
-  // A panel that progressed beyond 'delivered' (→ installed) still has deliveryDate and was delivered
-  const wasDelivered=s=>s==='delivered'||s==='installed';
   ['NF','SF','EF','WF'].forEach(zid=>{
     allIds(zid).forEach(id=>{
       const p=panels[id]||{};
-      if(wasDelivered(p.status) && p.deliveryDate){
+      if(p.deliveryDate){
         dateMap[p.deliveryDate]=(dateMap[p.deliveryDate]||0)+1;
         facadeMap[zid][p.deliveryDate]=(facadeMap[zid][p.deliveryDate]||0)+1;
       }
     });
   });
   const _gc=gC();const total=(_gc.installed||0)+(_gc.delivered||0)+(_gc.fabricated||0)+(_gc.cutting||0)+(_gc.cip||0)+(_gc.cl_not_issued||0)+(_gc.defect||0);
-  const totalDelivered=allPanelIds().filter(id=>wasDelivered((panels[id]||{}).status)).length;
+  const totalDelivered=allPanelIds().filter(id=>!!(panels[id]||{}).deliveryDate).length;
   const rows=[];
   const start=new Date('2026-01-01');
   const end=new Date('2027-12-31');
