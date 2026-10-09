@@ -21410,7 +21410,7 @@ function renderAAABetaPage(){
   const cvs=document.getElementById('aaab-cvs');
   const ctx=cvs.getContext('2d');
   let cW,cH;
-  let theta=-0.85,phi=0.42,zoom=0.55,panX=0,panY=0;
+  let theta=-0.65,phi=0.40,zoom=0.82,panX=0,panY=0;
   let showLabels=false;
   let floorFilter=new Set(); // empty = show all
   function _aaabUpdateFloorLabel(){
