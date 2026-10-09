@@ -4689,19 +4689,20 @@ function _renderProjOverviewReport(){
     const st=(panels[id]||{}).status||'pending';
     sections.forEach((sec,i)=>{if(sec.match(z,n,fl,col)){counts[i].total++;counts[i][st]=(counts[i][st]||0)+1;}});
   });
-  const tot=counts.reduce((a,c)=>({total:a.total+c.total,installed:a.installed+c.installed,delivered:a.delivered+c.delivered}),{total:0,installed:0,delivered:0});
+  const tot=counts.reduce((a,c)=>({total:a.total+c.total,installed:a.installed+c.installed+(c.c_and_d||0),delivered:a.delivered+c.delivered}),{total:0,installed:0,delivered:0});
   const hth='padding:7px 11px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;';
   const isPct=_projOverviewValMode==='pct';
   const fmt=(v,t)=>isPct?(t>0?(v/t*100).toFixed(1)+'%':'—'):v;
   const td=(v,t,clr)=>`<td style="padding:6px 11px;text-align:center;"><span style="font-size:12px;font-family:var(--mono);font-weight:700;color:${clr||'#1a2a3a'};">${fmt(v,t)}</span></td>`;
   const rows=sections.map((s,i)=>{
     const c=counts[i];
-    const totDel=c.installed+c.delivered;
+    const cInstalled=c.installed+(c.c_and_d||0);
+    const totDel=cInstalled+c.delivered;
     return `<tr style="border-top:1px solid var(--border);">
       <td style="padding:8px 11px;font-size:12px;font-weight:600;color:#1a2a3a;white-space:nowrap;">${s.label}</td>
       ${td(c.total,c.total)}
-      ${td(c.installed,c.total,'#1a9458')}
-      ${td(c.total-c.installed,c.total,'#cc4400')}
+      ${td(cInstalled,c.total,'#1a9458')}
+      ${td(c.total-cInstalled,c.total,'#cc4400')}
       ${td(c.delivered,c.total,'#a07800')}
       ${td(totDel,c.total,'#224F93')}
       ${td(c.total-totDel,c.total,'#884400')}
