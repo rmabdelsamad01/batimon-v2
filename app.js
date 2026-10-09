@@ -21986,26 +21986,21 @@ function renderAAABetaPage(){
         }
         for(let i=1;i<17;i++)faces.push(jl([31.5,ya,-(1+i)],[31.5,yb,-(1+i)]));
       }
-      // NEF (North East Facade): z=-18, x=17.5..31.5, cols 65-52 (14 cols × 1 unit), RDC to R+25
+      // NEF (North East Facade): z=-18, x=17.5..31.5, cols 65-51, RDC to R+25
       if(fi<=R25fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+18B'&&fl!=='R+17T'&&fl!=='R+17B'){
-        const nefYa=fl==='R+18T'?efMergedYa18T:y0;
-        const nefYb=fl==='R+18T'?efMergedYb18T:y1;
-        const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52];
-        for(let i=0;i<14;i++){
+        const nefYa=fl==='R+18T'?efMergedYa18T:fl==='R+18B'?efMergedYa18B:y0;
+        const nefYb=fl==='R+18T'?efMergedYb18T:fl==='R+18B'?efMergedYb18B:y1;
+        const NEF_C=[65,64,63,62,61,60,59,58,57,56,55,54,53,52,51];
+        const nefPW=(31.5-17.5)/NEF_C.length;
+        for(let i=0;i<15;i++){
           const col=NEF_C[i];
-          const x0=31.5-(i+1)*PANEL+JG,x1=31.5-i*PANEL-JG;
-          if(fl==='R+25'){
-            // trapezoid — east (col65, i=0) is highest slope, west (col52, i=13) is lowest
-            const lPx=Math.round((13-i)*47/13),rPx=lPx+3;
-            const ptL=nefYb-lPx/50,ptR=nefYb-rPx/50;
-            faces.push(quad([[x0,nefYa,-18],[x0,ptR,-18],[x1,ptL,-18],[x1,nefYa,-18]],getColor('NF',fi,col,true),null,0));
-            faces.push(jl([x0,ptR,-18],[x1,ptL,-18]));
-          } else {
-            faces.push(quad([[x0,nefYa,-18],[x0,nefYb,-18],[x1,nefYb,-18],[x1,nefYa,-18]],getColor('NF',fi,col,true),null,0));
-            faces.push(...typeOverlays(getType('NF',fi,col),[x0,-18],[x1,-18],nefYa,nefYb));
-          }
+          const x0=31.5-i*nefPW,x1=31.5-(i+1)*nefPW;
+          const rawT=getType('NF',fi,col);
+          const t=(rawT===''&&(col===53||col===52)&&fi<=R24fi)?'vh':rawT;
+          faces.push(quad([[x0,nefYa,-18],[x0,nefYb,-18],[x1,nefYb,-18],[x1,nefYa,-18]],getColor('NF',fi,col,true),null,0));
+          faces.push(...typeOverlays(t,[x0,-18],[x1,-18],nefYa,nefYb));
         }
-        for(let i=1;i<14;i++)faces.push(jl([31.5-i*PANEL,nefYa,-18],[31.5-i*PANEL,nefYb,-18]));
+        for(let i=1;i<15;i++)faces.push(jl([31.5-i*nefPW,nefYa,-18],[31.5-i*nefPW,nefYb,-18]));
       }
       // NF cols 47-50: z=-17, x=14.5..17.5 (NF extension behind 99-96), RDC to R+34
       if(fi<=R34fi&&fl!=='R+18M'&&fl!=='R+18MD'&&fl!=='R+17T'&&fl!=='R+17B'){
