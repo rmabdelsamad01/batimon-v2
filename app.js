@@ -19197,6 +19197,10 @@ window.poFilter=function(){
 
 (async()=>{await load();updateTabs();router();startRealtimeSync();})();
 
+// Prevent trackpad horizontal swipe (back gesture) while in canvas pages
+const _CANVAS_PAGES=['aaab','aaa','3d','builder'];
+window.addEventListener('wheel',e=>{if(_CANVAS_PAGES.includes(curPage))e.preventDefault();},{passive:false});
+
 let _lastSyncTime=Date.now();
 
 function startRealtimeSync(){
@@ -21399,7 +21403,7 @@ function renderAAABetaPage(){
       </div>
       <button onclick="renderAAABetaPage()" title="Refresh" style="padding:4px 11px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;">↺ Refresh</button>
     </div>
-    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;background:linear-gradient(180deg,#6aaed4 0%,#96c8e8 35%,#c4dff0 70%,#bdd8e8 100%);position:relative;cursor:grab;user-select:none;">
+    <div id="aaab-vp" style="flex:1;min-height:0;overflow:hidden;overscroll-behavior:none;background:linear-gradient(180deg,#6aaed4 0%,#96c8e8 35%,#c4dff0 70%,#bdd8e8 100%);position:relative;cursor:grab;user-select:none;">
       <canvas id="aaab-cvs" style="display:block;position:absolute;inset:0;"></canvas>
       <div style="position:absolute;top:10px;left:12px;background:rgba(200,90,26,0.1);border:1px solid rgba(200,90,26,0.38);border-radius:6px;padding:5px 10px;color:#e87030;font-size:10px;font-family:'IBM Plex Mono',monospace;pointer-events:none;">⚡ Shift Zone · R+17 &amp; R+18</div>
       <div id="aaab-hint" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);color:#6b7f96;font-size:11px;padding:5px 16px;border-radius:20px;pointer-events:none;white-space:nowrap;">🖱 Left drag: Pan &nbsp;·&nbsp; Shift+drag: Orbit &nbsp;·&nbsp; Scroll: Zoom &nbsp;·&nbsp; Right drag: Orbit</div>
@@ -22455,9 +22459,9 @@ function renderAAABetaPage(){
     vp.style.cursor=(e.button===2||e.shiftKey)?'grabbing':'move';
   });
   vp.addEventListener('contextmenu',e=>e.preventDefault());
-  window.addEventListener('mouseup',()=>{drag=false;if(vp.isConnected)vp.style.cursor='grab';});
-  window.addEventListener('mousemove',e=>{
-    if(!drag||!vp.isConnected)return;
+  const _onMUp=()=>{drag=false;if(vp.isConnected)vp.style.cursor='grab';};
+  const _onMMove=e=>{
+    if(!drag||!vp.isConnected){window.removeEventListener('mouseup',_onMUp);window.removeEventListener('mousemove',_onMMove);return;}
     const dx=e.clientX-lX,dy=e.clientY-lY;
     if(dragBtn===2||(e.shiftKey&&e.buttons===1)){
       theta-=dx*0.007;
@@ -22467,7 +22471,9 @@ function renderAAABetaPage(){
       panX+=dx;panY+=dy;
     }
     lX=e.clientX;lY=e.clientY;render();
-  });
+  };
+  window.addEventListener('mouseup',_onMUp);
+  window.addEventListener('mousemove',_onMMove);
   vp.addEventListener('wheel',e=>{
     zoom=Math.max(0.1,Math.min(7,zoom*(e.deltaY<0?1.08:0.93)));
     render();e.preventDefault();
