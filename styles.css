@@ -18,7 +18,7 @@
 body{font-family:var(--font);background:#f0f4f9;color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column;font-size:13px;}
 header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:80px;background:var(--blue);border-bottom:3px solid var(--blue-dim);flex-shrink:0;overflow:visible;}
 .logo{display:flex;align-items:center;gap:10px;cursor:pointer;}
-.logo img{height:30px;filter:brightness(0) invert(1);}
+.logo img{height:30px;}
 .logo-fb{display:none;align-items:center;gap:8px;}
 .lmark{width:30px;height:30px;background:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;}
 .lmark svg{width:18px;height:18px;}
