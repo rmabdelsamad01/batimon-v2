@@ -7719,6 +7719,10 @@ async function _loadSignedChecklistBody(typeId, label){
             style="font-size:10px;font-weight:700;padding:5px 10px;border:none;border-radius:5px;background:#fff;color:#c02020;border:1.5px solid #f5b8b8;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;opacity:0.4;pointer-events:none;">
             🗑 Suppr.
           </button>
+          <button id="scl-btn-dl-all" onclick="_sclDownloadAll()" title="Télécharger tous les checklists en ZIP"
+            style="font-size:10px;font-weight:700;padding:5px 10px;border:none;border-radius:5px;background:#1a3a6e;color:#fff;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;">
+            📥 Download All
+          </button>
         </div>
       </div>
       <!-- Column headers -->
@@ -7856,6 +7860,137 @@ function _sclUpdateButtons(){
   if(btnV){btnV.style.opacity=one?'1':'0.4';btnV.style.pointerEvents=one?'auto':'none';}
   if(btnP){btnP.style.opacity=one?'1':'0.4';btnP.style.pointerEvents=one?'auto':'none';}
   if(btnD){btnD.style.opacity=any?'1':'0.4';btnD.style.pointerEvents=any?'auto':'none';}
+}
+
+function _loadScript(src){
+  return new Promise((resolve,reject)=>{
+    if(document.querySelector(`script[src="${src}"]`)){resolve();return;}
+    const s=document.createElement('script');
+    s.src=src;s.onload=resolve;s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function _buildChecklistPDF(rec,label){
+  const {jsPDF}=window.jspdf;
+  const ck=QC_CHECKLISTS[rec.checklist_type]||{title:label,items:[]};
+  const projName=rec.project||'';
+  const dateStr=rec.inspection_date||'';
+  const panelRef=rec.panel_ref||'—';
+  const itemsRows=(Array.isArray(rec.items)?rec.items:[]).map((item,i)=>{
+    const bg=i%2===0?'#f8fafc':'#fff';
+    const resultColor=item.result==='C'?'#1a9458':item.result==='NC'?'#c02020':'#8099b0';
+    return`<tr style="background:${bg};"><td style="padding:5px 8px;font-size:10px;color:#8099b0;text-align:center;border-bottom:1px solid #eef2f8;">${item.index}</td><td style="padding:5px 8px;font-size:11px;color:#1e3a5f;border-bottom:1px solid #eef2f8;">${item.description||''}</td><td style="padding:5px 8px;font-size:11px;font-weight:700;color:${resultColor};text-align:center;border-bottom:1px solid #eef2f8;">${item.result||'—'}</td><td style="padding:5px 8px;font-size:10px;color:#8099b0;border-bottom:1px solid #eef2f8;">${item.comment||''}</td></tr>`;
+  }).join('');
+  const sig1Img=rec.signature_data?`<img src="${rec.signature_data}" style="max-width:220px;max-height:70px;object-fit:contain;display:block;margin-top:6px;">`:'<div style="width:220px;height:60px;border-bottom:1.5px solid #1e3a5f;margin-top:30px;"></div>';
+  const sig2Img=rec.sig2_data?`<img src="${rec.sig2_data}" style="max-width:220px;max-height:70px;object-fit:contain;display:block;margin-top:6px;">`:'<div style="width:220px;height:60px;border-bottom:1.5px solid #1e3a5f;margin-top:30px;"></div>';
+
+  const container=document.createElement('div');
+  container.style.cssText='position:fixed;top:-9999px;left:-9999px;width:794px;background:#fff;padding:20px 28px;box-sizing:border-box;font-family:Arial,sans-serif;color:#1e3a5f;';
+  container.innerHTML=`
+    <div style="background:linear-gradient(135deg,#224F93,#1a3a6e);color:#fff;padding:12px 16px;border-radius:8px;margin-bottom:14px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Contrôle Qualité — ${projName}</div>
+      <div style="font-size:16px;font-weight:700;">${ck.title}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;padding:10px 14px;background:#f4f7fc;border-radius:6px;">
+      <div><div style="font-size:9px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;">Projet</div><div style="font-size:12px;font-weight:600;">${projName}</div></div>
+      <div><div style="font-size:9px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;">Référence Panneau</div><div style="font-size:12px;font-weight:600;">${panelRef}</div></div>
+      <div><div style="font-size:9px;font-weight:700;color:#8099b0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;">Date</div><div style="font-size:12px;font-weight:600;">${dateStr}</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      <thead><tr>
+        <th style="background:#224F93;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;padding:6px 8px;text-align:center;width:32px;">#</th>
+        <th style="background:#224F93;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;padding:6px 8px;text-align:left;">Description</th>
+        <th style="background:#224F93;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;padding:6px 8px;text-align:center;width:48px;">Résultat</th>
+        <th style="background:#224F93;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;padding:6px 8px;text-align:left;width:160px;">Commentaires</th>
+      </tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    ${rec.remarks?`<div style="background:#f4f7fc;border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:11px;"><span style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8099b0;letter-spacing:0.8px;">Remarques : </span>${rec.remarks}</div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:10px;">
+      <div style="border-top:2px solid #224F93;padding-top:8px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#1e3a5f;margin-bottom:4px;">Contrôleur</div>
+        <div style="font-size:11px;color:#8099b0;margin-bottom:6px;">${rec.signature_name||''}</div>
+        ${sig1Img}
+      </div>
+      <div style="border-top:2px solid #224F93;padding-top:8px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#1e3a5f;margin-bottom:4px;">Conducteur Travaux</div>
+        <div style="font-size:11px;color:#8099b0;margin-bottom:6px;">${rec.sig2_name||''}</div>
+        ${sig2Img}
+      </div>
+    </div>`;
+  document.body.appendChild(container);
+
+  const canvas=await html2canvas(container,{scale:1.5,useCORS:true,logging:false});
+  document.body.removeChild(container);
+
+  const imgData=canvas.toDataURL('image/jpeg',0.88);
+  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pageW=pdf.internal.pageSize.getWidth();
+  const pageH=pdf.internal.pageSize.getHeight();
+  const ratio=pageW/canvas.width;
+  const totalH=canvas.height*ratio;
+
+  if(totalH<=pageH){
+    pdf.addImage(imgData,'JPEG',0,0,pageW,totalH);
+  } else {
+    let srcY=0;
+    const sliceH=Math.floor(pageH/ratio);
+    while(srcY<canvas.height){
+      const h=Math.min(sliceH,canvas.height-srcY);
+      const sliceCanvas=document.createElement('canvas');
+      sliceCanvas.width=canvas.width;sliceCanvas.height=h;
+      sliceCanvas.getContext('2d').drawImage(canvas,0,srcY,canvas.width,h,0,0,canvas.width,h);
+      if(srcY>0)pdf.addPage();
+      pdf.addImage(sliceCanvas.toDataURL('image/jpeg',0.88),'JPEG',0,0,pageW,h*ratio);
+      srcY+=h;
+    }
+  }
+  return pdf.output('blob');
+}
+
+async function _sclDownloadAll(){
+  const rows=[...document.querySelectorAll('#scl-rows [id^="signed-row-"]')].filter(r=>r.style.display!=='none');
+  if(!rows.length){alert('Aucun enregistrement visible.');return;}
+
+  const btn=document.getElementById('scl-btn-dl-all');
+  const origText=btn?btn.innerHTML:'';
+  const setBtn=(txt)=>{if(btn){btn.innerHTML=txt;btn.style.pointerEvents='none';}};
+  setBtn('⏳ Chargement…');
+
+  try{
+    await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+    const zip=new JSZip();
+    const modal=document.getElementById('qc-signed-modal');
+    const label=modal?.dataset?.label||'checklist';
+
+    for(let i=0;i<rows.length;i++){
+      const id=rows[i].dataset.recordId;
+      setBtn(`⏳ ${i+1} / ${rows.length}`);
+      try{
+        const {data}=await sb.from('qc_checklists').select('*').eq('id',id).single();
+        if(!data)continue;
+        const blob=await _buildChecklistPDF(data,label);
+        const fname=`${(data.panel_ref||id).replace(/[^a-zA-Z0-9_\-]/g,'_')}_${data.checklist_type}.pdf`;
+        zip.file(fname,blob);
+      }catch(e){console.error('PDF error for',id,e);}
+    }
+
+    const zipBlob=await zip.generateAsync({type:'blob'});
+    const url=URL.createObjectURL(zipBlob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`checklists_${label.replace(/\s+/g,'_')}.zip`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(e){
+    alert('Erreur lors de la génération : '+e.message);
+    console.error(e);
+  }finally{
+    if(btn){btn.innerHTML=origText;btn.style.pointerEvents='auto';}
+  }
 }
 
 function _sclVoir(){
