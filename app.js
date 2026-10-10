@@ -10800,8 +10800,13 @@ async function applyBulkStatus(status){
   // Re-render current page
   const z=ZONES.find(z=>z.id===curPage);
   if(z){
-    if(z.simple) renderSimpleFP(z);
-    else{const t=document.getElementById('tbl-'+z.id);if(t){t.innerHTML='';buildComplexTable(z);}}
+    if(z.simple) renderSimpleGrid(z);
+    else{
+      const _bgw=document.getElementById('gw-'+z.id);
+      const _bsx=_bgw?_bgw.scrollLeft:0,_bsy=_bgw?_bgw.scrollTop:0;
+      const t=document.getElementById('tbl-'+z.id);if(t){t.innerHTML='';buildComplexTable(z);}
+      requestAnimationFrame(()=>{if(_bgw){_bgw.scrollLeft=_bsx;_bgw.scrollTop=_bsy;}});
+    }
   }
   if(curPage==='dashboard') renderDash();
   if(curPage==='BM-dashboard') renderBMDashboard();
@@ -11246,7 +11251,7 @@ async function savePanel(){
       const _sx=_gw?_gw.scrollLeft:0,_sy=_gw?_gw.scrollTop:0;
       const t=document.getElementById('tbl-'+curPage);
       if(t){t.innerHTML='';buildComplexTable(z);}
-      if(_gw){_gw.scrollLeft=_sx;_gw.scrollTop=_sy;}
+      requestAnimationFrame(()=>{if(_gw){_gw.scrollLeft=_sx;_gw.scrollTop=_sy;}});
     }
   }
   toast('Panel updated');
