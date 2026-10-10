@@ -11152,8 +11152,8 @@ async function savePanel(){
   if(sbProfile?.role==='viewer'){toast('Viewers cannot edit panels.');return;}
   const installDate = selStat==='installed' ? document.getElementById('m-install-date').value : (panels[selPanel]||{}).installDate||'';
   const installRef = ['installed','bottom_bracket'].includes(selStat) ? document.getElementById('m-install-ref').value : (panels[selPanel]||{}).installRef||'';
-  const fabDate = ['fabricated','delivered','installed','bottom_bracket'].includes(selStat) ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
-  const deliveryDate = ['delivered','installed','bottom_bracket'].includes(selStat) ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
+  const fabDate = selStat==='fabricated' ? document.getElementById('m-fab-date').value : (panels[selPanel]||{}).fabDate||'';
+  const deliveryDate = selStat==='delivered' ? document.getElementById('m-del-date').value : (panels[selPanel]||{}).deliveryDate||'';
   const cdDate = selStat==='c_and_d' ? (document.getElementById('m-cd-date')?.value||new Date().toISOString().split('T')[0]) : (panels[selPanel]||{}).cdDate||'';
   const bbDate = selStat==='bottom_bracket' ? (document.getElementById('m-bb-date')?.value||new Date().toISOString().split('T')[0]) : (panels[selPanel]||{}).bbDate||'';
   // Mobile users setting installed/delivered/c_and_d (UCW) or bracket statuses (BM) → save as pending_status
