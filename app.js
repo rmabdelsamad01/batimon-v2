@@ -7953,10 +7953,29 @@ async function _sclDownloadAll(){
   const rows=[...document.querySelectorAll('#scl-rows [id^="signed-row-"]')].filter(r=>r.style.display!=='none');
   if(!rows.length){alert('Aucun enregistrement visible.');return;}
 
+  // Capture everything needed before modal can be closed
+  const ids=rows.map(r=>r.dataset.recordId);
+  const total=ids.length;
+  const modal=document.getElementById('qc-signed-modal');
+  const label=modal?.dataset?.label||'checklist';
+
+  // Disable button to prevent double-click
   const btn=document.getElementById('scl-btn-dl-all');
-  const origText=btn?btn.innerHTML:'';
-  const setBtn=(txt)=>{if(btn){btn.innerHTML=txt;btn.style.pointerEvents='none';}};
-  setBtn('⏳ Chargement…');
+  if(btn){btn.style.opacity='0.5';btn.style.pointerEvents='none';}
+
+  // Floating progress chip — lives outside the modal, survives its close
+  const chip=document.createElement('div');
+  chip.id='_dl-all-chip';
+  chip.style.cssText='position:fixed;bottom:24px;right:24px;z-index:99999;background:#1a3a6e;color:#fff;padding:10px 16px;border-radius:10px;font-family:"Barlow",sans-serif;font-size:12px;font-weight:600;box-shadow:0 4px 18px rgba(0,0,0,0.28);display:flex;align-items:center;gap:10px;min-width:220px;';
+  chip.innerHTML=`<span style="font-size:16px;">⏳</span><div><div id="_dl-chip-title" style="font-size:11px;opacity:0.75;margin-bottom:1px;">Generating PDFs</div><div id="_dl-chip-prog">0 / ${total}</div></div>`;
+  document.body.appendChild(chip);
+
+  const setChip=(done,txt)=>{
+    const p=document.getElementById('_dl-chip-prog');
+    const t=document.getElementById('_dl-chip-title');
+    if(p)p.textContent=txt;
+    if(done&&t)t.textContent='Done!';
+  };
 
   try{
     await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
@@ -7964,32 +7983,38 @@ async function _sclDownloadAll(){
     await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
     const zip=new JSZip();
-    const modal=document.getElementById('qc-signed-modal');
-    const label=modal?.dataset?.label||'checklist';
-
-    for(let i=0;i<rows.length;i++){
-      const id=rows[i].dataset.recordId;
-      setBtn(`⏳ ${i+1} / ${rows.length}`);
+    for(let i=0;i<ids.length;i++){
+      setChip(false,`${i+1} / ${total}`);
       try{
-        const {data}=await sb.from('qc_checklists').select('*').eq('id',id).single();
+        const {data}=await sb.from('qc_checklists').select('*').eq('id',ids[i]).single();
         if(!data)continue;
         const blob=await _buildChecklistPDF(data,label);
-        const fname=`${(data.panel_ref||id).replace(/[^a-zA-Z0-9_\-]/g,'_')}_${data.checklist_type}.pdf`;
+        const fname=`${(data.panel_ref||ids[i]).replace(/[^a-zA-Z0-9_\-]/g,'_')}_${data.checklist_type}.pdf`;
         zip.file(fname,blob);
-      }catch(e){console.error('PDF error for',id,e);}
+      }catch(e){console.error('PDF error for',ids[i],e);}
     }
 
+    setChip(false,`Compressing…`);
     const zipBlob=await zip.generateAsync({type:'blob'});
     const url=URL.createObjectURL(zipBlob);
     const a=document.createElement('a');
     a.href=url;a.download=`checklists_${label.replace(/\s+/g,'_')}.zip`;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    // Success state on chip then fade out
+    chip.style.background='#1a7a4a';
+    chip.innerHTML=`<span style="font-size:16px;">✅</span><div><div style="font-size:11px;opacity:0.8;margin-bottom:1px;">${total} PDF${total>1?'s':''} ready</div><div style="font-weight:700;">Download started</div></div>`;
+    toast('✅ ZIP téléchargé — '+total+' checklist'+(total>1?'s':''));
+    setTimeout(()=>chip.remove(),3500);
+
   }catch(e){
-    alert('Erreur lors de la génération : '+e.message);
+    chip.style.background='#8b1a1a';
+    chip.innerHTML=`<span style="font-size:16px;">⚠</span><div><div style="font-size:11px;opacity:0.8;">Erreur</div><div>${e.message||'Génération échouée'}</div></div>`;
     console.error(e);
+    setTimeout(()=>chip.remove(),5000);
   }finally{
-    if(btn){btn.innerHTML=origText;btn.style.pointerEvents='auto';}
+    if(btn){btn.style.opacity='1';btn.style.pointerEvents='auto';}
   }
 }
 
