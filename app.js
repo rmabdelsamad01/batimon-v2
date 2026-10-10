@@ -19738,7 +19738,7 @@ function _renderMobileInstallRate(){
   ['NF','SF','EF','WF'].forEach(zid=>{
     allIds(zid).forEach(id=>{
       const p=panels[id]||{};
-      if(p.status==='installed'&&p.installDate){
+      if(p.installDate){
         dateMap[p.installDate]=(dateMap[p.installDate]||0)+1;
       }
     });
