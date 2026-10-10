@@ -310,7 +310,7 @@ async function openProject(id){
   }
 
   await load();
-  goPage('dashboard');
+  goPage('welcome');
 }
 
 // ── Mobile project menu (Full App mode on phone) ────────────────────────────
